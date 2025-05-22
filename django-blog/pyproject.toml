@@ -1,0 +1,29 @@
+[project]
+name = "django-blog"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Mykola Dotsenko",email = "docnikolaj1990@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "django (>=5.2.1,<6.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "django_blog", from = "src"}]
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
+isort = "^6.0.1"
+ruff = "^0.11.10"
+pytest = "^8.3.5"
+pytest-django = "^4.11.1"
+coverage = "^7.8.1"
+pre-commit = "^4.2.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
