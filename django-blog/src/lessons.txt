@@ -1,1 +1,3 @@
-post - 
+cd django-blog
+
+ poetry run python manage.py runserver 5000
