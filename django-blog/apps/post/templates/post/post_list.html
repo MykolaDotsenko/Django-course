@@ -1,1 +1,19 @@
 {{ posts }}
+<h1>Пости</h1>
+<form method="get">
+  {{ form.as_p }}
+  <button type="submit">Пошук</button>
+</form>
+
+{% if request.user.is_authenticated %}<a href="{% url 'post_create' %}"
+  >+ Новий пост</a
+>
+{% endif %}
+
+<ul>
+  {% for post in posts %}
+  <li><a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a></li>
+  {% empty %}
+  <li>Немає постів.</li>
+  {% endfor %}
+</ul>

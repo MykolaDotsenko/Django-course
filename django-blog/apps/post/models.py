@@ -1,3 +1,4 @@
+import random
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
@@ -26,7 +27,7 @@ class Post(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.title)
+            self.slug = slugify(self.title)+ str(random.randint(1, 1000000))
         super().save(*args, **kwargs)
 
 class Category(models.Model):

@@ -1,0 +1,8 @@
+<h1>{{ post.title }}</h1>
+<p>{{ post.text }}</p>
+
+<p>
+  <a href="{% url 'post_edit' post.slug %}">Редагувати</a> |
+  <a href="{% url 'post_delete' post.slug %}">Видалити</a> |
+  <a href="{% url 'post_list' %}">Назад</a>
+</p>
