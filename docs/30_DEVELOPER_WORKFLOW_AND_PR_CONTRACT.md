@@ -166,8 +166,8 @@ python -m pip install -e ".[dev]"
 Run the core CI-equivalent quality gates:
 
 ```bash
-ruff format --check .
-ruff check .
+ruff format --check apps config scripts manage.py
+ruff check apps config scripts manage.py
 python manage.py check
 coverage erase
 coverage run -m pytest -q
