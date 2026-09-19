@@ -28,6 +28,8 @@ class ConverterPrimitivePreviewTests(SimpleTestCase):
         )
         self.assertIn('type="submit"', html)
         self.assertIn('aria-label="Swap source and destination"', html)
+        self.assertIn('id="preview-source"', html)
+        self.assertIn('id="preview-destination"', html)
         self.assertIn('aria-haspopup="dialog"', html)
         self.assertIn("<details", html)
         self.assertIn("Source details", html)
