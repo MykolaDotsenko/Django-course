@@ -21,7 +21,9 @@ Before production code changes:
 - mobile/API strategy;
 - quality/security/accessibility;
 - ADR log;
-- references.
+- references;
+- API/data-source research matrix;
+- external API integration contracts.
 
 Implementation starts only after the documentation is coherent enough to act as an engineering contract.
 
@@ -83,7 +85,9 @@ Deliverables:
 - CountryCurrency;
 - active/historical metadata;
 - constraints;
-- seed/import management command;
+- REST Countries v5 import adapter/management command for selected current metadata;
+- no request-path dependency on REST Countries;
+- no committed raw provider dump;
 - deterministic fixture subset;
 - current vs historical selector query rules.
 
@@ -104,13 +108,18 @@ Deliverables:
 
 - provider interface;
 - Frankfurter v2 adapter;
-- strict timeout;
+- explicit default blend source policy;
+- support for pinned provider policy internally when justified;
+- strict timeout and bounded retry policy;
 - normalized RateQuote;
 - Decimal conversion service;
 - latest/current cache;
 - historical cache namespace;
+- safe stale fallback;
 - provider/source attribution;
-- unit + contract tests.
+- no silent provider switching;
+- unit + fixture-based contract tests;
+- optional manual/scheduled live smoke test.
 
 Acceptance:
 
@@ -204,6 +213,9 @@ Deliverables:
 - currency-era lookup;
 - currency transition story support;
 - deterministic StoryChapter composer;
+- Wikidata targeted ingestion for candidate structured facts;
+- optional Wikimedia Commons / Europeana media enrichment with rights metadata;
+- no runtime SPARQL dependency;
 - progressive story disclosure;
 - story partial/unavailable states;
 - editorial/admin workflow;
@@ -246,7 +258,10 @@ Deliverables:
 - ranges;
 - provenance;
 - observation date;
+- source trust class;
 - confidence;
+- curated/official source ingestion where available;
+- no mandatory Numbeo dependency;
 - equivalent-count calculation;
 - transparent disclaimers.
 
@@ -356,12 +371,14 @@ Only implement after core conversion/context proves stable.
 
 This is a research/prototype phase, not guaranteed production scope.
 
-Research:
+Research and prototype adapters:
 
-- official CPI sources;
-- World Bank indicator suitability;
-- OECD PPP/price-level datasets;
-- national statistical-office requirements;
+- Eurostat HICP for EU inflation/time change;
+- Eurostat PPP/price-level datasets for European cross-country comparison;
+- OECD SDMX PPP/price-level datasets;
+- World Bank CPI/PPP indicators for global coverage;
+- national statistical-office requirements where methodology demands;
+- source/dataset metadata and licensing;
 - base-period methodology;
 - domestic purchasing power vs cross-country price levels.
 
@@ -395,3 +412,25 @@ Deliverables:
 4. Historical purchasing power remains separate from historical FX until methodology is proven.
 5. Current cultural/payment data must never be silently presented as historical.
 6. The project should remain deployable and understandable after every implementation PR.
+
+
+# External data sequencing rule
+
+External integrations follow this order:
+
+```text
+research source
+→ document provenance/licence/cost
+→ define normalized contract
+→ fixture tests
+→ adapter
+→ import/cache policy
+→ user-facing integration
+```
+
+Do not place a third-party API into a user request path simply because an endpoint exists.
+
+For source decisions, implementation must reference:
+
+- `11_API_RESEARCH_AND_DATA_SOURCES.md`;
+- `12_EXTERNAL_API_CONTRACTS.md`.
