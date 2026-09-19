@@ -97,6 +97,8 @@ Deliverables:
 - neutral core + controlled country-accent system;
 - focus/reduced-motion/high-contrast rules;
 - primary converter shell from `03B_SCREEN_BLUEPRINTS.md`;
+- signature bilateral source/destination workspace for large screens;
+- independent restrained source/destination atmosphere channels within one stable Quiet Atlas shell;
 - AmountField, CountryCurrencyTrigger, SwapButton, ConvertButton and initial Result primitives using exact anatomy/sizing from `03C1_COMPONENT_ANATOMY_AND_DIMENSIONS.md`;
 - explicit hover/focus/pressed/loading/error states from `03C_COMPONENT_STATES_AND_MICROINTERACTIONS.md`;
 - container-query behavior for reusable components;
@@ -112,6 +114,8 @@ Deliverables:
 Acceptance:
 
 - converter remains the visual focal point;
+- source and destination remain simultaneously identifiable on large screens;
+- bilateral cultural atmosphere does not alter control mechanics or focus order;
 - result/provenance hierarchy is readable without decorative effects;
 - all primary controls have strong keyboard focus and comfortable touch targets;
 - component behavior survives 320px/reflow and text expansion;
@@ -205,6 +209,8 @@ Deliverables:
 - explicit first Convert;
 - progressive HTMX updates after success;
 - swap;
+- signature bilateral source/destination presentation on large screens;
+- stacked bilateral identity on mobile without compressed split-screen behavior;
 - result partial;
 - reference-rate/effective-date/source metadata;
 - stale fallback semantics;
@@ -214,7 +220,7 @@ Deliverables:
 - CSP-friendly external TypeScript behavior with no inline event-handler dependency;
 - Playwright P0 flow + axe state scans.
 
-At this point the basic product is useful.
+At this point the basic product is useful and already expresses the product's signature idea: conversion connects two cultural/currency contexts, even before the deeper Explore data layers ship.
 
 ---
 
@@ -388,7 +394,7 @@ Historical mode must not automatically backdate current payment customs.
 
 ## Implementation PR 10 — Typical prices / purchasing context
 
-**Goal:** answer “what does this amount roughly mean locally?”
+**Goal:** answer “what does this amount roughly mean locally?” and complete the P0 compact Explore triad together with payment context and money/culture storytelling.
 
 Deliverables:
 
@@ -711,3 +717,35 @@ Before an AI PR merges, it must answer:
 - Can the model trigger side effects? If yes, why is that necessary?
 
 Default answer for side effects is **no**.
+
+
+---
+
+# Signature experience sequencing rule
+
+The original-concept restoration does **not** introduce a new parallel roadmap.
+
+It is delivered through existing implementation slices:
+
+```text
+PR 2  → bilateral visual shell + atmosphere tokens
+PR 3  → correct country/currency relationships
+PR 5  → working dual-context converter
+PR 8  → Money & culture story path
+PR 9  → Payment context path
+PR 10 → Everyday value path
+PR 11 → saved cultural pairs / recent context
+P1    → optional pronunciation/audio + richer sourced comparison
+```
+
+P0 is considered culturally complete only when the converter can provide these three first-level deeper paths:
+
+```text
+Everyday value
+Payment context
+Money & culture
+```
+
+Do not create a separate large “culture dashboard” milestone.
+
+The bilateral experience belongs inside the existing converter architecture.
