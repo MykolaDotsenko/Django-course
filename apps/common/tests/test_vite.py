@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import pytest
 from django.template import Context, Template
 from django.test import SimpleTestCase, override_settings
 
@@ -174,9 +173,8 @@ class ViteProductionAssetTests(SimpleTestCase):
         with self.assertRaisesRegex(ViteManifestError, "unreadable or malformed"):
             self.render()
 
-    @pytest.mark.parametrize(
-        "payload",
-        [
+    def test_malformed_manifest_shapes_fail_fast(self) -> None:
+        invalid_payloads: tuple[object, ...] = (
             [],
             {"frontend/src/app.ts": []},
             {"frontend/src/app.ts": {}},
@@ -188,13 +186,15 @@ class ViteProductionAssetTests(SimpleTestCase):
                     "imports": ["_missing.js"],
                 }
             },
-        ],
-    )
-    def test_malformed_manifest_shapes_fail_fast(self, payload: object) -> None:
-        self.write_manifest(payload)
+        )
 
-        with self.assertRaises(ViteManifestError):
-            self.render()
+        for payload in invalid_payloads:
+            with self.subTest(payload=payload):
+                _load_manifest.cache_clear()
+                self.write_manifest(payload)
+
+                with self.assertRaises(ViteManifestError):
+                    self.render()
 
     def test_manifest_is_cached_after_first_production_load(self) -> None:
         self.write_manifest({"frontend/src/app.ts": {"file": "assets/app-first.js"}})
