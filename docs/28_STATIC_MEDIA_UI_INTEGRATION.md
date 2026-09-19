@@ -952,3 +952,76 @@ Template tests assert:
 - missing href renders a non-link title.
 
 This keeps accessibility/performance behavior centralized instead of retested independently in every future page.
+
+
+# 32. DEBUG visual QA preview
+
+A dedicated preview surface now exists at:
+
+```text
+/_design/media/
+```
+
+It is registered only when:
+
+```text
+DEBUG = True
+```
+
+Purpose:
+
+- inspect the real registry/selectors/view models/templates together;
+- review image density before product-page wiring;
+- compare desktop/tablet/mobile layouts;
+- verify historical illustration labels;
+- verify trust/provenance placement;
+- test eager vs lazy loading behavior.
+
+The preview is not a product page and must not become a production route.
+
+## Preview coverage
+
+The page renders:
+
+- home hero;
+- three explainer cards;
+- all ten initial destination visuals;
+- five purchasing-power story categories;
+- Then & Now;
+- Finland markka era;
+- euro transition;
+- trust/source block.
+
+The page intentionally renders more media than a real product screen because its job is QA, not production information density.
+
+## Preview styling
+
+The route uses:
+
+```text
+static/css/quiet-atlas-preview.css
+```
+
+This stylesheet is **preview-only**.
+
+It exists so media composition can be evaluated before the planned Tailwind/Vite implementation.
+
+Do not evolve it into a second production CSS system.
+
+When Tailwind ships:
+
+- production pages use the design-system utility/components;
+- this preview can either migrate to those components or remain a small isolated QA harness.
+
+## Preview tests
+
+Tests assert:
+
+- route renders;
+- correct template;
+- expected section/card counts;
+- key scenarios are visible;
+- hero uses eager/high fetch priority;
+- card media remains lazy by default.
+
+This gives one end-to-end presentation test across the static-media stack.
