@@ -148,6 +148,9 @@ def main() -> None:
 
             _assert_preview_integrity(page, viewport_width=width)
 
+            page.evaluate("document.activeElement?.blur()")
+            page.wait_for_timeout(220)
+
             if console_errors:
                 raise RuntimeError(
                     f"Browser console errors for {name}: " + " | ".join(console_errors),
