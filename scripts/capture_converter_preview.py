@@ -63,8 +63,7 @@ def _assert_preview_integrity(page: Page, *, viewport_width: int) -> None:
     )
     if overflow["scrollWidth"] > overflow["clientWidth"] + 1:
         raise RuntimeError(
-            f"Horizontal overflow detected: {overflow['scrollWidth']} > "
-            f"{overflow['clientWidth']}",
+            f"Horizontal overflow detected: {overflow['scrollWidth']} > {overflow['clientWidth']}",
         )
 
     amount_height = 60 if viewport_width <= 480 else 64
