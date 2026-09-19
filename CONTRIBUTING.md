@@ -37,6 +37,19 @@ set +a
 
 Django does not silently parse arbitrary `.env` files; deployment configuration always enters through the process environment. A local `DJANGO_SECRET_KEY` is optional, while preview/production require an explicit strong key and allowed hosts.
 
+Database behavior is explicit:
+
+- local/test without `DATABASE_URL` use SQLite for zero-setup development;
+- setting `DATABASE_URL=postgresql://...` switches Django to PostgreSQL;
+- preview/production require a PostgreSQL `DATABASE_URL`;
+- CI runs the full test suite against PostgreSQL 18.6 in a separate integration lane.
+
+After selecting the database, apply migrations:
+
+```bash
+python manage.py migrate
+```
+
 ### Database
 
 Local and ordinary fast test runs use SQLite when `DATABASE_URL` is empty.
@@ -72,6 +85,7 @@ Run the same core checks used by CI:
 ruff format --check apps config scripts manage.py
 ruff check apps config scripts manage.py
 python manage.py check
+python manage.py makemigrations --check --dry-run
 coverage erase
 coverage run -m pytest -q
 coverage report
