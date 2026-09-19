@@ -380,11 +380,11 @@ Shared HTTP utilities may handle transport mechanics, but they do not decide dom
 
 ---
 
-## ADR-029 — Nordic editorial utility is the core visual language
+## ADR-029 — Quiet Atlas is the core visual language
 
 **Status:** accepted
 
-The product uses a restrained visual direction described as:
+The product design language is named **Quiet Atlas** and uses a restrained direction described as:
 
 > **Nordic editorial utility — calm enough for money, warm enough for culture.**
 
