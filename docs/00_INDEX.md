@@ -41,6 +41,13 @@ This handbook is the single source of truth for the Cultural Currency Converter 
 27. [Static image generation plan](27_STATIC_IMAGE_GENERATION_PLAN.md)
 28. [Static media UI integration architecture](28_STATIC_MEDIA_UI_INTEGRATION.md)
 29. [Original concept traceability and signature experience](29_ORIGINAL_CONCEPT_TRACEABILITY.md)
+30. [Developer workflow and pull request contract](30_DEVELOPER_WORKFLOW_AND_PR_CONTRACT.md)
+31. [Test strategy and requirement traceability](31_TEST_STRATEGY_AND_TRACEABILITY.md)
+32. [Environment, configuration and secrets contract](32_ENVIRONMENT_CONFIGURATION_AND_SECRETS.md)
+33. [Data migrations, fixtures and seeding strategy](33_DATA_MIGRATIONS_FIXTURES_AND_SEEDING.md)
+34. [Release, deployment and rollback runbook](34_RELEASE_DEPLOYMENT_AND_ROLLBACK_RUNBOOK.md)
+35. [Content, internationalization and copy contract](35_CONTENT_I18N_AND_COPY_CONTRACT.md)
+36. [Performance budgets and profiling contract](36_PERFORMANCE_BUDGETS_AND_PROFILING.md)
 
 ## UX decision hierarchy
 
@@ -231,3 +238,21 @@ Before changing the main converter composition, read:
 The settled invariant is:
 
 > Source and destination may independently influence atmosphere and context, while arithmetic, controls, trust, accessibility and interaction mechanics remain stable.
+
+
+## Development execution hierarchy
+
+Before starting a non-trivial implementation PR:
+
+1. `30_DEVELOPER_WORKFLOW_AND_PR_CONTRACT.md` — Definition of Ready/Done, scope, review and merge contract;
+2. `31_TEST_STRATEGY_AND_TRACEABILITY.md` — which test layer protects each requirement/invariant;
+3. the product/UX/backend/frontend handbook documents governing the feature;
+4. `32_ENVIRONMENT_CONFIGURATION_AND_SECRETS.md` when configuration/external capabilities change;
+5. `33_DATA_MIGRATIONS_FIXTURES_AND_SEEDING.md` when persisted/schema/import data changes;
+6. `35_CONTENT_I18N_AND_COPY_CONTRACT.md` when user-facing financial/cultural copy changes;
+7. `36_PERFORMANCE_BUDGETS_AND_PROFILING.md` when request, payload, query or media cost changes;
+8. `34_RELEASE_DEPLOYMENT_AND_ROLLBACK_RUNBOOK.md` before production/deployment-sensitive changes.
+
+The repository pull-request template mirrors this execution contract.
+
+A task is not ready when implementation still requires the developer to invent settled product behaviour.

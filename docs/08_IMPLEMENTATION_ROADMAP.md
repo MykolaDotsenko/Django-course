@@ -749,3 +749,36 @@ Money & culture
 Do not create a separate large “culture dashboard” milestone.
 
 The bilateral experience belongs inside the existing converter architecture.
+
+
+---
+
+# Development execution rule
+
+Every roadmap PR is executed through the common development contract:
+
+```text
+Definition of Ready
+→ bounded PR
+→ acceptance criteria
+→ implementation
+→ requirement-traceable tests
+→ CI / browser QA
+→ docs/ADR update when behaviour changes
+→ merge
+```
+
+Before coding any roadmap slice, consult:
+
+- `30_DEVELOPER_WORKFLOW_AND_PR_CONTRACT.md`;
+- `31_TEST_STRATEGY_AND_TRACEABILITY.md`.
+
+When applicable also consult:
+
+- `32_ENVIRONMENT_CONFIGURATION_AND_SECRETS.md`;
+- `33_DATA_MIGRATIONS_FIXTURES_AND_SEEDING.md`;
+- `34_RELEASE_DEPLOYMENT_AND_ROLLBACK_RUNBOOK.md`;
+- `35_CONTENT_I18N_AND_COPY_CONTRACT.md`;
+- `36_PERFORMANCE_BUDGETS_AND_PROFILING.md`.
+
+Do not expand an implementation PR because another improvement is nearby. Add it to the roadmap/backlog or split it into a new PR unless it is required for the current acceptance criteria.
