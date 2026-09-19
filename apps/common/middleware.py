@@ -32,7 +32,7 @@ class RequestContextMiddleware:
             duration_ms = round((perf_counter() - started_at) * 1000, 3)
             response["X-Request-ID"] = request_id
 
-            resolver_match = request.resolver_match
+            resolver_match = getattr(request, "resolver_match", None)
             logger.info(
                 "http_request",
                 extra={
