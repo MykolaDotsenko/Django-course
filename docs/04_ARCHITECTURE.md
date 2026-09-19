@@ -275,3 +275,209 @@ Reject by default:
 - duplicated web/mobile business rules;
 - remote API calls inside model `save()`;
 - unsourced cultural content.
+
+
+## 17. Historical conversion architecture
+
+Historical conversion reuses the same exchange domain rather than creating a parallel subsystem.
+
+Conceptual flow:
+
+```text
+requested date
+     ↓
+historical query validation
+     ↓
+provider adapter
+     ↓
+normalized historical RateQuote
+     ↓
+Decimal conversion
+     ↓
+historical result
+     ├── HTML result
+     ├── JSON API
+     ├── historical chart
+     └── story composer
+```
+
+There must be one normalized quote semantics shared by all presentation paths.
+
+## 18. Historical observation lookup
+
+The provider adapter is responsible for:
+
+- translating requested date to provider request format;
+- validating response;
+- detecting missing observation;
+- resolving provider-supported fallback policy;
+- exposing actual effective date;
+- exposing observation granularity where known;
+- exposing coverage failures distinctly from transient provider failures.
+
+Application/domain code should not inspect raw provider payloads.
+
+## 19. Historical fallback policy
+
+The domain does not pretend every calendar day has an observation.
+
+For daily datasets, a candidate policy is:
+
+- choose most recent supported observation on or before requested date;
+- only within a bounded window;
+- return both requested and effective dates.
+
+For monthly/low-frequency datasets:
+
+- preserve actual provider period/date;
+- do not imply daily precision.
+
+The precise provider policy must be contract-tested against Frankfurter/provider behaviour before implementation is frozen.
+
+## 20. Historical cache
+
+Use a distinct cache namespace for normalized historical observations.
+
+Candidate key inputs:
+
+- provider/provider-set;
+- base;
+- quote;
+- requested/effective date policy;
+- normalized effective date where known.
+
+Historical observations can have very long TTLs, but invalidation must remain possible if a provider corrects source data.
+
+## 21. Story composer
+
+Storytelling is an application-layer composition service.
+
+Concept:
+
+```text
+compose_money_story(
+    historical_conversion,
+    country_context?,
+    currency_era?,
+    transitions[],
+    story_moments[],
+    latest_comparison?
+) -> StoryChapter[]
+```
+
+Rules:
+
+- no network I/O inside templates;
+- no raw provider payload in story layer;
+- no LLM dependency in core storytelling;
+- no chapter without source-backed facts where factual claims are involved;
+- no story error can invalidate a successful conversion.
+
+## 22. Story data path
+
+```text
+curated DB facts
++ normalized exchange data
+        ↓
+relevance/filtering
+        ↓
+deterministic story composer
+        ↓
+template chapters
+```
+
+Optional future AI rewriting sits after validated story context and before final presentation, with deterministic fallback.
+
+## 23. Historical chart
+
+Charts query time-series data through the same provider boundary.
+
+Do not fetch an entire series merely to answer one date conversion.
+
+Single historical conversion:
+
+- single quote/date-oriented provider call.
+
+Chart:
+
+- explicit range query;
+- aggregation/granularity chosen deliberately;
+- cached separately.
+
+## 24. Temporal context boundary
+
+Current travel context and historical FX are separate data domains.
+
+Historical mode must not automatically combine:
+
+- 1998 FX result;
+- 2026 typical prices;
+- 2026 payment customs;
+
+without explicit current-context labeling.
+
+A future historical-purchasing-power service would be separate from `exchange` and use its own data adapters/methodology.
+
+## 25. Historical API contract
+
+The existing conversion quote API can accept an optional date rather than creating an unrelated endpoint.
+
+Concept:
+
+```text
+POST /api/v1/conversions/quote/
+```
+
+Current request:
+
+```json
+{
+  "amount": "100.00",
+  "base": "EUR",
+  "quote": "JPY"
+}
+```
+
+Historical request:
+
+```json
+{
+  "amount": "100.00",
+  "base": "FIM",
+  "quote": "USD",
+  "date": "1998-06-15"
+}
+```
+
+Response includes:
+
+- `historical`;
+- `requested_date`;
+- `effective_date`;
+- `observation_granularity`;
+- `used_previous_observation`;
+- provider/source metadata.
+
+Web and mobile must interpret the same semantics.
+
+## 26. Archived currency search boundary
+
+Archived currency discovery should be driven by normalized currency metadata.
+
+Do not hard-code FIM/DEM/etc. into templates.
+
+The search/query layer can apply:
+
+- current mode → active currencies prioritized/visible;
+- historical mode → archived currencies eligible according to date/coverage.
+
+## 27. Story observability
+
+Useful structured logs/metrics may include:
+
+- historical query success/failure class;
+- fallback-observation use;
+- out-of-coverage;
+- story chapter availability.
+
+Do not log private trip/account content merely for storytelling analytics.
