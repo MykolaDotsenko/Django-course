@@ -48,8 +48,26 @@ This directory contains release-owned static illustrations for Cultural Currency
 - `story-cafe-affordability-v1.svg`
 - `story-street-food-affordability-v1.svg`
 
-Total current pack: **19 SVG assets**.
+### UI coverage expansion
+
+- `history-then-now-comparison-v1.svg`
+- `story-transit-affordability-v1.svg`
+- `story-budget-hotel-affordability-v1.svg`
+- `trust-rate-provenance-v1.svg`
+
+Total current pack: **23 SVG assets**.
 
 Full prompt, usage and authenticity documentation:
 
 - `docs/27_STATIC_IMAGE_GENERATION_PLAN.md`
+
+
+## Selection architecture
+
+Do not hardcode these file paths directly across page templates.
+
+Use the presentation registry/selectors documented in:
+
+- `docs/28_STATIC_MEDIA_UI_INTEGRATION.md`
+
+The current 23-asset pack is intentionally capped until real desktop/mobile screenshot QA identifies another concrete gap.
