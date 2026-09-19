@@ -73,9 +73,7 @@ def _parse_bool(
     if normalized in _FALSE_VALUES:
         return False
 
-    raise ConfigurationError(
-        f"{name} must be a boolean value (true/false, yes/no, on/off, 1/0)."
-    )
+    raise ConfigurationError(f"{name} must be a boolean value (true/false, yes/no, on/off, 1/0).")
 
 
 def _parse_allowed_hosts(
@@ -89,9 +87,7 @@ def _parse_allowed_hosts(
             return _LOCAL_HOSTS
         if environment is RuntimeEnvironment.TEST:
             return _TEST_HOSTS
-        raise ConfigurationError(
-            "DJANGO_ALLOWED_HOSTS is required for preview and production."
-        )
+        raise ConfigurationError("DJANGO_ALLOWED_HOSTS is required for preview and production.")
 
     hosts = tuple(host.strip() for host in raw.split(",") if host.strip())
     if not hosts:
@@ -103,10 +99,14 @@ def _parse_allowed_hosts(
                 "DJANGO_ALLOWED_HOSTS entries must be host names without schemes or paths."
             )
 
-    if environment in {
-        RuntimeEnvironment.PREVIEW,
-        RuntimeEnvironment.PRODUCTION,
-    } and "*" in hosts:
+    if (
+        environment
+        in {
+            RuntimeEnvironment.PREVIEW,
+            RuntimeEnvironment.PRODUCTION,
+        }
+        and "*" in hosts
+    ):
         raise ConfigurationError(
             "Wildcard DJANGO_ALLOWED_HOSTS is not allowed in preview or production."
         )
@@ -120,10 +120,14 @@ def _load_secret_key(
 ) -> str:
     configured = _optional(environ, "DJANGO_SECRET_KEY")
     if configured is not None:
-        if environment in {
-            RuntimeEnvironment.PREVIEW,
-            RuntimeEnvironment.PRODUCTION,
-        } and len(configured) < 50:
+        if (
+            environment
+            in {
+                RuntimeEnvironment.PREVIEW,
+                RuntimeEnvironment.PRODUCTION,
+            }
+            and len(configured) < 50
+        ):
             raise ConfigurationError(
                 "DJANGO_SECRET_KEY must be at least 50 characters in preview or production."
             )
@@ -137,9 +141,7 @@ def _load_secret_key(
         # explicitly when stable sessions across process restarts are useful.
         return secrets.token_urlsafe(48)
 
-    raise ConfigurationError(
-        "DJANGO_SECRET_KEY is required for preview and production."
-    )
+    raise ConfigurationError("DJANGO_SECRET_KEY is required for preview and production.")
 
 
 def load_runtime_config(
@@ -155,13 +157,15 @@ def load_runtime_config(
         default=environment is RuntimeEnvironment.LOCAL,
     )
 
-    if environment in {
-        RuntimeEnvironment.PREVIEW,
-        RuntimeEnvironment.PRODUCTION,
-    } and debug:
-        raise ConfigurationError(
-            "DJANGO_DEBUG must be false in preview and production."
-        )
+    if (
+        environment
+        in {
+            RuntimeEnvironment.PREVIEW,
+            RuntimeEnvironment.PRODUCTION,
+        }
+        and debug
+    ):
+        raise ConfigurationError("DJANGO_DEBUG must be false in preview and production.")
 
     return RuntimeConfig(
         environment=environment,
