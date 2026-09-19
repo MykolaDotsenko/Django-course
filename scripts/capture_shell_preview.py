@@ -1,0 +1,103 @@
+from __future__ import annotations
+
+import os
+from pathlib import Path
+
+from playwright.sync_api import Page, sync_playwright
+
+BASE_URL = os.environ.get(
+    "SHELL_PREVIEW_URL",
+    "http://127.0.0.1:8000/_design/shell/",
+)
+OUTPUT_DIR = Path(
+    os.environ.get(
+        "SHELL_PREVIEW_SCREENSHOT_DIR",
+        "artifacts/shell-preview",
+    )
+)
+
+VIEWPORTS = (
+    ("desktop-1440", 1440, 1000),
+    ("tablet-768", 768, 1024),
+    ("mobile-390", 390, 844),
+    ("reflow-320", 320, 700),
+)
+
+
+def _assert_shell_integrity(page: Page) -> None:
+    heading = page.locator("h1")
+    if heading.count() != 1 or heading.inner_text().strip() != "Quiet Atlas foundation":
+        raise RuntimeError("Quiet Atlas shell must expose exactly one expected H1")
+
+    if page.locator('[data-country-theme="fi"]').count() != 1:
+        raise RuntimeError("Source Finland atmosphere scope is missing")
+
+    if page.locator('[data-country-theme="jp"]').count() != 1:
+        raise RuntimeError("Destination Japan atmosphere scope is missing")
+
+    page.evaluate("document.fonts.ready")
+    inter_loaded = page.evaluate('document.fonts.check('16px "Inter Variable"')')
+    if not inter_loaded:
+        raise RuntimeError("Self-hosted Inter Variable did not load")
+
+    overflow = page.evaluate(
+        """() => ({
+            scrollWidth: document.documentElement.scrollWidth,
+            clientWidth: document.documentElement.clientWidth,
+        })"""
+    )
+    if overflow["scrollWidth"] > overflow["clientWidth"] + 1:
+        raise RuntimeError(
+            f"Horizontal overflow detected: {overflow['scrollWidth']} > {overflow['clientWidth']}",
+        )
+
+    page.keyboard.press("Tab")
+    active_class = page.evaluate("document.activeElement?.className ?? ''")
+    if "qa-skip-link" not in active_class:
+        raise RuntimeError(f"Skip link is not first in keyboard order: {active_class!r}")
+
+
+def main() -> None:
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+
+        for name, width, height in VIEWPORTS:
+            context = browser.new_context(
+                viewport={"width": width, "height": height},
+                device_scale_factor=1,
+            )
+            page = context.new_page()
+            console_errors: list[str] = []
+
+            page.on(
+                "console",
+                lambda message: (
+                    console_errors.append(message.text) if message.type == "error" else None
+                ),
+            )
+
+            response = page.goto(BASE_URL, wait_until="networkidle")
+            if response is None or not response.ok:
+                status = response.status if response else "no response"
+                raise RuntimeError(f"Shell preview request failed for {name}: {status}")
+
+            _assert_shell_integrity(page)
+
+            if console_errors:
+                raise RuntimeError(
+                    f"Browser console errors for {name}: " + " | ".join(console_errors),
+                )
+
+            page.screenshot(
+                path=str(OUTPUT_DIR / f"{name}.png"),
+                full_page=True,
+            )
+            context.close()
+
+        browser.close()
+
+
+if __name__ == "__main__":
+    main()
