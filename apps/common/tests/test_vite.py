@@ -24,10 +24,7 @@ class ViteDevelopmentAssetTests(SimpleTestCase):
         html = render_vite_asset()
 
         client = '<script type="module" src="http://127.0.0.1:5173/@vite/client"></script>'
-        entry = (
-            '<script type="module" '
-            'src="http://127.0.0.1:5173/frontend/src/app.ts"></script>'
-        )
+        entry = '<script type="module" src="http://127.0.0.1:5173/frontend/src/app.ts"></script>'
 
         self.assertIn(client, html)
         self.assertIn(entry, html)
