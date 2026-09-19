@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" aria-hidden="true">
+<defs>
+  <linearGradient id="canvas" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#F6F7F3"/>
+    <stop offset="1" stop-color="#E6EEEA"/>
+  </linearGradient>
+  <linearGradient id="archive" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#284A63"/>
+    <stop offset="1" stop-color="#607F8E"/>
+  </linearGradient>
+  <linearGradient id="warm" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#E8D8BA"/>
+    <stop offset="1" stop-color="#C79A67"/>
+  </linearGradient>
+  <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
+    <feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#14211D" flood-opacity=".14"/>
+  </filter>
+  <filter id="grain" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="2" seed="44"/>
+    <feColorMatrix type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="table" tableValues="0 .028"/></feComponentTransfer>
+  </filter>
+</defs>
+<rect width="1200" height="630" fill="url(#canvas)"/>
+<circle cx="1015" cy="105" r="210" fill="#DCEFEB" opacity=".78"/>
+<path d="M0 338C150 292 285 325 420 276C590 216 700 254 835 218C982 177 1097 183 1200 138V448H0Z" fill="#B9C9C3"/>
+<g fill="#748984" opacity=".76">
+  <rect x="75" y="250" width="105" height="185" rx="8"/>
+  <rect x="200" y="210" width="128" height="225" rx="8"/>
+  <rect x="353" y="273" width="90" height="162" rx="8"/>
+  <rect x="760" y="235" width="112" height="200" rx="8"/>
+  <rect x="900" y="188" width="120" height="247" rx="8"/>
+</g>
+<rect y="450" width="1200" height="180" fill="#6C5143"/>
+<g transform="translate(105 395)" filter="url(#shadow)">
+  <rect width="390" height="155" rx="30" fill="#F1EADF"/>
+  <path d="M52 48C135 20 204 80 276 43C326 18 355 41 368 50V119C313 127 264 98 213 123C149 154 97 108 52 128Z" fill="#D4CCB8"/>
+  <path d="M72 58L153 124M143 43L216 119M225 48L298 116" stroke="#8FA19B" stroke-width="6"/>
+</g>
+<g transform="translate(560 393)" filter="url(#shadow)">
+  <rect width="204" height="120" rx="28" fill="#0B6B61"/>
+  <path d="M146 37q18 17 0 34M127 29q30 25 0 50M108 21q42 34 0 66" fill="none" stroke="#EAF2EE" stroke-width="5" stroke-linecap="round"/>
+</g>
+<g transform="translate(855 392)" filter="url(#shadow)">
+  <rect width="186" height="120" rx="28" fill="#345E7D"/>
+  <circle cx="52" cy="60" r="25" fill="#DCEFEB"/>
+  <path d="M88 40H148M88 61H134M88 82H154" stroke="#EAF2EE" stroke-width="6" stroke-linecap="round"/>
+</g>
+<path d="M782 454H828" stroke="#DCCCAD" stroke-width="9" stroke-linecap="round"/>
+<path d="M818 439L836 454L818 469" fill="none" stroke="#DCCCAD" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+<rect width="1200" height="630" filter="url(#grain)" opacity=".4"/>
+</svg>
