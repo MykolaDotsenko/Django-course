@@ -1098,3 +1098,87 @@ Current reviewed implementation uses:
 - actions/upload-artifact v7.
 
 Production does not depend on Playwright. It is QA tooling only.
+
+
+# 34. Responsive and social derivative implementation
+
+Browser screenshot QA validated the original 23 semantic content assets and exposed two additional delivery surfaces that justify dedicated compositions:
+
+- narrow mobile hero/history presentation;
+- 1200×630 social/OpenGraph previews.
+
+Five release-owned derivatives were therefore added without expanding country/story semantics:
+
+```text
+hero-home-global-value-mobile-v1.svg
+history-then-now-mobile-v1.svg
+og-home-global-value-v1.svg
+og-history-then-now-v1.svg
+og-local-value-v1.svg
+```
+
+The registry now contains **28 assets**:
+
+- 23 canonical semantic assets;
+- 2 responsive portrait derivatives;
+- 3 social/OpenGraph derivatives.
+
+## Selection contract
+
+Dedicated selectors own these variants:
+
+```text
+select_home_hero_mobile_media()
+select_history_then_now_mobile_media()
+select_home_og_media()
+select_history_og_media()
+select_local_value_og_media()
+```
+
+Page templates should not guess filenames or dimensions.
+
+## Responsive images
+
+The two portrait derivatives are 960×1200 / 4:5.
+
+They are intended for responsive source selection when a narrow viewport materially benefits from a different composition.
+
+Do not render/download desktop and portrait hero assets simultaneously without browser-level source selection.
+
+Recommended future production markup:
+
+```html
+<picture>
+  <source media="(max-width: 640px)" srcset="...mobile...">
+  <img src="...desktop..." ...>
+</picture>
+```
+
+The server/presenter still owns which approved semantic variant is available.
+
+## Social images
+
+The three OpenGraph derivatives are 1200×630 and intentionally contain no baked text.
+
+This keeps:
+
+- title/copy in metadata rather than pixels;
+- localization independent from artwork;
+- the image reusable across page titles;
+- visual authenticity rules identical to in-product artwork.
+
+These are release-owned visuals, so they may live in static.
+
+## QA
+
+The DEBUG media preview renders all 28 registered assets.
+
+Playwright now validates all 28 at:
+
+- 1440px;
+- 768px;
+- 390px.
+
+The original content-pack constraint remains:
+
+> Delivery-format derivatives are allowed only for concrete rendering surfaces; they are not permission to create more decorative country cards.
