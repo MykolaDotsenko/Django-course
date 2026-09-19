@@ -952,3 +952,99 @@ On every screen ask:
 If not, remove it.
 
 This is the principal defense against portfolio-demo overdesign.
+
+
+---
+
+# 42. Signature bilateral converter blueprint
+
+The large-screen converter should make the source↔destination relationship visually unmistakable without turning the screen into two separate mini-sites.
+
+Reference composition:
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ Convert money with context                                  │
+│                                                             │
+│ FROM                                  TO                    │
+│ Finland                               Japan                 │
+│ EUR                                   JPY                   │
+│ subtle source atmosphere              richer destination    │
+│                                                             │
+│ €100.00              →               ¥17,450               │
+│                                                             │
+│ Reference rate · effective date · provider/source           │
+└─────────────────────────────────────────────────────────────┘
+```
+
+Rules:
+
+- one visual shell;
+- two explicit contexts;
+- one shared result hierarchy;
+- no mandatory exact 50/50 split;
+- no giant decorative image before the task;
+- source/destination visuals remain optional enhancement.
+
+The result should feel like a bridge between the contexts.
+
+---
+
+# 43. Compact Explore blueprint
+
+After a successful result:
+
+```text
+What does ¥17,450 mean in Japan?
+
+Everyday value
+Payment context
+Money & culture
+```
+
+These are first-level paths, not necessarily three large cards.
+
+Preferred presentation:
+
+- compact disclosures;
+- concise linked rows;
+- one small grouped section.
+
+Avoid:
+
+- 8–12 tile dashboards;
+- unrelated cultural trivia;
+- carousel-first interaction;
+- media that pushes practical context down.
+
+---
+
+# 44. Mobile bilateral blueprint
+
+Do not reproduce the desktop layout at narrow width.
+
+Recommended order:
+
+```text
+FROM
+Finland · EUR
+Amount
+
+↓
+
+Converted result
+
+↓
+
+TO
+Japan · JPY
+
+Trust metadata
+Everyday value
+Payment context
+Money & culture
+```
+
+The visual transition may be subtle, but source and destination identity must remain clear.
+
+The mobile page is successful when the user perceives one journey through two contexts without horizontal scrolling or duplicated controls.
