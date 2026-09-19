@@ -15,6 +15,8 @@ class ImageViewModel:
     decorative: bool
     kind: str
     label: str
+    width: int
+    height: int
 
 
 def build_static_image_view_model(
@@ -40,4 +42,6 @@ def build_static_image_view_model(
         decorative=decorative,
         kind=asset.kind,
         label=asset.label,
+        width=asset.width,
+        height=asset.height,
     )
