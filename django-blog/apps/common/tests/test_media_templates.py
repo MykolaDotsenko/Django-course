@@ -5,6 +5,7 @@ from django.test import SimpleTestCase
 
 from apps.common.presentation.media_assets import get_static_media_asset
 from apps.common.presentation.media_view_models import (
+    MediaCardViewModel,
     build_static_image_view_model,
 )
 
@@ -94,14 +95,14 @@ class MediaCardTemplateTests(SimpleTestCase):
         html = render_to_string(
             "components/media/media_card.html",
             {
-                "card": {
-                    "image": self.image,
-                    "eyebrow": "Local value",
-                    "title": "Japan",
-                    "summary": "See what everyday spending feels like locally.",
-                    "href": "/countries/jp/",
-                    "badge": "Featured",
-                },
+                "card": MediaCardViewModel(
+                    image=self.image,
+                    eyebrow="Local value",
+                    title="Japan",
+                    summary="See what everyday spending feels like locally.",
+                    href="/countries/jp/",
+                    badge="Featured",
+                ),
             },
         )
 
@@ -119,12 +120,10 @@ class MediaCardTemplateTests(SimpleTestCase):
         html = render_to_string(
             "components/media/media_card.html",
             {
-                "card": {
-                    "image": self.image,
-                    "title": "Japan",
-                    "summary": "",
-                    "href": "",
-                },
+                "card": MediaCardViewModel(
+                    image=self.image,
+                    title="Japan",
+                ),
             },
         )
 
