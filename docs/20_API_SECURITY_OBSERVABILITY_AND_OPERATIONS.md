@@ -524,6 +524,15 @@ At request start:
 
 Use UUID/ULID-like opaque ID.
 
+Implemented request-ID acceptance contract:
+
+- header: `X-Request-ID`;
+- accepted length: 1–64 characters;
+- accepted characters: ASCII letters/digits plus `.`, `_` and `-`;
+- first character must be alphanumeric;
+- absent/invalid/oversized values are replaced with a server-generated UUID4;
+- the final ID is returned in `X-Request-ID` and bound to structured logs.
+
 Do not put user data into request ID.
 
 ---
@@ -674,6 +683,10 @@ Check:
 Optional cache check only if deployment declares cache required.
 
 No external provider check.
+
+Implemented health responses deliberately expose only generic state. Database exception strings, credentials and host details are not returned to clients.
+
+The access-log baseline records `request.path`, not the full URL, and never records request bodies by default.
 
 ---
 
