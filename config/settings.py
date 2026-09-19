@@ -5,6 +5,7 @@ Security-sensitive deployment configuration is loaded through the validated
 runtime boundary in config.environment.
 """
 
+import os
 from pathlib import Path
 
 from config.database import load_database_config
@@ -58,7 +59,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASE_CONFIG = load_database_config(
-    environ=__import__("os").environ,
+    environ=os.environ,
     environment=RUNTIME_CONFIG.environment,
     base_dir=BASE_DIR,
 )
