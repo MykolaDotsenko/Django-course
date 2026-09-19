@@ -147,3 +147,40 @@ def test_duplicate_database_query_options_fail_fast() -> None:
             environment=RuntimeEnvironment.TEST,
             base_dir=BASE_DIR,
         )
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "postgresql://user:pass@localhost/db?sslmode",
+        "postgresql://user:pass@localhost/db?=require",
+    ],
+)
+def test_invalid_query_options_fail_fast(url: str) -> None:
+    with pytest.raises(ConfigurationError, match="invalid query options|empty query option"):
+        load_database_config(
+            environ={"DATABASE_URL": url},
+            environment=RuntimeEnvironment.TEST,
+            base_dir=BASE_DIR,
+        )
+
+
+@pytest.mark.parametrize("option", ["user", "password", "host", "port", "dbname"])
+def test_query_options_cannot_override_core_connection_fields(option: str) -> None:
+    with pytest.raises(ConfigurationError, match="duplicates a core connection field"):
+        load_database_config(
+            environ={
+                "DATABASE_URL": f"postgresql://user:pass@localhost/db?{option}=override"
+            },
+            environment=RuntimeEnvironment.TEST,
+            base_dir=BASE_DIR,
+        )
+
+
+def test_empty_postgresql_user_fails_fast() -> None:
+    with pytest.raises(ConfigurationError, match="PostgreSQL user"):
+        load_database_config(
+            environ={"DATABASE_URL": "postgresql://:pass@localhost/db"},
+            environment=RuntimeEnvironment.TEST,
+            base_dir=BASE_DIR,
+        )
