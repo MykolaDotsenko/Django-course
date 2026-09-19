@@ -865,3 +865,90 @@ pytest
 ```
 
 The project pyproject now provides the Django settings/testpaths needed by pytest-django.
+
+
+# 31. Reusable template component implementation
+
+The second implementation slice introduces exactly two project-level templates:
+
+```text
+django-blog/templates/components/media/
+├── image_frame.html
+└── media_card.html
+```
+
+This deliberately avoids separate country/story/explainer card templates while their structure is still identical.
+
+## image_frame.html
+
+Owns:
+
+- intrinsic width/height;
+- aspect-ratio wrapper;
+- lazy/eager loading;
+- async decoding;
+- optional fetchpriority;
+- decorative `aria-hidden`;
+- optional semantic figcaption;
+- one stable media CSS hook.
+
+## media_card.html
+
+Owns:
+
+- shared image frame;
+- optional eyebrow;
+- title;
+- optional href;
+- summary;
+- optional badge.
+
+Country/story/explainer presenters vary data, not duplicated markup.
+
+The typed Python contract is:
+
+```text
+MediaCardViewModel
+- image: ImageViewModel
+- title
+- summary
+- href
+- eyebrow
+- badge
+```
+
+## Intrinsic dimensions
+
+StaticMediaAsset now stores physical SVG dimensions.
+
+Current contract:
+
+- hero: 1600×900;
+- all card/history/trust assets: 1200×900.
+
+The dimensions flow into ImageViewModel and then HTML `width`/`height` attributes to strengthen layout stability.
+
+## Project-level template discovery
+
+The transitional Django settings now include:
+
+```text
+TEMPLATES[0]["DIRS"] = [BASE_DIR / "templates"]
+```
+
+so shared presentation components do not need to live inside the legacy blog app.
+
+## Component tests
+
+Template tests assert:
+
+- decorative image defaults to lazy + async loading;
+- decorative image uses empty alt and aria-hidden;
+- intrinsic dimensions render;
+- hero can opt into eager/high fetch priority;
+- meaningful image is not hidden from the accessibility tree;
+- optional figcaption renders semantically;
+- media card renders typed optional fields and link;
+- missing href renders a non-link title.
+
+This keeps accessibility/performance behavior centralized instead of retested independently in every future page.
