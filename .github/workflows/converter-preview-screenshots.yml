@@ -1,0 +1,113 @@
+name: Converter primitive preview
+
+on:
+  pull_request:
+    paths:
+      - "apps/common/presentation/converter_preview.py"
+      - "apps/common/tests/test_converter_preview.py"
+      - "apps/common/views.py"
+      - "config/**"
+      - "frontend/**"
+      - "pyproject.toml"
+      - "templates/components/converter/**"
+      - "templates/components/icons/**"
+      - "templates/design/converter_preview.html"
+      - "scripts/capture_converter_preview.py"
+      - ".github/workflows/converter-preview-screenshots.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: converter-preview-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  render:
+    name: Chromium converter primitives
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      APP_ENV: test
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: testserver,localhost,127.0.0.1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install project and browser tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Install and build frontend
+        working-directory: frontend
+        run: |
+          npm ci --no-audit --no-fund
+          npm run quality
+
+      - name: Install Chromium
+        run: python -m playwright install --with-deps chromium
+
+      - name: Django system check
+        run: python manage.py check
+
+      - name: Start preview server
+        run: |
+          python manage.py runserver 127.0.0.1:8000 --noreload > /tmp/converter-preview-server.log 2>&1 &
+          echo $! > /tmp/converter-preview-server.pid
+
+          python - <<'PY'
+          import time
+          import urllib.error
+          import urllib.request
+
+          url = "http://127.0.0.1:8000/_design/converter/"
+          deadline = time.time() + 20
+
+          while time.time() < deadline:
+              try:
+                  with urllib.request.urlopen(url, timeout=2) as response:
+                      if response.status == 200:
+                          break
+              except (urllib.error.URLError, TimeoutError):
+                  time.sleep(0.5)
+          else:
+              raise SystemExit("Django converter preview server did not become ready")
+          PY
+
+      - name: Capture responsive component evidence
+        run: python scripts/capture_converter_preview.py
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v7
+        with:
+          name: quiet-atlas-converter-primitives
+          path: artifacts/converter-preview/*.png
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Stop preview server
+        if: always()
+        run: |
+          if [ -f /tmp/converter-preview-server.pid ]; then
+            kill "$(cat /tmp/converter-preview-server.pid)" || true
+          fi
