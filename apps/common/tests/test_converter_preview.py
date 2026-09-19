@@ -22,6 +22,10 @@ class ConverterPrimitivePreviewTests(SimpleTestCase):
         self.assertIn("Illustrative component data · not a rate quote.", html)
         self.assertNotIn(">LIVE<", html)
         self.assertIn('inputmode="decimal"', html)
+        self.assertIn(
+            'aria-describedby="preview-amount-currency preview-amount-message"',
+            html,
+        )
         self.assertIn('type="submit"', html)
         self.assertIn('aria-label="Swap source and destination"', html)
         self.assertIn('aria-haspopup="dialog"', html)
@@ -46,6 +50,12 @@ class ConverterPrimitivePreviewTests(SimpleTestCase):
         self.assertIn("Japan", html)
         self.assertIn("Japanese yen · JPY", html)
         self.assertIn("Finnish markka · FIM", html)
+        self.assertIn('id="preview-historical-status"', html)
+        self.assertIn(
+            'aria-labelledby="preview-historical-label preview-historical-country '
+            'preview-historical-currency preview-historical-status"',
+            html,
+        )
         self.assertIn(">Historical<", html)
 
     def test_named_partial_loader_renders_status_badge_in_isolation(self) -> None:
