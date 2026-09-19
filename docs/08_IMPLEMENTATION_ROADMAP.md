@@ -73,7 +73,7 @@ Deliverables:
 - neutral core + controlled country-accent system;
 - focus/reduced-motion/high-contrast rules;
 - primary converter shell from `03B_SCREEN_BLUEPRINTS.md`;
-- AmountField, CountryCurrencyTrigger, SwapButton, ConvertButton and initial Result primitives;
+- AmountField, CountryCurrencyTrigger, SwapButton, ConvertButton and initial Result primitives using exact anatomy/sizing from `03C1_COMPONENT_ANATOMY_AND_DIMENSIONS.md`;
 - explicit hover/focus/pressed/loading/error states from `03C_COMPONENT_STATES_AND_MICROINTERACTIONS.md`;
 - container-query behavior for reusable components;
 - 320px/reflow and mobile layouts;
