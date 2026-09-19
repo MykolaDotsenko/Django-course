@@ -74,6 +74,11 @@ def _parse_query_options(query: str) -> tuple[tuple[str, str], ...]:
         if not key:
             raise ConfigurationError("DATABASE_URL contains an empty query option.")
 
+        if key in _RESERVED_QUERY_OPTIONS:
+            raise ConfigurationError(
+                f"DATABASE_URL query option {key!r} duplicates a core connection field."
+            )
+
         if key in seen:
             raise ConfigurationError(f"DATABASE_URL query option {key!r} is duplicated.")
 
@@ -97,7 +102,7 @@ def _parse_postgresql_url(database_url: str) -> DatabaseConfig:
     if not parsed.hostname:
         raise ConfigurationError("DATABASE_URL must include a PostgreSQL host.")
 
-    if parsed.username is None:
+    if parsed.username is None or not unquote(parsed.username).strip():
         raise ConfigurationError("DATABASE_URL must include a PostgreSQL user.")
 
     database_name = unquote(parsed.path.lstrip("/")).strip()
