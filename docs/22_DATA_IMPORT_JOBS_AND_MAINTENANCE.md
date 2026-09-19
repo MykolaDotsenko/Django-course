@@ -877,3 +877,124 @@ A scheduled/import job is production-ready when:
 - failure is non-zero/visible;
 - cache invalidation occurs after commit;
 - concurrent overlap is safe/prevented when necessary.
+
+
+# Media and image jobs
+
+## 57. Sourced-media ingestion
+
+Potential command:
+
+```text
+manage.py ingest_media_candidate \
+  --source wikimedia \
+  --country FI \
+  --year 1998
+```
+
+The command does not publish the first search result.
+
+Flow:
+
+```text
+search source
+→ fetch record metadata
+→ rights/date/relevance validation
+→ download approved candidate when allowed
+→ image validation/derivatives
+→ unpublished MediaAsset
+→ editorial review
+→ publish
+```
+
+## 58. AI media generation command
+
+Initial generated media is editorial/build-time.
+
+Example:
+
+```text
+manage.py generate_media_candidate \
+  --country FI \
+  --year 1998 \
+  --role story_cover
+```
+
+The command:
+
+- builds normalized prompt from structured data;
+- calls one configured ImageGenerator adapter;
+- records provider/model/prompt metadata;
+- validates output;
+- stores unpublished candidate;
+- never auto-publishes.
+
+## 59. No generation from selector changes
+
+Country/year selection is not a scheduled/background generation trigger.
+
+A user may select the same combination many times with zero AI generation cost.
+
+Published stored asset selection is read-only.
+
+## 60. Media derivatives
+
+A processing command/service can create:
+
+- responsive widths;
+- WebP/AVIF where supported;
+- safe JPEG/PNG fallback;
+- content hash;
+- focal-point-aware crops.
+
+Do not regenerate derivatives on every web request.
+
+## 61. Media-rights maintenance
+
+Potential report:
+
+```text
+manage.py audit_media_rights
+```
+
+Checks:
+
+- missing licence;
+- dead canonical source;
+- missing attribution;
+- retired/blocked rights status;
+- AI illustration missing required label.
+
+A transient dead source URL alone does not automatically delete the asset.
+
+## 62. Orphan cleanup
+
+Potential:
+
+```text
+manage.py clean_orphan_media --dry-run
+```
+
+Candidates:
+
+- rejected AI candidates older than retention threshold;
+- unreferenced derivatives;
+- duplicate hashes;
+- retired unused assets.
+
+Deletion defaults to dry-run/review.
+
+## 63. Future user on-demand generation
+
+If approved later, do **not** implement through a long-running management command invoked from a request.
+
+That feature becomes a real asynchronous workload with:
+
+- queued job;
+- job state;
+- idempotency;
+- quota;
+- cancellation/timeout;
+- spend limits.
+
+At that point a task queue may finally be justified.
