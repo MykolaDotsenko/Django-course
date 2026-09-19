@@ -20,6 +20,8 @@ Remove duplicated formatters/linters once Ruff covers the required rules.
 
 ## 3. Test pyramid
 
+Detailed testing execution rules live in `31_TEST_STRATEGY_AND_TRACEABILITY.md`; this section remains the quality-level summary.
+
 ### Domain unit tests
 Fast and exhaustive for:
 
@@ -165,6 +167,8 @@ Specific requirements:
 
 ## 9. Performance budgets
 
+Detailed performance measurement/profiling rules live in `36_PERFORMANCE_BUDGETS_AND_PROFILING.md`.
+
 Initial goals, subject to measurement:
 
 - server-rendered critical path;
@@ -206,6 +210,8 @@ Before production:
 - provider outage does not break static/cultural pages.
 
 ## 12. Definition of done
+
+The repository-wide execution Definition of Done is maintained in `30_DEVELOPER_WORKFLOW_AND_PR_CONTRACT.md`; the items below are the quality/security/accessibility subset.
 
 A feature is not done until:
 
