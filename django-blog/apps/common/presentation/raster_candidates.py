@@ -57,13 +57,16 @@ _candidates = {
 RASTER_CANDIDATES = MappingProxyType(_candidates)
 
 
-def _candidate_image(candidate: RasterCandidate) -> ImageViewModel:
+def _candidate_image(
+    candidate: RasterCandidate,
+    canonical_asset: StaticMediaAsset,
+) -> ImageViewModel:
     return ImageViewModel(
         src=static(candidate.path),
         ratio="4 / 3",
         alt="",
         decorative=True,
-        kind="story",
+        kind=canonical_asset.kind,
         label=candidate.label,
         width=candidate.width,
         height=candidate.height,
@@ -80,7 +83,7 @@ def build_raster_comparison(
         title=candidate.label,
         semantic_key=candidate.semantic_asset_key,
         canonical=build_static_image_view_model(canonical_asset),
-        candidate=_candidate_image(candidate),
+        candidate=_candidate_image(candidate, canonical_asset),
         generator=candidate.generator,
         generation_job_id=candidate.generation_job_id,
     )
