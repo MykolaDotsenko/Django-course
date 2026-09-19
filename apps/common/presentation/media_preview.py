@@ -18,7 +18,6 @@ from .media_view_models import (
     build_static_image_view_model,
 )
 
-
 COUNTRY_PREVIEW = (
     ("FI", "Finland"),
     ("JP", "Japan"),
