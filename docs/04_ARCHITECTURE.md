@@ -924,3 +924,104 @@ Do not force sharing of:
 - chart rendering.
 
 Architecture optimizes for clarity rather than percentage of shared frontend code.
+
+
+## 48. Backend detailed-design contract
+
+The high-level architecture in this file is expanded by:
+
+- 16_BACKEND_SYSTEM_DESIGN.md
+- 17_INFORMATION_FLOW_AND_REQUEST_LIFECYCLES.md
+- 18_APPLICATION_SERVICES_AND_DOMAIN_ORCHESTRATION.md
+- 19_DATA_CONSISTENCY_CACHING_AND_CONCURRENCY.md
+- 20_API_SECURITY_OBSERVABILITY_AND_OPERATIONS.md
+- 21_BACKEND_SCENARIO_CATALOG.md
+- 22_DATA_IMPORT_JOBS_AND_MAINTENANCE.md
+
+These documents are implementation constraints, not optional commentary.
+
+## 49. Synchronous Django request model
+
+The initial backend uses synchronous Django views and DRF views.
+
+Do not introduce async views merely for provider I/O.
+
+Django 5.2 still does not support transactions in native async mode, while this product requires clear ORM/transaction semantics and has only one normal runtime upstream provider.
+
+A synchronous provider client with strict timeout is the default.
+
+Reconsider async only after measured concurrency requirements justify it.
+
+## 50. WSGI-first deployment
+
+WSGI is sufficient for the initial production application.
+
+ASGI is not a portfolio checkbox.
+
+Adopt ASGI deliberately if the application later requires long-lived async connections, WebSockets or measured concurrent I/O that materially benefits.
+
+## 51. Explicit transaction ownership
+
+Global ATOMIC_REQUESTS is disabled.
+
+Use short application-service transaction.atomic() blocks only where several durable writes form one invariant.
+
+External network calls occur before opening the transaction.
+
+After-commit cache invalidation or side effects use transaction.on_commit().
+
+## 52. PostgreSQL concurrency policy
+
+Use:
+
+- database constraints for durable uniqueness/invariants;
+- optimistic version checks for future multi-device aggregate edits where needed;
+- select_for_update only for a demonstrated pessimistic-locking requirement.
+
+Do not use broad locking as a default.
+
+Concurrency-sensitive tests must run against PostgreSQL, not rely on SQLite behavior.
+
+## 53. API schema generation
+
+Use drf-spectacular for OpenAPI 3.
+
+DRF's built-in OpenAPI generator is deprecated.
+
+The generated schema is the source for mobile openapi-typescript types and is validated in CI.
+
+## 54. Backend cache policy
+
+Cache stores normalized reusable data, not domain truth.
+
+For current FX, semantic freshness is separate from physical retention so a quote can remain available as an explicitly stale fallback.
+
+Cache keys include all semantics that affect truth:
+
+- current vs historical;
+- provider policy;
+- provider identity where pinned;
+- pair;
+- date/granularity for historical/series data.
+
+## 55. Scheduled work policy
+
+Slow-changing sources use management commands plus one canonical production scheduler.
+
+No web request waits for REST Countries, Wikidata, Europeana, Eurostat, OECD or World Bank.
+
+No Celery/task broker is introduced until a real asynchronous workload needs distributed execution/retry/status.
+
+## 56. Backend fitness rule
+
+Implementation is architecturally incorrect if:
+
+- a view parses raw provider JSON;
+- an API serializer performs FX arithmetic;
+- a model performs network I/O;
+- a cache is the sole copy of user/editorial state;
+- a DB transaction contains remote HTTP;
+- web and mobile call separate conversion implementations;
+- raw upstream exceptions reach clients;
+- a mutable user object can be updated without ownership enforcement;
+- an import can wipe valid local data because the upstream response was partial.
