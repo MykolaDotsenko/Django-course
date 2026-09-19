@@ -5,7 +5,7 @@ from types import MappingProxyType
 from typing import Literal
 
 
-AssetKind = Literal["hero", "fallback", "country", "story", "history", "trust"]
+AssetKind = Literal["hero", "fallback", "country", "story", "history", "trust", "responsive", "social"]
 
 
 class UnknownMediaAssetError(KeyError):
@@ -187,6 +187,51 @@ _assets = {
         "trust-rate-provenance-v1.svg",
         kind="trust",
         label="Rate and source provenance",
+    ),
+    "hero_home_global_value_mobile": _asset(
+        "hero_home_global_value_mobile",
+        "hero-home-global-value-mobile-v1.svg",
+        kind="responsive",
+        label="Mobile home hero global value",
+        ratio="4 / 5",
+        width=960,
+        height=1200,
+    ),
+    "history_then_now_mobile": _asset(
+        "history_then_now_mobile",
+        "history-then-now-mobile-v1.svg",
+        kind="responsive",
+        label="Mobile Then and Now comparison",
+        ratio="4 / 5",
+        width=960,
+        height=1200,
+    ),
+    "og_home_global_value": _asset(
+        "og_home_global_value",
+        "og-home-global-value-v1.svg",
+        kind="social",
+        label="Home OpenGraph preview",
+        ratio="40 / 21",
+        width=1200,
+        height=630,
+    ),
+    "og_history_then_now": _asset(
+        "og_history_then_now",
+        "og-history-then-now-v1.svg",
+        kind="social",
+        label="Then and Now OpenGraph preview",
+        ratio="40 / 21",
+        width=1200,
+        height=630,
+    ),
+    "og_local_value": _asset(
+        "og_local_value",
+        "og-local-value-v1.svg",
+        kind="social",
+        label="Local value OpenGraph preview",
+        ratio="40 / 21",
+        width=1200,
+        height=630,
     ),
 }
 
