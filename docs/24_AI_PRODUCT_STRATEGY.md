@@ -214,7 +214,7 @@ amount
 
 No AI call.
 
-If OpenAI is fully unavailable:
+If Gemini live AI is unavailable or free quota is exhausted:
 
 - conversion works;
 - historical conversion works;
