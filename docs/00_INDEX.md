@@ -12,6 +12,7 @@ This handbook is the single source of truth for the Cultural Currency Converter 
 3. [UI design system](03_UI_DESIGN_SYSTEM.md)
    - [Visual foundations](03A_VISUAL_FOUNDATIONS.md)
    - [Screen-by-screen blueprints](03B_SCREEN_BLUEPRINTS.md)
+   - [Component anatomy and dimensions](03C1_COMPONENT_ANATOMY_AND_DIMENSIONS.md)
    - [Component states and microinteractions](03C_COMPONENT_STATES_AND_MICROINTERACTIONS.md)
    - [Responsive, motion, accessibility and design QA](03D_RESPONSIVE_MOTION_ACCESSIBILITY.md)
 4. [Architecture](04_ARCHITECTURE.md)
@@ -36,8 +37,9 @@ Before an implementation PR changes the user experience, read in this order:
 6. `03_UI_DESIGN_SYSTEM.md` — executive visual/component contract;
 7. `03A_VISUAL_FOUNDATIONS.md` — tokens, hierarchy, typography, color, grid and visual language;
 8. `03B_SCREEN_BLUEPRINTS.md` — screen composition and information density;
-9. `03C_COMPONENT_STATES_AND_MICROINTERACTIONS.md` — component state behavior;
-10. `03D_RESPONSIVE_MOTION_ACCESSIBILITY.md` — adaptive/accessibility/motion QA.
+9. `03C1_COMPONENT_ANATOMY_AND_DIMENSIONS.md` — exact component anatomy, sizing and hierarchy;
+10. `03C_COMPONENT_STATES_AND_MICROINTERACTIONS.md` — component state behavior;
+11. `03D_RESPONSIVE_MOTION_ACCESSIBILITY.md` — adaptive/accessibility/motion QA.
 
 A visually attractive implementation that violates the UX state model is not considered correct.
 
