@@ -4,10 +4,11 @@ This file is the executive design contract. Detailed implementation guidance liv
 
 - [Visual foundations](03A_VISUAL_FOUNDATIONS.md)
 - [Screen-by-screen blueprints](03B_SCREEN_BLUEPRINTS.md)
+- [Component anatomy and dimensions](03C1_COMPONENT_ANATOMY_AND_DIMENSIONS.md)
 - [Component states and microinteractions](03C_COMPONENT_STATES_AND_MICROINTERACTIONS.md)
 - [Responsive, motion, accessibility and design QA](03D_RESPONSIVE_MOTION_ACCESSIBILITY.md)
 
-The design language is named:
+The design language is named **Quiet Atlas**:
 
 > **Nordic editorial utility — calm enough for money, warm enough for culture.**
 
