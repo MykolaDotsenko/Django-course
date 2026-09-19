@@ -5,8 +5,10 @@ Security-sensitive deployment configuration is loaded through the validated
 runtime boundary in config.environment.
 """
 
+import os
 from pathlib import Path
 
+from config.database import load_database_config
 from config.environment import load_runtime_config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -56,12 +58,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
+DATABASE_CONFIG = load_database_config(
+    environ=os.environ,
+    environment=RUNTIME_CONFIG.environment,
+    base_dir=BASE_DIR,
+)
+DATABASES = {"default": DATABASE_CONFIG.as_django_settings()}
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

@@ -37,6 +37,27 @@ set +a
 
 Django does not silently parse arbitrary `.env` files; deployment configuration always enters through the process environment. A local `DJANGO_SECRET_KEY` is optional, while preview/production require an explicit strong key and allowed hosts.
 
+### Database
+
+Local/test use SQLite when `DATABASE_URL` is empty. Preview/production require PostgreSQL, and CI runs the full test suite against PostgreSQL 18.6.
+
+To run the same PostgreSQL baseline locally:
+
+```bash
+docker run --rm --name quiet-atlas-postgres \
+  -e POSTGRES_DB=cultural_currency \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -p 5432:5432 \
+  postgres:18.6-alpine
+
+export DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/cultural_currency
+python manage.py migrate
+pytest -q
+```
+
+The database settings keep Django autocommit enabled and explicitly disable global `ATOMIC_REQUESTS`. External network calls must never be placed inside intentional write transactions.
+
 Optional local commit hooks:
 
 ```bash
@@ -51,6 +72,7 @@ Run the same core checks used by CI:
 ruff format --check apps config scripts manage.py
 ruff check apps config scripts manage.py
 python manage.py check
+python manage.py makemigrations --check --dry-run
 coverage erase
 coverage run -m pytest -q
 coverage report

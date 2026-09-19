@@ -19,7 +19,9 @@ python manage.py makemigrations --check
 python manage.py migrate
 ```
 
-Once the target project shell exists, CI should enforce migration drift detection.
+CI enforces migration drift detection on the fast Python matrix and on the PostgreSQL integration lane.
+
+The PostgreSQL lane also applies all migrations to a fresh database before running the test suite.
 
 Never edit an already-applied shared migration to change history.
 

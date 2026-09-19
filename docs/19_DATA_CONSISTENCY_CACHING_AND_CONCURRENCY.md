@@ -101,6 +101,8 @@ This keeps transactions short.
 
 # 4. No global ATOMIC_REQUESTS
 
+The foundation database configuration explicitly sets `ATOMIC_REQUESTS=False`.
+
 Do not enable ATOMIC_REQUESTS globally.
 
 Reasons:
