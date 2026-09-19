@@ -30,6 +30,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "apps.common.middleware.RequestContextMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -82,5 +83,38 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 
 SESSION_COOKIE_SECURE = RUNTIME_CONFIG.is_production
 CSRF_COOKIE_SECURE = RUNTIME_CONFIG.is_production
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {
+            "()": "apps.common.observability.JsonFormatter",
+        }
+    },
+    "handlers": {
+        "console_json": {
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+        }
+    },
+    "loggers": {
+        "cultural_currency.access": {
+            "handlers": ["console_json"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "cultural_currency.health": {
+            "handlers": ["console_json"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django": {
+            "handlers": ["console_json"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+    },
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

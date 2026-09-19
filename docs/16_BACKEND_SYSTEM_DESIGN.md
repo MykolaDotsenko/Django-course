@@ -1200,6 +1200,21 @@ Use:
 
 Do not require a full observability platform on day one.
 
+## Implemented foundation
+
+The phase-1 operational baseline now includes:
+
+- `GET /health/live/` with no dependency checks;
+- `GET /health/ready/` with database connectivity as the only dependency check;
+- bounded `X-Request-ID` correlation;
+- server-generated UUID4 when the incoming ID is absent or invalid;
+- request ID returned in the response header;
+- request-scoped correlation through `ContextVar` with cleanup after every request;
+- JSON request logs with method, path, route, status and duration;
+- privacy-bounded access logging that excludes query strings and request bodies.
+
+Provider/cache-specific observability and OpenTelemetry remain later work tied to the corresponding features.
+
 ---
 
 # 50. Observability phase 2

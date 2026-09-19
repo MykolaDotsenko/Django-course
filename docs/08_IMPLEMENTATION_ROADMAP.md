@@ -49,6 +49,8 @@ Implementation starts only after the documentation is coherent enough to act as 
 
 Each slice must be independently reviewable and green. Merging PR 1A does **not** mean the remaining foundation acceptance criteria are complete.
 
+**Execution status after PR 1E:** PR 1A–1E are implemented. The foundation milestone is complete; subsequent work starts at Implementation PR 2.
+
 **Goal:** replace legacy course scaffolding with a clean product shell.
 
 Deliverables:

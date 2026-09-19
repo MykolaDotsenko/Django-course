@@ -185,7 +185,7 @@ Ruff owns Python formatting and linting. Black/isort are intentionally not part 
 
 Runtime configuration is explicit through process environment variables. The canonical template is `.env.example`; Django does not silently load arbitrary `.env` files. Normal CI runs as `APP_ENV=test` and requires no secret credentials.
 
-PostgreSQL and observability remain separate roadmap slices.
+PostgreSQL and the phase-1 observability baseline are implemented and covered by CI. The next product work starts with the server-rendered design-system shell; later provider/cache observability is added only with the features that need it.
 
 ---
 

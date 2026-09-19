@@ -103,12 +103,12 @@ The handbook covers:
 
 ## Delivery strategy
 
-The rebuild is intentionally incremental. The first implementation slice moves the validated Django/Quiet Atlas shell to the repository root and removes the unrelated course blog domain. Dependency, environment, PostgreSQL and observability hardening remain separate bounded foundation PRs.
+The rebuild is intentionally incremental. The repository/Django foundation is now complete: root product shell, consolidated Python quality tooling, validated environment configuration, PostgreSQL-backed CI, health endpoints, request correlation and structured logging. The next implementation milestone is the server-rendered Quiet Atlas design system and converter shell.
 
 See [docs/08_IMPLEMENTATION_ROADMAP.md](docs/08_IMPLEMENTATION_ROADMAP.md).
 
 ## Current status
 
-**Phase:** implementation foundation.
+**Phase:** foundation complete → server-rendered product shell next.
 
-The Django product shell now lives at the repository root. The unrelated course blog domain has been removed; the retained `apps/common` package is the tested Quiet Atlas media/QA foundation for the next product slices.
+The Django product shell, runtime configuration, PostgreSQL path and observability baseline are executable and CI-backed. Product implementation can now build on this foundation without carrying legacy course scaffolding or speculative infrastructure.
