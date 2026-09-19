@@ -819,3 +819,366 @@ It is:
 > **a small, coherent asset system with typed selection, graceful fallbacks, historical honesty, zero runtime cost, and a clean path to real sourced media later.**
 
 That is the architecture this document standardizes.
+
+
+# 30. Foundation implementation status
+
+The first implementation slice lives in the transitional Django shell at:
+
+```text
+django-blog/apps/common/presentation/
+├── media_assets.py
+├── media_selectors.py
+└── media_view_models.py
+```
+
+This location is intentionally outside the legacy `apps.post` feature.
+
+The module contains no blog/domain dependency and can move unchanged into the rebuilt project shell.
+
+The implementation also configures:
+
+```text
+STATICFILES_DIRS = [BASE_DIR.parent / "static"]
+```
+
+so the repository-root Quiet Atlas pack is discoverable by the current Django staticfiles system.
+
+Tests cover:
+
+- all 23 registry entries;
+- unique/static paths;
+- approved aspect ratios;
+- decorative accessibility defaults;
+- registry immutability;
+- country normalization/fallback;
+- story normalization/fallback;
+- named hero/payment/provenance selectors;
+- ImageViewModel static URL generation;
+- explicit meaningful-alt promotion;
+- Django staticfiles discovery for every registered asset.
+
+Normal command from `django-blog/`:
+
+```text
+pytest
+```
+
+The project pyproject now provides the Django settings/testpaths needed by pytest-django.
+
+
+# 31. Reusable template component implementation
+
+The second implementation slice introduces exactly two project-level templates:
+
+```text
+django-blog/templates/components/media/
+├── image_frame.html
+└── media_card.html
+```
+
+This deliberately avoids separate country/story/explainer card templates while their structure is still identical.
+
+## image_frame.html
+
+Owns:
+
+- intrinsic width/height;
+- aspect-ratio wrapper;
+- lazy/eager loading;
+- async decoding;
+- optional fetchpriority;
+- decorative `aria-hidden`;
+- optional semantic figcaption;
+- one stable media CSS hook.
+
+## media_card.html
+
+Owns:
+
+- shared image frame;
+- optional eyebrow;
+- title;
+- optional href;
+- summary;
+- optional badge.
+
+Country/story/explainer presenters vary data, not duplicated markup.
+
+The typed Python contract is:
+
+```text
+MediaCardViewModel
+- image: ImageViewModel
+- title
+- summary
+- href
+- eyebrow
+- badge
+```
+
+## Intrinsic dimensions
+
+StaticMediaAsset now stores physical SVG dimensions.
+
+Current contract:
+
+- hero: 1600×900;
+- all card/history/trust assets: 1200×900.
+
+The dimensions flow into ImageViewModel and then HTML `width`/`height` attributes to strengthen layout stability.
+
+## Project-level template discovery
+
+The transitional Django settings now include:
+
+```text
+TEMPLATES[0]["DIRS"] = [BASE_DIR / "templates"]
+```
+
+so shared presentation components do not need to live inside the legacy blog app.
+
+## Component tests
+
+Template tests assert:
+
+- decorative image defaults to lazy + async loading;
+- decorative image uses empty alt and aria-hidden;
+- intrinsic dimensions render;
+- hero can opt into eager/high fetch priority;
+- meaningful image is not hidden from the accessibility tree;
+- optional figcaption renders semantically;
+- media card renders typed optional fields and link;
+- missing href renders a non-link title.
+
+This keeps accessibility/performance behavior centralized instead of retested independently in every future page.
+
+
+# 32. DEBUG visual QA preview
+
+A dedicated preview surface now exists at:
+
+```text
+/_design/media/
+```
+
+It is registered only when:
+
+```text
+DEBUG = True
+```
+
+Purpose:
+
+- inspect the real registry/selectors/view models/templates together;
+- review image density before product-page wiring;
+- compare desktop/tablet/mobile layouts;
+- verify historical illustration labels;
+- verify trust/provenance placement;
+- test eager vs lazy loading behavior.
+
+The preview is not a product page and must not become a production route.
+
+## Preview coverage
+
+The page renders:
+
+- home hero;
+- three explainer cards;
+- all ten initial destination visuals;
+- five purchasing-power story categories;
+- Then & Now;
+- Finland markka era;
+- euro transition;
+- trust/source block.
+
+The page intentionally renders more media than a real product screen because its job is QA, not production information density.
+
+## Preview styling
+
+The route uses:
+
+```text
+static/css/quiet-atlas-preview.css
+```
+
+This stylesheet is **preview-only**.
+
+It exists so media composition can be evaluated before the planned Tailwind/Vite implementation.
+
+Do not evolve it into a second production CSS system.
+
+When Tailwind ships:
+
+- production pages use the design-system utility/components;
+- this preview can either migrate to those components or remain a small isolated QA harness.
+
+## Preview tests
+
+Tests assert:
+
+- route renders;
+- correct template;
+- expected section/card counts;
+- key scenarios are visible;
+- hero uses eager/high fetch priority;
+- card media remains lazy by default.
+
+This gives one end-to-end presentation test across the static-media stack.
+
+
+# 33. Automated browser screenshot QA
+
+Responsive visual QA is automated through Playwright.
+
+Workflow:
+
+```text
+.github/workflows/media-preview-screenshots.yml
+```
+
+Capture script:
+
+```text
+django-blog/scripts/capture_media_preview.py
+```
+
+## Viewports
+
+The workflow renders the DEBUG media preview at:
+
+- desktop: 1440 × 1200;
+- tablet: 768 × 1024;
+- mobile: 390 × 844.
+
+Each capture is full-page.
+
+## Browser integrity checks
+
+Before saving a screenshot, the Playwright script asserts:
+
+- expected preview H1;
+- exactly 23 rendered images;
+- every image completed with non-zero natural width;
+- no page-level horizontal overflow;
+- no browser console errors;
+- HTTP response is successful.
+
+A visually broken asset therefore fails QA instead of merely producing a misleading screenshot.
+
+## Artifact
+
+Successful runs upload:
+
+```text
+quiet-atlas-media-preview
+```
+
+containing:
+
+```text
+desktop-1440.png
+tablet-768.png
+mobile-390.png
+```
+
+Artifacts are retained for 14 days.
+
+The workflow is intentionally scoped to media/template/preview-related changes and can also be run manually.
+
+## Tooling
+
+Current reviewed implementation uses:
+
+- Python 3.13;
+- Playwright Python 1.63.0;
+- Chromium;
+- actions/checkout v7;
+- actions/setup-python v7;
+- actions/upload-artifact v7.
+
+Production does not depend on Playwright. It is QA tooling only.
+
+
+# 34. Responsive and social derivative implementation
+
+Browser screenshot QA validated the original 23 semantic content assets and exposed two additional delivery surfaces that justify dedicated compositions:
+
+- narrow mobile hero/history presentation;
+- 1200×630 social/OpenGraph previews.
+
+Five release-owned derivatives were therefore added without expanding country/story semantics:
+
+```text
+hero-home-global-value-mobile-v1.svg
+history-then-now-mobile-v1.svg
+og-home-global-value-v1.svg
+og-history-then-now-v1.svg
+og-local-value-v1.svg
+```
+
+The registry now contains **28 assets**:
+
+- 23 canonical semantic assets;
+- 2 responsive portrait derivatives;
+- 3 social/OpenGraph derivatives.
+
+## Selection contract
+
+Dedicated selectors own these variants:
+
+```text
+select_home_hero_mobile_media()
+select_history_then_now_mobile_media()
+select_home_og_media()
+select_history_og_media()
+select_local_value_og_media()
+```
+
+Page templates should not guess filenames or dimensions.
+
+## Responsive images
+
+The two portrait derivatives are 960×1200 / 4:5.
+
+They are intended for responsive source selection when a narrow viewport materially benefits from a different composition.
+
+Do not render/download desktop and portrait hero assets simultaneously without browser-level source selection.
+
+Recommended future production markup:
+
+```html
+<picture>
+  <source media="(max-width: 640px)" srcset="...mobile...">
+  <img src="...desktop..." ...>
+</picture>
+```
+
+The server/presenter still owns which approved semantic variant is available.
+
+## Social images
+
+The three OpenGraph derivatives are 1200×630 and intentionally contain no baked text.
+
+This keeps:
+
+- title/copy in metadata rather than pixels;
+- localization independent from artwork;
+- the image reusable across page titles;
+- visual authenticity rules identical to in-product artwork.
+
+These are release-owned visuals, so they may live in static.
+
+## QA
+
+The DEBUG media preview renders all 28 registered assets.
+
+Playwright now validates all 28 at:
+
+- 1440px;
+- 768px;
+- 390px.
+
+The original content-pack constraint remains:
+
+> Delivery-format derivatives are allowed only for concrete rendering surfaces; they are not permission to create more decorative country cards.
