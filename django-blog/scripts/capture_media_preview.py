@@ -49,9 +49,9 @@ def _assert_preview_integrity(page: Page) -> None:
         raise RuntimeError(f"Unexpected preview heading: {title!r}")
 
     image_count = page.locator("img").count()
-    if image_count != 23:
+    if image_count != 28:
         raise RuntimeError(
-            f"Expected 23 preview images, found {image_count}",
+            f"Expected 28 preview images, found {image_count}",
         )
 
     broken_images = page.locator("img").evaluate_all(
