@@ -25,10 +25,11 @@ The first image pack must:
 
 # 2. Current implementation
 
-The current pack contains **19 static SVG illustrations** under:
+The current pack contains **23 static SVG illustrations** under:
 
 - 14 P0 assets;
-- 5 focused P1 expansion assets.
+- 5 focused P1 expansion assets;
+- 4 UI-coverage assets added after the integration review.
 
 All are stored under:
 
@@ -104,6 +105,10 @@ gold     #C29B61
 | IMG-17 | story-market-basket-value-v1.svg | purchasing-power story | 4:3 SVG | generated |
 | IMG-18 | story-cafe-affordability-v1.svg | café affordability story | 4:3 SVG | generated |
 | IMG-19 | story-street-food-affordability-v1.svg | street-food affordability story | 4:3 SVG | generated |
+| IMG-20 | history-then-now-comparison-v1.svg | Then & Now comparison | 4:3 SVG | generated |
+| IMG-21 | story-transit-affordability-v1.svg | transit affordability story | 4:3 SVG | generated |
+| IMG-22 | story-budget-hotel-affordability-v1.svg | accommodation affordability story | 4:3 SVG | generated |
+| IMG-23 | trust-rate-provenance-v1.svg | rate/source trust explainer | 4:3 SVG | generated |
 
 ---
 
@@ -504,6 +509,87 @@ daily food choices without exoticizing a specific culture.
 
 ---
 
+## IMG-20 — Then & Now comparison
+
+File:
+
+```text
+history-then-now-comparison-v1.svg
+```
+
+Prompt:
+
+```text
+Create a calm premium editorial historical-comparison illustration with
+two clearly distinct but balanced eras side by side. The older side uses
+abstract paper-money, archive-paper and analogue cues; the current side
+uses modern contactless/payment cues. Connect them with a restrained
+timeline/transition motif. Do not reproduce exact banknotes, dates,
+denominations or UI text. It must support a “Then & Now” currency-value
+comparison without pretending to be documentary evidence.
+```
+
+---
+
+## IMG-21 — Transit affordability
+
+File:
+
+```text
+story-transit-affordability-v1.svg
+```
+
+Prompt:
+
+```text
+Show everyday public-transport affordability in a calm premium editorial
+style: a clean tram/bus/metro vehicle, generic transit/payment card,
+abstract ticket/receipt form and a few coins. No transport-company logos,
+route numbers, prices or text. The composition should support the idea
+“this amount equals roughly N local rides.”
+```
+
+---
+
+## IMG-22 — Budget-hotel affordability
+
+File:
+
+```text
+story-budget-hotel-affordability-v1.svg
+```
+
+Prompt:
+
+```text
+Show a modest, clean urban budget-hotel context with simple windows,
+entry, generic payment card/receipt and coins. Avoid luxury-resort cues,
+stars, brand signs or exact price labels. The visual should communicate
+practical accommodation affordability rather than aspirational travel.
+```
+
+---
+
+## IMG-23 — Rate/source provenance
+
+File:
+
+```text
+trust-rate-provenance-v1.svg
+```
+
+Prompt:
+
+```text
+Create a trustworthy editorial visual for exchange-rate provenance:
+a clean source document, verification shield/check, magnifier and
+generic payment/rate objects. No financial hype, charts promising
+profits, logos, numbers or text. Communicate “inspectable source,
+effective date and verified provenance.”
+```
+
+---
+
 # 7. Accessibility contract
 
 The SVG files are decorative presentation assets by default and therefore contain no embedded text.
@@ -551,9 +637,9 @@ If real historical evidence is needed, use sourced media through the MediaAsset 
 
 # 10. Next image batch
 
-The focused P1 expansion is now complete.
+The focused P1 expansion plus the four UI-coverage assets is now complete.
 
-Do **not** add more decorative static country cards until the 19 current assets
+Do **not** add more decorative static country cards until the 23 current assets
 are wired into real layouts and inspected in desktop/mobile screenshots.
 
 The next media work should be higher-value and evidence-based:
@@ -569,9 +655,9 @@ The goal is not a large gallery. The goal is maximum explanatory value per asset
 
 # 11. Definition of done
 
-The static P0 + focused P1 pack is done when:
+The static P0 + focused P1/UI-coverage pack is done when:
 
-- all 19 assets exist in the repository;
+- all 23 assets exist in the repository;
 - each maps to a concrete component/screen;
 - no asset contains baked text;
 - no asset makes unsupported historical claims;

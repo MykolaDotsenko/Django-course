@@ -970,3 +970,56 @@ or:
 > Artistic reconstruction · not an archival photograph
 
 Accessibility text alone is not enough.
+
+
+## 50. Release-owned static media integration
+
+The current Quiet Atlas static pack contains 23 release-owned SVG assets.
+
+Implementation rules:
+
+- use a typed registry and selector layer;
+- page templates receive normalized image view models;
+- do not hardcode country/story filenames across templates;
+- hero is the only eager-loaded image by default;
+- country/story cards lazy-load;
+- unknown country/story uses a generic fallback;
+- historical illustrations display as illustrative, not archival evidence;
+- trust/provenance art is reserved for source education rather than repeated beside every result.
+
+Detailed implementation contract:
+
+- `27_STATIC_IMAGE_GENERATION_PLAN.md`
+- `28_STATIC_MEDIA_UI_INTEGRATION.md`
+
+## 51. Static image density
+
+Do not display all available assets because they exist.
+
+Recommended visible density:
+
+- one hero;
+- up to three explainer visuals;
+- three to six featured destinations;
+- story visuals below the primary conversion flow.
+
+On mobile, image rhythm must never push the converter/result below decorative content.
+
+## 52. Then & Now imagery
+
+Use `history-then-now-comparison-v1.svg` only where the UI is explicitly comparing two periods.
+
+Do not use it as a generic historical-page decoration.
+
+Its two-era composition is semantic hierarchy.
+
+## 53. Trust imagery
+
+Use `trust-rate-provenance-v1.svg` for source/provenance education:
+
+- source drawer;
+- onboarding;
+- explain-trust section;
+- source empty state.
+
+Do not show it beside every quote; repeated trust illustration reduces information density and weakens the primary result hierarchy.
