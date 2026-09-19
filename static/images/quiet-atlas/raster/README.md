@@ -20,6 +20,7 @@ Raster candidates may be promoted only after visual review confirms that they:
 | File | Semantic role | Prompt source | Generator | Job | Status |
 |---|---|---|---|---|---|
 | `trust-rate-provenance-ai-v1.webp` | trust / provenance | IMG-23 | Z Image | `aa52c950-ee69-4c26-882b-c0a37d4aae63` | generated candidate |
+| `countries-japan-local-value-ai-v1.webp` | Japan local value | IMG-05 | Z Image | `f5646c31-a25c-4abe-9ab5-b83a57668fdf` | generated candidate |
 
 ## Optimization
 
@@ -36,7 +37,7 @@ generator PNG
 → Git binary blob
 ```
 
-The first provenance candidate was normalized to:
+The current review candidates are normalized to compact WebP derivatives. The provenance candidate was normalized to:
 
 ```text
 560 × 420 WebP
@@ -72,3 +73,11 @@ It must never be described as an archival photograph or historical evidence.
 These files are generated ahead of time and stored.
 
 No normal country/year selection triggers an image-generation API call.
+
+
+Japan candidate:
+
+```text
+560 × 420 WebP
+~11.1 KiB
+```
