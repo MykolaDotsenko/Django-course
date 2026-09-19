@@ -43,8 +43,13 @@ Needs to translate a total budget into meaningful daily spending.
 ### Supporting jobs
 - quickly swap source and destination;
 - verify how fresh the rate is;
+- convert using a specific historical date;
+- discover archived currencies relevant to a country/date;
+- understand which rate observation was actually used;
 - understand whether cards or cash are commonly useful;
 - see approximate common-item equivalents;
+- explore the sourced story behind a currency/date;
+- compare a historical reference rate with the latest reference rate when semantically valid;
 - repeat frequent pairs;
 - inspect historical context;
 - prepare a trip budget.
@@ -72,12 +77,17 @@ A P0 release is successful when an anonymous visitor can:
 
 ## 7. P1 scope
 
+- historical FX converter with requested/effective-date distinction;
+- archived currency discovery in historical mode;
+- country/date historical-currency suggestions;
+- deterministic sourced money-story layer;
+- currency timelines and Then & now comparisons where valid;
+- historical chart context;
 - recent conversions;
 - favourite pairs;
 - optional account sync;
 - richer cultural profile;
-- historical rate context;
-- shareable/bookmarkable conversion URL;
+- shareable/bookmarkable current and historical conversion URLs;
 - progressive enhancement polish.
 
 ## 8. Later scope
@@ -93,6 +103,9 @@ Foreign item price interpreted in home currency with clearly-labelled fee assump
 
 ### Offline mobile
 Use the last successful rate and cached destination context with explicit staleness.
+
+### Historical purchasing power
+A separate, later feature using explicit CPI/PPP/price-level methodology. It must not be inferred from FX rates.
 
 ### Rate alerts
 Only after notification infrastructure and provider semantics are robust.
@@ -171,3 +184,61 @@ FX conversion
 ```
 
 The cultural layer should increase understanding, not compete with the conversion task.
+
+
+## 13. Storytelling layer
+
+Storytelling is a product layer over sourced data, not a content-generation gimmick.
+
+The storytelling system may explain:
+
+- the converted amount in plain language;
+- the currency era on the selected date;
+- a country/currency transition;
+- a valid Then & now rate comparison;
+- a relevant sourced historical/cultural moment.
+
+The product-facing entry point can be:
+
+> **The story behind this rate**
+
+Story quality rules:
+
+- every factual claim is sourced;
+- temporal relevance matters;
+- missing context is omitted rather than invented;
+- causal explanations require explicit source support;
+- deterministic templates are the default;
+- AI, if introduced later, may rewrite only validated sourced facts.
+
+## 14. Historical converter
+
+The historical converter answers:
+
+> **What would this amount convert to using the available historical FX observation for a selected date?**
+
+It does not answer historical purchasing power.
+
+Required semantics:
+
+- `requested_date` = the calendar date selected by the user;
+- `effective_date` = the actual rate observation used;
+- provider/source attribution remains visible;
+- missing weekend/holiday observations are never silently presented as exact-date data;
+- archived currencies are discoverable only where data/era context supports them;
+- country/date may suggest a historical currency but never silently replace an explicit user choice;
+- pair/date coverage is communicated accurately rather than implying universal history back to the provider's earliest date.
+
+## 15. Temporal trust model
+
+Historical experiences must keep these concepts separate:
+
+```text
+historical FX rate
+≠ inflation
+≠ purchasing power
+≠ current local prices
+≠ investment return
+```
+
+A historical conversion can be enriched by a sourced story, but the story must not alter the arithmetic result or imply unsupported economic causality.

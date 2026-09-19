@@ -706,3 +706,152 @@ A component is ready only if:
 - contrast survives country themes;
 - source/freshness information remains legible;
 - mobile stacking preserves logical reading order.
+
+
+---
+
+## 33. Historical converter UI additions
+
+Historical mode adds only the controls required to change temporal context.
+
+Recommended control:
+
+```text
+Rate date
+[ Latest available ▾ ]
+```
+
+Historical selection reveals a date picker.
+
+Do not permanently occupy primary-screen space with a large timeline or chart.
+
+### Historical result badge
+
+Use:
+
+- Historical reference
+- Previous available observation
+- Monthly observation
+
+Avoid:
+
+- Old rate
+- Live history
+- Time-machine rate
+
+## 34. Requested vs effective date presentation
+
+When dates differ, use explicit stacked metadata:
+
+```text
+Requested
+14 Jun 1998
+
+Observation used
+12 Jun 1998
+```
+
+Do not compress this into a tooltip.
+
+The date discrepancy is central trust information.
+
+## 35. Archived currency presentation
+
+Archived currency rows should expose historical status.
+
+Example:
+
+```text
+Finnish markka · FIM
+Historical currency
+Provider coverage 1972–2002
+```
+
+Current-mode selectors should not visually flood the list with retired currencies.
+
+## 36. Story component
+
+Product-facing label:
+
+> The story behind this rate
+
+Recommended structure:
+
+- compact trigger/disclosure;
+- semantic chapter headings;
+- sourced chapter footer/detail;
+- currency timeline only where useful;
+- no auto-playing animation.
+
+Story visual hierarchy remains lower than conversion and rate provenance.
+
+## 37. Currency timeline
+
+A timeline may visualize:
+
+- introduction;
+- selected date;
+- transition;
+- retirement/changeover;
+- current currency.
+
+Desktop may use horizontal presentation if labels remain readable.
+
+Mobile should prefer a vertical timeline rather than forcing horizontal scroll.
+
+Every milestone must remain understandable without visual position alone.
+
+## 38. Then & now component
+
+Use a neutral comparison layout:
+
+```text
+Then
+15 Jun 2016
+100 EUR ≈ X USD
+
+Latest reference
+18 Sep 2026
+100 EUR ≈ Y USD
+```
+
+If a percentage difference is shown:
+
+- state direction;
+- avoid green/red “gain/loss” semantics;
+- avoid investment framing.
+
+## 39. Historical context card rule
+
+Historical stories can use editorial cards, but each must answer a relevant temporal question.
+
+Good:
+
+> Finland was using FIM on this date.
+
+Good:
+
+> Euro cash replaced national notes/coins later in the transition.
+
+Bad:
+
+> Finland has thousands of lakes.
+
+The last fact may be true but has low relevance to a money story.
+
+## 40. Story motion
+
+If timeline/story transitions use animation:
+
+- motion never delays reading;
+- selected date/result is available immediately;
+- reduced-motion preference removes non-essential movement;
+- no “counting through years” animation before showing result.
+
+## 41. Historical colour semantics
+
+Do not make historical mode sepia/brown merely to signal “old”.
+
+That can make the product feel nostalgic rather than authoritative.
+
+Use the same trust-oriented design system, with subtle temporal cues in typography/metadata rather than theme gimmicks.

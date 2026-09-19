@@ -212,3 +212,78 @@ conversion
 ```
 
 Commercial CTAs such as money transfer, account upsell or rate tracking are not copied merely because competitors use them.
+
+
+## Historical FX and archived currencies
+
+### Frankfurter currency catalog
+
+https://frankfurter.dev/currencies/
+
+Current documented capability:
+
+- active and archived currencies;
+- historical coverage per currency;
+- provider counts;
+- archived examples including FIM, DEM, ATS, ESP and others.
+
+### Frankfurter historical/time-series API
+
+https://frankfurter.dev/
+
+Relevant endpoints/capabilities:
+
+- specific historical date;
+- date ranges;
+- time series;
+- `scope=all` for legacy currencies;
+- provider-specific queries;
+- provider attribution.
+
+Historical UX must communicate per-pair/per-provider coverage rather than claiming every pair exists back to 1948.
+
+### ECB euro reference rates
+
+https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html
+
+Important trust guidance:
+
+- ECB reference rates are normally updated on working days;
+- they are published for information purposes;
+- ECB explicitly discourages using them for transaction purposes.
+
+This reinforces product copy such as “reference rate” rather than guaranteed transaction/live rate.
+
+## Future historical purchasing-power research
+
+These are candidate primary sources for a separate later methodology. They are **not** interchangeable with FX-rate data.
+
+### World Bank Indicators API
+
+https://datahelpdesk.worldbank.org/knowledgebase/topics/125589-developer-information
+
+Useful for official indicator-series access and provenance.
+
+Before implementation, identify the exact CPI/inflation indicator and verify country/time coverage and methodology.
+
+### OECD price level indices / PPP
+
+https://www.oecd.org/en/data/indicators/price-level-indices.html
+
+OECD price-level indices compare relative country price levels using purchasing power parities and market exchange rates.
+
+This may support later cross-country price-level interpretation, but does not by itself answer all historical consumer purchasing-power questions.
+
+### Methodology rule
+
+Do not combine:
+
+```text
+historical FX
++
+current price cards
+```
+
+and label the result historical purchasing power.
+
+Any future “what could this buy then?” feature requires an explicit, documented price/inflation methodology.
