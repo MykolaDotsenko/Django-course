@@ -8,7 +8,6 @@ from urllib.parse import parse_qsl, unquote, urlparse
 
 from config.environment import ConfigurationError, RuntimeEnvironment
 
-
 _RESERVED_QUERY_OPTIONS = frozenset({"user", "password", "host", "port", "dbname"})
 
 
