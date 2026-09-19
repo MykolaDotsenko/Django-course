@@ -1181,7 +1181,7 @@ Priority: P0
 
 Expected:
 - conversion/history/context/story fallback works;
-- no OpenAI key required for core app.
+- no Gemini key required for core app.
 
 ## BE-168 — Narrative draft from valid source packet
 Priority: P1
@@ -1224,22 +1224,22 @@ Expected:
 - no tool/action exists;
 - generation contract remains unchanged.
 
-## BE-174 — OpenAI timeout during editorial draft
+## BE-174 — Gemini timeout during live explanation
 Priority: P1
 
 Expected:
 - normalized timeout;
-- editor gets retry/manual path;
+- cached/deterministic fallback is returned;
 - no core product failure.
 
-## BE-175 — OpenAI 429
+## BE-175 — Gemini free-tier quota / 429
 Priority: P1
 
 Expected:
-- bounded retry policy;
-- no unlimited escalation/cost.
+- no paid escalation;
+- cached/deterministic fallback.
 
-## BE-176 — OpenAI refusal
+## BE-176 — Gemini refusal
 Priority: P1
 
 Expected:
@@ -1260,7 +1260,7 @@ Expected:
 - app startup/readiness succeeds when AI is optional/disabled;
 - AI capability reports unavailable only when used.
 
-## BE-179 — Missing OpenAI key while AI feature enabled
+## BE-179 — Missing Gemini key while AI feature enabled
 Priority: P0 config
 
 Expected:
@@ -1280,7 +1280,7 @@ Expected:
 - full normal test suite passes with fake adapter;
 - zero live billable calls.
 
-## BE-182 — Model routing changes Terra → another model
+## BE-182 — Model routing changes Gemini Flash-Lite → another model
 Priority: P1 governance
 
 Expected:
@@ -1304,17 +1304,19 @@ Priority: P0 security/trust
 Expected:
 - reject; only supplied source references are allowed.
 
-## BE-186 — Image candidate generated with Flare
+## BE-186 — Public demo requests runtime image generation
+Priority: P0 cost regression
+
+Expected:
+- disabled by configuration;
+- stored/sourced media or Quiet Atlas fallback used.
+
+## BE-187 — Development creates a pre-generated AI image
 Priority: P1
 
 Expected:
-- candidate stored unpublished with model/prompt metadata.
-
-## BE-187 — Final image generated with Sunburst
-Priority: P1
-
-Expected:
-- moderation/review required before publish.
+- candidate is reviewed and stored as MediaAsset;
+- production page never regenerates it.
 
 ## BE-188 — Image-generation provider refusal
 Priority: P1
