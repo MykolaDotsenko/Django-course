@@ -1185,40 +1185,35 @@ Use narrowly typed capabilities such as:
 
 Each capability owns its own typed request/result schema.
 
-## 66. OpenAI provider isolation
+## 66. Gemini provider isolation
 
 A small infrastructure adapter owns:
 
-- OpenAI SDK/client creation;
-- API key/project config;
+- Google Gemini SDK/client construction;
+- server-only auth key/project config;
 - timeout/retry;
 - provider error normalization;
-- usage/cost metadata.
+- quota/usage metadata.
 
 Domain/application code does not import provider model names.
 
 ## 67. Initial AI model routing
 
-Configuration maps capabilities to model tiers.
-
-Initial target:
+The public portfolio deployment intentionally uses one live free-tier model:
 
 ```text
-text fast      → GPT-5.6 Luna
-text quality   → GPT-5.6 Terra
-text audit     → GPT-5.6 Sol
-
-image draft    → GPT-Image-2.5 Flare
-image final    → GPT-Image-2.5 Sunburst
-
-moderation     → omni-moderation-latest
+runtime explanation → gemini-3.1-flash-lite
 ```
 
-These are deployment/configuration decisions, not domain types.
+All paid-model routing and runtime image generation are disabled.
+
+Stored/pre-generated media and deterministic story/context paths remain the default.
+
+This minimizes dependencies, quota complexity and cost while still demonstrating a real typed AI integration.
 
 ## 68. Structured text output
 
-Application-integrated text AI uses the OpenAI Responses API with JSON-schema Structured Outputs.
+Application-integrated text AI uses Gemini schema-constrained structured JSON output.
 
 Schema correctness does not imply factual correctness.
 
