@@ -267,4 +267,18 @@ Rules:
 - `.env.example` contains only variables the application actually consumes;
 - arbitrary `.env` files are not silently loaded into production configuration.
 
-Database configuration remains the responsibility of the following PostgreSQL foundation slice.
+Database configuration is now implemented through `config.database.load_database_config()`.
+
+Database rules:
+
+- empty `DATABASE_URL` in local/test uses the documented SQLite zero-setup fallback;
+- preview/production require `DATABASE_URL`;
+- configured URLs must use PostgreSQL;
+- URL credentials/database names are normalized before entering Django settings;
+- query options such as `sslmode` are preserved as PostgreSQL connection options;
+- malformed URLs fail fast with configuration-specific errors;
+- database passwords are excluded from configuration object representations;
+- global `ATOMIC_REQUESTS` is explicitly false;
+- connection persistence is conservative (`CONN_MAX_AGE=0`) until deployment measurements justify another value.
+
+PostgreSQL 18.6 is exercised in the dedicated CI integration lane; application semantics remain compatible with Django's supported PostgreSQL line rather than depending on PostgreSQL-18-only features.
