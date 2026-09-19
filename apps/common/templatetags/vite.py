@@ -92,9 +92,7 @@ def _string_list(chunk: ManifestChunk, field: str, *, chunk_key: str) -> tuple[s
         return ()
 
     if not isinstance(value, list) or any(not isinstance(item, str) or not item for item in value):
-        raise ViteManifestError(
-            f"Vite manifest chunk {chunk_key!r} has an invalid {field!r} list."
-        )
+        raise ViteManifestError(f"Vite manifest chunk {chunk_key!r} has an invalid {field!r} list.")
 
     return tuple(value)
 
@@ -149,8 +147,7 @@ def _render_development_asset(entry: str) -> SafeString:
     entry_url = f"{origin}/{entry}"
 
     return format_html(
-        '<script type="module" src="{}"></script>\n'
-        '<script type="module" src="{}"></script>',
+        '<script type="module" src="{}"></script>\n<script type="module" src="{}"></script>',
         client_url,
         entry_url,
     )
