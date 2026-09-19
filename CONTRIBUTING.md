@@ -8,25 +8,50 @@ The engineering handbook is the source of truth:
 
 Before implementing a non-trivial change, identify the governing product/UX/architecture document and the acceptance criteria being implemented.
 
-## Current implementation setup
+## Python setup
 
 The Django product shell lives at the repository root.
 
-Validated checks currently mirror CI:
+Python support is intentionally bounded to the versions exercised in CI:
+
+- Python 3.13
+- Python 3.14
+
+Install the application and development toolchain from the single project metadata source:
 
 ```bash
-python -m pip install \
-  "Django>=5.2.1,<6.0.0" \
-  "pytest==8.3.5" \
-  "pytest-django==4.11.1" \
-  "ruff==0.11.10"
-
-python manage.py check
-ruff check apps/common
-pytest -q
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
 ```
 
-Dependency consolidation, environment-driven settings, PostgreSQL integration and runtime observability are intentionally delivered in the next bounded foundation PRs rather than hidden inside this structural migration.
+Optional local commit hooks:
+
+```bash
+pre-commit install
+```
+
+## Quality checks
+
+Run the same core checks used by CI:
+
+```bash
+ruff format --check apps config scripts manage.py
+ruff check apps config scripts manage.py
+python manage.py check
+coverage erase
+coverage run -m pytest -q
+coverage report
+python -m pip_audit --skip-editable
+```
+
+For intentional local formatting/fixes:
+
+```bash
+ruff check --fix apps config scripts manage.py
+ruff format apps config scripts manage.py
+```
+
+Ruff is the repository's Python formatter and linter. Do not reintroduce Black or isort unless a concrete unsupported requirement appears.
 
 ## Before coding
 

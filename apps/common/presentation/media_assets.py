@@ -4,8 +4,9 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Literal
 
-
-AssetKind = Literal["hero", "fallback", "country", "story", "history", "trust", "responsive", "social"]
+AssetKind = Literal[
+    "hero", "fallback", "country", "story", "history", "trust", "responsive", "social"
+]
 
 
 class UnknownMediaAssetError(KeyError):

@@ -5,7 +5,6 @@ from pathlib import Path
 
 from playwright.sync_api import Page, sync_playwright
 
-
 BASE_URL = os.environ.get(
     "MEDIA_PREVIEW_URL",
     "http://127.0.0.1:8000/_design/media/",
@@ -72,8 +71,7 @@ def _assert_preview_integrity(page: Page) -> None:
     )
     if overflow["scrollWidth"] > overflow["clientWidth"] + 1:
         raise RuntimeError(
-            "Horizontal overflow detected: "
-            f"{overflow['scrollWidth']} > {overflow['clientWidth']}",
+            f"Horizontal overflow detected: {overflow['scrollWidth']} > {overflow['clientWidth']}",
         )
 
 
@@ -94,9 +92,7 @@ def main() -> None:
             page.on(
                 "console",
                 lambda message: (
-                    console_errors.append(message.text)
-                    if message.type == "error"
-                    else None
+                    console_errors.append(message.text) if message.type == "error" else None
                 ),
             )
 
@@ -112,8 +108,7 @@ def main() -> None:
 
             if console_errors:
                 raise RuntimeError(
-                    f"Browser console errors for {name}: "
-                    + " | ".join(console_errors),
+                    f"Browser console errors for {name}: " + " | ".join(console_errors),
                 )
 
             page.screenshot(

@@ -152,25 +152,38 @@ The repository PR template operationalizes this contract.
 
 ---
 
-# 6. Current foundation local commands
+# 6. Current Python development commands
 
-The validated Django product shell now lives at the repository root.
+The validated Django product shell and Python tooling live at the repository root.
 
-Until the dependency/tooling foundation PR consolidates the final bootstrap, the checks mirror CI:
+Install application and development dependencies from `pyproject.toml`:
 
 ```bash
-python -m pip install \
-  "Django>=5.2.1,<6.0.0" \
-  "pytest==8.3.5" \
-  "pytest-django==4.11.1" \
-  "ruff==0.11.10"
-
-python manage.py check
-ruff check apps/common
-pytest -q
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
 ```
 
-Do not fold environment/PostgreSQL/observability changes into the structural migration merely because those files are nearby. They remain separate roadmap slices.
+Run the core CI-equivalent quality gates:
+
+```bash
+ruff format --check apps config scripts manage.py
+ruff check apps config scripts manage.py
+python manage.py check
+coverage erase
+coverage run -m pytest -q
+coverage report
+python -m pip_audit --skip-editable
+```
+
+Optional local commit hooks:
+
+```bash
+pre-commit install
+```
+
+Ruff owns Python formatting and linting. Black/isort are intentionally not part of the toolchain.
+
+Environment/PostgreSQL/observability changes remain separate roadmap slices.
 
 ---
 

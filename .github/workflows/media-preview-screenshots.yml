@@ -38,12 +38,10 @@ jobs:
           cache: pip
           cache-dependency-path: pyproject.toml
 
-      - name: Install render dependencies
+      - name: Install project and browser tools
         run: |
           python -m pip install --upgrade pip
-          python -m pip install \
-            "Django>=5.2.1,<6.0.0" \
-            "playwright==1.63.0"
+          python -m pip install -e ".[dev]"
 
       - name: Install Chromium
         run: python -m playwright install --with-deps chromium
