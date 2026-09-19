@@ -269,7 +269,7 @@ Acceptance:
 
 ---
 
-## Implementation PR 8A — Media asset pipeline
+## Implementation PR 7A — Media asset pipeline
 
 **Goal:** support sourced historical/editorial media and optional reviewed AI illustrations without making images a runtime dependency.
 
