@@ -71,6 +71,7 @@ Convert → Understand → Explore → Save → Return
 11. **Explicit backend ownership.** Views/forms/serializers handle transport; application use cases coordinate; pure domain code owns financial semantics; provider adapters own external JSON.
 12. **Short transactions.** Network I/O never runs while PostgreSQL transactions/row locks are intentionally held; durable invariants use constraints and explicit transaction boundaries.
 13. **Media authenticity before spectacle.** Real sourced archival media is preferred for historical evidence; AI imagery is reviewed, stored and visibly labelled as illustration rather than generated on every country/year change.
+14. **AI synthesizes; it does not establish truth.** The public demo uses Gemini 3.1 Flash-Lite's free tier for one bounded live explanation feature; paid AI and runtime image generation are disabled by default. FX, historical observations, provenance and published facts remain deterministic and sourced.
 
 ## Documentation
 
@@ -90,6 +91,7 @@ The handbook covers:
 - API/security/observability/operations and 148 backend scenarios;
 - scheduled imports, maintenance and failure behavior;
 - sourced historical media, object-storage strategy and controlled AI illustration pipeline;
+- zero-cost Gemini free-tier explanation, structured outputs, persistent cache, deterministic fallback, evals and privacy/quota governance;
 - quality, security and accessibility;
 - implementation sequencing and ADRs;
 - official references.
