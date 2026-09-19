@@ -71,7 +71,7 @@ Convert → Understand → Explore → Save → Return
 11. **Explicit backend ownership.** Views/forms/serializers handle transport; application use cases coordinate; pure domain code owns financial semantics; provider adapters own external JSON.
 12. **Short transactions.** Network I/O never runs while PostgreSQL transactions/row locks are intentionally held; durable invariants use constraints and explicit transaction boundaries.
 13. **Media authenticity before spectacle.** Real sourced archival media is preferred for historical evidence; AI imagery is reviewed, stored and visibly labelled as illustration rather than generated on every country/year change.
-14. **AI synthesizes; it does not establish truth.** OpenAI is an optional editorial/inference provider behind typed capability interfaces. FX, historical observations, provenance and published facts remain deterministic and sourced.
+14. **AI synthesizes; it does not establish truth.** The public demo uses Gemini 3.1 Flash-Lite's free tier for one bounded live explanation feature; paid AI and runtime image generation are disabled by default. FX, historical observations, provenance and published facts remain deterministic and sourced.
 
 ## Documentation
 
