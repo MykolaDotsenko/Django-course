@@ -61,6 +61,8 @@ class StaticMediaRegistryTests(SimpleTestCase):
                 ratio="4 / 3",
                 kind="fallback",
                 label="Unexpected",
+                width=1200,
+                height=900,
             )
 
     def test_unknown_key_raises_domain_specific_error(self):
@@ -165,6 +167,17 @@ class ImageViewModelTests(SimpleTestCase):
         self.assertEqual(image.alt, "")
         self.assertTrue(image.decorative)
         self.assertEqual(image.kind, "country")
+        self.assertEqual(image.width, 1200)
+        self.assertEqual(image.height, 900)
+
+    def test_hero_exposes_intrinsic_wide_dimensions(self):
+        image = build_static_image_view_model(
+            get_static_media_asset("hero_home_global_value"),
+        )
+
+        self.assertEqual(image.ratio, "16 / 9")
+        self.assertEqual(image.width, 1600)
+        self.assertEqual(image.height, 900)
 
     def test_meaningful_alt_promotes_asset_to_meaningful_content(self):
         asset = get_static_media_asset("history_then_now")
