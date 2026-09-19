@@ -1,0 +1,139 @@
+{% load partials %}
+
+{% partialdef amount-field %}
+  <div class="qa-field{% if component.error %} qa-field--error{% endif %}">
+    <label class="qa-field__label" for="{{ component.id }}">{{ component.label }}</label>
+    <div class="qa-amount-control">
+      <input
+        class="qa-amount-control__input"
+        id="{{ component.id }}"
+        name="{{ component.name }}"
+        type="text"
+        inputmode="decimal"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        value="{{ component.value }}"
+        placeholder="{{ component.placeholder }}"
+        aria-describedby="{{ component.id }}-currency{% if component.error or component.hint %} {{ component.id }}-message{% endif %}"
+        {% if component.error %}aria-invalid="true"{% endif %}
+      >
+      <span class="qa-amount-control__currency" id="{{ component.id }}-currency">
+        {{ component.currency_code }}
+      </span>
+    </div>
+    {% if component.error %}
+      <p class="qa-field__message qa-field__message--error" id="{{ component.id }}-message">
+        {{ component.error }}
+      </p>
+    {% elif component.hint %}
+      <p class="qa-field__message" id="{{ component.id }}-message">{{ component.hint }}</p>
+    {% endif %}
+  </div>
+{% endpartialdef amount-field %}
+
+{% partialdef country-currency-trigger %}
+  <div class="qa-selector">
+    <p class="qa-field__label" id="{{ component.id }}-label">{{ component.role_label }}</p>
+    <button
+      class="qa-selector-trigger"
+      id="{{ component.id }}"
+      type="button"
+      aria-haspopup="dialog"
+      aria-expanded="false"
+      aria-labelledby="{{ component.id }}-label {{ component.id }}-country {{ component.id }}-currency{% if component.historical %} {{ component.id }}-status{% endif %}"
+    >
+      <span class="qa-selector-trigger__media" aria-hidden="true">{{ component.media_text }}</span>
+      <span class="qa-selector-trigger__copy">
+        <span class="qa-selector-trigger__country" id="{{ component.id }}-country">
+          {{ component.country_name }}
+        </span>
+        <span class="qa-selector-trigger__currency" id="{{ component.id }}-currency">
+          {{ component.currency_name }} · {{ component.currency_code }}
+        </span>
+      </span>
+      {% if component.historical %}
+        <span
+          class="qa-status-badge qa-status-badge--historical"
+          id="{{ component.id }}-status"
+        >Historical</span>
+      {% endif %}
+      <span class="qa-selector-trigger__chevron" aria-hidden="true">
+        {% include "components/icons/chevron_down.html" %}
+      </span>
+    </button>
+  </div>
+{% endpartialdef country-currency-trigger %}
+
+{% partialdef swap-button %}
+  <button class="qa-swap-button" type="button" aria-label="Swap source and destination">
+    {% include "components/icons/swap.html" %}
+  </button>
+{% endpartialdef swap-button %}
+
+{% partialdef convert-button %}
+  <button class="qa-primary-button" type="submit">
+    <span>Convert</span>
+  </button>
+{% endpartialdef convert-button %}
+
+{% partialdef status-badge %}
+  <span class="qa-status-badge qa-status-badge--{{ component.kind }}">{{ component.label }}</span>
+{% endpartialdef status-badge %}
+
+{% partialdef rate-meta %}
+  <div class="qa-rate-meta">
+    <p class="qa-rate-meta__rate">{{ component.rate_line }}</p>
+    <dl class="qa-rate-meta__facts">
+      <div>
+        <dt>Data class</dt>
+        <dd>{{ component.data_class }}</dd>
+      </div>
+      <div>
+        <dt>Effective date</dt>
+        <dd>{{ component.effective_date }}</dd>
+      </div>
+      <div>
+        <dt>Provider</dt>
+        <dd>{{ component.provider }}</dd>
+      </div>
+      {% if component.fetched_at %}
+        <div>
+          <dt>Last synced</dt>
+          <dd>{{ component.fetched_at }}</dd>
+        </div>
+      {% endif %}
+    </dl>
+    <details class="qa-source-details">
+      <summary>Source details</summary>
+      <div class="qa-source-details__body">
+        <p>{{ component.explanation }}</p>
+        <p>Provider: {{ component.provider }}</p>
+      </div>
+    </details>
+  </div>
+{% endpartialdef rate-meta %}
+
+{% partialdef conversion-result %}
+  <section class="qa-result" aria-labelledby="{{ component.id }}-title">
+    <div class="qa-result__header">
+      <h2 class="qa-result__title" id="{{ component.id }}-title">Conversion result</h2>
+      {% with component=component.status %}
+        {% include "components/converter/primitives.html#status-badge" %}
+      {% endwith %}
+    </div>
+
+    <div class="qa-result__amounts">
+      <p class="qa-result__input">{{ component.input_amount }} {{ component.input_currency }}</p>
+      <p class="qa-result__output">
+        <span class="qa-result__approximation" aria-hidden="true">≈</span>
+        <span>{{ component.output_amount }}</span>
+        <span class="qa-result__currency">{{ component.output_currency }}</span>
+      </p>
+    </div>
+
+    {% with component=component.rate_meta %}
+      {% include "components/converter/primitives.html#rate-meta" %}
+    {% endwith %}
+  </section>
+{% endpartialdef conversion-result %}
