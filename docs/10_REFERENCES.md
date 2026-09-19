@@ -287,3 +287,155 @@ current price cards
 and label the result historical purchasing power.
 
 Any future “what could this buy then?” feature requires an explicit, documented price/inflation methodology.
+
+
+# External API and Data-Source References
+
+The detailed evaluation and selected roles live in:
+
+- [API research and data-source strategy](11_API_RESEARCH_AND_DATA_SOURCES.md)
+- [External API integration contracts](12_EXTERNAL_API_CONTRACTS.md)
+
+The links below are primary/current documentation sources to re-check before implementation.
+
+## Frankfurter
+
+- Main API / v2 documentation  
+  https://frankfurter.dev/
+- Currency catalog and historical coverage  
+  https://frankfurter.dev/currencies/
+- Provider catalog  
+  https://frankfurter.dev/providers/
+- Open-source repository / self-hosting  
+  https://github.com/lineofflight/frankfurter
+
+Implementation policy:
+
+- general FX source = Frankfurter v2;
+- use source/provider attribution;
+- keep current vs historical semantics explicit;
+- no silent switching to another provider methodology.
+
+## ECB Data Portal / SDMX
+
+- Web service / SDMX API guidance  
+  https://data.ecb.europa.eu/help/getting-data-web-services-sdmx-0
+- Euro foreign-exchange reference rates  
+  https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html
+
+Use as an authoritative ECB reference/verification source and possible explicit provider adapter, not as an invisible fallback for blended Frankfurter data.
+
+## REST Countries
+
+- Documentation  
+  https://restcountries.com/docs
+- Country API documentation  
+  https://restcountries.com/docs/countries
+- Terms of Service  
+  https://restcountries.com/legal/terms-of-service
+
+Re-check authentication, quota, pricing and redistribution terms before production import automation.
+
+Use as import/enrichment, not request-path infrastructure.
+
+## Wikidata
+
+- Data access  
+  https://www.wikidata.org/wiki/Wikidata:Data_access
+- Stable interface policy  
+  https://www.wikidata.org/wiki/Wikidata:Stable_Interface_Policy
+- Licensing  
+  https://www.wikidata.org/wiki/Wikidata:Licensing
+
+Use stable targeted entity APIs for ingestion.
+
+SPARQL/query-service tooling is valuable for research but not required for user-facing runtime rendering.
+
+## Wikimedia APIs / Commons
+
+- Wikimedia API rate limits  
+  https://www.mediawiki.org/wiki/Wikimedia_APIs/Rate_limits
+- API etiquette  
+  https://www.mediawiki.org/wiki/API:Etiquette
+- Commons reuse/licensing guidance  
+  https://commons.wikimedia.org/wiki/Commons:Reusing_content_outside_Wikimedia/licenses/en
+
+Persist per-file creator/licence/source metadata for any external media that is displayed.
+
+## Europeana
+
+- APIs overview  
+  https://www.europeana.eu/en/apis
+- API documentation / access guidance  
+  https://pro.europeana.eu/page/apis
+
+Use only as optional cultural-heritage enrichment with server-side credentials and record-level rights checks.
+
+## Eurostat
+
+- Web services  
+  https://ec.europa.eu/eurostat/data/web-services
+- Data Browser API access  
+  https://ec.europa.eu/eurostat/web/user-guides/data-browser/api-data-access/
+
+Candidate dataset families include:
+
+- HICP monthly indices such as `prc_hicp_midx`;
+- purchasing-power / price-level datasets such as `prc_ppp_ind` and related tables.
+
+Do not use PPP/price-level indices as a substitute for domestic CPI/HICP time-series inflation.
+
+## OECD
+
+- OECD API / SDMX guidance  
+  https://www.oecd.org/en/data/insights/data-explainers/2024/09/api.html
+- OECD Data Explorer  
+  https://data-explorer.oecd.org/
+
+Candidate PPP/price-level dataflow:
+
+```text
+DSD_PPP@DF_PPP_CPL
+```
+
+Dataset identifiers/versions must be re-checked at implementation time.
+
+## World Bank Indicators API
+
+- API documentation  
+  https://datahelpdesk.worldbank.org/knowledgebase/articles/889392
+- CPI index indicator  
+  https://data.worldbank.org/indicator/FP.CPI.TOTL
+- Consumer inflation indicator  
+  https://data.worldbank.org/indicator/FP.CPI.TOTL.ZG
+- PPP conversion factor  
+  https://data.worldbank.org/indicator/PA.NUS.PPP
+- Price-level ratio  
+  https://data.worldbank.org/indicator/PA.NUS.PPPC.RF
+
+Preserve indicator/dataset attribution and verify indicator-specific reuse terms.
+
+## Numbeo
+
+- API documentation and pricing  
+  https://www.numbeo.com/common/api.jsp
+- Terms of Use  
+  https://www.numbeo.com/common/terms_of_use.jsp
+
+Evaluated as a potentially strong item-price provider but deliberately not selected as a required P0/P1 dependency.
+
+Current cost/licensing and crowdsourced provenance must be re-evaluated if the product later funds this integration.
+
+## Source-review requirement
+
+Before implementing any external API:
+
+1. confirm the current version;
+2. confirm authentication;
+3. confirm rate/quota limits;
+4. confirm pricing;
+5. confirm licence/redistribution rules;
+6. capture representative fixtures;
+7. confirm source update frequency;
+8. document outage/fallback behaviour;
+9. record the review date in the implementation PR.

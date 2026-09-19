@@ -226,3 +226,153 @@ Historical/current conversion is the source-of-truth task.
 Story/chart/cultural modules are progressive enrichment.
 
 If story data is incomplete or unavailable, the successful conversion remains unchanged.
+
+
+---
+
+## ADR-020 — Frankfurter v2 blend is the default FX source policy
+
+**Status:** accepted
+
+Use Frankfurter v2's default institutional/official-source blend for general current and historical conversion.
+
+Reasons:
+
+- broad current and archived-currency coverage;
+- provider attribution;
+- historical/time-series support;
+- no public API key;
+- open-source self-host escape hatch.
+
+A pinned source such as ECB is a distinct source policy, not an invisible fallback.
+
+---
+
+## ADR-021 — No silent FX provider switching
+
+**Status:** accepted
+
+A provider outage cannot silently substitute a rate from a source with different methodology.
+
+Recovery order is:
+
+- valid cache;
+- configured Frankfurter endpoint;
+- safe same-pair stale cache;
+- explicit unavailable state.
+
+Changing provider semantics requires a deliberate adapter/policy decision and updated attribution.
+
+---
+
+## ADR-022 — Only FX is a runtime external dependency by default
+
+**Status:** accepted
+
+The critical user request path may call Frankfurter when a rate refresh is required.
+
+Country metadata, cultural/story data, media metadata and official statistical observations are imported or curated into local storage.
+
+This minimizes latency, quota risk and outage coupling.
+
+---
+
+## ADR-023 — REST Countries is import-only reference metadata
+
+**Status:** accepted
+
+REST Countries v5 can seed/update selected normalized country fields.
+
+It is not called on every page request and does not define our domain schema.
+
+The project does not commit or redistribute a full raw provider dataset.
+
+Current authentication, pricing and terms must be re-checked before production automation.
+
+---
+
+## ADR-024 — Cultural knowledge sources are editorial inputs
+
+**Status:** accepted
+
+Wikidata, Wikimedia Commons and Europeana are discovery/import sources.
+
+They are not runtime source-of-truth dependencies for conversion.
+
+Rules:
+
+- structured facts require verification for trust-sensitive claims;
+- media requires per-record/per-file rights metadata;
+- published story content is stored locally with provenance;
+- runtime SPARQL is not required.
+
+---
+
+## ADR-025 — Official statistical APIs are imported behind dedicated adapters
+
+**Status:** accepted for future purchasing-power work
+
+Potential sources:
+
+- Eurostat HICP/PPP;
+- OECD PPP/price-level data;
+- World Bank CPI/PPP indicators.
+
+They are not interchangeable:
+
+- CPI/HICP measures price change through time;
+- PPP/price-level indices support cross-country price-level comparisons.
+
+No historical purchasing-power feature ships until methodology is explicit and tested.
+
+---
+
+## ADR-026 — Numbeo is not a required P0/P1 dependency
+
+**Status:** accepted
+
+Numbeo provides useful current/historical item-price data but is not selected as a mandatory source because:
+
+- current API cost is disproportionate for the portfolio stage;
+- data is crowdsourced;
+- commercial/API licensing creates additional dependency.
+
+Keep the domain capable of supporting a future licensed price provider without coupling `TypicalPrice` to Numbeo's schema.
+
+---
+
+## ADR-027 — Clients never call third-party data APIs directly
+
+**Status:** accepted
+
+Django owns all external data-source policies.
+
+The browser receives server-rendered HTML/HTMX fragments.
+
+React Native calls our versioned Django API.
+
+Benefits:
+
+- no leaked keys;
+- one cache/fallback policy;
+- consistent Decimal/date semantics;
+- centralized provenance and licensing;
+- simpler offline behaviour.
+
+---
+
+## ADR-028 — External data contracts are explicit and provider-specific
+
+**Status:** accepted
+
+Do not create one generic external-API abstraction that erases semantic differences.
+
+Each provider gets a small adapter responsible for:
+
+- transport;
+- validation;
+- normalization;
+- provenance;
+- provider-specific errors.
+
+Shared HTTP utilities may handle transport mechanics, but they do not decide domain meaning.
