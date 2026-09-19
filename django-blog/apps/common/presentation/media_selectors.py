@@ -66,3 +66,23 @@ def select_payment_culture_media() -> StaticMediaAsset:
 
 def select_rate_provenance_media() -> StaticMediaAsset:
     return get_static_media_asset("trust_rate_provenance")
+
+
+def select_home_hero_mobile_media() -> StaticMediaAsset:
+    return get_static_media_asset("hero_home_global_value_mobile")
+
+
+def select_history_then_now_mobile_media() -> StaticMediaAsset:
+    return get_static_media_asset("history_then_now_mobile")
+
+
+def select_home_og_media() -> StaticMediaAsset:
+    return get_static_media_asset("og_home_global_value")
+
+
+def select_history_og_media() -> StaticMediaAsset:
+    return get_static_media_asset("og_history_then_now")
+
+
+def select_local_value_og_media() -> StaticMediaAsset:
+    return get_static_media_asset("og_local_value")
