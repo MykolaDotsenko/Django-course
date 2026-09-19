@@ -124,6 +124,41 @@
       </div>
     </section>
 
+    <section class="qa-preview__section" aria-labelledby="raster-title">
+      <div class="qa-preview__section-heading">
+        <div>
+          <p class="qa-preview__kicker">Candidate review</p>
+          <h2 id="raster-title">Canonical SVG vs AI raster</h2>
+        </div>
+        <p>Raster candidates are reviewed side by side and never replace canonical media automatically.</p>
+      </div>
+
+      <div class="qa-preview__comparison-grid">
+        {% for comparison in raster_comparisons %}
+          <article class="qa-preview__comparison">
+            <div class="qa-preview__comparison-heading">
+              <div>
+                <p class="qa-preview__kicker">{{ comparison.semantic_key }}</p>
+                <h3>{{ comparison.title }}</h3>
+              </div>
+              <p>{{ comparison.generator }} · {{ comparison.generation_job_id }}</p>
+            </div>
+
+            <div class="qa-preview__comparison-pair">
+              <div>
+                <p class="qa-preview__comparison-label">Canonical SVG</p>
+                {% include "components/media/image_frame.html" with image=comparison.canonical loading="lazy" only %}
+              </div>
+              <div>
+                <p class="qa-preview__comparison-label">AI WebP candidate</p>
+                {% include "components/media/image_frame.html" with image=comparison.candidate loading="lazy" only %}
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+
     <section class="qa-preview__trust" aria-labelledby="trust-title">
       <div class="qa-preview__trust-copy">
         <p class="qa-preview__kicker">Trust layer</p>
