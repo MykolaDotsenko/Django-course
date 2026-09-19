@@ -1144,3 +1144,192 @@ Presentation must distinguish:
 - decorative asset.
 
 AI output cannot be upgraded into evidence by styling or placement.
+
+
+## 64. AI architecture position
+
+AI is an optional infrastructure capability, not a source-of-truth domain.
+
+Application flow:
+
+```text
+deterministic application/domain data
+        ↓
+capability-specific AI interface
+        ↓
+provider adapter
+        ↓
+Gemini Developer API
+        ↓
+structured candidate
+        ↓
+deterministic validation
+        ↓
+review/publish or discard
+```
+
+Core conversion/history/context remains fully functional with AI disabled.
+
+## 65. Capability-specific AI interfaces
+
+Do not create a generic `llm.generate(prompt)` service.
+
+Use narrowly typed capabilities such as:
+
+- NarrativeDrafter
+- AltTextDrafter
+- ImagePromptComposer
+- ImageGenerator
+- ContentModerator
+- QualityAuditor
+
+Each capability owns its own typed request/result schema.
+
+## 66. Gemini provider isolation
+
+A small infrastructure adapter owns:
+
+- Google Gemini SDK/client construction;
+- server-only auth key/project config;
+- timeout/retry;
+- provider error normalization;
+- quota/usage metadata.
+
+Domain/application code does not import provider model names.
+
+## 67. Initial AI model routing
+
+The public portfolio deployment intentionally uses one live free-tier model:
+
+```text
+runtime explanation → gemini-3.1-flash-lite
+```
+
+All paid-model routing and runtime image generation are disabled.
+
+Stored/pre-generated media and deterministic story/context paths remain the default.
+
+This minimizes dependencies, quota complexity and cost while still demonstrating a real typed AI integration.
+
+## 68. Structured text output
+
+Application-integrated text AI uses Gemini schema-constrained structured JSON output.
+
+Schema correctness does not imply factual correctness.
+
+Application validators still enforce:
+
+- supplied fact IDs only;
+- temporal/currency semantics;
+- source references;
+- output length;
+- forbidden inferences.
+
+## 69. No model-side retrieval in P1
+
+Initial AI calls receive complete structured source packets.
+
+Do not enable:
+
+- web search;
+- file search;
+- DB tools;
+- arbitrary function tools
+
+for normal editorial generation.
+
+The source/provenance system remains deterministic and local.
+
+## 70. No autonomous agent loop
+
+AI does not autonomously:
+
+- search;
+- retrieve;
+- mutate;
+- publish;
+- call external business tools.
+
+Each AI invocation is a bounded operation initiated by application/admin code.
+
+## 71. AI external-call transaction rule
+
+AI follows the same external-call rule as all providers:
+
+```text
+build input
+→ call provider
+→ validate candidate
+→ open DB transaction if needed
+→ persist candidate/approval
+→ commit
+```
+
+No AI request runs while holding an intentional DB transaction or row lock.
+
+## 72. AI persistence rule
+
+Published AI-derived output becomes normal domain/editorial content.
+
+Store enough generation metadata for traceability:
+
+- capability;
+- provider;
+- model;
+- prompt version;
+- source packet/input hash;
+- created/reviewed dates;
+- moderation status;
+- usage/cost estimate where useful.
+
+Do not persist every raw provider response indefinitely by default.
+
+## 73. AI failure isolation
+
+AI failures affect only optional capabilities.
+
+Examples:
+
+- narrative draft unavailable;
+- image generation unavailable;
+- optional explanation unavailable.
+
+They do not change:
+
+- quote result;
+- historical observation;
+- local context;
+- stored media;
+- saved trips.
+
+AI provider is never a liveness/readiness dependency.
+
+## 74. AI privacy boundary
+
+P0/P1 editorial AI receives only public/curated product data.
+
+Do not send:
+
+- user email/name;
+- precise address;
+- private trip notes;
+- account history;
+- auth credentials.
+
+Any future user-facing personalized AI requires separate privacy/security review.
+
+## 75. AI framework restraint
+
+No LangChain/LlamaIndex/agent framework initially.
+
+Direct provider SDK + typed application interfaces are simpler for the bounded use cases.
+
+Add orchestration frameworks only after real repeated complexity justifies them.
+
+## 76. AI retrieval restraint
+
+No vector database/embedding layer initially.
+
+Country/currency/date/story relevance is already represented structurally in PostgreSQL.
+
+Use SQL/domain queries until semantic retrieval across a large unstructured corpus becomes a real requirement.

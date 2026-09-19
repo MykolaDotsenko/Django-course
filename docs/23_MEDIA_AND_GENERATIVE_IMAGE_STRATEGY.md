@@ -531,21 +531,19 @@ This is a strong reason for keeping provider identity behind our own adapter ins
 
 # 21. Provider selection status
 
-**No permanent AI provider is selected yet.**
+**No runtime image-generation provider is enabled in the public portfolio demo.**
 
-Reason:
+Current Gemini image-generation API pricing lists no Free Tier for Gemini 3.1 Flash Image / Flash Lite Image, so runtime image generation would violate the €0 target.
 
-AI generation is an editorial/build-time enrichment capability, not a core P0 dependency.
+Portfolio strategy:
 
-Choose provider only after:
+- factual imagery → Wikimedia/Europeana/other rights-aware sources;
+- AI illustrations → created manually/offline during development, reviewed, then stored;
+- long tail → Quiet Atlas CSS/SVG fallback.
 
-- prompt benchmark;
-- current pricing;
-- API stability;
-- output licence/terms review;
-- implementation timing.
+Google Gemini 3.1 Flash-Lite is selected only for free-tier live **text** explanation.
 
-This avoids documenting a provider choice months before actual usage.
+Image-provider adapters remain future/optional development tooling.
 
 ---
 

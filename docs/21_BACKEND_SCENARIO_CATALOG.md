@@ -1172,3 +1172,231 @@ Priority: P2
 
 Expected:
 - semantic/idempotency key prevents duplicate billable jobs when feature exists.
+
+
+# T. AI integration and governance
+
+## BE-167 — AI disabled globally
+Priority: P0
+
+Expected:
+- conversion/history/context/story fallback works;
+- no Gemini key required for core app.
+
+## BE-168 — Narrative draft from valid source packet
+Priority: P1
+
+Expected:
+- Structured Output parses;
+- all factual chapters reference supplied fact IDs;
+- candidate remains unpublished.
+
+## BE-169 — Narrative returns unknown fact ID
+Priority: P0 trust
+
+Expected:
+- semantic validation rejects candidate.
+
+## BE-170 — Narrative adds plausible unsupplied fact
+Priority: P0 trust
+
+Expected:
+- eval/review detects unsupported claim;
+- cannot publish as accepted AI draft.
+
+## BE-171 — Model sharpens approximate date
+Priority: P0 trust
+
+Expected:
+- temporal-precision validator/eval rejects.
+
+## BE-172 — Model asserts causal FX explanation without sourced causality
+Priority: P0 trust
+
+Expected:
+- reject/flag candidate.
+
+## BE-173 — Source text contains prompt injection instructions
+Priority: P0 security
+
+Expected:
+- treated as data;
+- no tool/action exists;
+- generation contract remains unchanged.
+
+## BE-174 — Gemini timeout during live explanation
+Priority: P1
+
+Expected:
+- normalized timeout;
+- cached/deterministic fallback is returned;
+- no core product failure.
+
+## BE-175 — Gemini free-tier quota / 429
+Priority: P1
+
+Expected:
+- no paid escalation;
+- cached/deterministic fallback.
+
+## BE-176 — Gemini refusal
+Priority: P1
+
+Expected:
+- typed refusal state;
+- no empty publication;
+- no repeated bypass attempts.
+
+## BE-177 — AI structured output schema succeeds but semantics are wrong
+Priority: P0
+
+Expected:
+- post-schema semantic validation can still reject.
+
+## BE-178 — AI provider unavailable at app startup
+Priority: P0 operations
+
+Expected:
+- app startup/readiness succeeds when AI is optional/disabled;
+- AI capability reports unavailable only when used.
+
+## BE-179 — Missing Gemini key while AI feature enabled
+Priority: P0 config
+
+Expected:
+- capability/config check fails clearly;
+- no secret fallback in code.
+
+## BE-180 — AI call attempted inside DB transaction
+Priority: P0 regression
+
+Expected:
+- architecture/test/review rejects.
+
+## BE-181 — CI without provider key
+Priority: P0
+
+Expected:
+- full normal test suite passes with fake adapter;
+- zero live billable calls.
+
+## BE-182 — Model routing changes Gemini Flash-Lite → another model
+Priority: P1 governance
+
+Expected:
+- eval comparison required before promotion.
+
+## BE-183 — Prompt changes without version bump
+Priority: P0 governance
+
+Expected:
+- review/test convention rejects.
+
+## BE-184 — Generated candidate exceeds length
+Priority: P1
+
+Expected:
+- deterministic validator rejects/truncates only according to explicit policy; no silent publish.
+
+## BE-185 — Generated output includes unknown URL
+Priority: P0 security/trust
+
+Expected:
+- reject; only supplied source references are allowed.
+
+## BE-186 — Public demo requests runtime image generation
+Priority: P0 cost regression
+
+Expected:
+- disabled by configuration;
+- stored/sourced media or Quiet Atlas fallback used.
+
+## BE-187 — Development creates a pre-generated AI image
+Priority: P1
+
+Expected:
+- candidate is reviewed and stored as MediaAsset;
+- production page never regenerates it.
+
+## BE-188 — Image-generation provider refusal
+Priority: P1
+
+Expected:
+- no automatic prompt-obfuscation bypass;
+- manual/sourced fallback.
+
+## BE-189 — Moderation flags image
+Priority: P0
+
+Expected:
+- candidate cannot auto-publish.
+
+## BE-190 — Moderation passes historically false image
+Priority: P0 trust
+
+Expected:
+- historical/editorial review still required; moderation is not truth validation.
+
+## BE-191 — AI monthly budget ceiling reached
+Priority: P1 operations
+
+Expected:
+- optional generation disabled;
+- core product remains healthy.
+
+## BE-192 — AI cost metadata unavailable
+Priority: P2
+
+Expected:
+- operation may complete if otherwise valid;
+- observability records missing usage;
+- no domain failure.
+
+## BE-193 — Duplicate AI job exact same input
+Priority: P1
+
+Expected:
+- semantic idempotency/reuse policy prevents accidental duplicate billable request unless variant requested.
+
+## BE-194 — Editor intentionally requests another variant
+Priority: P1
+
+Expected:
+- new variant explicitly generated and separately tracked.
+
+## BE-195 — Source fact corrected after AI story approved
+Priority: P0 trust
+
+Expected:
+- affected draft/published derived content is flagged needs-review according to source-packet dependency policy.
+
+## BE-196 — Provider model deprecated
+Priority: P1 operations
+
+Expected:
+- benchmark replacement through eval pipeline;
+- existing published content remains unchanged.
+
+## BE-197 — Runtime explanation feature disabled
+Priority: P0
+
+Expected:
+- no effect on converter; deterministic UI remains complete.
+
+## BE-198 — Future runtime explanation receives private trip notes unexpectedly
+Priority: P0 privacy regression
+
+Expected:
+- prohibited by payload builder/tests.
+
+## BE-199 — AI capability attempts web-search tool
+Priority: P0 architecture regression
+
+Expected:
+- no tool configured in P1 path; impossible by adapter contract.
+
+## BE-200 — AI capability attempts autonomous publish/write
+Priority: P0 security regression
+
+Expected:
+- no action tool/authority exists; publication remains deterministic application action.

@@ -35,6 +35,9 @@ This handbook is the single source of truth for the Cultural Currency Converter 
 21. [Backend scenario catalog](21_BACKEND_SCENARIO_CATALOG.md)
 22. [Data import, scheduled jobs and maintenance](22_DATA_IMPORT_JOBS_AND_MAINTENANCE.md)
 23. [Media, historical imagery and generative image strategy](23_MEDIA_AND_GENERATIVE_IMAGE_STRATEGY.md)
+24. [AI product strategy and model selection](24_AI_PRODUCT_STRATEGY.md)
+25. [AI integration architecture](25_AI_INTEGRATION_ARCHITECTURE.md)
+26. [AI prompting, evaluations, safety and cost](26_AI_PROMPTS_EVALS_SAFETY_AND_COST.md)
 
 ## UX decision hierarchy
 
@@ -169,3 +172,19 @@ Before adding a sourced or generated image flow, read:
 A missing image is an acceptable state.
 
 A misleading historical image is not.
+
+
+## AI decision hierarchy
+
+Before adding or changing AI behavior, read:
+
+1. `24_AI_PRODUCT_STRATEGY.md` — allowed/rejected use cases and model routing;
+2. `25_AI_INTEGRATION_ARCHITECTURE.md` — capability interfaces, provider boundary, structured outputs and persistence;
+3. `26_AI_PROMPTS_EVALS_SAFETY_AND_COST.md` — prompt versions, eval gates, safety, privacy and spend controls;
+4. `23_MEDIA_AND_GENERATIVE_IMAGE_STRATEGY.md` — image authenticity/storage policy;
+5. `17_INFORMATION_FLOW_AND_REQUEST_LIFECYCLES.md` — deterministic source-of-truth flows;
+6. `09_ADR_LOG.md` — durable decisions.
+
+AI may transform trusted data into candidates.
+
+AI may not become a new source of financial or historical truth.
