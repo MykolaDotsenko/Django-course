@@ -24,6 +24,9 @@ This handbook is the single source of truth for the Cultural Currency Converter 
 10. [Official references](10_REFERENCES.md)
 11. [API research and data-source strategy](11_API_RESEARCH_AND_DATA_SOURCES.md)
 12. [External API integration contracts](12_EXTERNAL_API_CONTRACTS.md)
+13. [Frontend technology strategy](13_FRONTEND_TECHNOLOGY_STRATEGY.md)
+14. [Web frontend architecture](14_WEB_FRONTEND_ARCHITECTURE.md)
+15. [Mobile frontend architecture](15_MOBILE_FRONTEND_ARCHITECTURE.md)
 
 ## UX decision hierarchy
 
@@ -108,3 +111,19 @@ Before adding or changing a third-party API, read in this order:
 6. `09_ADR_LOG.md` — durable provider/source decisions.
 
 A new API is not accepted merely because it provides convenient JSON.
+
+
+## Frontend decision hierarchy
+
+Before adding/changing a web or mobile frontend dependency, read:
+
+1. `13_FRONTEND_TECHNOLOGY_STRATEGY.md` — selected/rejected technologies and why;
+2. `14_WEB_FRONTEND_ARCHITECTURE.md` — Django/HTMX/Vite/TypeScript ownership and implementation rules;
+3. `15_MOBILE_FRONTEND_ARCHITECTURE.md` — Expo/React Native/API/offline state ownership;
+4. `03_UI_DESIGN_SYSTEM.md` and detailed Quiet Atlas docs — required visual/interaction behavior;
+5. `02B_INTERACTION_AND_STATE_SPEC.md` — state integrity and recovery rules;
+6. `09_ADR_LOG.md` — durable frontend architecture decisions.
+
+A frontend dependency is not accepted because it is popular, modern, or visually impressive.
+
+It must solve a documented problem with lower total complexity than the native/platform/project-owned alternative.
