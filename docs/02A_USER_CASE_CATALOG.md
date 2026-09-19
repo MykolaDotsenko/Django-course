@@ -1320,3 +1320,298 @@ These rules apply across the catalog.
 8. **Offline/cached data always exposes age.**
 9. **No provider response is trusted before validation.**
 10. **No user input is reinterpreted silently when meaning is ambiguous.**
+
+
+# H2. Historical Converter and Storytelling
+
+## UC-073 — Convert on an exact historical date
+
+**Priority:** P1
+
+### User intent
+
+> I want to know what this amount converted to on a specific past date.
+
+### Example
+
+100 EUR → USD on 15 June 2016.
+
+### Expected behaviour
+
+- preserve the requested date;
+- retrieve the appropriate historical reference observation;
+- show amount/result/rate;
+- show actual effective observation date;
+- show provider/source;
+- mark the result as Historical reference, not current/live.
+
+---
+
+## UC-074 — Historical date with no exact observation
+
+**Priority:** P1 critical trust case
+
+### Example
+
+User selects Sunday 14 June 1998.
+
+### Expected behaviour
+
+- do not invent a Sunday observation;
+- apply the documented provider/fallback policy;
+- show both requested date and actual observation date;
+- explain that the previous available observation was used;
+- never hide the date substitution.
+
+---
+
+## UC-075 — Historical country suggests archived currency
+
+**Priority:** P1 differentiator
+
+### Example
+
+Country: Finland  
+Date: 15 June 1998  
+Currency currently selected: EUR
+
+### Expected behaviour
+
+Show:
+
+> Finland used the Finnish markka (FIM) on this date.
+
+Action:
+
+> Use FIM
+
+Alternative:
+
+> Keep EUR
+
+### Critical rule
+
+Do not silently replace the user's explicit currency selection.
+
+---
+
+## UC-076 — Select an archived currency
+
+**Priority:** P1
+
+### User intent
+
+> I want to convert Finnish markka, Deutsche Mark or another retired currency during its supported historical period.
+
+### Expected behaviour
+
+- archived currencies are discoverable in historical mode;
+- active-period/provider coverage is visible;
+- current mode does not become cluttered with archived codes;
+- selected date must be compatible with available historical coverage.
+
+---
+
+## UC-077 — Historical date outside coverage
+
+**Priority:** P1
+
+### Expected behaviour
+
+Explain:
+
+> Historical data for this pair starts on [date].
+
+Offer:
+
+- earliest supported date;
+- change currency;
+- source/coverage details.
+
+Do not imply that provider-wide earliest history applies to every pair.
+
+---
+
+## UC-078 — Then & now comparison
+
+**Priority:** P1
+
+### Preconditions
+
+The same currency pair has valid historical and current/latest reference observations.
+
+### Expected behaviour
+
+Show:
+
+- historical conversion;
+- latest reference conversion;
+- clearly directional rate difference.
+
+### Copy rule
+
+Good:
+
+> The latest reference conversion gives about 8% more USD per 100 EUR than the selected 2016 observation.
+
+Bad:
+
+> You would have made 8%.
+
+No investment-return framing.
+
+---
+
+## UC-079 — Historical FX is not historical purchasing power
+
+**Priority:** P1 trust case
+
+### User intent
+
+> What could 100 FIM buy in 1998?
+
+### Expected behaviour
+
+The product explains that FX conversion alone cannot answer that question.
+
+Do not use current typical-price cards as historical evidence.
+
+If a future historical purchasing-power module exists, expose it as a separate calculation with its own methodology/source.
+
+---
+
+## UC-080H — Open the story behind a historical conversion
+
+**Priority:** P1
+
+### User intent
+
+> Explain what monetary/cultural era I am looking at.
+
+### Expected behaviour
+
+Story may contain:
+
+- conversion summary;
+- currency era;
+- currency transition;
+- valid Then & now comparison;
+- temporally relevant sourced historical/cultural context.
+
+### Critical rule
+
+Historical conversion succeeds even if no story content exists.
+
+---
+
+## UC-081H — Archived currency has no valid current market comparison
+
+**Priority:** P1
+
+### Example
+
+FIM → USD in 1998.
+
+### Expected behaviour
+
+Do not fabricate a current FIM/USD market quote.
+
+Instead show a currency transition/timeline where sourced.
+
+---
+
+## UC-082H — Story fact is missing or weakly sourced
+
+**Priority:** P1
+
+### Expected behaviour
+
+Omit the chapter.
+
+Do not fill the story with generic trivia or AI-generated claims.
+
+---
+
+## UC-083H — Historical event near a rate movement
+
+**Priority:** P1 trust case
+
+### Expected behaviour
+
+A historical event may be displayed as contextual information.
+
+The app does not claim:
+
+> Event X caused the currency move
+
+unless a reliable cited source explicitly supports that causal relationship.
+
+---
+
+## UC-084H — Share historical conversion/story
+
+**Priority:** P2
+
+### Expected behaviour
+
+Shareable state can contain:
+
+- amount;
+- pair;
+- requested date;
+- country context.
+
+Rendered/shared result must still expose actual observation date when it differs from requested date.
+
+No private account/trip data is added to the URL.
+
+---
+
+## UC-085H — Historical chart highlights selected point
+
+**Priority:** P1/P2
+
+### Expected behaviour
+
+The chart uses the same normalized historical quote semantics as the converter.
+
+The selected date/observation is highlighted.
+
+The chart has text/table equivalent.
+
+---
+
+## UC-086H — Monthly/low-frequency archived series
+
+**Priority:** P1
+
+### Expected behaviour
+
+If provider data is monthly rather than daily:
+
+- state the observation granularity;
+- do not imply day-level precision;
+- show the actual period/date used.
+
+---
+
+## UC-087H — Historical deep link reload
+
+**Priority:** P1
+
+### Example
+
+```text
+?amount=100&from=FIM&to=USD&date=1998-06-15
+```
+
+### Expected behaviour
+
+Reload reproduces:
+
+- requested date;
+- pair;
+- amount;
+- historical result semantics.
+
+Any fallback observation remains separately labelled.
