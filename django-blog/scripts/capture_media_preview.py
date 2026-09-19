@@ -24,6 +24,25 @@ VIEWPORTS = (
 )
 
 
+def _load_lazy_images(page: Page) -> None:
+    """Bring every preview image into the loading viewport before validation."""
+
+    images = page.locator("img")
+    for index in range(images.count()):
+        image = images.nth(index)
+        image.scroll_into_view_if_needed()
+        image.evaluate(
+            """element => element.complete
+                ? Promise.resolve()
+                : new Promise((resolve, reject) => {
+                    element.addEventListener("load", resolve, {once: true});
+                    element.addEventListener("error", reject, {once: true});
+                })"""
+        )
+
+    page.evaluate("window.scrollTo(0, 0)")
+
+
 def _assert_preview_integrity(page: Page) -> None:
     title = page.locator("h1").inner_text()
     if title.strip() != "Quiet Atlas media system":
@@ -88,6 +107,7 @@ def main() -> None:
                     f"Preview request failed for {name}: {status}",
                 )
 
+            _load_lazy_images(page)
             _assert_preview_integrity(page)
 
             if console_errors:
