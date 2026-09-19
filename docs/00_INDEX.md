@@ -39,6 +39,7 @@ This handbook is the single source of truth for the Cultural Currency Converter 
 25. [AI integration architecture](25_AI_INTEGRATION_ARCHITECTURE.md)
 26. [AI prompting, evaluations, safety and cost](26_AI_PROMPTS_EVALS_SAFETY_AND_COST.md)
 27. [Static image generation plan](27_STATIC_IMAGE_GENERATION_PLAN.md)
+28. [Static media UI integration architecture](28_STATIC_MEDIA_UI_INTEGRATION.md)
 
 ## UX decision hierarchy
 
@@ -200,3 +201,15 @@ Before adding or replacing release-owned imagery, read:
 3. `03_UI_DESIGN_SYSTEM.md` — Quiet Atlas visual hierarchy.
 
 The initial P0 pack lives under `static/images/quiet-atlas/` and is designed to work with zero runtime image-generation cost.
+
+
+## Static-media implementation order
+
+When wiring release-owned visuals into Django/HTMX:
+
+1. `27_STATIC_IMAGE_GENERATION_PLAN.md` — asset inventory and prompt/authenticity contract;
+2. `28_STATIC_MEDIA_UI_INTEGRATION.md` — registry, selectors, view models and template integration;
+3. `03_UI_DESIGN_SYSTEM.md` — visual hierarchy and restraint;
+4. `23_MEDIA_AND_GENERATIVE_IMAGE_STRATEGY.md` — future sourced/AI MediaAsset migration.
+
+Do not hardcode Quiet Atlas filenames throughout page templates.
