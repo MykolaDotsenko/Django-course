@@ -1,0 +1,134 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quiet Atlas media preview</title>
+  <link rel="stylesheet" href="{% static 'css/quiet-atlas-preview.css' %}">
+</head>
+<body class="qa-preview">
+  <header class="qa-preview__header">
+    <div>
+      <p class="qa-preview__kicker">Design QA · DEBUG only</p>
+      <h1>Quiet Atlas media system</h1>
+      <p class="qa-preview__lede">
+        A real rendering surface for checking hierarchy, density, fallbacks,
+        historical honesty and responsive behavior before product-page wiring.
+      </p>
+    </div>
+    <div class="qa-preview__meta">
+      <strong>23 assets</strong>
+      <span>zero runtime generation</span>
+    </div>
+  </header>
+
+  <main class="qa-preview__main">
+    <section class="qa-preview__hero" aria-labelledby="hero-title">
+      <div class="qa-preview__hero-copy">
+        <p class="qa-preview__kicker">Convert · Understand · Explore</p>
+        <h2 id="hero-title">Convert money with context.</h2>
+        <p>
+          The converter remains the primary task. Media supports the story
+          without becoming the story.
+        </p>
+        <div class="qa-preview__result-mock" aria-label="Example conversion result">
+          <span>100.00 EUR</span>
+          <strong>→</strong>
+          <span>17,450 JPY</span>
+        </div>
+      </div>
+
+      <div class="qa-preview__hero-media">
+        {% include "components/media/image_frame.html" with image=hero_image loading="eager" fetchpriority="high" only %}
+      </div>
+    </section>
+
+    <section class="qa-preview__section" aria-labelledby="explainers-title">
+      <div class="qa-preview__section-heading">
+        <div>
+          <p class="qa-preview__kicker">Product explanation</p>
+          <h2 id="explainers-title">Context without card soup</h2>
+        </div>
+        <p>Three visuals maximum before the deeper content sections.</p>
+      </div>
+
+      <div class="qa-preview__grid qa-preview__grid--3">
+        {% for card in explainer_cards %}
+          {% include "components/media/media_card.html" with card=card only %}
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="qa-preview__section" aria-labelledby="countries-title">
+      <div class="qa-preview__section-heading">
+        <div>
+          <p class="qa-preview__kicker">Destination context</p>
+          <h2 id="countries-title">Country atmosphere</h2>
+        </div>
+        <p>Visual identity is supportive; real prices and payment guidance remain textual/sourced.</p>
+      </div>
+
+      <div class="qa-preview__grid qa-preview__grid--countries">
+        {% for card in country_cards %}
+          {% include "components/media/media_card.html" with card=card only %}
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="qa-preview__section" aria-labelledby="stories-title">
+      <div class="qa-preview__section-heading">
+        <div>
+          <p class="qa-preview__kicker">Purchasing-power intuition</p>
+          <h2 id="stories-title">Everyday value stories</h2>
+        </div>
+        <p>Food, transit and accommodation cover materially different spending categories.</p>
+      </div>
+
+      <div class="qa-preview__grid qa-preview__grid--stories">
+        {% for card in story_cards %}
+          {% include "components/media/media_card.html" with card=card only %}
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="qa-preview__section" aria-labelledby="history-title">
+      <div class="qa-preview__section-heading">
+        <div>
+          <p class="qa-preview__kicker">Historical mode</p>
+          <h2 id="history-title">Illustration, not fabricated evidence</h2>
+        </div>
+        <p>Historical artwork is visibly described as illustrative and never substitutes for sourced archive media.</p>
+      </div>
+
+      <div class="qa-preview__grid qa-preview__grid--3">
+        {% for card in history_cards %}
+          {% include "components/media/media_card.html" with card=card only %}
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="qa-preview__trust" aria-labelledby="trust-title">
+      <div class="qa-preview__trust-copy">
+        <p class="qa-preview__kicker">Trust layer</p>
+        <h2 id="trust-title">Source and freshness belong in the product.</h2>
+        <p>
+          Provider, effective date and stale/fresh semantics are visible
+          information. The illustration is optional support for that education.
+        </p>
+
+        <dl class="qa-preview__source-list">
+          <div><dt>Provider</dt><dd>Frankfurter</dd></div>
+          <div><dt>Effective date</dt><dd>12 Jun 1998</dd></div>
+          <div><dt>Requested date</dt><dd>14 Jun 1998</dd></div>
+          <div><dt>Status</dt><dd>Historical observation</dd></div>
+        </dl>
+      </div>
+
+      <div class="qa-preview__trust-media">
+        {% include "components/media/media_card.html" with card=trust_card only %}
+      </div>
+    </section>
+  </main>
+</body>
+</html>
