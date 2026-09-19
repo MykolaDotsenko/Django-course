@@ -1,6 +1,6 @@
 # Official References
 
-These are preferred primary references for implementation decisions. Version-match documentation before each implementation PR.
+These are preferred primary references for implementation and UX decisions. Version-match documentation before each implementation PR.
 
 ## Django
 
@@ -21,7 +21,7 @@ These are preferred primary references for implementation decisions. Version-mat
 
 - Documentation  
   https://htmx.org/docs/
-- Security guidance is included in the official docs  
+- Security guidance  
   https://htmx.org/docs/#security
 - Reference  
   https://htmx.org/reference/
@@ -48,24 +48,87 @@ Tailwind 4 targets modern browsers; verify target-browser requirements before im
 - Python examples  
   https://frankfurter.dev/python/
 
-Relevant API capabilities:
+Relevant API characteristics:
 
-- latest rates;
-- single pair rates;
+- daily exchange rates from central banks and official sources;
+- latest reference rates;
+- individual pair rates;
 - historical dates;
 - time series;
 - provider filtering;
 - provider attribution;
-- currencies including legacy scope.
+- current and legacy currency metadata.
 
-## Accessibility
+### UX implication
+
+Frankfurter explicitly describes its data as mostly daily and states it is not intended for live trading.
+
+Therefore product copy must not describe P0 exchange data as “live” or “real-time”.
+
+Use:
+
+- reference rate;
+- effective date;
+- provider/source attribution.
+
+## Accessibility — W3C
 
 - WCAG 2.2 Recommendation  
   https://www.w3.org/TR/WCAG22/
 - WCAG overview  
   https://www.w3.org/WAI/standards-guidelines/wcag/
-- What's new in 2.2  
+- What's new in WCAG 2.2  
   https://www.w3.org/WAI/standards-guidelines/wcag/new-in-22/
+- Understanding Target Size (Minimum) — SC 2.5.8  
+  https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum
+- Understanding Focus Appearance  
+  https://www.w3.org/WAI/WCAG22/Understanding/focus-appearance
+
+Relevant UX constraints include:
+
+- WCAG 2.2 AA target-size/spacing requirements;
+- visible and unobscured keyboard focus;
+- non-colour-only state communication;
+- predictable form/error behaviour.
+
+## Form UX reference — GOV.UK Design System
+
+The project does not copy GOV.UK visual styling. These references are used for mature form-interaction guidance.
+
+- Text input  
+  https://design-system.service.gov.uk/components/text-input/
+- Select  
+  https://design-system.service.gov.uk/components/select/
+- Error message  
+  https://design-system.service.gov.uk/components/error-message/
+- Error summary  
+  https://design-system.service.gov.uk/components/error-summary/
+
+Relevant guidance:
+
+- visible labels rather than placeholder-only fields;
+- concise hint text;
+- field-specific errors;
+- programmatic description/error association;
+- predictable native controls where appropriate.
+
+## Native mobile UX — Apple Human Interface Guidelines
+
+- Buttons  
+  https://developer.apple.com/design/human-interface-guidelines/buttons
+- Accessibility  
+  https://developer.apple.com/design/human-interface-guidelines/accessibility
+- UI design tips  
+  https://developer.apple.com/design/tips/
+
+Relevant mobile considerations:
+
+- primary touch controls should have comfortable hit regions;
+- iOS guidance commonly uses at least 44×44 pt for standard button hit regions;
+- custom buttons need clear pressed states;
+- spacing is important for users with limited touch precision.
+
+Android/Material platform-specific guidance should be added and version-checked when React Native UI implementation begins.
 
 ## React Native
 
@@ -94,6 +157,58 @@ Use only for the explicit mobile API boundary, not as an unnecessary intermediar
 
 ## Country and currency standards
 
-Prefer ISO-style stable identifiers in the domain. Where external country metadata is used, import/normalize only fields the product actually owns and display.
+Prefer ISO-style stable identifiers in the domain.
+
+Where external country metadata is used, import/normalize only fields the product actually owns and displays.
 
 Any third-party country-data provider must be replaceable through import/normalization boundaries and must not become an implicit domain schema.
+
+## Competitive UX benchmarks
+
+These are **benchmarks, not authorities**.
+
+They help identify established user expectations for the primary conversion task.
+
+### Wise Currency Converter
+
+https://wise.com/us/currency-converter/
+
+Current observed hierarchy:
+
+- amount;
+- source currency;
+- destination currency;
+- converted result;
+- mid-market/reference-rate explanation;
+- tracking/history as secondary actions.
+
+### Xe Currency Converter
+
+https://www.xe.com/currencyconverter/
+
+Current observed hierarchy:
+
+- amount;
+- From;
+- To;
+- result;
+- rate timestamp/context;
+- tracking/historical tools.
+
+### Product conclusion
+
+Mainstream converters validate a very low-friction conversion hierarchy.
+
+Cultural Currency Converter should not compete with that workflow.
+
+Its differentiation begins **after the trusted result**:
+
+```text
+conversion
+→ trust/freshness
+→ local purchasing context
+→ payment guidance
+→ culture
+```
+
+Commercial CTAs such as money transfer, account upsell or rate tracking are not copied merely because competitors use them.
