@@ -68,7 +68,7 @@ Concept:
 
 ```text
 integrations/
-└── openai/
+└── gemini/
     ├── client.py
     ├── errors.py
     ├── models.py
@@ -99,7 +99,7 @@ A dedicated `media` app becomes justified when MediaAsset/storage/generation is 
 
 # 4. Provider transport boundary
 
-`integrations/openai/client.py` owns:
+`integrations/gemini/client.py` owns:
 
 - SDK/client construction;
 - API key;
@@ -139,9 +139,15 @@ Provider model names do not appear in the application use case.
 
 # 6. Structured text generation
 
-Use the OpenAI **Responses API** with Structured Outputs.
+Use the **Gemini Developer API** with schema-constrained structured JSON output.
 
-The provider call requests a strict JSON Schema.
+Primary runtime model:
+
+```text
+gemini-3.1-flash-lite
+```
+
+The provider request supplies the expected response schema.
 
 Do not ask for:
 
@@ -149,7 +155,7 @@ Do not ask for:
 
 and then parse arbitrary free-form output.
 
-Use a schema corresponding to the application result.
+Use a schema corresponding to the application result and validate it again application-side.
 
 ---
 
@@ -430,24 +436,20 @@ No automatic candidate → publish transition.
 
 # 20. Moderation architecture
 
-Use two safety layers.
+For the zero-cost portfolio demo, do not add a second paid moderation API.
 
-## Provider generation safety
+Safety layers are:
 
-Image/text provider policies may refuse generation.
+1. provider safety filters/refusals;
+2. schema/semantic validation;
+3. deterministic content rules;
+4. human review for stored editorial/AI media.
 
-## Product moderation
+This is sufficient because live AI only explains already-curated public data and cannot publish or mutate anything.
 
-Use `omni-moderation-latest` for relevant candidate text/image checks.
+If public user-authored prompts are introduced later, reevaluate a dedicated moderation capability.
 
-Moderation result is a signal, not factual validation.
-
-Human review still handles:
-
-- historical authenticity;
-- stereotype;
-- anachronism;
-- licensing/source correctness.
+Moderation/safety never replaces factual validation.
 
 ---
 
@@ -687,29 +689,34 @@ Do not rely only on provider billing dashboard.
 
 # 34. Capability config example
 
-Concept:
+Portfolio-demo configuration:
 
 ```python
 AI_CAPABILITIES = {
-    "narrative_draft": {
-        "provider": "openai",
-        "model": "gpt-5.6-terra",
-        "reasoning": "low",
+    "runtime_explanation": {
+        "provider": "gemini",
+        "model": "gemini-3.1-flash-lite",
         "enabled": True,
+        "live": True,
+        "cache": "persistent",
+        "fallback": "deterministic",
     },
-    "tag_suggestion": {
-        "provider": "openai",
-        "model": "gpt-5.6-luna",
-        "reasoning": "none",
+    "narrative_draft": {
+        "provider": "gemini",
+        "model": "gemini-3.1-flash-lite",
+        "enabled": False,
+        "live": False,
     },
-    "image_final": {
-        "provider": "openai",
-        "model": "gpt-image-2.5-sunburst",
+    "image_generation": {
+        "enabled": False,
+        "live": False,
     },
 }
 ```
 
 Actual settings are environment/deployment-driven.
+
+No paid-model automatic fallback exists.
 
 ---
 
@@ -717,8 +724,8 @@ Actual settings are environment/deployment-driven.
 
 Server-only:
 
-- OPENAI_API_KEY;
-- optional OpenAI project/org identifiers.
+- GEMINI_API_KEY / current Gemini auth key;
+- optional Google project identifiers required by the selected SDK/auth flow.
 
 Never expose to:
 
@@ -766,21 +773,34 @@ Do not send private profile/trip notes unless a future feature explicitly requir
 
 ---
 
-# 38. API retention consideration
+# 38. Free-tier data-handling consideration
 
-Provider data-handling policy is reviewed before enabling user-facing AI.
+Google's current Gemini Developer API pricing documentation marks free-tier usage as **used to improve Google products**.
 
-OpenAI's API inputs/outputs are not used for training by default unless the organization opts in, but provider retention controls and abuse-monitoring behavior must still be considered.
+Therefore live free-tier AI receives only public/non-sensitive data:
 
-No product privacy text should promise zero retention unless the deployment actually has that configuration/eligibility.
+- conversion values;
+- currency/country identifiers;
+- public curated context;
+- public fact IDs.
+
+Do not send personal profile data, private trip notes or secrets.
+
+If privacy requirements later become stronger, disable live free-tier AI or move to a paid provider/tier with appropriate data controls.
 
 ---
 
-# 39. Request safety identifier
+# 39. Public demo request identity
 
-If a future public user-triggered AI feature uses provider safety identifiers, send a pseudonymous stable identifier rather than raw email/name.
+The Gemini request does not need user identity.
 
-No need for this in internal editorial generation unless provider/API policy requires it.
+Rate limiting/caching is enforced by our backend using:
+
+- normalized packet hash;
+- anonymous/IP/session safeguards where appropriate;
+- application-wide daily live-call ceiling.
+
+Do not forward raw user identity to Gemini.
 
 ---
 
@@ -812,23 +832,24 @@ For editorial public facts, a controlled debug/audit mode can retain prompt vers
 
 ---
 
-# 41. Cost calculation
+# 41. Cost/quota accounting
 
-Usage metadata maps to configured provider pricing table.
+The portfolio target is:
 
-Cost estimate is operational metadata.
+```text
+normal runtime AI cost = €0
+```
 
-It must not be hard-coded into domain rules.
+Track:
 
-Pricing table has:
+- live call count;
+- free-tier 429/quota exhaustion;
+- cache hit rate;
+- deterministic fallback rate.
 
-- provider;
-- model;
-- effective_from;
-- unit prices;
-- source/review date.
+A pricing table is only needed if a paid tier is intentionally enabled later.
 
-Current provider price changes should not require product-code changes.
+Free-tier limits are not hard-coded as provider guarantees because Google states actual quotas vary by model/project/account and are visible in AI Studio.
 
 ---
 
@@ -901,18 +922,21 @@ AI does not replace the source/editor screen.
 
 # 46. Media editor workflow
 
+Public deployment does not generate images.
+
+Development workflow:
+
 ```text
 open MediaGenerationBrief
-→ generate Flare candidates
-→ reject/select concept
-→ optional Sunburst final
-→ moderation
+→ generate/obtain candidate manually using available development tooling
+→ reject/select
+→ review authenticity/rights
 → metadata/AI label
-→ approve
+→ store MediaAsset
 → publish
 ```
 
-Every provider call is explicit.
+No image-generation provider key is required in production.
 
 ---
 
@@ -949,19 +973,32 @@ It is not automatically rewritten in production.
 
 ---
 
-# 49. Runtime explanation architecture — future
+# 49. Runtime explanation architecture — selected demo feature
 
-If approved:
+Selected portfolio flow:
 
 ```text
-client
-→ backend explanation endpoint
-→ deterministic rate/context query
-→ ExplanationPacket
-→ AIExplanationGenerator
-→ structured output
-→ semantic validator
-→ response
+client clicks "Explain this"
+→ backend builds deterministic ExplanationPacket
+→ persistent cache lookup by packet+prompt+model hash
+   ├─ hit → return cached result
+   └─ miss
+       ↓
+       Gemini 3.1 Flash-Lite free-tier call
+       ↓
+       structured output
+       ↓
+       semantic validator
+       ↓
+       persist cache
+       ↓
+       return
+```
+
+If quota/provider fails:
+
+```text
+deterministic explanation
 ```
 
 The endpoint never forwards arbitrary client prompt directly.
@@ -1048,14 +1085,14 @@ Application code remains the sole action authority.
 
 ---
 
-# 55. Integration acceptance criteria
+# 55. Zero-cost integration acceptance criteria
 
 AI integration is correctly implemented when:
 
 - core product works with AI disabled;
 - capability-specific interfaces exist;
 - no generic free-form LLM escape hatch is used in domain/application code;
-- Responses API structured output is used for structured text tasks;
+- Gemini schema-constrained structured output is used for live text tasks;
 - model names live in config/provider layer;
 - provider errors are normalized;
 - calls happen outside DB transactions;
@@ -1066,3 +1103,78 @@ AI integration is correctly implemented when:
 - CI uses fakes and requires no provider key;
 - usage/cost/latency/refusals are observable;
 - privacy payload is minimized.
+
+
+# 56. Zero-cost public-demo controls
+
+Required controls:
+
+- no billing-dependent model in default config;
+- no image-generation API in production;
+- AI call only after explicit user click;
+- persistent result cache;
+- daily application-level live-call ceiling configurable independently of provider quota;
+- per-session/IP abuse guard if public traffic requires it;
+- deterministic fallback;
+- no retries that can multiply quota unexpectedly;
+- one live request at most per unique uncached explanation packet under normal flow.
+
+## 57. Gemini free-tier quota behavior
+
+Google documents that Gemini API free-tier rate limits vary by model/project/account and are shown in Google AI Studio.
+
+Do not encode a claimed provider RPD as a permanent application invariant.
+
+Application behavior for `429 RESOURCE_EXHAUSTED`:
+
+```text
+cached result if available
+→ deterministic fallback
+→ optional subtle "AI explanation unavailable" metadata
+```
+
+Never prompt the user to pay or break conversion.
+
+## 58. Auth-key policy
+
+Current Gemini API documentation requires modern restricted/auth keys rather than exposing unrestricted standard keys.
+
+The key is server-only.
+
+Do not embed it in:
+
+- JavaScript;
+- mobile bundle;
+- repository;
+- HTML;
+- public environment variables.
+
+## 59. OpenRouter optional developer fallback
+
+OpenRouter currently offers a free plan with free models and a documented free-plan request limit.
+
+It is **not** the default production fallback because:
+
+- available free models change;
+- the free router may select different models;
+- output quality/behavior can drift;
+- adding a second live provider reduces reproducibility.
+
+It may be useful for local experiments only.
+
+## 60. Runtime AI recruiter signal
+
+The demo needs to prove architecture, not burn tokens.
+
+One live endpoint is enough to demonstrate:
+
+- provider adapter;
+- typed structured output;
+- source-packet grounding;
+- cache;
+- quota handling;
+- semantic validation;
+- graceful fallback;
+- observability.
+
+Additional live AI endpoints reduce ROI.
