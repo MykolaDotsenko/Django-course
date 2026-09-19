@@ -164,7 +164,7 @@ Design consequence:
 - large touch targets;
 - easy swap;
 - cached mobile state later;
-- cultural exploration stays below the fold.
+- deeper cultural exploration stays below the fold; lightweight bilateral country atmosphere may be present in the converter itself.
 
 ### Tier 1 — Traveller planning a trip
 
