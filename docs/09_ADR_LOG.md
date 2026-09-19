@@ -1140,3 +1140,142 @@ A failed, malformed or suspiciously incomplete external snapshot must not wipe v
 Small canonical snapshot applies are atomic after full validation.
 
 Large future datasets may use staging + publish/activate semantics.
+
+
+---
+
+## ADR-078 — Static assets and content media are separate systems
+
+**Status:** accepted
+
+Use Django/Vite staticfiles only for release-owned brand/UI assets.
+
+Sourced historical media and generated editorial illustrations are content media stored through Django's media Storage API.
+
+Do not put a growing country/year media library into Git.
+
+---
+
+## ADR-079 — Core country/year selection never triggers image generation
+
+**Status:** accepted
+
+Changing a country, currency or historical date reads already-published media or uses a programmatic fallback.
+
+It does not call an image-generation API.
+
+Reasons:
+
+- latency;
+- variable cost;
+- nondeterminism;
+- provider failure;
+- historical hallucination;
+- offline/recruiter-demo stability.
+
+---
+
+## ADR-080 — Real sourced historical media outranks AI reconstruction
+
+**Status:** accepted
+
+For factual/editorial historical context, selection priority is:
+
+1. relevant real sourced media;
+2. broader but honestly dated real media;
+3. approved AI editorial illustration;
+4. programmatic Quiet Atlas fallback.
+
+AI output is never historical evidence.
+
+---
+
+## ADR-081 — Historical AI imagery requires visible authenticity labeling
+
+**Status:** accepted
+
+If generated media could reasonably be mistaken for an archival photograph or factual reconstruction, it must display a visible label such as:
+
+> AI-generated editorial illustration
+
+or:
+
+> Artistic reconstruction · not an archival photograph
+
+Alt text alone is insufficient.
+
+---
+
+## ADR-082 — Published media is stored and versioned, never regenerated on page load
+
+**Status:** accepted
+
+Approved generated/sourced media is stored as an immutable/versioned asset.
+
+Store:
+
+- provenance;
+- content hash;
+- source/provider metadata;
+- generation prompt/model metadata where applicable.
+
+A model upgrade does not silently alter existing pages.
+
+---
+
+## ADR-083 — Media bytes live outside PostgreSQL
+
+**Status:** accepted
+
+PostgreSQL stores MediaAsset metadata and storage key.
+
+File/object storage stores image bytes and derivatives.
+
+Development can use FileSystemStorage.
+
+Production can use S3-compatible storage through Django's Storage API.
+
+---
+
+## ADR-084 — AI image providers sit behind a server-side adapter
+
+**Status:** accepted
+
+Potential providers include OpenAI, Stability AI and Google image-generation services.
+
+No provider is permanently selected before an actual Quiet Atlas benchmark and current pricing/terms review.
+
+Browser/mobile never receive provider API keys or call image-generation providers directly.
+
+---
+
+## ADR-085 — Media search APIs are ingestion tools, not user-request dependencies
+
+**Status:** accepted
+
+Wikimedia Commons and Europeana are queried during editorial/import workflows.
+
+Normal page requests use only local published media metadata/storage.
+
+Do not display “first search result” directly from an archive API.
+
+---
+
+## ADR-086 — Future on-demand AI generation is an explicit async feature
+
+**Status:** accepted for future scope
+
+If users later request custom artistic country/year imagery, generation is a separate explicit action.
+
+It requires:
+
+- asynchronous job state;
+- idempotency;
+- quota;
+- caching;
+- spend control;
+- moderation.
+
+This would be a real justification for introducing task-queue infrastructure.
+
+It is not part of core conversion.
