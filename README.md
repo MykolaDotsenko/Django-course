@@ -70,6 +70,7 @@ Convert → Understand → Explore → Save → Return
 10. **Documentation is executable intent.** Non-trivial PRs must reference the relevant product/architecture documents.
 11. **Explicit backend ownership.** Views/forms/serializers handle transport; application use cases coordinate; pure domain code owns financial semantics; provider adapters own external JSON.
 12. **Short transactions.** Network I/O never runs while PostgreSQL transactions/row locks are intentionally held; durable invariants use constraints and explicit transaction boundaries.
+13. **Media authenticity before spectacle.** Real sourced archival media is preferred for historical evidence; AI imagery is reviewed, stored and visibly labelled as illustration rather than generated on every country/year change.
 
 ## Documentation
 
@@ -88,6 +89,7 @@ The handbook covers:
 - PostgreSQL transactions, constraints, cache/concurrency policy;
 - API/security/observability/operations and 148 backend scenarios;
 - scheduled imports, maintenance and failure behavior;
+- sourced historical media, object-storage strategy and controlled AI illustration pipeline;
 - quality, security and accessibility;
 - implementation sequencing and ADRs;
 - official references.
