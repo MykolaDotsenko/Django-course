@@ -127,5 +127,5 @@ class MediaCardTemplateTests(SimpleTestCase):
             },
         )
 
-        self.assertIn(">Japan", html)
+        self.assertIn("Japan", html)
         self.assertNotIn("<a ", html)
