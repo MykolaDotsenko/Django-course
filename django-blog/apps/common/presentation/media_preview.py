@@ -17,6 +17,7 @@ from .media_view_models import (
     MediaCardViewModel,
     build_static_image_view_model,
 )
+from .raster_candidates import build_all_raster_comparisons
 
 
 COUNTRY_PREVIEW = (
@@ -196,4 +197,5 @@ def build_media_preview_context() -> dict[str, object]:
         "history_cards": history_cards,
         "trust_card": trust_card,
         "derivative_cards": derivative_cards,
+        "raster_comparisons": build_all_raster_comparisons(),
     }
