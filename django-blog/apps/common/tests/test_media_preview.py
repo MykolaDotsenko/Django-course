@@ -16,6 +16,7 @@ class MediaPreviewViewTests(SimpleTestCase):
         self.assertEqual(len(response.context["story_cards"]), 5)
         self.assertEqual(len(response.context["history_cards"]), 3)
         self.assertEqual(len(response.context["derivative_cards"]), 5)
+        self.assertEqual(len(response.context["raster_comparisons"]), 2)
 
         self.assertContains(response, "Quiet Atlas media system")
         self.assertContains(response, "28 assets")
@@ -40,6 +41,9 @@ class MediaPreviewViewTests(SimpleTestCase):
             "Mobile home hero",
             "Home OpenGraph",
             "Local value OpenGraph",
+            "Canonical SVG vs AI raster",
+            "Japan local-value AI candidate",
+            "Rate provenance AI candidate",
         ):
             with self.subTest(text=text):
                 self.assertContains(response, text)
