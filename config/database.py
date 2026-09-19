@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qsl, unquote, urlparse
@@ -16,7 +16,7 @@ class DatabaseConfig:
     engine: str
     name: str
     user: str = ""
-    password: str = ""
+    password: str = field(default="", repr=False)
     host: str = ""
     port: str = ""
     options: tuple[tuple[str, str], ...] = ()
@@ -61,7 +61,11 @@ def _parse_query_options(query: str) -> tuple[tuple[str, str], ...]:
     if not query:
         return ()
 
-    pairs = parse_qsl(query, keep_blank_values=False, strict_parsing=True)
+    try:
+        pairs = parse_qsl(query, keep_blank_values=False, strict_parsing=True)
+    except ValueError as exc:
+        raise ConfigurationError("DATABASE_URL contains malformed query options.") from exc
+
     seen: set[str] = set()
     normalized: list[tuple[str, str]] = []
 
