@@ -94,6 +94,11 @@ The handbook covers:
 - zero-cost Gemini free-tier explanation, structured outputs, persistent cache, deterministic fallback, evals and privacy/quota governance;
 - quality, security and accessibility;
 - implementation sequencing and ADRs;
+- developer workflow, Definition of Ready/Done and PR review contract;
+- requirement-to-test traceability and fixture strategy;
+- environment/configuration/secrets boundaries;
+- migration, seeding, release and rollback runbooks;
+- content/i18n terminology and performance budgets;
 - official references.
 
 ## Delivery strategy
