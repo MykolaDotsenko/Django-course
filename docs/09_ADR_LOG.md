@@ -1283,22 +1283,27 @@ It is not part of core conversion.
 
 ---
 
-## ADR-087 — OpenAI is the initial primary AI provider
+## ADR-087 — Gemini free tier is the initial live AI provider
 
-**Status:** accepted
+**Status:** accepted (revised for portfolio economics)
 
-Use OpenAI as the initial provider for structured text, image generation and moderation.
+Use Google Gemini Developer API Free Tier as the initial live runtime provider.
+
+Selected live model:
+
+```text
+gemini-3.1-flash-lite
+```
 
 Reasons:
 
-- one platform covers the initial capability set;
-- GPT-5.6 supports Structured Outputs;
-- GPT-Image-2.5 covers image generation/editing;
-- first-party multimodal moderation exists.
+- current free-tier input/output pricing is $0;
+- Structured Outputs are supported;
+- task is intentionally bounded and grounded;
+- quota exhaustion can fall back deterministically;
+- no billing-dependent runtime AI is needed for a portfolio demo.
 
-This is a provider-layer choice, not a domain dependency.
-
-Google/Anthropic remain benchmark/fallback candidates rather than parallel production dependencies.
+OpenAI/Anthropic/paid Gemini remain optional development benchmarks only.
 
 ---
 
@@ -1349,11 +1354,11 @@ This preserves semantics and prevents untyped prompt sprawl.
 
 ---
 
-## ADR-091 — OpenAI Responses API + Structured Outputs is the text integration path
+## ADR-091 — Gemini structured JSON output is the text integration path
 
-**Status:** accepted
+**Status:** accepted (revised for zero-cost runtime)
 
-Structured application output uses JSON Schema/Structured Outputs.
+Live application output uses Gemini schema-constrained structured JSON.
 
 Plain free-form output is allowed only for explicitly non-integrated editorial/manual workflows.
 
@@ -1361,20 +1366,18 @@ Schema validity is necessary but not sufficient; semantic validators still run.
 
 ---
 
-## ADR-092 — Initial AI model routing is tiered by capability
+## ADR-092 — Public demo uses one free live model and no runtime image model
 
-**Status:** accepted
+**Status:** accepted (revised for portfolio economics)
 
-Initial configuration:
+Initial production configuration:
 
-- GPT-5.6 Luna → narrow low-cost tasks;
-- GPT-5.6 Terra → primary editorial structured generation;
-- GPT-5.6 Sol → rare audit/eval escalation;
-- GPT-Image-2.5 Flare → image concepts/candidates;
-- GPT-Image-2.5 Sunburst → final/featured images;
-- omni-moderation-latest → moderation.
+- Gemini 3.1 Flash-Lite → live structured explanation;
+- no paid text fallback;
+- no runtime image-generation model;
+- deterministic/cached fallback for live explanation.
 
-Do not route every task to the strongest/most expensive model.
+One model is easier to evaluate, operate and keep free.
 
 ---
 
@@ -1513,13 +1516,20 @@ Future personalized AI requires separate privacy/security decision.
 
 ---
 
-## ADR-103 — AI cost is governed per capability, not globally implicit
+## ADR-103 — AI runtime target is €0/month
 
-**Status:** accepted
+**Status:** accepted (revised for portfolio economics)
 
-Each capability defines model, token/image bounds, retries, timeout and enabled/budget state.
+The default public demo configuration uses only free-tier live text and zero runtime image generation.
 
-When budget ceiling is reached, optional AI work stops; core product remains available.
+When free quota/application quota is reached:
+
+```text
+cached result
+→ deterministic fallback
+```
+
+There is no automatic paid overflow.
 
 ---
 
