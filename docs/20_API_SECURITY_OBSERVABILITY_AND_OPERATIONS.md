@@ -1016,3 +1016,19 @@ Production backend is ready when:
 - backup/restore story exists;
 - optional external providers are not readiness dependencies;
 - security headers/CSP pass functional tests.
+
+
+---
+
+# 61. Execution runbook cross-references
+
+This document defines backend operational semantics.
+
+Use these execution-level runbooks for implementation/release work:
+
+- environment/configuration/secrets: `32_ENVIRONMENT_CONFIGURATION_AND_SECRETS.md`;
+- migrations/fixtures/seeding: `33_DATA_MIGRATIONS_FIXTURES_AND_SEEDING.md`;
+- release/deploy/rollback: `34_RELEASE_DEPLOYMENT_AND_ROLLBACK_RUNBOOK.md`;
+- performance/profiling: `36_PERFORMANCE_BUDGETS_AND_PROFILING.md`.
+
+These documents do not replace the health, incident, security or provider semantics here; they operationalize them.
