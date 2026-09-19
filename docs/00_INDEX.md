@@ -8,6 +8,7 @@ This handbook is the single source of truth for the Cultural Currency Converter 
 2. [UX research and experience blueprint](02_UX_RESEARCH_AND_FLOWS.md)
    - [User case catalog](02A_USER_CASE_CATALOG.md)
    - [Interaction and state specification](02B_INTERACTION_AND_STATE_SPEC.md)
+   - [Storytelling and historical converter](02C_STORYTELLING_AND_HISTORICAL_CONVERTER.md)
 3. [UI design system](03_UI_DESIGN_SYSTEM.md)
 4. [Architecture](04_ARCHITECTURE.md)
 5. [Domain model](05_DOMAIN_MODEL.md)
@@ -25,7 +26,8 @@ Before an implementation PR changes the user experience, read in this order:
 2. `02_UX_RESEARCH_AND_FLOWS.md` — experience principles and end-to-end behaviour;
 3. `02A_USER_CASE_CATALOG.md` — concrete scenarios the product must support;
 4. `02B_INTERACTION_AND_STATE_SPEC.md` — state transitions and recovery rules;
-5. `03_UI_DESIGN_SYSTEM.md` — visual/component implementation constraints.
+5. `02C_STORYTELLING_AND_HISTORICAL_CONVERTER.md` — historical FX, money stories and temporal trust rules;
+6. `03_UI_DESIGN_SYSTEM.md` — visual/component implementation constraints.
 
 A visually attractive implementation that violates the UX state model is not considered correct.
 
