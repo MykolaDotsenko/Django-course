@@ -33,7 +33,7 @@ class MediaPreviewViewTests(SimpleTestCase):
             "Japan",
             "Transit affordability",
             "Budget accommodation",
-            "Then & Now",
+            "Then &amp; Now",
             "Why trust this rate?",
             "Illustrative visual",
         ):
