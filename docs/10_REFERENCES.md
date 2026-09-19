@@ -1131,3 +1131,265 @@ Do not overuse snapshots as the primary UI correctness signal.
 Use for selected high-value native end-to-end flows.
 
 Cloud EAS workflow cadence can be adjusted for cost/maturity; local Maestro remains useful.
+
+
+# Backend Architecture References
+
+Research reviewed: **2026-09-19**.
+
+The detailed backend contracts live in:
+
+- [Backend system design](16_BACKEND_SYSTEM_DESIGN.md)
+- [Information flow and request lifecycles](17_INFORMATION_FLOW_AND_REQUEST_LIFECYCLES.md)
+- [Application services and domain orchestration](18_APPLICATION_SERVICES_AND_DOMAIN_ORCHESTRATION.md)
+- [Data consistency, caching and concurrency](19_DATA_CONSISTENCY_CACHING_AND_CONCURRENCY.md)
+- [API, security, observability and operations](20_API_SECURITY_OBSERVABILITY_AND_OPERATIONS.md)
+- [Backend scenario catalog](21_BACKEND_SCENARIO_CATALOG.md)
+- [Data import, scheduled jobs and maintenance](22_DATA_IMPORT_JOBS_AND_MAINTENANCE.md)
+
+## Django transactions
+
+https://docs.djangoproject.com/en/5.2/topics/db/transactions/
+
+Key implementation guidance:
+
+- Django uses autocommit by default;
+- transaction.atomic() defines explicit atomic sections;
+- long-running transactions have a cost;
+- transaction.on_commit() is designed for work such as cache invalidation/background actions after successful commit;
+- catching DB exceptions around an atomic boundary is safer than hiding them inside a broken transaction.
+
+Project conclusion:
+
+- no global ATOMIC_REQUESTS;
+- short explicit write transactions;
+- no external HTTP while a transaction is open;
+- after-commit cache invalidation.
+
+## Django asynchronous support
+
+https://docs.djangoproject.com/en/5.2/topics/async/
+
+Django 5.2 supports asynchronous queries and views in many areas, but its documentation explicitly states that transactions do not yet work in async mode and recommends wrapping transactional work in a synchronous function when needed.
+
+Project conclusion:
+
+- synchronous backend request model initially;
+- do not add async views for novelty;
+- revisit only for measured async workloads.
+
+## Django QuerySet locking
+
+https://docs.djangoproject.com/en/5.2/ref/models/querysets/#select-for-update
+
+Important behavior:
+
+- select_for_update locks selected rows until transaction end on supported DBs;
+- evaluating it outside a transaction on PostgreSQL raises TransactionManagementError;
+- TestCase transaction wrapping can hide incorrect usage, so lock behavior needs TransactionTestCase/real transaction testing.
+
+Project conclusion:
+
+- pessimistic locking is exceptional;
+- concurrency tests use PostgreSQL semantics.
+
+## Django constraints
+
+https://docs.djangoproject.com/en/5.2/ref/models/constraints/
+
+Use:
+
+- CheckConstraint;
+- UniqueConstraint;
+- conditional/functional constraints where a durable invariant justifies them.
+
+Project conclusion:
+
+- database constraints protect race-sensitive durable invariants;
+- application validation improves user feedback but does not replace DB guarantees.
+
+## Django cache framework
+
+https://docs.djangoproject.com/en/5.2/topics/cache/
+
+Relevant guidance:
+
+- cache APIs include add/get_or_set/get_many/set_many/delete/touch;
+- LocMemCache is process-local and is not a strong production shared-cache choice;
+- cache backends are accessed through Django's abstraction.
+
+Project conclusion:
+
+- cache is optimization/fallback, not domain authority;
+- no correctness depends on LocMemCache cross-worker behavior;
+- production backend remains configurable.
+
+## Django cache/Vary utilities
+
+https://docs.djangoproject.com/en/5.2/ref/utils/#module-django.utils.cache
+
+Relevant for full-document vs HTMX fragment responses.
+
+The Vary header defines request headers that affect a cached representation.
+
+Project conclusion:
+
+- dual full/fragment views vary on HX-Request when cacheable.
+
+## Django management commands
+
+https://docs.djangoproject.com/en/5.2/howto/custom-management-commands/
+
+Django explicitly supports custom management commands and notes they are useful for standalone/periodic scheduled work.
+
+Project conclusion:
+
+- scheduled imports begin as management commands + platform scheduler;
+- command handle() remains a thin transport over reusable import services.
+
+## Django database optimization
+
+https://docs.djangoproject.com/en/5.2/topics/db/optimization/
+
+Use query profiling and appropriate select_related/prefetch_related instead of guessing.
+
+Project conclusion:
+
+- query shape drives indexes/prefetch;
+- focused query-count regression tests only where N+1 risk is real.
+
+## Django PostgreSQL database notes
+
+https://docs.djangoproject.com/en/5.2/ref/databases/
+
+Review current PostgreSQL/psycopg requirements and connection behavior when implementation/deployment begins.
+
+Django has supported psycopg-based connection pooling in recent 5.x releases, but pooling remains a deployment decision based on worker/connection constraints.
+
+Do not add pooling blindly.
+
+## Django logging
+
+https://docs.djangoproject.com/en/5.2/howto/logging/
+
+Use namespaced Python/Django loggers and production structured logging configuration.
+
+Project conclusion:
+
+- request/provider/cache/import events use consistent structured fields;
+- secrets/private payloads are not logged.
+
+## Django system checks
+
+https://docs.djangoproject.com/en/5.2/topics/checks/
+
+Django's extensible system-check framework can detect project configuration issues and is run by management commands; deployment should invoke checks explicitly.
+
+Project conclusion:
+
+- use manage.py check --deploy;
+- add custom checks only for meaningful project-specific configuration invariants.
+
+## Django deployment checklist
+
+https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+
+Re-run immediately before deployment.
+
+Production hardening follows Django's deployment checklist rather than a custom security folklore list.
+
+## Django REST Framework schemas
+
+https://www.django-rest-framework.org/api-guide/schemas/
+
+DRF's built-in OpenAPI generation is deprecated.
+
+DRF recommends third-party schema packages.
+
+## DRF API documentation recommendations
+
+https://www.django-rest-framework.org/topics/documenting-your-api/
+
+DRF currently identifies drf-spectacular as the recommended OpenAPI 3 replacement.
+
+## drf-spectacular
+
+https://drf-spectacular.readthedocs.io/en/latest/
+
+Use for:
+
+- OpenAPI 3 generation;
+- explicit schema annotations where introspection is insufficient;
+- deterministic client-generation contract.
+
+At the research date, current documentation supports Django 5.2 and contemporary DRF releases.
+
+## DRF versioning
+
+https://www.django-rest-framework.org/api-guide/versioning/
+
+Project uses a URL namespace/version boundary under /api/v1/.
+
+Do not scatter version-condition business logic throughout application services.
+
+## DRF throttling
+
+https://www.django-rest-framework.org/api-guide/throttling/
+
+Important documented limitations:
+
+- DRF throttling is intended for policy/basic over-use protection;
+- it is not a security/DDoS control;
+- built-in cache-based throttles can be fuzzy under concurrency.
+
+Project conclusion:
+
+- use DRF throttling as fair-use protection;
+- use platform/edge controls if hostile abuse becomes a real concern.
+
+## DRF pagination
+
+https://www.django-rest-framework.org/api-guide/pagination/
+
+Paginate only collections that can actually grow.
+
+Bounded country/currency metadata can remain complete if payload size supports offline picker value.
+
+## PostgreSQL transaction isolation
+
+https://www.postgresql.org/docs/current/transaction-iso.html
+
+Review transaction isolation and retry behavior before introducing stronger-than-default isolation.
+
+Project conclusion:
+
+- default isolation + constraints/explicit conflicts is sufficient initially;
+- do not globally enable SERIALIZABLE.
+
+## PostgreSQL explicit locking
+
+https://www.postgresql.org/docs/current/explicit-locking.html
+
+Use row locks only for demonstrated contention/invariants and keep locked transactions short.
+
+## OpenTelemetry Python
+
+https://opentelemetry.io/docs/languages/python/
+
+Optional future production observability.
+
+Initial backend does not depend on OpenTelemetry; structured logs/request IDs/provider/cache signals are sufficient for the first deployment.
+
+## Backend source precedence
+
+When backend guidance conflicts:
+
+1. correctness and source/provenance integrity;
+2. Django/PostgreSQL documented semantics;
+3. security/privacy;
+4. explicit product/domain contracts;
+5. operational simplicity;
+6. performance measurements;
+7. architectural fashion.
+
+A more sophisticated pattern is not better if it introduces a second source of truth or hides control flow.

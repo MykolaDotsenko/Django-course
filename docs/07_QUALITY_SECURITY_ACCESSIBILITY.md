@@ -502,3 +502,192 @@ Every runtime dependency must have:
 - defined failure/removal path.
 
 Reject dependencies that duplicate native/platform capability without enough product value.
+
+
+## 30. Backend test architecture
+
+Backend tests should mirror architecture boundaries rather than only HTTP pages.
+
+### Pure domain tests
+
+Cover:
+
+- Decimal conversion;
+- quote freshness;
+- historical observation selection;
+- requested/effective date separation;
+- Then & Now comparison;
+- purchase-equivalent ranges;
+- story chapter selection.
+
+These tests should run without DB/network.
+
+### Application/use-case tests
+
+Cover:
+
+- fresh cache hit;
+- cache miss/provider success;
+- stale fallback;
+- unavailable result;
+- same-currency fast path;
+- transaction orchestration;
+- ownership/conflict results.
+
+Use fake providers/cache where possible.
+
+### ORM/integration tests
+
+Cover:
+
+- constraints;
+- optimized query behavior;
+- import upserts;
+- ownership-scoped queries;
+- published-only filters.
+
+### PostgreSQL concurrency tests
+
+Use PostgreSQL, not SQLite, for:
+
+- duplicate favourite race;
+- optimistic Trip conflict;
+- select_for_update behavior if introduced;
+- transaction/on_commit behavior where relevant.
+
+### Provider contract tests
+
+Use captured/synthetic fixtures, never mandatory live internet.
+
+### API tests
+
+Assert:
+
+- HTTP status;
+- stable machine error code;
+- request_id;
+- Decimal strings;
+- requested/effective dates;
+- OpenAPI contract.
+
+## 31. Backend scenario traceability
+
+Every non-trivial backend PR should list relevant BE-* IDs from:
+
+`21_BACKEND_SCENARIO_CATALOG.md`.
+
+P0 backend scenarios should be automated where technically meaningful.
+
+Use parameterization to avoid one-test-per-line ceremony.
+
+The scenario catalog is a coverage map, not a test-file naming requirement.
+
+## 32. Transaction tests
+
+Test:
+
+- multi-write success;
+- rollback on second-write failure;
+- on_commit runs after success;
+- on_commit does not run after rollback;
+- remote provider is invoked outside transaction for workflows that combine external data + writes.
+
+Do not rely on Django TestCase when a test specifically needs real commit/lock semantics; use TransactionTestCase/pytest transaction facilities appropriately.
+
+## 33. Cache contract tests
+
+Required cases:
+
+- miss → provider;
+- fresh hit → no provider;
+- stale fallback;
+- stale too old rejected;
+- cache read failure;
+- cache write failure;
+- wrong pair rejected;
+- wrong provider-policy namespace rejected;
+- current/historical key separation;
+- history grouping separation.
+
+## 34. Import tests
+
+Each import source tests:
+
+- valid snapshot;
+- timeout;
+- malformed payload;
+- duplicate external identity;
+- suspiciously incomplete snapshot;
+- idempotent second run;
+- dry run;
+- failed write rollback;
+- old canonical data preserved on fetch/validation failure.
+
+Live source tests are manual/scheduled smoke tests, not normal CI.
+
+## 35. Query-performance tests
+
+Use targeted query-count assertions only for pages/use cases where N+1 regression is realistic:
+
+- destination context;
+- story page;
+- saved trips.
+
+Do not make every ORM test brittle with exact query counts.
+
+Use PostgreSQL EXPLAIN/profile data before adding speculative indexes.
+
+## 36. API schema CI
+
+Use drf-spectacular schema generation.
+
+CI should:
+
+```text
+generate OpenAPI schema
+→ validate
+→ run openapi-typescript
+→ verify generated mobile contract is current
+```
+
+A schema diff requires intentional API review.
+
+## 37. Security backend tests
+
+Automate:
+
+- CSRF on web mutation;
+- cross-user resource access;
+- malicious/invalid external URL handling;
+- escaping of imported/editorial text;
+- bounded history ranges;
+- mass-assignment protection;
+- secret/redaction behavior where testable;
+- production settings check.
+
+DRF throttling tests verify policy behavior but are not treated as DDoS guarantees.
+
+## 38. Health/operations tests
+
+Verify:
+
+- liveness succeeds without DB/provider calls;
+- readiness fails on PostgreSQL failure;
+- readiness stays healthy during Frankfurter outage;
+- missing critical production config fails checks/startup;
+- provider timeout maps to normalized error/fallback;
+- request IDs are returned and logged.
+
+## 39. Backend severity rules
+
+Severity-high regressions include:
+
+- wrong currency pair attached to a result;
+- wrong historical effective date;
+- unlabelled stale quote;
+- unauthorized cross-user access;
+- partial import wiping canonical data;
+- external network call inside a held DB transaction/row lock;
+- cache entry from one provider policy reused under another;
+- raw provider data/error exposed to client;
+- API/mobile Decimal semantics changed without contract version review.

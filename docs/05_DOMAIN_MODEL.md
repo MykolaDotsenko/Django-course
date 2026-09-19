@@ -499,3 +499,142 @@ The model is intentionally not implemented until source/methodology research is 
 - archived currency cannot receive a fabricated current market quote;
 - story facts must be published, temporally relevant and sourced;
 - current TypicalPrice rows are not reused as historical purchasing-power observations.
+
+
+## 27. Backend value objects
+
+Critical cross-interface concepts should use explicit immutable value objects rather than loose dictionaries.
+
+Recommended concepts:
+
+- CurrencyCode
+- CountryCode
+- MoneyAmount
+- ProviderPolicy
+- RateQuote
+- RateSeries
+- ConversionResult
+- HistoricalConversionResult
+- QuoteFreshness
+- ObservationGranularity
+- DestinationContext
+- PurchaseEquivalent
+- ThenNowComparison
+- StoryChapter
+
+These objects are transport-agnostic.
+
+Django forms, DRF serializers and React Native contracts map to/from them.
+
+## 28. Conversion status
+
+Use an enum/result state rather than several independent booleans.
+
+Candidate values:
+
+- fresh_success
+- stale_success
+- same_currency
+- historical_exact
+- historical_previous_observation
+
+Failure states remain typed application errors.
+
+This avoids impossible combinations such as success=true and unavailable=true.
+
+## 29. Trip optimistic concurrency
+
+When cross-device Trip editing becomes production scope, Trip may add:
+
+- version: positive integer
+
+Mutating commands include the version they read.
+
+A successful update increments it.
+
+A stale version produces a conflict rather than silent overwrite.
+
+Do not add version fields to unrelated models without a concurrency need.
+
+## 30. Favourite uniqueness
+
+Authenticated FavouritePair should have a database uniqueness guarantee covering the canonical identity required by product semantics.
+
+Candidate dimensions:
+
+- user;
+- base currency;
+- quote currency;
+- optional source country;
+- optional destination country.
+
+Normalize nullable/context semantics carefully so duplicate logical favourites cannot appear under concurrent requests.
+
+## 31. TypicalPrice durable constraints
+
+Database/model validation should guarantee:
+
+- amount_low > 0;
+- amount_high is null or >= amount_low;
+- currency required;
+- geography scope explicit;
+- source required for publishable records;
+- observed period/date required for publishable records.
+
+Publication policy may be stricter than the database check.
+
+## 32. StoryMoment publication constraints
+
+A published StoryMoment must have, at minimum:
+
+- category;
+- temporal scope;
+- source identity/URL;
+- verified_at according to policy;
+- relevant country and/or currency association.
+
+Some rules are cross-relation and therefore enforced through application/admin validation rather than a single SQL check.
+
+## 33. Imported source metadata
+
+Imported canonical/reference rows should preserve enough source metadata to debug or refresh them without copying the entire raw payload.
+
+Useful fields can include:
+
+- source identifier;
+- source external ID;
+- fetched_at;
+- source_updated_at/version where available;
+- verified_at;
+- import/source class.
+
+The domain owns normalized values, not the provider schema.
+
+## 34. ImportRun candidate
+
+Introduce ImportRun only when recurring scheduled jobs need durable run history beyond structured logs.
+
+Candidate fields:
+
+- source;
+- job_name;
+- started_at;
+- finished_at;
+- status;
+- source_version;
+- counts;
+- normalized error_code;
+- small metadata JSON.
+
+Do not create this table before it adds operational value.
+
+## 35. Domain model concurrency rule
+
+Durable correctness is protected at the lowest sensible layer:
+
+- database constraint for uniqueness/range;
+- transaction for multi-write invariant;
+- optimistic version for multi-device aggregate conflict;
+- application validation for cross-entity/domain rules.
+
+Do not rely only on a pre-save "does this exist?" query where a concurrent request can race it.

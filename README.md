@@ -38,6 +38,7 @@ Convert → Understand → Explore → Save → Return
                      └──────────────┬──────────────┘
                                     ▼
                          Django modular monolith
+                    presentation → use cases → domain
                  ┌──────────────────┼──────────────────┐
                  │                  │                  │
              PostgreSQL        Django cache       JSON API v1
@@ -67,6 +68,8 @@ Convert → Understand → Explore → Save → Return
 8. **Proportional architecture.** No microservices, event buses or repository layers without a concrete problem.
 9. **Explicit stale-data semantics.** Cached/offline rates are labelled with their source time.
 10. **Documentation is executable intent.** Non-trivial PRs must reference the relevant product/architecture documents.
+11. **Explicit backend ownership.** Views/forms/serializers handle transport; application use cases coordinate; pure domain code owns financial semantics; provider adapters own external JSON.
+12. **Short transactions.** Network I/O never runs while PostgreSQL transactions/row locks are intentionally held; durable invariants use constraints and explicit transaction boundaries.
 
 ## Documentation
 
@@ -81,6 +84,10 @@ The handbook covers:
 - domain models and financial rules;
 - React Native/Expo/API/offline architecture;
 - explicit frontend technology decisions and rejected alternatives;
+- backend system design, request/data flows and application-service boundaries;
+- PostgreSQL transactions, constraints, cache/concurrency policy;
+- API/security/observability/operations and 148 backend scenarios;
+- scheduled imports, maintenance and failure behavior;
 - quality, security and accessibility;
 - implementation sequencing and ADRs;
 - official references.

@@ -27,6 +27,13 @@ This handbook is the single source of truth for the Cultural Currency Converter 
 13. [Frontend technology strategy](13_FRONTEND_TECHNOLOGY_STRATEGY.md)
 14. [Web frontend architecture](14_WEB_FRONTEND_ARCHITECTURE.md)
 15. [Mobile frontend architecture](15_MOBILE_FRONTEND_ARCHITECTURE.md)
+16. [Backend system design](16_BACKEND_SYSTEM_DESIGN.md)
+17. [Information flow and request lifecycles](17_INFORMATION_FLOW_AND_REQUEST_LIFECYCLES.md)
+18. [Application services and domain orchestration](18_APPLICATION_SERVICES_AND_DOMAIN_ORCHESTRATION.md)
+19. [Data consistency, caching and concurrency](19_DATA_CONSISTENCY_CACHING_AND_CONCURRENCY.md)
+20. [API, security, observability and operations](20_API_SECURITY_OBSERVABILITY_AND_OPERATIONS.md)
+21. [Backend scenario catalog](21_BACKEND_SCENARIO_CATALOG.md)
+22. [Data import, scheduled jobs and maintenance](22_DATA_IMPORT_JOBS_AND_MAINTENANCE.md)
 
 ## UX decision hierarchy
 
@@ -127,3 +134,22 @@ Before adding/changing a web or mobile frontend dependency, read:
 A frontend dependency is not accepted because it is popular, modern, or visually impressive.
 
 It must solve a documented problem with lower total complexity than the native/platform/project-owned alternative.
+
+
+## Backend decision hierarchy
+
+Before implementing or changing backend behavior, read in this order:
+
+1. 16_BACKEND_SYSTEM_DESIGN.md — system boundaries, synchronous Django strategy, transactions, data ownership and deployment shape;
+2. 17_INFORMATION_FLOW_AND_REQUEST_LIFECYCLES.md — exact end-to-end information flow for current/historical conversion, context, mobile and imports;
+3. 18_APPLICATION_SERVICES_AND_DOMAIN_ORCHESTRATION.md — use-case boundaries, domain purity and service responsibilities;
+4. 19_DATA_CONSISTENCY_CACHING_AND_CONCURRENCY.md — PostgreSQL, cache, transaction, stale-data and concurrency rules;
+5. 20_API_SECURITY_OBSERVABILITY_AND_OPERATIONS.md — public contract, auth/security, failures, health and operations;
+6. 21_BACKEND_SCENARIO_CATALOG.md — concrete backend cases and regression coverage;
+7. 22_DATA_IMPORT_JOBS_AND_MAINTENANCE.md — scheduled/import workflows and source maintenance;
+8. 05_DOMAIN_MODEL.md and 12_EXTERNAL_API_CONTRACTS.md — persisted/domain/provider schemas;
+9. 09_ADR_LOG.md — durable decisions.
+
+Every backend implementation PR should list the relevant BE-* scenario IDs.
+
+A backend abstraction is accepted only if it protects a real invariant, integration boundary, transaction, repeated query shape or measurable operational need.
