@@ -91,7 +91,7 @@ The handbook covers:
 - API/security/observability/operations and 148 backend scenarios;
 - scheduled imports, maintenance and failure behavior;
 - sourced historical media, object-storage strategy and controlled AI illustration pipeline;
-- bounded OpenAI integration, model routing, structured outputs, evals, cost/privacy/safety governance;
+- zero-cost Gemini free-tier explanation, structured outputs, persistent cache, deterministic fallback, evals and privacy/quota governance;
 - quality, security and accessibility;
 - implementation sequencing and ADRs;
 - official references.
