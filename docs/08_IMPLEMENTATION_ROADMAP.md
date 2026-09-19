@@ -24,7 +24,14 @@ Before production code changes:
 - ADR log;
 - references;
 - API/data-source research matrix;
-- external API integration contracts.
+- external API integration contracts;
+- backend system design;
+- request/information-flow contracts;
+- application-service/domain orchestration rules;
+- consistency/cache/concurrency rules;
+- API/security/observability/operations rules;
+- backend scenario catalog;
+- scheduled import/maintenance architecture.
 
 Implementation starts only after the documentation is coherent enough to act as an engineering contract.
 
@@ -46,6 +53,13 @@ Deliverables:
 - initial CI;
 - health endpoint;
 - production settings checks;
+- synchronous Django request baseline;
+- WSGI-first deployment baseline;
+- explicit autocommit configuration with no global ATOMIC_REQUESTS;
+- request-ID middleware;
+- structured logging baseline;
+- separate /health/live/ and /health/ready/ endpoints;
+- PostgreSQL-backed integration test path;
 - safe `.env.example`;
 - README run instructions.
 
@@ -53,6 +67,10 @@ Acceptance:
 
 - no hard-coded secret key;
 - `DEBUG` environment-controlled;
+- readiness checks PostgreSQL but does not call Frankfurter or other optional providers;
+- liveness has no dependency checks;
+- no provider/network call occurs inside a DB transaction;
+- request ID appears in logs and response metadata where defined;
 - clean migration state;
 - test/quality commands documented;
 - CI green.
@@ -118,8 +136,14 @@ Deliverables:
 - active/historical metadata;
 - constraints;
 - REST Countries v5 import adapter/management command for selected current metadata;
+- reusable sync service outside the command;
+- dry-run/diff support where practical;
+- full-snapshot sanity validation;
+- idempotent upsert semantics;
+- network fetch before write transaction;
 - no request-path dependency on REST Countries;
 - no committed raw provider dump;
+- failed/partial upstream snapshot cannot delete existing canonical data;
 - deterministic fixture subset;
 - current vs historical selector query rules.
 
@@ -145,11 +169,16 @@ Deliverables:
 - strict timeout and bounded retry policy;
 - normalized RateQuote;
 - Decimal conversion service;
-- latest/current cache;
+- latest/current semantic cache;
+- physical-retention vs semantic-freshness distinction;
 - historical cache namespace;
+- provider-policy-aware versioned cache keys;
 - safe stale fallback;
 - provider/source attribution;
 - no silent provider switching;
+- cache failure remains correctness-safe;
+- provider HTTP 200 invalid-payload path;
+- same-currency fast path with no provider call;
 - unit + fixture-based contract tests;
 - optional manual/scheduled live smoke test.
 
@@ -318,7 +347,9 @@ Phase A:
 
 Phase B:
 
-- durable user sync after accounts are introduced.
+- durable user sync after accounts are introduced;
+- authenticated FavouritePair database uniqueness guarantee;
+- concurrent duplicate-save test.
 
 ---
 
@@ -332,7 +363,10 @@ Deliverables:
 - ownership rules;
 - durable favourites/history;
 - deletion/privacy controls;
-- authorization tests.
+- authorization tests;
+- ownership-scoped queries for every user-owned resource;
+- account deletion/privacy lifecycle defined;
+- cross-user read/update/delete regression cases from backend scenario catalog.
 
 Basic current and historical conversion remain anonymous.
 
@@ -351,10 +385,14 @@ Deliverables:
 - requested/effective-date fields;
 - destination context;
 - story endpoint/embedded story contract only if justified;
-- schema/OpenAPI;
+- drf-spectacular OpenAPI 3 schema;
 - schema generation suitable for openapi-typescript;
+- stable API error envelope + machine-readable codes + request_id;
+- URL namespace versioning under /api/v1;
+- explicit Decimal-string/date semantics;
 - contract tests;
-- throttling/rate-abuse baseline where necessary.
+- throttling/rate-abuse baseline where necessary, documented as fair-use rather than DDoS security;
+- CI schema validation + generated-mobile-type drift check.
 
 ---
 
@@ -418,7 +456,10 @@ Deliverables:
 - daily budget interpretation;
 - web UI;
 - API;
-- mobile UI.
+- mobile UI;
+- Trip transaction boundaries;
+- optimistic version conflict semantics when multi-device editing is introduced;
+- no external FX call while Trip write transaction is open.
 
 Only implement after core conversion/context proves stable.
 
@@ -450,10 +491,16 @@ No feature ships until methodology is explainable and testable.
 Deliverables:
 
 - PostgreSQL deployment;
-- production cache when justified;
+- production shared cache when justified;
+- explicit cache-degradation behavior;
+- provider timeout hierarchy;
 - static assets;
 - security headers;
-- observability;
+- structured observability/request IDs;
+- provider/cache/import operational metrics/logs;
+- database backup/restore runbook;
+- provider and data-source incident playbooks;
+- production startup/system checks;
 - performance profiling;
 - final Playwright matrix;
 - accessibility review;
@@ -516,3 +563,30 @@ For frontend technology decisions, implementation PRs must consult:
 - `15_MOBILE_FRONTEND_ARCHITECTURE.md`.
 
 Do not add a client framework or state library as a convenience shortcut around the documented ownership model.
+
+
+# Backend implementation sequencing rule
+
+Backend changes follow this order:
+
+```text
+scenario / invariant
+→ transport boundary
+→ application use case
+→ pure domain rule where possible
+→ persistence/provider boundary
+→ transaction/cache/concurrency policy
+→ failure/observability behavior
+→ tests
+→ presentation/API wiring
+```
+
+Every non-trivial backend PR must reference the relevant BE-* scenarios from `21_BACKEND_SCENARIO_CATALOG.md`.
+
+Before adding an abstraction, answer:
+
+- Which invariant or repeated boundary does it protect?
+- Why is direct Django ORM / a plain function insufficient?
+- Does it reduce or increase the number of places where business truth can exist?
+
+Do not introduce generic repository, DI, async, Redis, Celery, CQRS or event-bus infrastructure without a documented scenario that requires it.
