@@ -8,15 +8,13 @@ The engineering handbook is the source of truth:
 
 Before implementing a non-trivial change, identify the governing product/UX/architecture document and the acceptance criteria being implemented.
 
-## Current transitional setup
+## Current implementation setup
 
-The current `django-blog/` shell is temporary legacy course code.
+The Django product shell lives at the repository root.
 
 Validated checks currently mirror CI:
 
 ```bash
-cd django-blog
-
 python -m pip install \
   "Django>=5.2.1,<6.0.0" \
   "pytest==8.3.5" \
@@ -28,7 +26,7 @@ ruff check apps/common
 pytest -q
 ```
 
-The final bootstrap commands will be updated when Implementation PR 1 replaces the legacy shell.
+Dependency consolidation, environment-driven settings, PostgreSQL integration and runtime observability are intentionally delivered in the next bounded foundation PRs rather than hidden inside this structural migration.
 
 ## Before coding
 
