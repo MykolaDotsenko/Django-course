@@ -102,7 +102,7 @@ Acceptance:
 
 Each slice must preserve the PR 2 acceptance criteria relevant to its scope. Later slices must not bypass the ownership model established in `14_WEB_FRONTEND_ARCHITECTURE.md`.
 
-**Execution status after PR 2A:** the locked frontend build/tooling baseline and CI gate are implemented. PR 2B is next; no converter business logic or Django↔Vite manifest bridge is claimed complete by PR 2A.
+**Execution status after PR 2B:** PR 2A–2B are implemented. The locked frontend build baseline and repo-owned Django↔Vite asset bridge are CI-backed, including development tags, production manifest traversal, imported CSS/modulepreload ordering, cache behavior and malformed-manifest failure paths. PR 2C is next; no Quiet Atlas presentation layer or converter business logic is claimed complete by PR 2B.
 
 **Goal:** establish visual/accessibility foundation before domain complexity.
 
