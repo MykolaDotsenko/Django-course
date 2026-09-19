@@ -77,7 +77,7 @@ def _assert_preview_integrity(page: Page, *, viewport_width: int) -> None:
         label="Amount control",
     )
     _assert_minimum_size(
-        page.locator("#preview-source").locator(".."),
+        page.locator("#preview-source"),
         min_height=selector_height,
         label="Source trigger",
     )
