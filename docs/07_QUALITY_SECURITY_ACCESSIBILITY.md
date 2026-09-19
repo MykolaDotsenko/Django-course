@@ -286,3 +286,219 @@ Any bug that can cause one of the following is severity-high:
 - user-requested date silently changed.
 
 These failures are more serious than cosmetic rendering defects because they undermine product trust.
+
+
+## 17. Web frontend quality toolchain
+
+Selected:
+
+- TypeScript strict;
+- `tsc --noEmit`;
+- Biome 2 for TypeScript/JavaScript/JSON linting and formatting;
+- djLint for Django templates;
+- Vite production build;
+- Playwright;
+- `@axe-core/playwright`.
+
+Do not add ESLint + Prettier on top of Biome unless a concrete unsupported rule/workflow requires them.
+
+Do not add a JavaScript unit-test runner merely for tooling completeness; introduce one only when pure client logic volume justifies it.
+
+## 18. Web build CI
+
+Fast frontend gate:
+
+```text
+npm ci
+npm run typecheck
+npm run check
+npm run build
+```
+
+Template gate:
+
+```text
+djlint --check ...
+```
+
+Browser gate:
+
+```text
+playwright test
+```
+
+Axe scans run inside representative Playwright states.
+
+## 19. Vite integration tests
+
+The repo-owned Django Vite manifest bridge must be unit-tested for:
+
+- development mode tags;
+- production entry script;
+- entry CSS;
+- imported chunk CSS;
+- modulepreload ordering where used;
+- missing manifest;
+- missing entry;
+- malformed manifest.
+
+A build system failure should fail loudly rather than silently serve an unstyled page.
+
+## 20. HTMX integrity tests
+
+Test:
+
+- normal request returns complete document;
+- HTMX request returns expected named partial;
+- `Vary: HX-Request` on cacheable dual-representation response;
+- CSRF on unsafe request;
+- rapid consecutive requests cannot render obsolete pair/result;
+- validation preserves form state;
+- HTMX error response renders/recoveries correctly;
+- back/forward does not produce form/result mismatch.
+
+## 21. CSP/frontend security test
+
+Target CSP-friendly frontend:
+
+- no required inline event handlers;
+- no third-party runtime CDN;
+- no arbitrary external script;
+- no provider HTML injection;
+- no unsafe user value in CSS/theme variables.
+
+When HTMX configuration is hardened (for example disabling eval/script-tag processing), E2E must prove required behavior still works before the setting is accepted.
+
+## 22. Web bundle review
+
+Track:
+
+- core compressed JS;
+- optional chart chunk;
+- CSS;
+- font bytes;
+- cultural media above fold.
+
+Initial target:
+
+> core JavaScript before optional historical chart should stay comfortably below 100 kB compressed.
+
+This is a budget/guardrail, not a vanity score.
+
+Any significant growth requires explanation in the PR.
+
+## 23. Browser matrix
+
+Design/behavior review:
+
+- current Chromium;
+- current Firefox;
+- current WebKit/Safari representation.
+
+Product baseline follows Tailwind 4:
+
+- Chrome 111+;
+- Safari 16.4+;
+- Firefox 128+.
+
+No unsupported-browser polyfill pile is introduced.
+
+## 24. Mobile frontend quality toolchain
+
+Selected:
+
+- TypeScript strict;
+- Expo-compatible lint/format workflow;
+- Jest;
+- `jest-expo`;
+- `@testing-library/react-native`;
+- Expo Router testing utilities;
+- Maestro for black-box E2E smoke.
+
+Use Expo-compatible package versions through `expo install` for native modules.
+
+## 25. Mobile test ownership
+
+### Unit
+
+- formatting;
+- API error mapping;
+- query key construction;
+- SQLite repository/migrations;
+- offline/stale state resolution.
+
+### Component/integration
+
+- conversion states;
+- historical requested/effective dates;
+- picker;
+- source metadata;
+- offline badge/result;
+- navigation where behavior matters.
+
+### E2E
+
+Maestro high-value flows:
+
+- launch;
+- current conversion;
+- Swap;
+- historical conversion;
+- favourite persistence;
+- offline cached result;
+- offline uncached result.
+
+Do not rely on snapshot tests as the main UI quality signal.
+
+## 26. SQLite migration quality
+
+Every persisted schema change must:
+
+- have a migration;
+- preserve existing useful user data;
+- be idempotently testable from supported previous schema;
+- use parameterized SQL;
+- have rollback/recovery strategy when appropriate.
+
+Never solve migration complexity by deleting the database on app update.
+
+## 27. Mobile API-contract quality
+
+OpenAPI-generated mobile types are a CI contract.
+
+Recommended check:
+
+```text
+generate OpenAPI
+→ run openapi-typescript
+→ git diff --exit-code
+```
+
+A backend API change cannot quietly leave stale hand-written mobile interfaces.
+
+## 28. Mobile accessibility QA
+
+Required manual passes before production:
+
+- iOS VoiceOver;
+- Android TalkBack;
+- large system font;
+- reduced motion;
+- light/dark only if both themes ship;
+- physical-device touch accuracy;
+- landscape/keyboard where relevant.
+
+Automated tests do not replace these.
+
+## 29. Frontend dependency quality rule
+
+Every runtime dependency must have:
+
+- documented purpose;
+- maintained upstream;
+- compatible license;
+- stable version line;
+- acceptable accessibility impact;
+- defined failure/removal path.
+
+Reject dependencies that duplicate native/platform capability without enough product value.
