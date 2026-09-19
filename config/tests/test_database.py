@@ -117,6 +117,25 @@ def test_invalid_database_urls_fail_fast(url: str, message: str) -> None:
         )
 
 
+def test_database_password_is_redacted_from_repr() -> None:
+    config = load_database_config(
+        environ={"DATABASE_URL": "postgresql://user:super-secret@localhost/db"},
+        environment=RuntimeEnvironment.TEST,
+        base_dir=BASE_DIR,
+    )
+
+    assert "super-secret" not in repr(config)
+
+
+def test_malformed_database_query_options_fail_fast() -> None:
+    with pytest.raises(ConfigurationError, match="malformed query options"):
+        load_database_config(
+            environ={"DATABASE_URL": "postgresql://user:pass@localhost/db?broken"},
+            environment=RuntimeEnvironment.TEST,
+            base_dir=BASE_DIR,
+        )
+
+
 def test_duplicate_database_query_options_fail_fast() -> None:
     with pytest.raises(ConfigurationError, match="duplicated"):
         load_database_config(
