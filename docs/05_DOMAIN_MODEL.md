@@ -261,3 +261,241 @@ Every external datum that affects trust should support:
 - stale rate retains original effective timestamp;
 - historical country/currency relationships remain queryable;
 - approximate prices cannot be published without source metadata.
+
+
+## 17. Historical rate semantics
+
+Historical queries require two separate temporal concepts.
+
+### Requested date
+
+The date the user asked about.
+
+### Effective date
+
+The actual provider observation used.
+
+These can differ because:
+
+- weekend;
+- holiday;
+- missing observation;
+- low-frequency historical series.
+
+The domain must never overwrite one with the other.
+
+Concept:
+
+```text
+HistoricalRateQuery
+- amount
+- base_currency
+- quote_currency
+- requested_date
+- provider_scope?
+```
+
+The normalized `RateQuote` contains the actual effective observation.
+
+## 18. Observation granularity
+
+Historical/provider data may be:
+
+- daily;
+- monthly;
+- other/unknown.
+
+Granularity affects what the UI is allowed to claim.
+
+A monthly observation must not be represented as exact daily market/reference data.
+
+The provider adapter owns raw provider interpretation and exposes normalized granularity where reliable.
+
+## 19. Currency lifecycle
+
+Currency availability is temporal.
+
+Extend currency/domain metadata conceptually with:
+
+```text
+Currency
+- code
+- name
+- symbol
+- minor_units
+- active_from?
+- active_to?
+- is_active
+- coverage_from?
+- coverage_to?
+```
+
+Important distinction:
+
+- currency lifecycle;
+- provider data coverage.
+
+A currency can historically exist before the provider's available dataset.
+
+Do not infer one from the other.
+
+## 20. CountryCurrency historical relationship
+
+The existing relationship becomes critical for historical UX.
+
+```text
+CountryCurrency
+- country
+- currency
+- is_primary
+- valid_from
+- valid_to
+- usage_role?
+- source
+```
+
+The minimum implementation should support:
+
+- current primary currency;
+- historical primary currency;
+- sourced date range.
+
+If euro-transition nuance requires accounting/legal/cash milestones, use explicit transition metadata instead of forcing every milestone into `valid_from`.
+
+## 21. CurrencyTransition candidate
+
+Only introduce this model when stories require more than CountryCurrency date ranges.
+
+```text
+CurrencyTransition
+- country
+- from_currency
+- to_currency
+- transition_type
+- announced_date?
+- accounting_start?
+- legal_tender_start?
+- cash_changeover_date?
+- legacy_end_date?
+- fixed_conversion_rate?
+- source_name
+- source_url
+- verified_at
+```
+
+Do not populate speculative or unavailable milestones.
+
+## 22. StoryMoment
+
+A story uses structured facts rather than free-generated narrative.
+
+```text
+StoryMoment
+- countries: many-to-many
+- currencies: many-to-many
+- category
+- title
+- summary
+- start_date
+- end_date: nullable
+- source_name
+- source_url
+- source_published_at: nullable
+- verified_at
+- relevance_weight
+- is_published
+```
+
+Suggested categories:
+
+- currency_introduction;
+- currency_retirement;
+- redenomination;
+- monetary_union;
+- cash_changeover;
+- central_bank;
+- cultural_money_fact;
+- sourced_economic_context.
+
+A StoryMoment does not claim that an event caused a rate movement unless its source explicitly supports that causal relationship.
+
+## 23. StoryChapter value object
+
+Story output is assembled, not stored as opaque generated prose.
+
+Concept:
+
+```text
+StoryChapter
+- kind
+- title
+- body
+- source_refs[]
+- temporal_scope
+- relevance
+```
+
+Potential kinds:
+
+- conversion;
+- currency_era;
+- transition;
+- then_now;
+- historical_moment;
+- explore.
+
+The story composer may return fewer chapters when data is incomplete.
+
+## 24. Historical conversion result
+
+Concept:
+
+```text
+HistoricalConversion
+- input_amount
+- base
+- quote
+- requested_date
+- effective_date
+- observation_granularity
+- rate
+- output_amount
+- provider
+- provider_sources[]
+- used_previous_observation
+```
+
+It is a domain result/value object, not necessarily a database row.
+
+## 25. Historical purchasing power boundary
+
+Historical FX and historical domestic purchasing power are separate domains.
+
+Do not add inflation-adjusted values to HistoricalConversion.
+
+A future purchasing-power model would require explicit inputs such as:
+
+```text
+PurchasingPowerObservation
+- country
+- indicator/source
+- period
+- index/value
+- base_period
+- methodology
+```
+
+The model is intentionally not implemented until source/methodology research is complete.
+
+## 26. Additional historical invariants
+
+- requested date <= today;
+- effective date <= requested date when using previous-observation fallback;
+- historical result preserves requested date even when observation differs;
+- no historical rate can exist outside normalized provider/pair coverage;
+- observation granularity is exposed when it affects precision;
+- archived/current status does not determine provider coverage automatically;
+- country/date suggestions are sourced;
+- archived currency cannot receive a fabricated current market quote;
+- story facts must be published, temporally relevant and sourced;
+- current TypicalPrice rows are not reused as historical purchasing-power observations.
