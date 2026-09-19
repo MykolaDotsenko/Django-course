@@ -98,7 +98,6 @@ def build_media_preview_context() -> dict[str, object]:
             eyebrow="Destination",
             title=name,
             summary="Country-specific atmosphere with deterministic fallback behavior.",
-            href=f"#country-{code.lower()}",
         )
         for code, name in COUNTRY_PREVIEW
     )
