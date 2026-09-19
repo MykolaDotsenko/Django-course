@@ -376,3 +376,160 @@ Each provider gets a small adapter responsible for:
 - provider-specific errors.
 
 Shared HTTP utilities may handle transport mechanics, but they do not decide domain meaning.
+
+
+---
+
+## ADR-029 — Nordic editorial utility is the core visual language
+
+**Status:** accepted
+
+The product uses a restrained visual direction described as:
+
+> **Nordic editorial utility — calm enough for money, warm enough for culture.**
+
+The design combines:
+
+- clear travel utility;
+- strong numerical typography;
+- generous whitespace;
+- quiet surfaces;
+- sourced editorial storytelling;
+- subtle contextual country accents.
+
+It explicitly avoids trading-dashboard, crypto, casino, tourism-collage and generic “AI gradient” aesthetics.
+
+---
+
+## ADR-030 — Semantic design tokens own visual decisions
+
+**Status:** accepted
+
+Color, typography, spacing, radius, border, elevation and motion are defined as semantic/system tokens before use in components.
+
+Tailwind 4 theme variables are the preferred web implementation mechanism.
+
+Country theming modifies constrained contextual variables rather than scattering raw colors through templates.
+
+---
+
+## ADR-031 — Country theming cannot change interaction architecture
+
+**Status:** accepted
+
+Country context may alter:
+
+- accent;
+- pattern;
+- imagery;
+- limited editorial atmosphere.
+
+It cannot alter:
+
+- control positions;
+- focus order;
+- semantic states;
+- component hierarchy;
+- validation behavior;
+- trust/provenance presentation.
+
+The neutral theme remains a complete fallback.
+
+---
+
+## ADR-032 — Whitespace and typography precede card chrome
+
+**Status:** accepted
+
+The product avoids “card soup”.
+
+Use cards only when a boundary/grouping is meaningful.
+
+Prefer:
+
+- spacing;
+- type hierarchy;
+- borders;
+- section rhythm
+
+before introducing additional elevated containers.
+
+This keeps information density high without visual noise.
+
+---
+
+## ADR-033 — Historical mode is visually archival, not nostalgic
+
+**Status:** accepted
+
+Historical mode uses:
+
+- date prominence;
+- timeline semantics;
+- neutral informational accent;
+- editorial composition.
+
+It deliberately avoids:
+
+- sepia;
+- fake paper;
+- typewriter fonts;
+- theatrical clock/time-machine motion.
+
+Historical trust is more important than nostalgia.
+
+---
+
+## ADR-034 — Motion must explain state or continuity
+
+**Status:** accepted
+
+Custom motion is permitted only when it communicates:
+
+- action feedback;
+- state transition;
+- spatial continuity;
+- layer change.
+
+Rejected defaults include:
+
+- number count-up;
+- bouncing conversion results;
+- autoplay historical timelines;
+- decorative parallax;
+- looping floating objects.
+
+Reduced-motion mode removes non-essential transforms and chart/story animation.
+
+---
+
+## ADR-035 — Responsive components prefer intrinsic/container-based adaptation
+
+**Status:** accepted
+
+Use:
+
+- viewport breakpoints for macro page/navigation changes;
+- Tailwind 4 container queries for reusable component adaptation.
+
+Mobile is intentionally composed as a task flow rather than a compressed desktop split-screen.
+
+Core conversion must remain usable under approximately 320 CSS px reflow conditions.
+
+---
+
+## ADR-036 — Light theme ships before optional dark theme
+
+**Status:** accepted
+
+Light mode is the primary design baseline.
+
+Dark mode ships only when it can match:
+
+- contrast;
+- chart quality;
+- state clarity;
+- country-theme safety;
+- provenance readability.
+
+Feature completeness is not a reason to ship a lower-quality dark theme.
