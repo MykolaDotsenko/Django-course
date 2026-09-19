@@ -28,7 +28,7 @@ AI capability interface
         ↓
 provider adapter
         ↓
-OpenAI API
+Gemini Developer API
 ```
 
 AI never calls application code by itself.
@@ -361,13 +361,13 @@ Use a two-step pattern when useful:
 ```text
 MediaGenerationBrief
         ↓
-ImagePromptComposer (Terra)
+ImagePromptComposer (optional development-only)
         ↓
 structured ImagePromptCandidate
         ↓
 deterministic validator/editor review
         ↓
-ImageGenerator (Flare/Sunburst)
+manual/offline image-generation tooling
 ```
 
 For simple image briefs, application can build the prompt deterministically and skip the text model.
@@ -634,19 +634,18 @@ Published output is persisted as normal product content.
 
 ---
 
-# 31. Prompt caching
+# 31. Persistent application cache
 
-GPT-5.6 supports provider prompt-cache controls.
+The main cost-control mechanism is our own persistent explanation cache keyed by:
 
-Potentially useful for repeated editorial tasks sharing:
+- normalized source packet hash;
+- prompt version;
+- model;
+- locale.
 
-- system capability contract;
-- style contract;
-- schema.
+This means repeated demo requests do not consume free-tier quota.
 
-Use only after usage volume justifies optimization.
-
-Architecture should keep stable prompt prefixes cache-friendly, but correctness never depends on provider prompt cache.
+Provider-side prompt caching is optional and not required for the zero-cost design.
 
 ---
 
@@ -735,7 +734,7 @@ Never expose to:
 - public logs;
 - candidate API response.
 
-Frontend requests our backend, not OpenAI directly.
+Frontend requests our backend, not Gemini directly.
 
 ---
 
@@ -888,7 +887,7 @@ A small opt-in live test validates real API compatibility.
 
 # 44. AI-free test suite
 
-The whole normal CI suite must pass without an OpenAI key.
+The whole normal CI suite must pass without a Gemini key.
 
 AI services are injected/faked.
 
