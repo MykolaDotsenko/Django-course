@@ -531,18 +531,19 @@ This is a strong reason for keeping provider identity behind our own adapter ins
 
 # 21. Provider selection status
 
-**OpenAI is selected as the initial primary AI provider**, behind the provider-neutral adapter defined in the AI architecture documents.
+**No runtime image-generation provider is enabled in the public portfolio demo.**
 
-Current image routing:
+Current Gemini image-generation API pricing lists no Free Tier for Gemini 3.1 Flash Image / Flash Lite Image, so runtime image generation would violate the €0 target.
 
-- GPT-Image-2.5 Flare — fast candidate/concept generation;
-- GPT-Image-2.5 Sunburst — high-value final/featured generation and precise editing.
+Portfolio strategy:
 
-The selection is not a permanent domain dependency.
+- factual imagery → Wikimedia/Europeana/other rights-aware sources;
+- AI illustrations → created manually/offline during development, reviewed, then stored;
+- long tail → Quiet Atlas CSS/SVG fallback.
 
-Before implementation and model upgrades, re-run the documented prompt/image eval set and review current pricing, API stability and terms.
+Google Gemini 3.1 Flash-Lite is selected only for free-tier live **text** explanation.
 
-Google and Stability remain benchmark/fallback candidates rather than parallel production dependencies.
+Image-provider adapters remain future/optional development tooling.
 
 ---
 
