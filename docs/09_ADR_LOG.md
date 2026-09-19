@@ -889,3 +889,254 @@ Use:
 - Maestro for high-value black-box E2E.
 
 Do not use UI snapshot testing as the primary correctness signal.
+
+
+---
+
+## ADR-057 — Backend request handling is synchronous Django
+
+**Status:** accepted
+
+Use synchronous Django/DRF request handlers initially.
+
+Django 5.2 transactions are not supported in native async mode, and the product has only one normal runtime upstream dependency.
+
+A sync HTTP client with strict timeout is simpler and safer.
+
+Reconsider async only after measured requirements justify it.
+
+---
+
+## ADR-058 — WSGI is sufficient for the initial deployment
+
+**Status:** accepted
+
+Do not require ASGI until the product has an actual async/long-lived connection use case.
+
+Using ASGI later remains possible.
+
+---
+
+## ADR-059 — Global ATOMIC_REQUESTS stays disabled
+
+**Status:** accepted
+
+Use Django's autocommit default.
+
+Open short explicit transaction.atomic() blocks only around multi-write durable invariants.
+
+Remote HTTP calls must happen outside transactions.
+
+---
+
+## ADR-060 — Post-commit side effects use transaction.on_commit
+
+**Status:** accepted
+
+Cache invalidation and future asynchronous side effects that depend on a successful DB write are registered after commit.
+
+Do not expose rolled-back DB state through cache.
+
+---
+
+## ADR-061 — Database constraints protect durable invariants
+
+**Status:** accepted
+
+Use PostgreSQL/Django constraints for durable uniqueness and range rules.
+
+Application pre-checks provide UX but are not the only protection against concurrency.
+
+---
+
+## ADR-062 — Pessimistic row locking is exceptional
+
+**Status:** accepted
+
+Do not use select_for_update by default.
+
+Prefer:
+
+- unique constraints;
+- atomic writes;
+- optimistic version conflicts for multi-device aggregates.
+
+Use row locks only for a demonstrated serialization requirement and test them on PostgreSQL.
+
+---
+
+## ADR-063 — Cache is optimization and explicit stale fallback, never authority
+
+**Status:** accepted
+
+Correctness must survive cache miss/eviction/failure.
+
+For FX, physical retention may exceed semantic freshness so a quote can be used only as an explicitly labelled stale fallback.
+
+Cache keys include all truth-affecting semantics.
+
+---
+
+## ADR-064 — No distributed cache lock or stampede framework initially
+
+**Status:** accepted
+
+Low-volume duplicate cold provider fetches are acceptable.
+
+Introduce request coalescing/Redis locking only after metrics show provider cost or traffic requires it.
+
+Correctness never depends on single-flight behavior.
+
+---
+
+## ADR-065 — Application services exist only for real orchestration boundaries
+
+**Status:** accepted
+
+A service/use-case is justified for provider/cache/transaction/multi-model/non-trivial shared behavior.
+
+Do not wrap simple Django ORM CRUD in generic service/repository classes.
+
+---
+
+## ADR-066 — No generic repository or dependency-injection framework
+
+**Status:** accepted
+
+Django ORM remains the persistence API.
+
+Use ordinary Python dependency injection/fakes where tests require it.
+
+Do not add a DI container.
+
+---
+
+## ADR-067 — Raw provider payloads stop at infrastructure adapters
+
+**Status:** accepted
+
+External JSON is validated and normalized into explicit values before entering application/domain code.
+
+Views, serializers, templates and mobile contracts never depend on Frankfurter/REST Countries raw shapes.
+
+---
+
+## ADR-068 — DRF OpenAPI uses drf-spectacular
+
+**Status:** accepted
+
+DRF's built-in OpenAPI generation is deprecated.
+
+Use drf-spectacular for OpenAPI 3 and generate mobile TypeScript contracts from that schema.
+
+---
+
+## ADR-069 — API errors have stable machine codes and request IDs
+
+**Status:** accepted
+
+Expected failures map to a stable envelope with:
+
+- code;
+- human detail;
+- field errors where relevant;
+- retryable where useful;
+- request_id.
+
+Clients never parse English error strings for behavior.
+
+---
+
+## ADR-070 — Request IDs and structured logs are baseline observability
+
+**Status:** accepted
+
+Every request receives a bounded opaque request ID that is returned and logged.
+
+Phase-one observability uses structured logs, request/provider/cache timings and health endpoints.
+
+OpenTelemetry is optional later infrastructure.
+
+---
+
+## ADR-071 — Liveness/readiness never depend on optional external providers
+
+**Status:** accepted
+
+Liveness checks process availability.
+
+Readiness checks critical local configuration and PostgreSQL.
+
+Frankfurter, Wikidata, REST Countries and statistical APIs are not health dependencies that trigger restart loops.
+
+---
+
+## ADR-072 — Slow-changing external data is imported, not fetched on user request
+
+**Status:** accepted
+
+Use management commands + a canonical production scheduler for country metadata, cultural ingestion and future statistical datasets.
+
+Imports are idempotent and preserve the last valid local snapshot on upstream failure.
+
+---
+
+## ADR-073 — No Celery until a concrete async workload requires it
+
+**Status:** accepted
+
+Management commands/platform scheduler are sufficient initially.
+
+A broker/task queue becomes justified only for real user-triggered long jobs, distributed retries, notifications/rate alerts or sustained worker workloads.
+
+---
+
+## ADR-074 — Import network I/O finishes before canonical DB write transaction
+
+**Status:** accepted
+
+Fetch, validate and normalize remote data before opening the transaction that applies the canonical snapshot.
+
+This avoids long locks and partial remote-dependent transactions.
+
+---
+
+## ADR-075 — Historical and current cache identities are semantic and versioned
+
+**Status:** accepted
+
+Quote/series cache keys include:
+
+- namespace version;
+- current/historical mode;
+- provider policy;
+- provider when pinned;
+- pair;
+- effective/request mapping where appropriate;
+- range/grouping for series.
+
+A provider-policy change requires a new semantic namespace rather than reusing incompatible entries.
+
+---
+
+## ADR-076 — Multi-device aggregate edits use optimistic conflicts when needed
+
+**Status:** accepted for future Trip editing
+
+When cross-device Trip updates become real, add a version field/check.
+
+A stale update receives 409 Conflict rather than silently overwriting newer server state.
+
+Do not add optimistic-version columns to all models preemptively.
+
+---
+
+## ADR-077 — Scheduled imports are idempotent and fail closed
+
+**Status:** accepted
+
+A failed, malformed or suspiciously incomplete external snapshot must not wipe valid canonical data.
+
+Small canonical snapshot applies are atomic after full validation.
+
+Large future datasets may use staging + publish/activate semantics.
