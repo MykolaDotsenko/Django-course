@@ -17,6 +17,8 @@ This handbook is the single source of truth for the Cultural Currency Converter 
 8. [Implementation roadmap](08_IMPLEMENTATION_ROADMAP.md)
 9. [Architecture decision log](09_ADR_LOG.md)
 10. [Official references](10_REFERENCES.md)
+11. [API research and data-source strategy](11_API_RESEARCH_AND_DATA_SOURCES.md)
+12. [External API integration contracts](12_EXTERNAL_API_CONTRACTS.md)
 
 ## UX decision hierarchy
 
@@ -82,3 +84,17 @@ The documentation distinguishes:
 - **research hypotheses**.
 
 Items marked as research questions should be tested through prototypes/usability work before they are treated as fixed behaviour.
+
+
+## External data decision hierarchy
+
+Before adding or changing a third-party API, read in this order:
+
+1. `11_API_RESEARCH_AND_DATA_SOURCES.md` — whether the source belongs in the product at all;
+2. `12_EXTERNAL_API_CONTRACTS.md` — how it is isolated, normalized, cached and tested;
+3. `04_ARCHITECTURE.md` — where the adapter belongs and whether it may be request-path critical;
+4. `05_DOMAIN_MODEL.md` — which normalized domain concept receives the data;
+5. `07_QUALITY_SECURITY_ACCESSIBILITY.md` — outage, security and testing expectations;
+6. `09_ADR_LOG.md` — durable provider/source decisions.
+
+A new API is not accepted merely because it provides convenient JSON.
