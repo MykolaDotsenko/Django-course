@@ -439,3 +439,342 @@ Before implementing any external API:
 7. confirm source update frequency;
 8. document outage/fallback behaviour;
 9. record the review date in the implementation PR.
+
+
+# Product Design References
+
+The detailed design specifications are informed by current official/platform guidance and are adapted to this product rather than copied visually.
+
+## Apple Human Interface Guidelines
+
+- Human Interface Guidelines  
+  https://developer.apple.com/design/human-interface-guidelines/
+- Design principles  
+  https://developer.apple.com/design/human-interface-guidelines/design-principles
+- Layout  
+  https://developer.apple.com/design/human-interface-guidelines/layout
+- Typography  
+  https://developer.apple.com/design/human-interface-guidelines/typography
+- Color  
+  https://developer.apple.com/design/human-interface-guidelines/color
+- Materials  
+  https://developer.apple.com/design/human-interface-guidelines/materials
+- Motion  
+  https://developer.apple.com/design/human-interface-guidelines/motion
+
+Relevant principles used here:
+
+- purpose and clarity before decoration;
+- consistent relationships between controls/content;
+- essential information receives sufficient space;
+- limited typeface count and readable weights;
+- semantic color rather than arbitrary color reuse;
+- materials/translucency represent hierarchy, not generic decoration;
+- motion communicates status/feedback and respects accessibility settings.
+
+Apple's current material guidance is not used as a reason to copy Liquid Glass into web content cards.
+
+## W3C / WCAG 2.2
+
+- WCAG 2.2  
+  https://www.w3.org/TR/WCAG22/
+- What's new in WCAG 2.2  
+  https://www.w3.org/WAI/standards-guidelines/wcag/new-in-22/
+- Understanding Target Size (Minimum)  
+  https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum
+- Understanding Focus Appearance  
+  https://www.w3.org/WAI/WCAG22/Understanding/focus-appearance
+
+Design implications include:
+
+- AA target-size/spacing requirements;
+- focus must remain visible/not obscured;
+- focus indication needs strong visible area/contrast;
+- color cannot be the sole state channel;
+- high zoom/reflow is part of layout quality.
+
+The project intentionally targets larger frequent-action hit areas than the 24×24 CSS-pixel AA minimum where practical.
+
+## Tailwind CSS 4
+
+- Theme variables  
+  https://tailwindcss.com/docs/theme
+- Responsive design and container queries  
+  https://tailwindcss.com/docs/responsive-design
+- Tailwind CSS v4 overview  
+  https://tailwindcss.com/blog/tailwindcss-v4
+
+Design-system implications:
+
+- semantic tokens map naturally to `@theme` variables;
+- CSS custom properties remain available at runtime;
+- container queries are first-class;
+- modern logical properties and CSS capabilities improve localization/RTL readiness.
+
+## Progressive disclosure
+
+- Nielsen Norman Group — Progressive Disclosure  
+  https://www.nngroup.com/articles/progressive-disclosure/
+
+The product applies progressive disclosure to:
+
+- source methodology;
+- historical charts;
+- storytelling;
+- advanced context;
+- account/saved features.
+
+Frequently needed conversion/trust information remains visible up front.
+
+## Reference interpretation rule
+
+External design systems/guidelines are **principle references**, not a visual template.
+
+Cultural Currency Converter does not attempt to look exactly like:
+
+- Apple;
+- Material;
+- Wise;
+- Xe;
+- GOV.UK.
+
+The design must remain recognizably its own product while preserving familiar interaction behavior.
+
+
+# Design System Research References
+
+Research reviewed: **2026-09-19**.
+
+These references support the Quiet Atlas visual-system decisions. They are principles and platform guidance, not visual templates to copy.
+
+## Apple Human Interface Guidelines
+
+### Branding
+
+https://developer.apple.com/design/human-interface-guidelines/branding
+
+Relevant current guidance:
+
+- brand identity should defer to useful content;
+- accent colour is stronger when used judiciously rather than across every control;
+- familiar components/patterns preserve learnability;
+- custom typography must remain legible and accessibility-compatible.
+
+Quiet Atlas implication:
+
+- fjord teal is scarce and meaningful;
+- country atmosphere lives mostly in content/editorial layers;
+- the converter remains familiar and immediately usable.
+
+### Text fields
+
+https://developer.apple.com/design/human-interface-guidelines/text-fields
+
+Relevant guidance:
+
+- visible context/label remains useful after placeholder disappears;
+- size fields for expected input;
+- preserve logical tab order;
+- use input/keyboard types appropriate to the data.
+
+Quiet Atlas implication:
+
+- Amount has a persistent label;
+- mobile uses decimal-appropriate input;
+- From/To/search controls retain explicit labels.
+
+### Entering data
+
+https://developer.apple.com/design/human-interface-guidelines/entering-data
+
+Relevant guidance:
+
+- minimize unnecessary data entry;
+- use information already available where appropriate;
+- make requested data clear.
+
+Quiet Atlas implication:
+
+- country/currency suggestions reduce work but never silently overwrite explicit intent;
+- no onboarding form before conversion.
+
+### Gestures
+
+https://developer.apple.com/design/human-interface-guidelines/gestures
+
+Relevant guidance:
+
+- familiar gestures behave familiarly;
+- custom gestures are supplementary;
+- important actions need non-gesture alternatives.
+
+Quiet Atlas implication:
+
+- no gesture-only Swap;
+- sheets may swipe-dismiss but retain Close/Back;
+- mobile interaction never depends on hidden gestures.
+
+### Toolbars
+
+https://developer.apple.com/design/human-interface-guidelines/toolbars
+
+Relevant guidance:
+
+- choose toolbar actions deliberately;
+- avoid overcrowding;
+- titles/actions should orient and support current content.
+
+Quiet Atlas implication:
+
+- global header stays compact;
+- secondary actions do not compete with Convert.
+
+### Apple design resources / current platform system
+
+https://developer.apple.com/design/
+
+Apple's current design system includes Liquid Glass and platform-native material/control guidance.
+
+Quiet Atlas implication:
+
+- native mobile may use current platform materials in navigation/control layers;
+- web content surfaces do **not** imitate Liquid Glass simply because it is fashionable.
+
+## W3C WCAG 2.2
+
+### Target Size (Minimum) — 2.5.8
+
+https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum
+
+WCAG AA minimum:
+
+- 24×24 CSS px, subject to documented spacing/exceptions.
+
+Quiet Atlas intentionally targets larger frequent controls:
+
+- roughly 44px+ web touch controls;
+- 48–56px primary mobile controls.
+
+### Focus Visible — 2.4.7
+
+https://www.w3.org/WAI/WCAG22/Understanding/focus-visible
+
+Keyboard focus must be visibly identifiable.
+
+### Focus Appearance — 2.4.13
+
+https://www.w3.org/WAI/WCAG22/Understanding/focus-appearance
+
+Although Level AAA, its 2-CSS-pixel-perimeter style guidance is used as a strong product target because the converter is form-heavy.
+
+### Non-text Contrast — 1.4.11
+
+https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast
+
+Used when reviewing:
+
+- control boundaries;
+- focus indicators;
+- chart markers;
+- interactive states.
+
+### Reflow — 1.4.10
+
+https://www.w3.org/WAI/WCAG22/Understanding/reflow
+
+Supports the design requirement that core conversion works under narrow/high-zoom layouts without two-dimensional scrolling.
+
+## GOV.UK Design System
+
+The visual style is not copied. The mature form/error interaction patterns remain useful references.
+
+- Text input  
+  https://design-system.service.gov.uk/components/text-input/
+- Select  
+  https://design-system.service.gov.uk/components/select/
+- Error message  
+  https://design-system.service.gov.uk/components/error-message/
+- Error summary  
+  https://design-system.service.gov.uk/components/error-summary/
+
+Quiet Atlas uses the same broad principles:
+
+- visible labels;
+- clear field-level errors;
+- predictable controls;
+- error summaries only when they improve recovery.
+
+## Material Design 3
+
+Primary reference:
+
+https://m3.material.io/
+
+Relevant categories to re-check during React Native implementation:
+
+- accessible design;
+- typography;
+- colour;
+- motion;
+- navigation;
+- text fields;
+- buttons;
+- sheets.
+
+Material is used as cross-platform interaction research, not as a requirement to make the product visually resemble a Material app.
+
+## Current converter benchmarks
+
+### Wise Currency Converter
+
+https://wise.com/us/currency-converter/
+
+Observed current hierarchy:
+
+- amount;
+- source/destination;
+- rate/result;
+- chart/history;
+- secondary rate-tracking actions.
+
+### Xe Currency Converter
+
+https://www.xe.com/currencyconverter/
+
+Observed current hierarchy:
+
+- amount;
+- From/To;
+- converted result;
+- rate metadata;
+- history/chart and transfer-related secondary actions.
+
+### Xe Currency Charts
+
+https://www.xe.com/currencycharts/
+
+Observed pattern:
+
+- pair selection;
+- period selection;
+- simple historical line visualization;
+- informational-rate disclaimer/context.
+
+Quiet Atlas conclusion:
+
+- match the low-friction conversion mental model users already know;
+- differentiate **after** the trusted result with local meaning, payment context, historical storytelling and provenance;
+- do not copy competitors' transfer/upsell hierarchy because our product goal is different.
+
+## Design-source precedence
+
+When guidance conflicts:
+
+1. task correctness and user trust;
+2. WCAG/accessibility requirements;
+3. platform-native expectations for mobile;
+4. product UX contract;
+5. Quiet Atlas visual language;
+6. trends/aesthetic inspiration.
+
+A design trend never overrides clarity, provenance or accessibility.
