@@ -1099,3 +1099,189 @@ The application domain does not depend on OpenAI/Stability/Google-specific outpu
 Provider/model identity is recorded for provenance/operations, but published-media selection works against MediaAsset.
 
 This makes model deprecation a generation-tooling issue rather than a page-runtime outage.
+
+
+# 51. Gemini text-generation contract
+
+Google Gemini Developer API Free Tier is the initial live AI provider.
+
+Primary model:
+
+```text
+gemini-3.1-flash-lite
+```
+
+The backend uses the official server-side Google Gen AI SDK/API and schema-constrained structured JSON output.
+
+Provider-specific response objects stop inside the adapter.
+
+## 52. Text model routing
+
+Public demo:
+
+```text
+runtime explanation → gemini-3.1-flash-lite
+```
+
+No automatic paid escalation.
+
+The application asks for a capability, not a model name.
+
+## 53. Runtime image-generation contract
+
+Public demo runtime image generation is disabled.
+
+Current Gemini 3.1 Flash Image / Flash Lite Image API pricing lists no Free Tier, so the portfolio does not make billable image calls.
+
+Images are:
+
+- sourced;
+- generated manually/offline during development;
+- reviewed;
+- stored as MediaAsset.
+
+Provider adapter remains future/optional tooling only.
+
+## 54. Demo safety contract
+
+The zero-cost public demo does not add a separate paid moderation API.
+
+Safety uses:
+
+- provider safety/refusal behavior;
+- schema validation;
+- semantic validators;
+- no arbitrary user prompt;
+- human review for stored editorial/media assets.
+
+If user-authored generative prompts are added later, reassess dedicated moderation.
+
+## 55. AI timeout/retry
+
+Text and image capabilities have separate bounded policies.
+
+Retry only selected transient conditions:
+
+- connection failure;
+- provider 5xx;
+- 429 under bounded Retry-After policy.
+
+Do not blind-retry:
+
+- refusal;
+- moderation/safety block;
+- invalid input;
+- budget block;
+- auth/config error.
+
+## 56. Structured-output semantic validation
+
+Provider schema adherence is followed by application validation.
+
+Examples:
+
+- fact IDs must exist in supplied packet;
+- output cannot introduce unknown source URLs;
+- dates/currencies must match packet;
+- lengths are bounded;
+- historical causal claims follow policy.
+
+AI output is not accepted merely because JSON parses.
+
+## 57. AI source packet
+
+Text generation receives a normalized packet created by application/domain code.
+
+Do not send:
+
+- raw QuerySet serialization;
+- arbitrary HTML;
+- database credentials;
+- complete application state;
+- arbitrary user prompt as system-level instruction.
+
+## 58. AI tool policy
+
+P0/P1 Gemini calls do not enable:
+
+- web search;
+- file search;
+- shell/code execution;
+- arbitrary function tools;
+- MCP;
+- database access.
+
+All source retrieval occurs before the AI call through deterministic application code.
+
+## 59. Provider error normalization
+
+Map Gemini SDK/provider failures into project-level categories:
+
+```text
+AIProviderTimeout
+AIProviderUnavailable
+AIRateLimited
+AIInvalidResponse
+AIRefusal
+AISafetyBlocked
+AIBudgetExceeded
+AIConfigurationError
+```
+
+Raw provider exceptions never reach templates/mobile.
+
+## 60. Usage metadata
+
+Capture when available:
+
+- provider/model;
+- input/output tokens;
+- reasoning/usage metadata;
+- image count;
+- latency;
+- response/provider request ID;
+- estimated cost.
+
+Usage metadata is operational.
+
+It does not enter historical/domain truth.
+
+## 61. Explanation cache
+
+Before a Gemini live call, check the persistent application cache using the normalized packet/prompt/model/locale identity.
+
+Repeated identical demo interactions should normally be served without consuming provider quota.
+
+Correctness/fallback must not depend on any provider-side cache behavior.
+
+## 62. Gemini free-tier privacy/data controls
+
+Google currently marks Gemini Developer API Free Tier content as used to improve Google products.
+
+Therefore public-demo live AI sends only public/non-sensitive structured product data.
+
+Do not send:
+
+- names/emails;
+- precise user location;
+- private trip notes;
+- authentication data;
+- account history.
+
+A future feature needing private data must move to an appropriate data-control tier/provider or remain deterministic.
+
+## 63. Provider model lifecycle
+
+AI model names can change/deprecate.
+
+Model upgrade procedure:
+
+```text
+provider announces/desired upgrade
+→ run project eval set
+→ compare trust/style/cost/latency
+→ update routing config
+→ deploy
+```
+
+Existing published AI-derived media/prose does not regenerate automatically.
