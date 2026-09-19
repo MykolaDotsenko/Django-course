@@ -2,6 +2,8 @@
 
 This document defines the visual language of Cultural Currency Converter.
 
+The design language is named **Quiet Atlas**.
+
 The intended character is:
 
 > **Nordic editorial utility — calm enough for money, warm enough for culture.**
@@ -93,155 +95,261 @@ Country theming may alter atmosphere, never hierarchy.
 
 ---
 
-# 4. Core surface model
+# 4. Canonical colour and surface system
 
-Use four semantic elevation layers.
+The implementation palette is intentionally small. These values are the canonical light-theme starting point; country atmosphere is layered on top without replacing product semantics.
 
-## Surface 0 — Canvas
-
-Page/background layer.
-
-Purpose:
-
-- establish calm visual field
-- support edge-to-edge cultural atmosphere
-- never compete with content
-
-Suggested light token:
+## 4.1 Light theme — Quiet Atlas
 
 ```css
---surface-canvas: oklch(0.985 0.004 245);
+--canvas:              #F6F7F3;
+--surface:             #FFFFFF;
+--surface-soft:        #EEF2EE;
+--surface-accent:      #DCEFEB;
+
+--text-primary:        #14211D;
+--text-secondary:      #596660;
+--text-tertiary:       #66736C;
+--text-inverse:        #FFFFFF;
+
+--border-subtle:       #D7DED9;
+--border-control:      #7B8982;
+
+--brand:               #0B6B61;
+--brand-hover:         #085A52;
+--brand-soft:          #DCEFEB;
+
+--history:             #345E7D;
+--history-soft:        #E4EDF4;
+
+--success:             #2D6A4F;
+--success-soft:        #E5F2E9;
+
+--warning:             #9A5A13;
+--warning-soft:        #FFF2D8;
+
+--danger:              #A93632;
+--danger-soft:         #FCE8E7;
+
+--focus:               #0B6B61;
 ```
 
-## Surface 1 — Primary content
+## 4.2 Verified contrast targets
 
-Converter/result/content panels.
+The palette is chosen so normal body/status text can meet WCAG AA without relying on oversized type.
+
+Measured contrast examples:
+
+| Foreground | Background | Approx. contrast |
+|---|---|---:|
+| #14211D | #FFFFFF | 16.60:1 |
+| #14211D | #F6F7F3 | 15.43:1 |
+| #596660 | #FFFFFF | 6.01:1 |
+| #66736C | #FFFFFF | 4.96:1 |
+| #0B6B61 | #FFFFFF | 6.38:1 |
+| #FFFFFF | #0B6B61 | 6.38:1 |
+| #FFFFFF | #345E7D | 6.90:1 |
+| #FFFFFF | #A93632 | 6.44:1 |
+| #0B6B61 | #DCEFEB | 5.35:1 |
+| #345E7D | #E4EDF4 | 5.82:1 |
+| #9A5A13 | #FFF2D8 | 4.93:1 |
+| #A93632 | #FCE8E7 | 5.47:1 |
+
+These values still require component-level testing because contrast depends on actual adjacent pixels and states.
+
+## 4.3 Surface hierarchy
+
+### Canvas
+
+`#F6F7F3`
+
+Use for:
+
+- global page background;
+- large quiet breathing areas;
+- subtle country atmosphere.
+
+### Surface
+
+`#FFFFFF`
+
+Use for:
+
+- converter stage;
+- important interactive panels;
+- menus/sheets/dialogs.
+
+### Soft surface
+
+`#EEF2EE`
+
+Use for:
+
+- inset metadata;
+- quiet supporting groups;
+- read-only context.
+
+### Accent surface
+
+`#DCEFEB`
+
+Use sparingly for:
+
+- selected state;
+- brand-supportive highlight;
+- calm contextual emphasis.
+
+Do not alternate backgrounds merely to make every section look different.
+
+## 4.4 Border hierarchy
+
+`--border-subtle` is for grouping where the boundary is supplementary.
+
+`--border-control` is used where the visible boundary is itself necessary to recognize an input/control.
+
+Do not use a very low-contrast border as the only way to discover a control.
+
+## 4.5 Brand colour
+
+The brand colour is **fjord teal**:
+
+`#0B6B61`
+
+It communicates:
+
+- calm;
+- trust;
+- travel/geography;
+- Nordic identity without literal flag colours.
+
+Primary uses:
+
+- primary action;
+- selected navigation;
+- selected chart series;
+- focus relationship;
+- small brand accents.
+
+The brand colour is **not** used for:
+
+- every heading;
+- every icon;
+- every card border;
+- generic decoration.
+
+This follows the principle that a brand accent gains meaning through scarcity.
+
+## 4.6 Historical colour
+
+Historical mode uses **archive blue**:
+
+`#345E7D`
+
+It communicates temporal/informational context without creating nostalgic sepia styling.
+
+Historical mode changes:
+
+- status accent;
+- timeline marker;
+- selected historical point;
+- small date-context surfaces.
+
+It does not recolour the whole application.
+
+## 4.7 Status colours
+
+### Success
+
+`#2D6A4F`
+
+Only:
+
+- operation succeeded;
+- valid completion;
+- saved state confirmation.
+
+Never:
+
+- "good currency";
+- rate increased;
+- country is cheaper.
+
+### Warning
+
+`#9A5A13`
+
+Use for:
+
+- cached/stale quote;
+- partial data;
+- assumption requiring attention.
+
+### Danger
+
+`#A93632`
+
+Use for:
+
+- field validation;
+- destructive action;
+- unrecoverable error.
+
+### Informational/history
+
+`#345E7D`
+
+Use for:
+
+- historical mode;
+- source/context note;
+- neutral informational status.
+
+Every status also has text and, when useful, iconography. Colour is never the only carrier of meaning.
+
+## 4.8 Optional dark theme palette
+
+Dark mode is not required for first release, but its intended palette is documented to prevent arbitrary inversion later.
 
 ```css
---surface-primary: oklch(0.998 0.002 245);
+--dark-canvas:         #0D1512;
+--dark-surface:        #121D19;
+--dark-surface-soft:   #182620;
+--dark-text-primary:   #F2F7F4;
+--dark-text-secondary: #AAB8B1;
+--dark-border:         #2B3A34;
+
+--dark-brand:          #78D1C4;
+--dark-history:        #8FB5D1;
+--dark-warning:        #E7B567;
+--dark-danger:         #F08A85;
+--dark-success:        #83C99F;
 ```
 
-Use only where grouping improves comprehension.
-
-Do not put every section in a card.
-
-## Surface 2 — Muted context
-
-Metadata, inset details, low-priority grouped content.
-
-```css
---surface-muted: oklch(0.965 0.006 245);
-```
-
-## Surface 3 — Elevated/interactive
-
-Menus, popovers, command/search surfaces.
-
-```css
---surface-elevated: oklch(1 0 0);
-```
-
-Shadow/elevation is reserved for elements that actually float over content.
+The dark palette is a separate design pass, not an automatic inversion.
 
 ---
 
-# 5. Ink hierarchy
+# 5. Text hierarchy
 
 Use semantic text roles.
 
-```css
---text-primary: oklch(0.22 0.014 250);
---text-secondary: oklch(0.43 0.014 250);
---text-tertiary: oklch(0.56 0.012 250);
---text-inverse: oklch(0.98 0.004 245);
+```text
+primary   → core task/result/content
+secondary → supporting explanation/provenance
+tertiary  → nonessential metadata only
+inverse   → text on strong filled controls
 ```
 
 Rules:
 
-- important provenance never uses tertiary text if contrast becomes marginal
-- timestamps may be secondary, not “fine print”
-- disabled text is not simply faded to illegibility
-- placeholders are never substitutes for labels
+- important provenance never uses low-contrast tertiary treatment;
+- timestamps are secondary, not fine print;
+- disabled text remains readable;
+- placeholders never substitute for labels.
 
 ---
 
-# 6. Core brand accent
-
-The base product accent should feel Nordic and trustworthy rather than “bank blue”.
-
-Candidate family:
-
-```css
---accent-50:  oklch(0.97 0.02 225);
---accent-100: oklch(0.93 0.04 225);
---accent-300: oklch(0.78 0.09 225);
---accent-500: oklch(0.61 0.13 225);
---accent-600: oklch(0.53 0.12 225);
---accent-700: oklch(0.45 0.105 225);
---accent-800: oklch(0.36 0.08 225);
-```
-
-Use cases:
-
-- primary action
-- active/focus relationships
-- selected navigation
-- chart primary series
-- subtle brand highlights
-
-Never use accent simply to make a neutral paragraph look “interesting”.
-
----
-
-# 7. Semantic status colours
-
-Status colors communicate state, not market desirability.
-
-## Positive/success
-
-Use only for successful completion or valid status.
-
-Do not use it to mean:
-
-- currency gained
-- “good rate”
-- better country
-
-## Warning
-
-Use for:
-
-- stale/cached data
-- partial availability
-- assumptions requiring attention
-
-## Danger
-
-Use for:
-
-- validation error
-- destructive action
-- unrecoverable failure
-
-## Informational
-
-Use for:
-
-- historical mode
-- source/context note
-- neutral provider information
-
-Every status combines:
-
-- text
-- optional icon
-- optional color
-
-Never color alone.
-
----
-
-# 8. Country accent system
+# 6. Country accent system
 
 Country accents are contextual atmosphere, not brand replacement.
 
