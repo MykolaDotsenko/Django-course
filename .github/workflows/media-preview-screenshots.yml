@@ -26,6 +26,10 @@ jobs:
     name: Chromium responsive render
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      APP_ENV: test
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: testserver,localhost,127.0.0.1
 
     steps:
       - name: Checkout

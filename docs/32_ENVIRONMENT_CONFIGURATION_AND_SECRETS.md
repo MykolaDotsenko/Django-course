@@ -241,10 +241,30 @@ A PR introducing configuration must answer:
 
 ---
 
-# 14. Current transitional gap
+# 14. Implemented foundation boundary
 
-The existing legacy Django settings still contain development-only hardcoded configuration.
+The foundation now consumes security-sensitive Django configuration through `config.environment.load_runtime_config()`.
 
-This is known transitional debt, not an accepted production model.
+Canonical variables implemented at this stage:
 
-The foundation implementation must remove it rather than building new product code around it.
+```text
+APP_ENV
+DJANGO_DEBUG
+DJANGO_ALLOWED_HOSTS
+DJANGO_SECRET_KEY
+```
+
+Rules:
+
+- `APP_ENV` is explicit and limited to local/test/preview/production;
+- local can start without a committed secret and receives an ephemeral process key;
+- normal test/CI requires no secret credential;
+- preview/production require an explicit secret and allowed hosts;
+- preview/production reject `DEBUG=True`;
+- preview/production reject wildcard hosts;
+- malformed booleans, hosts or environment names fail fast;
+- production session/CSRF cookies are marked secure;
+- `.env.example` contains only variables the application actually consumes;
+- arbitrary `.env` files are not silently loaded into production configuration.
+
+Database configuration remains the responsibility of the following PostgreSQL foundation slice.

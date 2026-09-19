@@ -38,6 +38,10 @@ jobs:
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
+    env:
+      APP_ENV: test
+      DJANGO_DEBUG: "false"
+      DJANGO_ALLOWED_HOSTS: testserver,localhost,127.0.0.1
     strategy:
       fail-fast: false
       matrix:

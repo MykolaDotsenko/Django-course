@@ -1,20 +1,21 @@
 """
 Django settings for Cultural Currency Converter.
 
-The product shell now lives at the repository root. Environment/security
-hardening is intentionally handled by the next bounded foundation PR.
+Security-sensitive deployment configuration is loaded through the validated
+runtime boundary in config.environment.
 """
 
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+from config.environment import load_runtime_config
 
-# Transitional development settings. PR 3 moves these values to validated
-# environment configuration; keeping that change separate makes this
-# structural migration reviewable.
-SECRET_KEY = "django-insecure-ddjo7+$n%nn94hb#ma9-ihs$l&x8&!a6g6fngtk^7i#+2zf-@7"
-DEBUG = True
-ALLOWED_HOSTS = []
+BASE_DIR = Path(__file__).resolve().parent.parent
+RUNTIME_CONFIG = load_runtime_config()
+
+APP_ENV = RUNTIME_CONFIG.environment.value
+SECRET_KEY = RUNTIME_CONFIG.secret_key
+DEBUG = RUNTIME_CONFIG.debug
+ALLOWED_HOSTS = list(RUNTIME_CONFIG.allowed_hosts)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -76,5 +77,8 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+
+SESSION_COOKIE_SECURE = RUNTIME_CONFIG.is_production
+CSRF_COOKIE_SECURE = RUNTIME_CONFIG.is_production
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

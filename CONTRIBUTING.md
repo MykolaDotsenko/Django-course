@@ -24,6 +24,19 @@ python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
 
+Local development works without committed secrets. The default execution context is `local`.
+
+To make configuration explicit, copy the tracked template and export it through your shell or IDE:
+
+```bash
+cp .env.example .env
+set -a
+. ./.env
+set +a
+```
+
+Django does not silently parse arbitrary `.env` files; deployment configuration always enters through the process environment. A local `DJANGO_SECRET_KEY` is optional, while preview/production require an explicit strong key and allowed hosts.
+
 Optional local commit hooks:
 
 ```bash
