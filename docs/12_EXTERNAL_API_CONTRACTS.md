@@ -1101,64 +1101,60 @@ Provider/model identity is recorded for provenance/operations, but published-med
 This makes model deprecation a generation-tooling issue rather than a page-runtime outage.
 
 
-# 51. OpenAI text-generation contract
+# 51. Gemini text-generation contract
 
-OpenAI is the initial primary AI provider.
+Google Gemini Developer API Free Tier is the initial live AI provider.
 
-Text application integration uses:
+Primary model:
 
 ```text
-POST /v1/responses
+gemini-3.1-flash-lite
 ```
 
-through the official/server-side SDK.
-
-Normal AI text tasks request Structured Outputs with a strict JSON Schema.
+The backend uses the official server-side Google Gen AI SDK/API and schema-constrained structured JSON output.
 
 Provider-specific response objects stop inside the adapter.
 
 ## 52. Text model routing
 
-Initial capability routing:
+Public demo:
 
 ```text
-fast structured assist → gpt-5.6-luna
-quality editorial      → gpt-5.6-terra
-rare audit/eval        → gpt-5.6-sol
+runtime explanation → gemini-3.1-flash-lite
 ```
 
-Model aliases/snapshots are configuration.
+No automatic paid escalation.
 
 The application asks for a capability, not a model name.
 
-## 53. OpenAI image-generation contract
+## 53. Runtime image-generation contract
 
-Initial image routing:
+Public demo runtime image generation is disabled.
 
-```text
-candidate/concept → gpt-image-2.5-flare
-featured/final    → gpt-image-2.5-sunburst
-```
+Current Gemini 3.1 Flash Image / Flash Lite Image API pricing lists no Free Tier, so the portfolio does not make billable image calls.
 
-Use the Image API for simple one-shot generation/editing.
+Images are:
 
-Use Responses image-generation tooling only if a future genuinely multi-step multimodal workflow benefits.
+- sourced;
+- generated manually/offline during development;
+- reviewed;
+- stored as MediaAsset.
 
-Do not introduce the more complex interaction path without need.
+Provider adapter remains future/optional tooling only.
 
-## 54. OpenAI moderation contract
+## 54. Demo safety contract
 
-Use:
+The zero-cost public demo does not add a separate paid moderation API.
 
-```text
-omni-moderation-latest
-```
+Safety uses:
 
-where product moderation adds value for generated text/image candidates.
+- provider safety/refusal behavior;
+- schema validation;
+- semantic validators;
+- no arbitrary user prompt;
+- human review for stored editorial/media assets.
 
-Moderation is safety classification, not historical/factual validation.
-
-A clean moderation result does not mean an image/fact is historically accurate.
+If user-authored generative prompts are added later, reassess dedicated moderation.
 
 ## 55. AI timeout/retry
 
@@ -1258,18 +1254,21 @@ Use only as an optimization when repeated stable prompt prefixes justify it.
 
 Correctness/fallback must not depend on a prompt-cache hit.
 
-## 62. AI privacy/data controls
+## 62. Gemini free-tier privacy/data controls
 
-OpenAI API business inputs/outputs are not used to train provider models by default unless the organization opts in, according to current OpenAI business/API data-control documentation.
+Google currently marks Gemini Developer API Free Tier content as used to improve Google products.
 
-This does not remove the need to:
+Therefore public-demo live AI sends only public/non-sensitive structured product data.
 
-- minimize payload;
-- understand current retention/abuse-monitoring policy;
-- avoid personal data for editorial use cases;
-- review deployment-specific data controls before future user-facing AI.
+Do not send:
 
-Do not promise zero retention unless the actual API project/configuration provides it.
+- names/emails;
+- precise user location;
+- private trip notes;
+- authentication data;
+- account history.
+
+A future feature needing private data must move to an appropriate data-control tier/provider or remain deterministic.
 
 ## 63. Provider model lifecycle
 
