@@ -13,7 +13,12 @@ from apps.common.presentation.media_selectors import (
     COUNTRY_MEDIA_KEYS,
     STORY_MEDIA_KEYS,
     select_country_media,
+    select_history_og_media,
+    select_history_then_now_mobile_media,
     select_home_hero_media,
+    select_home_hero_mobile_media,
+    select_home_og_media,
+    select_local_value_og_media,
     select_payment_culture_media,
     select_rate_provenance_media,
     select_story_media,
@@ -25,7 +30,7 @@ from apps.common.presentation.media_view_models import (
 
 class StaticMediaRegistryTests(SimpleTestCase):
     def test_registry_contains_expected_release_pack(self):
-        self.assertEqual(len(QUIET_ATLAS_ASSETS), 23)
+        self.assertEqual(len(QUIET_ATLAS_ASSETS), 28)
 
     def test_registry_keys_match_asset_keys(self):
         for key, asset in QUIET_ATLAS_ASSETS.items():
@@ -41,11 +46,21 @@ class StaticMediaRegistryTests(SimpleTestCase):
                 self.assertTrue(path.startswith("images/quiet-atlas/"))
                 self.assertTrue(path.endswith(".svg"))
 
-    def test_only_hero_uses_wide_ratio(self):
+    def test_assets_use_expected_aspect_ratio_by_kind(self):
+        expected_ratios = {
+            "hero": "16 / 9",
+            "fallback": "4 / 3",
+            "country": "4 / 3",
+            "story": "4 / 3",
+            "history": "4 / 3",
+            "trust": "4 / 3",
+            "responsive": "4 / 5",
+            "social": "40 / 21",
+        }
+
         for asset in QUIET_ATLAS_ASSETS.values():
             with self.subTest(key=asset.key):
-                expected = "16 / 9" if asset.kind == "hero" else "4 / 3"
-                self.assertEqual(asset.ratio, expected)
+                self.assertEqual(asset.ratio, expected_ratios[asset.kind])
 
     def test_release_owned_assets_are_decorative_by_default(self):
         for asset in QUIET_ATLAS_ASSETS.values():
@@ -151,6 +166,26 @@ class MediaSelectorTests(SimpleTestCase):
             select_rate_provenance_media().key,
             "trust_rate_provenance",
         )
+        self.assertEqual(
+            select_home_hero_mobile_media().key,
+            "hero_home_global_value_mobile",
+        )
+        self.assertEqual(
+            select_history_then_now_mobile_media().key,
+            "history_then_now_mobile",
+        )
+        self.assertEqual(
+            select_home_og_media().key,
+            "og_home_global_value",
+        )
+        self.assertEqual(
+            select_history_og_media().key,
+            "og_history_then_now",
+        )
+        self.assertEqual(
+            select_local_value_og_media().key,
+            "og_local_value",
+        )
 
 
 class ImageViewModelTests(SimpleTestCase):
@@ -178,6 +213,19 @@ class ImageViewModelTests(SimpleTestCase):
         self.assertEqual(image.ratio, "16 / 9")
         self.assertEqual(image.width, 1600)
         self.assertEqual(image.height, 900)
+
+    def test_derivatives_expose_expected_intrinsic_dimensions(self):
+        mobile = build_static_image_view_model(
+            get_static_media_asset("hero_home_global_value_mobile"),
+        )
+        social = build_static_image_view_model(
+            get_static_media_asset("og_home_global_value"),
+        )
+
+        self.assertEqual((mobile.width, mobile.height), (960, 1200))
+        self.assertEqual(mobile.ratio, "4 / 5")
+        self.assertEqual((social.width, social.height), (1200, 630))
+        self.assertEqual(social.ratio, "40 / 21")
 
     def test_meaningful_alt_promotes_asset_to_meaningful_content(self):
         asset = get_static_media_asset("history_then_now")
