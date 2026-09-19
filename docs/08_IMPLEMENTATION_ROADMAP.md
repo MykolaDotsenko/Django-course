@@ -16,6 +16,7 @@ Before production code changes:
 - interaction/state model;
 - storytelling/historical converter specification;
 - UI system;
+- detailed visual foundations, screen blueprints, component states and design QA;
 - architecture;
 - domain model;
 - mobile/API strategy;
@@ -65,12 +66,29 @@ Acceptance:
 Deliverables:
 
 - Tailwind 4 build;
-- semantic base template;
+- semantic CSS/theme-token layer based on `03A_VISUAL_FOUNDATIONS.md`;
+- self-hosted primary typography strategy with system fallback;
 - responsive app shell;
-- design tokens;
-- focus/reduced-motion rules;
-- initial converter skeleton;
-- no React on web.
+- 4px spacing/radius/elevation scales;
+- neutral core + controlled country-accent system;
+- focus/reduced-motion/high-contrast rules;
+- primary converter shell from `03B_SCREEN_BLUEPRINTS.md`;
+- AmountField, CountryCurrencyTrigger, SwapButton, ConvertButton and initial Result primitives;
+- explicit hover/focus/pressed/loading/error states from `03C_COMPONENT_STATES_AND_MICROINTERACTIONS.md`;
+- container-query behavior for reusable components;
+- 320px/reflow and mobile layouts;
+- no React on web;
+- no decorative above-fold media dependency.
+
+Acceptance:
+
+- converter remains the visual focal point;
+- result/provenance hierarchy is readable without decorative effects;
+- all primary controls have strong keyboard focus and comfortable touch targets;
+- component behavior survives 320px/reflow and text expansion;
+- reduced-motion mode contains no essential animated information;
+- no raw one-off colour values bypass semantic tokens without justification;
+- visual design review reaches the documented 95+/100 target with no critical accessibility/trust defect.
 
 ---
 
