@@ -71,3 +71,23 @@ jobs:
               throw new Error('Expected Vite entry frontend/src/app.ts is missing or invalid');
             }
           "
+
+      - name: Verify production asset public base
+        run: |
+          node --input-type=module -e "
+            import { readdirSync, readFileSync } from 'node:fs';
+            const cssFiles = readdirSync('static/build/assets').filter((name) => name.endsWith('.css'));
+            const fontUrls = cssFiles.flatMap((name) => {
+              const css = readFileSync('static/build/assets/' + name, 'utf8');
+              return [...css.matchAll(/url\\(([^)]+\\.woff2)\\)/g)].map((match) =>
+                match[1].replace(/^['\"']|['\"']$/g, ''),
+              );
+            });
+            if (fontUrls.length === 0) {
+              throw new Error('Expected at least one built WOFF2 font URL');
+            }
+            const invalid = fontUrls.filter((url) => !url.startsWith('/static/build/assets/'));
+            if (invalid.length > 0) {
+              throw new Error('Built font URLs escaped Django static base: ' + invalid.join(', '));
+            }
+          "
