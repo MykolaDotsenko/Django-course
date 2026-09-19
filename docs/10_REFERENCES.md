@@ -439,3 +439,103 @@ Before implementing any external API:
 7. confirm source update frequency;
 8. document outage/fallback behaviour;
 9. record the review date in the implementation PR.
+
+
+# Product Design References
+
+The detailed design specifications are informed by current official/platform guidance and are adapted to this product rather than copied visually.
+
+## Apple Human Interface Guidelines
+
+- Human Interface Guidelines  
+  https://developer.apple.com/design/human-interface-guidelines/
+- Design principles  
+  https://developer.apple.com/design/human-interface-guidelines/design-principles
+- Layout  
+  https://developer.apple.com/design/human-interface-guidelines/layout
+- Typography  
+  https://developer.apple.com/design/human-interface-guidelines/typography
+- Color  
+  https://developer.apple.com/design/human-interface-guidelines/color
+- Materials  
+  https://developer.apple.com/design/human-interface-guidelines/materials
+- Motion  
+  https://developer.apple.com/design/human-interface-guidelines/motion
+
+Relevant principles used here:
+
+- purpose and clarity before decoration;
+- consistent relationships between controls/content;
+- essential information receives sufficient space;
+- limited typeface count and readable weights;
+- semantic color rather than arbitrary color reuse;
+- materials/translucency represent hierarchy, not generic decoration;
+- motion communicates status/feedback and respects accessibility settings.
+
+Apple's current material guidance is not used as a reason to copy Liquid Glass into web content cards.
+
+## W3C / WCAG 2.2
+
+- WCAG 2.2  
+  https://www.w3.org/TR/WCAG22/
+- What's new in WCAG 2.2  
+  https://www.w3.org/WAI/standards-guidelines/wcag/new-in-22/
+- Understanding Target Size (Minimum)  
+  https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum
+- Understanding Focus Appearance  
+  https://www.w3.org/WAI/WCAG22/Understanding/focus-appearance
+
+Design implications include:
+
+- AA target-size/spacing requirements;
+- focus must remain visible/not obscured;
+- focus indication needs strong visible area/contrast;
+- color cannot be the sole state channel;
+- high zoom/reflow is part of layout quality.
+
+The project intentionally targets larger frequent-action hit areas than the 24×24 CSS-pixel AA minimum where practical.
+
+## Tailwind CSS 4
+
+- Theme variables  
+  https://tailwindcss.com/docs/theme
+- Responsive design and container queries  
+  https://tailwindcss.com/docs/responsive-design
+- Tailwind CSS v4 overview  
+  https://tailwindcss.com/blog/tailwindcss-v4
+
+Design-system implications:
+
+- semantic tokens map naturally to `@theme` variables;
+- CSS custom properties remain available at runtime;
+- container queries are first-class;
+- modern logical properties and CSS capabilities improve localization/RTL readiness.
+
+## Progressive disclosure
+
+- Nielsen Norman Group — Progressive Disclosure  
+  https://www.nngroup.com/articles/progressive-disclosure/
+
+The product applies progressive disclosure to:
+
+- source methodology;
+- historical charts;
+- storytelling;
+- advanced context;
+- account/saved features.
+
+Frequently needed conversion/trust information remains visible up front.
+
+## Reference interpretation rule
+
+External design systems/guidelines are **principle references**, not a visual template.
+
+Cultural Currency Converter does not attempt to look exactly like:
+
+- Apple;
+- Material;
+- Wise;
+- Xe;
+- GOV.UK.
+
+The design must remain recognizably its own product while preserving familiar interaction behavior.
