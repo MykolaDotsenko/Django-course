@@ -3,10 +3,12 @@ name: Media preview screenshots
 on:
   pull_request:
     paths:
-      - "django-blog/apps/common/**"
-      - "django-blog/templates/**"
-      - "django-blog/config/**"
-      - "django-blog/scripts/capture_media_preview.py"
+      - "apps/common/**"
+      - "templates/**"
+      - "config/**"
+      - "scripts/capture_media_preview.py"
+      - "manage.py"
+      - "pyproject.toml"
       - "static/images/quiet-atlas/**"
       - "static/css/quiet-atlas-preview.css"
       - ".github/workflows/media-preview-screenshots.yml"
@@ -25,10 +27,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    defaults:
-      run:
-        working-directory: django-blog
-
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -38,12 +36,14 @@ jobs:
         with:
           python-version: "3.13"
           cache: pip
-          cache-dependency-path: django-blog/pyproject.toml
+          cache-dependency-path: pyproject.toml
 
       - name: Install render dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install             "Django>=5.2.1,<6.0.0"             "playwright==1.63.0"
+          python -m pip install \
+            "Django>=5.2.1,<6.0.0" \
+            "playwright==1.63.0"
 
       - name: Install Chromium
         run: python -m playwright install --with-deps chromium
@@ -53,7 +53,7 @@ jobs:
 
       - name: Start preview server
         run: |
-          python manage.py runserver 127.0.0.1:8000 --noreload             > /tmp/media-preview-server.log 2>&1 &
+          python manage.py runserver 127.0.0.1:8000 --noreload > /tmp/media-preview-server.log 2>&1 &
           echo $! > /tmp/media-preview-server.pid
 
           python - <<'PY'
@@ -82,7 +82,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: quiet-atlas-media-preview
-          path: django-blog/artifacts/media-preview/*.png
+          path: artifacts/media-preview/*.png
           if-no-files-found: error
           retention-days: 14
 

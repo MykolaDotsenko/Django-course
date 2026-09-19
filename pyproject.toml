@@ -1,19 +1,18 @@
 [project]
-name = "django-blog"
+name = "cultural-currency-converter"
 version = "0.1.0"
-description = ""
+description = "Django-first travel-money intelligence application."
 authors = [
-    {name = "Mykola Dotsenko",email = "docnikolaj1990@gmail.com"}
+    {name = "Mykola Dotsenko", email = "docnikolaj1990@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "django (>=5.2.1,<6.0.0)"
+    "Django>=5.2.1,<6.0.0"
 ]
 
 [tool.poetry]
-packages = [{include = "django_blog", from = "src"}]
-
+package-mode = false
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
@@ -27,7 +26,6 @@ pre-commit = "^4.2.0"
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
-
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"

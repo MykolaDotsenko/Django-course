@@ -152,15 +152,13 @@ The repository PR template operationalizes this contract.
 
 ---
 
-# 6. Current transitional local commands
+# 6. Current foundation local commands
 
-The existing `django-blog/` shell is transitional legacy code.
+The validated Django product shell now lives at the repository root.
 
-Until Implementation PR 1 replaces it, the current validated checks mirror CI:
+Until the dependency/tooling foundation PR consolidates the final bootstrap, the checks mirror CI:
 
 ```bash
-cd django-blog
-
 python -m pip install \
   "Django>=5.2.1,<6.0.0" \
   "pytest==8.3.5" \
@@ -172,9 +170,7 @@ ruff check apps/common
 pytest -q
 ```
 
-Do not treat these commands as the final target development bootstrap.
-
-When the foundation PR establishes the final package/build layout, update this document and `CONTRIBUTING.md` in that same PR.
+Do not fold environment/PostgreSQL/observability changes into the structural migration merely because those files are nearby. They remain separate roadmap slices.
 
 ---
 

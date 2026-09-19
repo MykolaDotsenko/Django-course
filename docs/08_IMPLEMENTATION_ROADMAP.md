@@ -39,6 +39,16 @@ Implementation starts only after the documentation is coherent enough to act as 
 
 ## Implementation PR 1 — Repository and Django foundation
 
+**Execution split:** this product milestone is intentionally delivered as bounded implementation slices:
+
+1. **PR 1A — structural product-root migration:** move the validated Django/Quiet Atlas shell to repository root, remove the unrelated blog domain and keep existing media/QA behaviour green;
+2. **PR 1B — Python dependency/tooling foundation;**
+3. **PR 1C — environment-driven settings and secret/config validation;**
+4. **PR 1D — PostgreSQL integration and database CI;**
+5. **PR 1E — health, request-ID and structured-observability baseline.**
+
+Each slice must be independently reviewable and green. Merging PR 1A does **not** mean the remaining foundation acceptance criteria are complete.
+
 **Goal:** replace legacy course scaffolding with a clean product shell.
 
 Deliverables:

@@ -103,12 +103,12 @@ The handbook covers:
 
 ## Delivery strategy
 
-The rebuild is intentionally incremental. The legacy blog implementation remains only until the foundation PR replaces it with the new project shell. Each following PR delivers one bounded vertical slice.
+The rebuild is intentionally incremental. The first implementation slice moves the validated Django/Quiet Atlas shell to the repository root and removes the unrelated course blog domain. Dependency, environment, PostgreSQL and observability hardening remain separate bounded foundation PRs.
 
 See [docs/08_IMPLEMENTATION_ROADMAP.md](docs/08_IMPLEMENTATION_ROADMAP.md).
 
 ## Current status
 
-**Phase:** documentation and architecture foundation.
+**Phase:** implementation foundation.
 
-The existing `django-blog/` code is legacy course material and is not the target architecture.
+The Django product shell now lives at the repository root. The unrelated course blog domain has been removed; the retained `apps/common` package is the tested Quiet Atlas media/QA foundation for the next product slices.
