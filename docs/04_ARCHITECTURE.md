@@ -481,3 +481,182 @@ Useful structured logs/metrics may include:
 - story chapter availability.
 
 Do not log private trip/account content merely for storytelling analytics.
+
+
+## 28. External data-source architecture
+
+External sources are classified by operational role.
+
+### Class A — runtime source of truth
+
+Used only when a user-facing request genuinely needs external data.
+
+P0/P1:
+
+- Frankfurter v2 for exchange-rate refresh.
+
+Requirements:
+
+- strict timeout;
+- validated response;
+- normalized provider adapter;
+- cache;
+- explicit stale/error state;
+- provenance.
+
+### Class B — scheduled/imported reference data
+
+Fetched outside the user request path and persisted locally.
+
+Examples:
+
+- REST Countries metadata;
+- Eurostat;
+- OECD;
+- World Bank statistical series.
+
+The application continues using the last validated local snapshot when the upstream service is unavailable.
+
+### Class C — editorial enrichment
+
+Used to discover or ingest candidate cultural/story content.
+
+Examples:
+
+- Wikidata;
+- Wikimedia Commons;
+- Europeana.
+
+Candidate data is reviewed/normalized before it becomes published product content.
+
+### Class D — research/commercial candidate
+
+Evaluated but not required by production.
+
+Example:
+
+- Numbeo for cost-of-living/item-price data.
+
+This classification is defined in detail in `11_API_RESEARCH_AND_DATA_SOURCES.md`.
+
+## 29. Critical request path
+
+The desired request path is intentionally small:
+
+```text
+Browser / React Native
+        ↓
+Django
+        ↓
+local PostgreSQL + cache
+        ↓
+Frankfurter only when FX refresh is required
+```
+
+Country metadata, cultural facts, media metadata and official statistical observations must already be local by the time a user needs them.
+
+Consequences:
+
+- fewer outage modes;
+- predictable latency;
+- simpler tests;
+- central licensing/provenance handling;
+- no browser/mobile secret exposure.
+
+## 30. No silent provider failover
+
+A fallback FX source is not interchangeable merely because it returns the same currency codes.
+
+Different providers may differ in:
+
+- observation time/date;
+- source institutions;
+- blend methodology;
+- frequency;
+- available currencies;
+- historical coverage.
+
+Therefore a Frankfurter failure does not silently become an ECB or commercial-provider quote.
+
+Recovery order:
+
+```text
+valid fresh cache
+→ configured Frankfurter endpoint
+→ safe same-semantics stale cache
+→ explicit unavailable state
+```
+
+A self-hosted Frankfurter deployment can replace the public endpoint without changing domain semantics.
+
+A different FX provider requires an explicit adapter/policy change and attribution.
+
+## 31. Statistical adapter boundary
+
+If historical purchasing-power work is approved, introduce statistical adapters only then.
+
+Potential boundary:
+
+```text
+statistics/
+└── sources/
+    ├── eurostat.py
+    ├── oecd.py
+    └── world_bank.py
+```
+
+Do not create the app/module before a production feature needs it.
+
+Statistical APIs are import dependencies, not page-render dependencies.
+
+Their normalized observations retain:
+
+- source;
+- dataset/indicator ID;
+- geography;
+- period/frequency;
+- unit/category;
+- value;
+- status/provisional metadata where available;
+- retrieval metadata.
+
+PPP/price-level and CPI/HICP datasets remain methodologically distinct.
+
+## 32. Country metadata boundary
+
+REST Countries is an import/enrichment source, not the domain schema.
+
+The `countries` app owns canonical identifiers and normalized fields.
+
+A sync command must:
+
+- validate;
+- map to ISO-style identifiers;
+- be idempotent;
+- avoid deleting valid local data because an upstream request failed;
+- avoid committing or redistributing the provider's full raw dataset.
+
+## 33. Cultural-source boundary
+
+Wikidata, Wikimedia Commons and Europeana belong behind editorial/import tooling.
+
+They are never called from a template or mobile client.
+
+A publishable cultural/story record must have the provenance/licence fields required by its source class.
+
+Media without sufficiently clear rights metadata is not publishable automatically.
+
+## 34. External API implementation contract
+
+Provider-specific details are governed by `12_EXTERNAL_API_CONTRACTS.md`.
+
+Key rules:
+
+- raw provider JSON never crosses into templates/API clients;
+- adapters own parsing and schema validation;
+- domain values use normalized types such as `Decimal`, ISO codes and explicit dates;
+- finite timeouts are mandatory;
+- retries are bounded and only used for safe/idempotent operations;
+- secrets stay server-side;
+- normal CI uses fixtures rather than the internet;
+- health checks do not synchronously depend on all external services.
