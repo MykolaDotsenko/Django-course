@@ -68,17 +68,20 @@ Do not create empty adapters before the corresponding feature exists.
 
 Use one well-understood Python HTTP client.
 
-Candidate:
+**Selected initial client:**
 
-- `httpx`.
+- `httpx` in synchronous mode.
 
-Reason:
+Reasons:
 
 - explicit timeout model;
-- sync/async capability;
-- mature testing/mocking ecosystem.
+- mature testing/mocking ecosystem;
+- clean transport abstraction;
+- one client can also support future async work if architecture later changes.
 
-Do not add both requests and httpx without a concrete reason.
+The backend intentionally remains synchronous for the initial implementation. Do not use async `httpx` merely because the library supports it.
+
+Do not add both `requests` and `httpx` without a concrete reason.
 
 ---
 
@@ -99,6 +102,23 @@ Exact values should be measured during implementation.
 Import/editorial jobs can tolerate longer timeouts.
 
 No request can wait indefinitely.
+
+### Transaction boundary
+
+External HTTP is completed **outside** any intentional PostgreSQL write transaction or row lock.
+
+Correct order:
+
+```text
+fetch
+→ validate
+→ normalize
+→ open transaction
+→ durable writes
+→ commit
+```
+
+Never hold database locks while waiting for a third-party API.
 
 ---
 
@@ -205,7 +225,8 @@ RateQuote
 - provider_keys[]
 - historical: bool
 - observation_granularity
-- stale: bool
+
+Fresh/stale classification is an application/cache concern derived from the normalized observation plus product freshness policy. The provider adapter itself does not invent a `stale` flag.
 ```
 
 Raw JSON never leaves `FrankfurterProvider`.
@@ -924,3 +945,73 @@ It gives us:
 - better provenance;
 - less code;
 - stronger portfolio architecture.
+
+
+# 42. Backend integration alignment
+
+External adapters are infrastructure.
+
+They are called from application/use-case code, never directly from:
+
+- Django templates;
+- DRF serializers;
+- model `save()`;
+- React Native;
+- web TypeScript.
+
+The application layer decides:
+
+- whether a cached quote is fresh;
+- whether a stale fallback is acceptable;
+- whether an error is user-visible/retryable;
+- whether data can be persisted/published.
+
+## 43. Provider/cache failure ownership
+
+Provider adapter emits normalized transport/source failures.
+
+The quote application path then decides:
+
+```text
+fresh cache hit
+→ return
+
+cache miss
+→ provider
+
+provider failure
+→ exact-semantic stale cache
+
+no acceptable stale
+→ RateTemporarilyUnavailable
+```
+
+Raw `httpx` exceptions never cross the application boundary.
+
+## 44. Import apply boundary
+
+For slow-changing sources such as REST Countries/Wikidata/statistics:
+
+```text
+remote fetch
+→ full/required validation
+→ normalization
+→ diff/staging
+→ short DB transaction
+→ commit
+→ on_commit cache invalidation
+```
+
+A partial/malformed upstream response cannot be interpreted as an instruction to delete valid canonical data.
+
+## 45. Import concurrency
+
+Recurring imports must be idempotent.
+
+If the same job can overlap, use one simple overlap-prevention mechanism appropriate to deployment:
+
+- scheduler non-overlap guarantee;
+- DB/advisory lock;
+- import-run lock row.
+
+Do not introduce a distributed task framework only to solve duplicate cron starts.
