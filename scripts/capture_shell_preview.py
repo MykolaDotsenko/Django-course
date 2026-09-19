@@ -36,7 +36,7 @@ def _assert_shell_integrity(page: Page) -> None:
         raise RuntimeError("Destination Japan atmosphere scope is missing")
 
     page.evaluate("document.fonts.ready")
-    inter_loaded = page.evaluate('document.fonts.check('16px "Inter Variable"')')
+    inter_loaded = page.evaluate("document.fonts.check('16px \\"Inter Variable\\"')")
     if not inter_loaded:
         raise RuntimeError("Self-hosted Inter Variable did not load")
 
