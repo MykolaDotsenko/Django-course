@@ -55,7 +55,15 @@ This directory contains release-owned static illustrations for Cultural Currency
 - `story-budget-hotel-affordability-v1.svg`
 - `trust-rate-provenance-v1.svg`
 
-Total current pack: **23 SVG assets**.
+### Responsive / social derivatives
+
+- `hero-home-global-value-mobile-v1.svg`
+- `history-then-now-mobile-v1.svg`
+- `og-home-global-value-v1.svg`
+- `og-history-then-now-v1.svg`
+- `og-local-value-v1.svg`
+
+Total current pack: **28 SVG assets**.
 
 Full prompt, usage and authenticity documentation:
 
@@ -70,4 +78,4 @@ Use the presentation registry/selectors documented in:
 
 - `docs/28_STATIC_MEDIA_UI_INTEGRATION.md`
 
-The current 23-asset pack is intentionally capped until real desktop/mobile screenshot QA identifies another concrete gap.
+The original 23-asset content pack remains capped. The 5 additional files are responsive/social derivatives added only after real desktop/mobile screenshot QA identified concrete delivery surfaces.

@@ -1876,3 +1876,22 @@ For the initial product:
 ## Future option
 
 On-demand user-triggered artistic generation can be reconsidered later as an explicit asynchronous feature with quotas, caching and job infrastructure.
+
+
+# 101. Implemented static social/responsive derivatives
+
+Following real desktop/tablet/mobile browser QA, the project now includes a small release-owned derivative set:
+
+- portrait home hero;
+- portrait Then & Now comparison;
+- home OpenGraph visual;
+- Then & Now OpenGraph visual;
+- local-value OpenGraph visual.
+
+These are derived from already approved Quiet Atlas concepts rather than generated for arbitrary user-selected country/year combinations.
+
+They remain under `static/images/quiet-atlas/` because they change with releases, have no content-management lifecycle, and create no runtime image-generation cost.
+
+This does not change the core rule:
+
+> Country/year editorial media remains stored/curated content, not on-demand AI output.

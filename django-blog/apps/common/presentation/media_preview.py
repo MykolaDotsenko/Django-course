@@ -3,7 +3,12 @@ from __future__ import annotations
 from .media_assets import get_static_media_asset
 from .media_selectors import (
     select_country_media,
+    select_history_og_media,
+    select_history_then_now_mobile_media,
     select_home_hero_media,
+    select_home_hero_mobile_media,
+    select_home_og_media,
+    select_local_value_og_media,
     select_payment_culture_media,
     select_rate_provenance_media,
     select_story_media,
@@ -145,6 +150,44 @@ def build_media_preview_context() -> dict[str, object]:
         badge="Source education",
     )
 
+    derivative_cards = (
+        MediaCardViewModel(
+            image=build_static_image_view_model(select_home_hero_mobile_media()),
+            eyebrow="Responsive derivative",
+            title="Mobile home hero",
+            summary="Portrait composition derived from the canonical home-hero prompt.",
+            badge="4:5 · 960×1200",
+        ),
+        MediaCardViewModel(
+            image=build_static_image_view_model(select_history_then_now_mobile_media()),
+            eyebrow="Responsive derivative",
+            title="Mobile Then & Now",
+            summary="Vertically stacked historical/current eras for narrow viewports.",
+            badge="4:5 · 960×1200",
+        ),
+        MediaCardViewModel(
+            image=build_static_image_view_model(select_home_og_media()),
+            eyebrow="Social derivative",
+            title="Home OpenGraph",
+            summary="Wide no-text social composition derived from the home-hero concept.",
+            badge="1200×630",
+        ),
+        MediaCardViewModel(
+            image=build_static_image_view_model(select_history_og_media()),
+            eyebrow="Social derivative",
+            title="Then & Now OpenGraph",
+            summary="Two-era social preview that remains explicitly illustrative.",
+            badge="1200×630",
+        ),
+        MediaCardViewModel(
+            image=build_static_image_view_model(select_local_value_og_media()),
+            eyebrow="Social derivative",
+            title="Local value OpenGraph",
+            summary="Purchasing-power social preview using grocery, meal, coffee and payment cues.",
+            badge="1200×630",
+        ),
+    )
+
     return {
         "hero_image": build_static_image_view_model(select_home_hero_media()),
         "explainer_cards": explainer_cards,
@@ -152,4 +195,5 @@ def build_media_preview_context() -> dict[str, object]:
         "story_cards": story_cards,
         "history_cards": history_cards,
         "trust_card": trust_card,
+        "derivative_cards": derivative_cards,
     }

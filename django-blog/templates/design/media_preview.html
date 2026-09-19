@@ -18,7 +18,7 @@
       </p>
     </div>
     <div class="qa-preview__meta">
-      <strong>23 assets</strong>
+      <strong>28 assets</strong>
       <span>zero runtime generation</span>
     </div>
   </header>
@@ -103,6 +103,22 @@
 
       <div class="qa-preview__grid qa-preview__grid--3">
         {% for card in history_cards %}
+          {% include "components/media/media_card.html" with card=card only %}
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="qa-preview__section" aria-labelledby="derivatives-title">
+      <div class="qa-preview__section-heading">
+        <div>
+          <p class="qa-preview__kicker">Delivery formats</p>
+          <h2 id="derivatives-title">Responsive and social derivatives</h2>
+        </div>
+        <p>These reuse approved semantic concepts rather than inventing new country/story imagery.</p>
+      </div>
+
+      <div class="qa-preview__grid qa-preview__grid--3">
+        {% for card in derivative_cards %}
           {% include "components/media/media_card.html" with card=card only %}
         {% endfor %}
       </div>

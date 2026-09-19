@@ -25,11 +25,14 @@ The first image pack must:
 
 # 2. Current implementation
 
-The current pack contains **23 static SVG illustrations** under:
+The current pack contains **28 release-owned SVG assets** under:
 
 - 14 P0 assets;
 - 5 focused P1 expansion assets;
-- 4 UI-coverage assets added after the integration review.
+- 4 UI-coverage assets added after the integration review;
+- 5 responsive/social derivatives added after browser screenshot QA.
+
+The original 23 content illustrations remain the canonical semantic pack. The 5 new files are delivery-format derivatives, not new country/story concepts.
 
 All are stored under:
 
@@ -109,6 +112,11 @@ gold     #C29B61
 | IMG-21 | story-transit-affordability-v1.svg | transit affordability story | 4:3 SVG | generated |
 | IMG-22 | story-budget-hotel-affordability-v1.svg | accommodation affordability story | 4:3 SVG | generated |
 | IMG-23 | trust-rate-provenance-v1.svg | rate/source trust explainer | 4:3 SVG | generated |
+| IMG-24 | hero-home-global-value-mobile-v1.svg | mobile hero derivative | 4:5 SVG | generated |
+| IMG-25 | history-then-now-mobile-v1.svg | mobile historical derivative | 4:5 SVG | generated |
+| IMG-26 | og-home-global-value-v1.svg | home/social preview derivative | 1200×630 SVG | generated |
+| IMG-27 | og-history-then-now-v1.svg | historical/social preview derivative | 1200×630 SVG | generated |
+| IMG-28 | og-local-value-v1.svg | local-value/social preview derivative | 1200×630 SVG | generated |
 
 ---
 
@@ -590,6 +598,109 @@ effective date and verified provenance.”
 
 ---
 
+## IMG-24 — Mobile home hero derivative
+
+File:
+
+```text
+hero-home-global-value-mobile-v1.svg
+```
+
+Derived from the IMG-01 home-hero prompt with a portrait composition constraint:
+
+```text
+Preserve the same Quiet Atlas “same money, different local meaning” scene,
+but recompose it for a narrow mobile viewport. Keep the traveler and urban
+context in the upper-middle portion, move practical spending objects into a
+clear lower tabletop layer, preserve generous breathing room, and avoid tiny
+detail that disappears at 390px width. No text, flags, logos or landmarks as
+the primary cue.
+```
+
+Use only when a portrait source materially improves the mobile layout. Do not
+load both desktop and mobile hero bytes unnecessarily; use responsive source
+selection.
+
+---
+
+## IMG-25 — Mobile Then & Now derivative
+
+File:
+
+```text
+history-then-now-mobile-v1.svg
+```
+
+Derived from IMG-20:
+
+```text
+Recompose the Then & Now editorial comparison vertically for mobile:
+historical era above, present era below, joined by one restrained timeline
+transition marker. Keep the eras visibly distinct through archive-blue/paper
+versus modern teal/contactless cues. No exact banknotes, dates, denominations
+or documentary-photo styling.
+```
+
+---
+
+## IMG-26 — Home OpenGraph/social derivative
+
+File:
+
+```text
+og-home-global-value-v1.svg
+```
+
+Derived from IMG-01:
+
+```text
+Create a 1200×630 Quiet Atlas social-preview composition using the home hero
+concept: understated global city context, map/travel planning object, generic
+payment card, exchange/value transition cue and everyday spending atmosphere.
+No embedded title or typography; page metadata owns text.
+```
+
+---
+
+## IMG-27 — Then & Now OpenGraph/social derivative
+
+File:
+
+```text
+og-history-then-now-v1.svg
+```
+
+Derived from IMG-20:
+
+```text
+Create a 1200×630 two-era editorial composition for sharing a historical
+currency comparison. Give historical and current eras equal visual weight,
+split by a clear restrained transition. Use abstract money/payment forms only.
+No exact banknotes, printed denominations, dates, labels or archival-photo
+impersonation.
+```
+
+---
+
+## IMG-28 — Local-value OpenGraph/social derivative
+
+File:
+
+```text
+og-local-value-v1.svg
+```
+
+Derived from IMG-02 and IMG-17:
+
+```text
+Create a 1200×630 Quiet Atlas purchasing-power scene using an everyday grocery
+bag, simple meal, coffee, generic payment card and a few coins in calm urban
+context. It should instantly communicate “what can this amount buy locally?”
+without text, prices, currency symbols or country stereotypes.
+```
+
+---
+
 # 7. Accessibility contract
 
 The SVG files are decorative presentation assets by default and therefore contain no embedded text.
@@ -637,10 +748,13 @@ If real historical evidence is needed, use sourced media through the MediaAsset 
 
 # 10. Next image batch
 
-The focused P1 expansion plus the four UI-coverage assets is now complete.
+The 23 semantic content assets have now been wired into a real DEBUG preview
+and inspected through automated desktop/tablet/mobile browser screenshots.
 
-Do **not** add more decorative static country cards until the 23 current assets
-are wired into real layouts and inspected in desktop/mobile screenshots.
+That QA justified only five delivery-format derivatives: two mobile portraits
+and three 1200×630 social/OpenGraph compositions.
+
+Do **not** use this as permission to add more decorative country cards.
 
 The next media work should be higher-value and evidence-based:
 
@@ -655,9 +769,9 @@ The goal is not a large gallery. The goal is maximum explanatory value per asset
 
 # 11. Definition of done
 
-The static P0 + focused P1/UI-coverage pack is done when:
+The static P0 + focused P1/UI-coverage pack plus responsive/social derivatives is done when:
 
-- all 23 assets exist in the repository;
+- all 28 release-owned assets exist in the repository;
 - each maps to a concrete component/screen;
 - no asset contains baked text;
 - no asset makes unsupported historical claims;
