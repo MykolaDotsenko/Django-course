@@ -691,3 +691,109 @@ Severity-high regressions include:
 - cache entry from one provider policy reused under another;
 - raw provider data/error exposed to client;
 - API/mobile Decimal semantics changed without contract version review.
+
+
+## 40. AI test architecture
+
+AI tests are split into four layers.
+
+### Adapter unit tests
+
+Mock provider behavior:
+
+- successful Structured Output;
+- refusal;
+- timeout;
+- 429;
+- 5xx;
+- malformed/partial response;
+- usage metadata missing;
+- invalid image bytes.
+
+### Semantic validator tests
+
+No provider required.
+
+Assert:
+
+- unknown fact IDs rejected;
+- unsupported URLs rejected;
+- temporal/currency invariants;
+- bounded lengths;
+- AI labels required where applicable.
+
+### Stored-output eval tests
+
+Representative stored outputs can be scored against deterministic invariants.
+
+This gives fast CI regression checks with zero API cost.
+
+### Live evals
+
+Explicit/manual/model-upgrade workflow only.
+
+Normal CI never depends on OpenAI availability.
+
+## 41. AI eval hard gates
+
+For historical factual generation:
+
+- JSON/schema success: 100%;
+- unknown fact IDs: 0;
+- unsupported critical factual claims: 0;
+- exact-date invention from approximate input: 0;
+- unsourced causal FX claims: 0;
+- required AI image authenticity labels: 100%.
+
+Style gains cannot compensate for trust failures.
+
+## 42. Prompt/model promotion
+
+A production prompt/model change requires:
+
+- version bump where behavior changes;
+- eval dataset version;
+- baseline vs candidate results;
+- representative human review;
+- cost/latency comparison;
+- updated routing/config when promoted.
+
+Do not auto-upgrade merely because a provider alias points to a newer model.
+
+## 43. AI CI secret policy
+
+Normal CI does not require OPENAI_API_KEY.
+
+Any live eval workflow:
+
+- uses protected secret;
+- is explicit;
+- has spend limits;
+- cannot run from untrusted fork PR code with secret access.
+
+## 44. AI privacy/security tests
+
+Test that AI payload builders exclude:
+
+- auth tokens;
+- email/name;
+- precise location;
+- private trip notes;
+- unrelated account history.
+
+Provider response/prompt logs must not leak API keys or sensitive headers.
+
+## 45. AI observability quality
+
+Track by capability/model:
+
+- success/error;
+- latency;
+- input/output usage;
+- estimated cost;
+- refusal;
+- moderation flag;
+- semantic-validation failure;
+- editorial acceptance where applicable.
+
+Observability must not require storing full sensitive prompt bodies.
