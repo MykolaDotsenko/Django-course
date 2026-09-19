@@ -408,6 +408,30 @@ CSS:
 
 No user/external API value can become arbitrary CSS.
 
+
+## 13.1 Bilateral theme ownership
+
+Country atmosphere applies independently to source and destination presentation regions when both countries are known.
+
+Rules:
+
+- source and destination may expose different semantic theme tokens at the same time;
+- the global Quiet Atlas shell remains stable;
+- controls keep identical anatomy/behavior on both sides;
+- theme resolution is presentation state, not FX-domain state;
+- a missing source/destination theme falls back to neutral without affecting conversion;
+- destination may receive stronger editorial emphasis, but source identity remains visible.
+
+The web must not implement country atmosphere by replacing component trees or shipping one stylesheet per country.
+
+Preferred model:
+
+```text
+global Quiet Atlas tokens
++ source-context token scope
++ destination-context token scope
+```
+
 ---
 
 # 14. CSS layering
