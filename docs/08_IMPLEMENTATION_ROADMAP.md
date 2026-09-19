@@ -306,16 +306,15 @@ Acceptance:
 
 Deliverables:
 
-- OpenAI server-side provider adapter;
+- Google Gemini server-side provider adapter;
 - capability-specific interfaces instead of generic free-form LLM service;
-- Responses API Structured Outputs for text capabilities;
-- initial model routing:
-  - GPT-5.6 Luna for narrow low-cost structured tasks;
-  - GPT-5.6 Terra for quality editorial drafting;
-  - GPT-5.6 Sol only for rare audit/eval escalation;
-  - GPT-Image-2.5 Flare for image candidates;
-  - GPT-Image-2.5 Sunburst for featured/final generation;
-  - omni-moderation-latest for safety classification;
+- Gemini structured outputs for text capabilities;
+- single live runtime model: Gemini 3.1 Flash-Lite Free Tier;
+- explicit “Explain this” endpoint as the only recruiter-visible live AI feature;
+- persistent explanation cache by normalized packet hash;
+- deterministic fallback on quota/provider failure;
+- image generation disabled in public runtime;
+- pre-generated/stored images for the portfolio demo;
 - StorySourcePacket / fact-ID grounding contracts;
 - versioned prompts and JSON schemas;
 - normalized provider errors;
@@ -324,11 +323,12 @@ Deliverables:
 - explicit feature flags;
 - no AI call inside DB transaction;
 - no web-search/tool-agent loop;
-- no user-request-path AI requirement.
+- no automatic paid-model fallback;
+- no AI call before explicit user action.
 
 Acceptance:
 
-- the whole product works with no AI API key when AI features are disabled;
+- the whole product works with no Gemini key when AI features are disabled;
 - normal CI makes zero live provider calls;
 - unknown fact IDs invalidate narrative candidates;
 - historical AI output cannot auto-publish;
