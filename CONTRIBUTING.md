@@ -35,8 +35,8 @@ pre-commit install
 Run the same core checks used by CI:
 
 ```bash
-ruff format --check .
-ruff check .
+ruff format --check apps config scripts manage.py
+ruff check apps config scripts manage.py
 python manage.py check
 coverage erase
 coverage run -m pytest -q
@@ -47,8 +47,8 @@ python -m pip_audit --skip-editable
 For intentional local formatting/fixes:
 
 ```bash
-ruff check --fix .
-ruff format .
+ruff check --fix apps config scripts manage.py
+ruff format apps config scripts manage.py
 ```
 
 Ruff is the repository's Python formatter and linter. Do not reintroduce Black or isort unless a concrete unsupported requirement appears.
