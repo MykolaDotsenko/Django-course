@@ -1,0 +1,18 @@
+<figure class="qa-media" data-media-kind="{{ image.kind }}">
+  <div class="qa-media__frame" style="aspect-ratio: {{ image.ratio }};">
+    <img
+      class="qa-media__image"
+      src="{{ image.src }}"
+      alt="{{ image.alt }}"
+      width="{{ image.width }}"
+      height="{{ image.height }}"
+      loading="{{ loading|default:'lazy' }}"
+      decoding="async"
+      {% if fetchpriority %}fetchpriority="{{ fetchpriority }}"{% endif %}
+      {% if image.decorative %}aria-hidden="true"{% endif %}
+    >
+  </div>
+  {% if caption %}
+    <figcaption class="qa-media__caption">{{ caption }}</figcaption>
+  {% endif %}
+</figure>
