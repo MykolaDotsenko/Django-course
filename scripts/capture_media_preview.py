@@ -72,8 +72,7 @@ def _assert_preview_integrity(page: Page) -> None:
     )
     if overflow["scrollWidth"] > overflow["clientWidth"] + 1:
         raise RuntimeError(
-            "Horizontal overflow detected: "
-            f"{overflow['scrollWidth']} > {overflow['clientWidth']}",
+            f"Horizontal overflow detected: {overflow['scrollWidth']} > {overflow['clientWidth']}",
         )
 
 
@@ -94,9 +93,7 @@ def main() -> None:
             page.on(
                 "console",
                 lambda message: (
-                    console_errors.append(message.text)
-                    if message.type == "error"
-                    else None
+                    console_errors.append(message.text) if message.type == "error" else None
                 ),
             )
 
@@ -112,8 +109,7 @@ def main() -> None:
 
             if console_errors:
                 raise RuntimeError(
-                    f"Browser console errors for {name}: "
-                    + " | ".join(console_errors),
+                    f"Browser console errors for {name}: " + " | ".join(console_errors),
                 )
 
             page.screenshot(
