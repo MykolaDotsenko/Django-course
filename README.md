@@ -103,12 +103,12 @@ The handbook covers:
 
 ## Delivery strategy
 
-The rebuild is intentionally incremental. PR2A established the locked frontend build baseline, and PR2B now connects Django to Vite through a repo-owned, tested development/production asset bridge. The next bounded slice is the Quiet Atlas semantic-token, typography and global-shell foundation.
+The rebuild is intentionally incremental. PR2A established the locked frontend build, PR2B connected Django to Vite, and PR2C now implements the first executable Quiet Atlas visual foundation: semantic tokens, self-hosted Inter Variable, a responsive semantic shell and restrained bilateral country-atmosphere scopes. The next bounded slice is converter component anatomy.
 
 See [docs/08_IMPLEMENTATION_ROADMAP.md](docs/08_IMPLEMENTATION_ROADMAP.md).
 
 ## Current status
 
-**Phase:** PR2B Django↔Vite bridge complete → PR2C Quiet Atlas foundations next.
+**Phase:** PR2C Quiet Atlas foundations complete → PR2D converter primitives next.
 
-The Django product shell, runtime configuration, PostgreSQL path, observability baseline, frontend build and Vite asset bridge are executable and CI-backed. Django templates can now consume the Vite dev server locally and hashed manifest assets outside local debug without introducing a second web application runtime.
+The Django product shell, runtime configuration, PostgreSQL path, observability baseline, frontend build, Vite bridge and Quiet Atlas shell are executable and CI-backed. A DEBUG-only `/_design/shell/` surface exercises the semantic landmarks, 320px-safe layout, self-hosted typography and independent source/destination atmosphere without claiming converter business behavior.

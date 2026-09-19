@@ -1,3 +1,17 @@
 @import "tailwindcss";
+@import "./tokens.css";
+@import "./base.css";
+@import "./shell.css";
 
 @source "../../../templates";
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto;
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
+  }
+}
