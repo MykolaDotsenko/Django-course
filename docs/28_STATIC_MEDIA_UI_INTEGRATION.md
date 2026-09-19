@@ -819,3 +819,49 @@ It is:
 > **a small, coherent asset system with typed selection, graceful fallbacks, historical honesty, zero runtime cost, and a clean path to real sourced media later.**
 
 That is the architecture this document standardizes.
+
+
+# 30. Foundation implementation status
+
+The first implementation slice lives in the transitional Django shell at:
+
+```text
+django-blog/apps/common/presentation/
+├── media_assets.py
+├── media_selectors.py
+└── media_view_models.py
+```
+
+This location is intentionally outside the legacy `apps.post` feature.
+
+The module contains no blog/domain dependency and can move unchanged into the rebuilt project shell.
+
+The implementation also configures:
+
+```text
+STATICFILES_DIRS = [BASE_DIR.parent / "static"]
+```
+
+so the repository-root Quiet Atlas pack is discoverable by the current Django staticfiles system.
+
+Tests cover:
+
+- all 23 registry entries;
+- unique/static paths;
+- approved aspect ratios;
+- decorative accessibility defaults;
+- registry immutability;
+- country normalization/fallback;
+- story normalization/fallback;
+- named hero/payment/provenance selectors;
+- ImageViewModel static URL generation;
+- explicit meaningful-alt promotion;
+- Django staticfiles discovery for every registered asset.
+
+Normal command from `django-blog/`:
+
+```text
+pytest
+```
+
+The project pyproject now provides the Django settings/testpaths needed by pytest-django.
