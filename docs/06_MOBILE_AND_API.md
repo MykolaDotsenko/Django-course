@@ -156,7 +156,9 @@ Example:
 {
   "code": "rate_unavailable",
   "detail": "The EUR/JPY reference rate is temporarily unavailable.",
-  "retryable": true
+  "retryable": true,
+  "fields": {},
+  "request_id": "01..."
 }
 ```
 
@@ -164,9 +166,25 @@ Do not make the mobile client parse English text to decide behaviour.
 
 ## 10. API schema
 
-Generate and validate an OpenAPI schema.
+Use **drf-spectacular** for deterministic OpenAPI 3 schema generation.
 
-The mobile client can later derive types or fixtures from the schema, but generated clients should not obscure basic HTTP behaviour.
+Django REST Framework's built-in OpenAPI schema generation is deprecated, so the mobile contract must not depend on it.
+
+The schema is a CI contract:
+
+```text
+Django/DRF serializers + views
+        ↓
+drf-spectacular OpenAPI
+        ↓
+schema validation
+        ↓
+openapi-typescript
+        ↓
+mobile generated types
+```
+
+Generated clients/types must not obscure basic HTTP behavior or application error semantics.
 
 ## 11. Mobile testing
 
@@ -416,3 +434,78 @@ Use:
 - Maestro for high-value black-box E2E smoke flows.
 
 Maestro cloud execution may be limited to selected PR/release workflows depending on cost and current EAS workflow maturity.
+
+
+## 25. API application-service ownership
+
+DRF is a transport layer.
+
+A mobile request follows:
+
+```text
+serializer
+→ typed command/query
+→ same application use case used by web
+→ domain/application result
+→ response serializer
+```
+
+DRF serializers/views do not own:
+
+- FX arithmetic;
+- provider fallback;
+- historical observation policy;
+- source/provenance rules;
+- trip transaction semantics.
+
+This prevents web/mobile behavior drift.
+
+## 26. API error contract
+
+All expected mobile API failures use stable machine-readable codes.
+
+Canonical envelope:
+
+```json
+{
+  "code": "historical_out_of_coverage",
+  "detail": "Historical data for this pair starts on 1972-01-03.",
+  "retryable": false,
+  "fields": {},
+  "request_id": "01..."
+}
+```
+
+The client may render `detail`, but behavior is driven by `code` and structured fields.
+
+Unknown exceptions map to a generic server error and are correlated by `request_id`.
+
+## 27. API versioning ownership
+
+All mobile contracts live under:
+
+```text
+/api/v1/
+```
+
+Breaking transport changes require compatibility work or a new version.
+
+Business/application services are not duplicated per version unless their semantics genuinely differ.
+
+## 28. API throttling boundary
+
+DRF throttling may provide anonymous/user fair-use limits.
+
+It is not treated as exact security or DDoS protection.
+
+If hostile public abuse becomes meaningful, enforce stronger limits at the platform/edge while keeping domain correctness independent from throttle counters.
+
+## 29. Mobile ownership/concurrency rule
+
+When authenticated resources ship:
+
+- every object query is ownership-scoped server-side;
+- IDs are not authorization;
+- duplicate favourite writes are protected by database uniqueness;
+- future multi-device Trip editing may use optimistic version conflicts;
+- the mobile client handles `409 conflict` explicitly instead of silently overwriting newer server state.
