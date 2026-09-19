@@ -15,6 +15,16 @@ Design keywords:
 - modern;
 - culturally respectful.
 
+The visual system must support the product hierarchy:
+
+```text
+conversion → trust → local meaning → payment context → culture
+```
+
+Decoration is never allowed to outrank the conversion result.
+
+---
+
 ## 2. Stable shell, contextual atmosphere
 
 Country selection may influence:
@@ -32,7 +42,9 @@ It must not change:
 - validation language;
 - fundamental component behaviour.
 
-This prevents every country from becoming a custom mini-site.
+This prevents every country from becoming a custom mini-site and protects learnability when users switch destinations repeatedly.
+
+---
 
 ## 3. Tailwind strategy
 
@@ -42,29 +54,40 @@ Define semantic tokens first:
 
 ```text
 surface
+surface-elevated
 surface-muted
 text
 text-muted
 border
+border-strong
 accent
+accent-hover
 accent-contrast
 success
 warning
 danger
 focus
+stale
 ```
 
 Avoid scattering country-specific raw colours through templates.
+
+Country themes modify semantic tokens within safe contrast constraints.
+
+---
 
 ## 4. Component inventory
 
 P0 components:
 
 - AppShell;
+- SkipLink;
 - Header;
+- ConverterForm;
 - CurrencyAmountField;
 - CountryCurrencySelector;
 - SwapButton;
+- ConvertButton;
 - ConversionResult;
 - RateMeta;
 - DataFreshnessBadge;
@@ -73,55 +96,414 @@ P0 components:
 - PaymentTips;
 - Disclosure;
 - InlineAlert;
+- ErrorSummary;
 - EmptyState;
-- Skeleton/LoadingIndicator;
+- ScopedLoadingIndicator;
+- SourceDetails;
 - Footer/DataSources.
 
 Prefer Django template partials and small HTMX targets.
 
-## 5. Responsive behaviour
+A component must represent a stable user/interface concept, not merely a visual rectangle.
+
+---
+
+## 5. Primary layout
 
 ### Large screens
-Two-country comparison can use a balanced split.
 
-### Medium
-Keep two columns only while controls remain comfortably readable.
+Use a balanced source/destination comparison when it improves scanning.
 
-### Small
-Stack source above destination. Result follows immediately after the destination selector.
+The result should visually bridge the two contexts rather than feel like a third competing column.
+
+### Medium screens
+
+Keep two columns only while controls remain comfortably readable and touch-friendly.
+
+### Small screens
+
+Stack in task order:
+
+```text
+Amount
+From
+Swap
+To
+Convert
+Result
+Trust metadata
+Local value
+Payment context
+Culture
+```
+
+No horizontal dependency is required to understand the result.
 
 Use container/layout primitives rather than device-name breakpoints where practical.
 
-## 6. Typography
+---
 
-Prioritize:
+## 6. Visual hierarchy
 
-1. numeric result;
-2. amount/currency identity;
-3. source freshness;
-4. practical local context;
-5. cultural enrichment.
+Priority:
 
-The converted amount should be visually prominent but not resemble a speculative price ticker.
+1. amount/result;
+2. source and destination identity;
+3. reference-rate trust metadata;
+4. local purchasing meaning;
+5. payment guidance;
+6. cultural enrichment;
+7. secondary save/share/history actions.
 
-## 7. Motion
+The converted amount should be prominent but must not resemble a speculative market ticker.
+
+Do not display excessive decimal precision merely because the API returns it.
+
+---
+
+## 7. Form design
+
+### Labels
+
+All inputs have visible persistent labels.
+
+Good:
+
+> Amount
+
+> From
+
+> To
+
+Do not rely on placeholder-only labels.
+
+### Hints
+
+Use short hint text only when most users need it.
+
+Do not add explanatory paragraphs under every field.
+
+### Errors
+
+Place specific error text close to the affected field and connect it programmatically.
+
+When several errors occur after a full submit, use an error summary if it improves recovery.
+
+### Prefix/suffix
+
+Currency codes/symbols may appear visually with amount fields, but the underlying label/value relationship remains clear.
+
+---
+
+## 8. Amount input
+
+The amount control should be visually dominant enough to identify the primary task, without becoming oversized decoration.
+
+Requirements:
+
+- persistent Amount label;
+- clear source currency code adjacent;
+- mobile decimal keyboard hint where supported;
+- no auto-formatting while the user is mid-edit if it moves the caret unexpectedly;
+- error copy preserves the entered value;
+- sufficient width for realistic travel/shopping amounts.
+
+Do not show a default `0.00` in a way that looks like a completed conversion before the user acts.
+
+---
+
+## 9. Country/currency selector
+
+The selector must communicate both concepts without conflating them.
+
+Suggested row anatomy:
+
+```text
+🇯🇵  Japan
+    Japanese yen · JPY
+```
+
+Currency-only option:
+
+```text
+€  Euro · EUR
+   Used by multiple countries
+```
+
+### Search result emphasis
+
+Primary:
+
+- country name or currency name.
+
+Secondary:
+
+- currency code;
+- currency name;
+- usage context.
+
+Flags are decorative/supportive, never sufficient identity.
+
+### Selected value
+
+Must remain understandable without flag imagery.
+
+---
+
+## 10. Swap control
+
+Swap is a frequent action.
+
+Requirements:
+
+- comfortable touch target;
+- visible label or accessible name;
+- clear pressed/hover/focus states;
+- visually located between From and To without becoming tiny;
+- keyboard focus remains after activation.
+
+On narrow mobile layouts, the icon may rotate/orient vertically while semantic meaning remains “Swap source and destination”.
+
+---
+
+## 11. Convert action
+
+The first conversion has one obvious primary button:
+
+> Convert
+
+After a result exists, copy may become:
+
+> Update
+
+only if testing shows the state difference improves clarity.
+
+A visible explicit action remains even when HTMX supports debounced enhancement.
+
+Avoid simultaneous equally-prominent CTAs such as:
+
+- Convert;
+- Sign up;
+- Track rate;
+- Explore;
+- Start trip.
+
+---
+
+## 12. Result component
+
+Recommended anatomy:
+
+```text
+100 EUR ≈ 17,450 JPY
+
+Reference rate
+1 EUR = 174.50 JPY
+
+Effective 18 Sep 2026
+ECB via Frankfurter
+
+Reference rate only — your payment provider may use a different rate or add fees.
+```
+
+### Status variants
+
+- current reference;
+- cached/stale;
+- offline;
+- same currency.
+
+The variant must be understandable in text.
+
+### Approximation symbol
+
+Use `≈` or plain-language “approximately” where it reinforces that this is informational rather than a guaranteed executable quote.
+
+---
+
+## 13. Freshness/status design
+
+Do not use green/red to imply “good/bad” rates.
+
+Status is about data freshness, not financial desirability.
+
+Possible badges:
+
+- Reference rate
+- Cached
+- Offline
+- Context unavailable
+
+Badges supplement explicit dates.
+
+“Last fetched” and “effective date” are different concepts and should not be visually merged.
+
+---
+
+## 14. Local-value cards
+
+Cards should answer one question per item.
+
+Example:
+
+```text
+☕ Coffee
+roughly 26–34
+Tokyo estimate
+```
+
+Keep provenance one interaction away, not hidden in an inaccessible tooltip.
+
+Avoid a wall of 8–12 cards.
+
+P0 target:
+
+- 3 high-value categories when data quality permits.
+
+---
+
+## 15. Payment-guidance component
+
+Prefer a compact ordered list over decorative cards for every fact.
+
+Potential structure:
+
+```text
+Paying in Japan
+
+Cards       Common in cities
+Cash        Useful for smaller businesses
+ATMs        Practical note…
+Tipping     Usually not expected…
+```
+
+Use icons only as scan aids.
+
+The wording carries meaning.
+
+---
+
+## 16. Cultural content presentation
+
+Culture should feel editorial, not encyclopedic.
+
+Use:
+
+- short teaser;
+- expandable section;
+- dedicated Explore/country page later.
+
+Avoid:
+
+- giant hero imagery before result;
+- auto-playing media;
+- carousel-heavy content;
+- unrelated trivia that pushes practical guidance down.
+
+---
+
+## 17. Typography
+
+Typography roles:
+
+### Display/result
+Large but controlled numeric emphasis.
+
+### Heading
+Clear content hierarchy.
+
+### Body
+High legibility and moderate measure.
+
+### Metadata
+Smaller, but never so small/low-contrast that source/freshness becomes effectively hidden.
+
+Trust metadata is secondary in visual weight, not optional in usability.
+
+---
+
+## 18. Spacing
+
+Spacing should communicate relationships.
+
+Tight group:
+
+- amount + currency code;
+- result + rate;
+- status + effective date.
+
+Larger separation:
+
+- converter;
+- local value;
+- payment context;
+- culture.
+
+Do not rely on card borders to create all hierarchy.
+
+Whitespace has higher ROI than unnecessary containers.
+
+---
+
+## 19. Touch targets
+
+WCAG 2.2 AA defines a 24×24 CSS-pixel minimum target or sufficient spacing under its exceptions.
+
+For this touch-heavy product, aim larger for primary controls.
+
+Web/mobile frequent actions should be designed around comfortable finger use, not merely technical minimum compliance.
+
+For iOS-native controls, platform guidance commonly targets at least 44×44 pt hit regions.
+
+Priority large targets:
+
+- Swap;
+- Convert;
+- country/currency picker trigger;
+- saved pair;
+- bottom navigation.
+
+---
+
+## 20. Focus styles
+
+Use an unmistakable focus treatment.
+
+The product should target a strong 2px-or-more equivalent outline with sufficient contrast rather than barely-visible browser-theme-dependent decoration.
+
+Focus styling must survive:
+
+- country themes;
+- light/dark surfaces;
+- error borders;
+- stale/warning states.
+
+Do not remove browser focus without a stronger replacement.
+
+---
+
+## 21. Motion
 
 Allowed:
 
 - small state transitions;
 - swap affordance;
 - drawer expansion;
-- skeleton-to-content transition.
+- restrained result update;
+- skeleton-to-content transition when actually useful.
 
 Avoid:
 
 - continuous decorative JS loops;
 - motion tied to every keystroke;
-- parallax in the primary workflow.
+- parallax in the primary workflow;
+- count-up number animations that delay reading the real result.
 
 Honor `prefers-reduced-motion`.
 
-## 8. Theme requirements
+---
+
+## 22. Theme requirements
 
 Initial release:
 
@@ -130,14 +512,108 @@ Initial release:
 
 Country theming is not a replacement for dark mode.
 
-## 9. Icons and flags
+Cultural colour references must avoid stereotyping and should remain subtle.
+
+---
+
+## 23. Icons and flags
 
 - use text currency codes alongside any symbol;
 - use country names alongside flags;
 - no emoji-only actionable control;
-- avoid implying that one flag uniquely represents a currency.
+- avoid implying that one flag uniquely represents a currency;
+- icons with directional meaning must be audited for RTL later.
 
-## 10. Content style
+---
+
+## 24. Loading design
+
+Use the smallest loading surface possible.
+
+### First conversion
+
+Scoped result loading state.
+
+### Subsequent update
+
+Retain previous result while the new one loads, but do not relabel it as belonging to the new inputs.
+
+### Enrichment
+
+Cultural/local-value loading does not block conversion.
+
+Avoid full-page skeletons after the app shell already exists.
+
+---
+
+## 25. Error design
+
+Error messages answer:
+
+1. what happened;
+2. whether previous data is still usable;
+3. what the user can do next.
+
+Good:
+
+> The reference rate could not be refreshed. Showing the last successful EUR → JPY rate effective 18 Sep 2026. Retry.
+
+Bad:
+
+> Live rates unavailable.
+
+Good:
+
+> Enter an amount such as 1234.56 or 1234,56, without thousands separators.
+
+Bad:
+
+> Invalid value.
+
+---
+
+## 26. Empty-state design
+
+An empty state should explain the next useful action.
+
+Examples:
+
+> Choose a destination to convert.
+
+> Choose a destination country to see local prices and money customs.
+
+> Local price context is not available for this destination yet.
+
+Avoid illustrations that take more space than the guidance.
+
+---
+
+## 27. Source/provenance UI
+
+Source information should be discoverable without needing hover.
+
+Default result shows:
+
+- rate effective date;
+- concise source/provider.
+
+Expanded detail may show:
+
+- contributing provider;
+- fetched timestamp;
+- methodology note.
+
+Typical-price context shows:
+
+- place scope;
+- observed date;
+- source.
+
+This is part of trust design, not legal fine print.
+
+---
+
+## 28. Content style
 
 Prefer precise, restrained language.
 
@@ -151,34 +627,57 @@ Bad:
 
 Good:
 
-> Typical coffee estimate, Tokyo, observed May 2026.
+> Typical coffee estimate · Tokyo · observed May 2026.
 
 Bad:
 
 > Coffee in Japan costs ¥500.
 
-## 11. Loading design
+Good:
 
-Use the smallest loading surface possible.
+> Reference rate effective 18 Sep 2026.
 
-- changing the amount should not blank the entire page;
-- cultural enrichment should not block conversion;
-- retain stable layout to reduce CLS;
-- show “Updating…” only where state actually changes.
+Bad:
 
-## 12. Error design
+> Live rate.
 
-Error messages answer:
+Avoid hype, trading language and claims that imply guaranteed savings.
 
-1. what happened;
-2. whether previous data is still usable;
-3. what the user can do next.
+---
 
-Example:
+## 29. Responsive cultural imagery
 
-> Live rates could not be refreshed. Showing the last successful EUR → JPY rate from 09:00 UTC. Retry.
+If imagery is introduced:
 
-## 13. Visual ROI rule
+- it loads after critical UI;
+- it has intrinsic dimensions;
+- it does not create CLS;
+- meaningful imagery has appropriate text alternative;
+- decorative imagery is ignored by assistive technology;
+- cropped compositions remain culturally respectful on narrow screens.
+
+The converter does not need imagery to function.
+
+---
+
+## 30. Data density
+
+Desktop can expose more provenance/context without forcing extra navigation.
+
+Mobile prioritizes:
+
+1. result;
+2. status;
+3. local value;
+4. payment guidance.
+
+Secondary source detail may collapse into disclosure.
+
+Do not simply shrink the desktop two-column experience.
+
+---
+
+## 31. Visual ROI rule
 
 Every visual element must do at least one of:
 
@@ -189,3 +688,21 @@ Every visual element must do at least one of:
 - strengthen cultural context without reducing clarity.
 
 Otherwise remove it.
+
+---
+
+## 32. Design-system acceptance checklist
+
+A component is ready only if:
+
+- meaning survives without colour;
+- keyboard focus is visible;
+- target size/spacing is comfortable;
+- error state is specific;
+- loading state is scoped;
+- reduced motion is respected;
+- text can expand;
+- no flag/icon is the only label;
+- contrast survives country themes;
+- source/freshness information remains legible;
+- mobile stacking preserves logical reading order.
