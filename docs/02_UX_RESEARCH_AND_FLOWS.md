@@ -8,6 +8,7 @@ Companion specifications:
 
 - [User Case Catalog](02A_USER_CASE_CATALOG.md)
 - [Interaction and State Specification](02B_INTERACTION_AND_STATE_SPEC.md)
+- [Storytelling and Historical Converter](02C_STORYTELLING_AND_HISTORICAL_CONVERTER.md)
 - [UI Design System](03_UI_DESIGN_SYSTEM.md)
 
 ---
@@ -1291,3 +1292,78 @@ These should be answered through prototype/usability testing rather than assumpt
 10. Is local recent history valuable enough to justify persistence by default?
 
 Until tested, these remain hypotheses rather than product facts.
+
+
+---
+
+## 36. Storytelling experience
+
+Storytelling is optional progressive disclosure after the trusted financial result.
+
+Experience order:
+
+```text
+conversion
+→ trust metadata
+→ local/historical meaning
+→ story
+```
+
+The story entry point should feel like:
+
+> **The story behind this rate**
+
+not like a mandatory onboarding chapter.
+
+A story is valuable when it helps the user understand:
+
+- the currency era;
+- a transition between currencies;
+- the difference between selected historical and latest reference observations;
+- a temporally relevant sourced context.
+
+The story is not valuable when it merely adds generic country trivia.
+
+## 37. Historical converter experience
+
+Historical conversion is an extension of the main converter.
+
+Default:
+
+> Rate date — Latest available
+
+Optional:
+
+> Historical date — [date]
+
+This preserves the existing mental model instead of creating a second converter.
+
+The historical result must clearly show:
+
+- requested date;
+- actual observation/effective date;
+- provider/source;
+- whether a previous observation was substituted;
+- whether the data is daily/monthly/other when granularity affects interpretation.
+
+## 38. Historical temporal separation
+
+In historical mode, hide current local-price/payment sections by default unless explicitly labelled as current context.
+
+The user should never need to wonder:
+
+> “Are these coffee prices from 1998 or from today?”
+
+Temporal clarity is part of UX correctness.
+
+## 39. Historical UX research questions
+
+Test:
+
+1. Is “Rate date” discoverable without cluttering the main converter?
+2. Does “Latest available / Historical date” communicate the distinction better than “Today / Past”?
+3. Do users understand requested date vs observation date on weekends?
+4. Does a historical-currency suggestion feel helpful or corrective?
+5. Is “The story behind this rate” compelling enough without becoming gimmicky?
+6. Do people understand Then & now as an FX comparison rather than investment return?
+7. Should historical story open inline, on a dedicated page, or in a mobile sheet?
