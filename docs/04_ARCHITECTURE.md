@@ -1159,7 +1159,7 @@ capability-specific AI interface
         ↓
 provider adapter
         ↓
-OpenAI API
+Gemini Developer API
         ↓
 structured candidate
         ↓
