@@ -1025,3 +1025,76 @@ Tests assert:
 - card media remains lazy by default.
 
 This gives one end-to-end presentation test across the static-media stack.
+
+
+# 33. Automated browser screenshot QA
+
+Responsive visual QA is automated through Playwright.
+
+Workflow:
+
+```text
+.github/workflows/media-preview-screenshots.yml
+```
+
+Capture script:
+
+```text
+django-blog/scripts/capture_media_preview.py
+```
+
+## Viewports
+
+The workflow renders the DEBUG media preview at:
+
+- desktop: 1440 × 1200;
+- tablet: 768 × 1024;
+- mobile: 390 × 844.
+
+Each capture is full-page.
+
+## Browser integrity checks
+
+Before saving a screenshot, the Playwright script asserts:
+
+- expected preview H1;
+- exactly 23 rendered images;
+- every image completed with non-zero natural width;
+- no page-level horizontal overflow;
+- no browser console errors;
+- HTTP response is successful.
+
+A visually broken asset therefore fails QA instead of merely producing a misleading screenshot.
+
+## Artifact
+
+Successful runs upload:
+
+```text
+quiet-atlas-media-preview
+```
+
+containing:
+
+```text
+desktop-1440.png
+tablet-768.png
+mobile-390.png
+```
+
+Artifacts are retained for 14 days.
+
+The workflow is intentionally scoped to media/template/preview-related changes and can also be run manually.
+
+## Tooling
+
+Current reviewed implementation uses:
+
+- Python 3.13;
+- Playwright Python 1.63.0;
+- Chromium;
+- actions/checkout v7;
+- actions/setup-python v7;
+- actions/upload-artifact v7.
+
+Production does not depend on Playwright. It is QA tooling only.
