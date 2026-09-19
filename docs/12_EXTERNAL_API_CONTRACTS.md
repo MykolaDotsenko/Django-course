@@ -1202,7 +1202,7 @@ Do not send:
 
 ## 58. AI tool policy
 
-P0/P1 OpenAI calls do not enable:
+P0/P1 Gemini calls do not enable:
 
 - web search;
 - file search;
@@ -1215,7 +1215,7 @@ All source retrieval occurs before the AI call through deterministic application
 
 ## 59. Provider error normalization
 
-Map OpenAI SDK/provider failures into project-level categories:
+Map Gemini SDK/provider failures into project-level categories:
 
 ```text
 AIProviderTimeout
@@ -1246,13 +1246,13 @@ Usage metadata is operational.
 
 It does not enter historical/domain truth.
 
-## 61. Prompt caching
+## 61. Explanation cache
 
-OpenAI GPT-5.6 supports prompt-cache controls.
+Before a Gemini live call, check the persistent application cache using the normalized packet/prompt/model/locale identity.
 
-Use only as an optimization when repeated stable prompt prefixes justify it.
+Repeated identical demo interactions should normally be served without consuming provider quota.
 
-Correctness/fallback must not depend on a prompt-cache hit.
+Correctness/fallback must not depend on any provider-side cache behavior.
 
 ## 62. Gemini free-tier privacy/data controls
 
