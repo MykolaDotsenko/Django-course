@@ -7,7 +7,6 @@ import pytest
 from config.database import DatabaseConfig, load_database_config
 from config.environment import ConfigurationError, RuntimeEnvironment
 
-
 BASE_DIR = Path("/tmp/cultural-currency-test")
 
 
