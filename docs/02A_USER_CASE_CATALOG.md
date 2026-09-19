@@ -224,6 +224,73 @@ This is a signature use case that demonstrates why Country and Currency are sepa
 
 ---
 
+## UC-008 — Bilateral cultural converter workspace
+
+**Priority:** P0 signature differentiator
+
+### User intent
+
+> I want to understand what I am converting from and what I am converting into as two real country/currency contexts, not only two codes.
+
+### Example
+
+Finland · EUR → Japan · JPY.
+
+### Expected behaviour
+
+On a sufficiently large screen:
+
+- source and destination are visible at the same time;
+- both show explicit country + currency identity;
+- both may show restrained independent cultural atmosphere;
+- the result visually connects the two contexts;
+- destination context may be richer, but source identity does not disappear;
+- removing all imagery still leaves a complete usable converter.
+
+### Critical rule
+
+Country-specific atmosphere must not alter control anatomy, validation, focus order or arithmetic.
+
+> Country changes atmosphere, never usability.
+
+### Mobile
+
+The same bilateral identity is preserved in a stacked flow rather than a compressed two-column split.
+
+---
+
+## UC-009 — Compact Explore after conversion
+
+**Priority:** P0 differentiator
+
+### User intent
+
+> I understand the converted amount. Give me the most useful next context without turning the page into a culture dashboard.
+
+### Preconditions
+
+A successful conversion exists.
+
+### Expected behaviour
+
+After result and trust metadata, expose at most three first-level paths:
+
+1. Everyday value;
+2. Payment context;
+3. Money & culture.
+
+The user may ignore all three and still complete the core task.
+
+### Acceptance
+
+- no sign-up gate;
+- no autoplay media;
+- no wall of cultural cards;
+- cultural data failure does not invalidate the conversion;
+- each factual claim retains provenance.
+
+---
+
 # B. Amount Input and Validation
 
 ## UC-010 — Decimal point amount
