@@ -533,3 +533,359 @@ Dark mode ships only when it can match:
 - provenance readability.
 
 Feature completeness is not a reason to ship a lower-quality dark theme.
+
+
+---
+
+## ADR-037 — Web remains Django templates + stable HTMX, not a SPA
+
+**Status:** accepted
+
+The web interface remains server-rendered Django HTML progressively enhanced by stable HTMX 2.x.
+
+Do not introduce React, Next.js, Vue or Svelte for the web application unless the product later develops client-application requirements that the current architecture cannot reasonably satisfy.
+
+Reasons:
+
+- Django already owns authoritative web state;
+- designed interactions map cleanly to HTML fragments;
+- progressive enhancement is valuable for reliability/accessibility;
+- lower runtime JavaScript;
+- no duplicated web/mobile business state.
+
+React competency is demonstrated separately in the native client.
+
+---
+
+## ADR-038 — Vite 8 + TypeScript are the web asset/enhancement toolchain
+
+**Status:** accepted
+
+Add Vite 8 and strict TypeScript to the Django web frontend.
+
+Vite owns:
+
+- CSS/JS development;
+- Tailwind Vite plugin;
+- TypeScript bundling;
+- font assets;
+- code splitting;
+- hashed production assets;
+- manifest generation.
+
+It does not own:
+
+- routing;
+- HTML rendering;
+- business state.
+
+Node is a build/development dependency, not a production request server.
+
+---
+
+## ADR-039 — Node 24 LTS is the frontend build runtime baseline
+
+**Status:** accepted
+
+Use Node 24 LTS rather than Node 26 Current.
+
+Reasons:
+
+- production tooling should prefer LTS;
+- compatible with Vite 8 and Expo 57;
+- reduces build-tool churn;
+- one Node major can support both web and mobile work.
+
+Pin through repository/CI configuration.
+
+---
+
+## ADR-040 — Use repo-owned Vite manifest integration for Django
+
+**Status:** accepted
+
+Follow Vite's official backend-integration manifest contract.
+
+Implement a small tested Django template tag/adapter that:
+
+- emits Vite dev-server modules in development;
+- reads `.vite/manifest.json` in production;
+- renders CSS/modulepreload/script tags.
+
+Do not make a third-party Django/Vite bridge an architectural dependency unless future complexity clearly justifies it.
+
+---
+
+## ADR-041 — Tailwind 4 is integrated through the official Vite plugin
+
+**Status:** accepted
+
+Use:
+
+```text
+tailwindcss
+@tailwindcss/vite
+```
+
+rather than an extra PostCSS pipeline.
+
+Quiet Atlas tokens use Tailwind 4 CSS-first `@theme` plus constrained CSS custom properties.
+
+Browser baseline follows Tailwind 4's modern-browser requirements.
+
+---
+
+## ADR-042 — Django 5.2 uses django-template-partials as a temporary fragment bridge
+
+**Status:** accepted
+
+Because Django 5.2 LTS does not yet have Django 6.0's built-in template partials, use `django-template-partials` for named reusable fragments.
+
+This is intentionally replaceable.
+
+When backend upgrade to Django 6+ occurs, migrate to native template partials rather than preserving the compatibility package indefinitely.
+
+---
+
+## ADR-043 — django-htmx provides server integration; Vite owns browser HTMX assets
+
+**Status:** accepted
+
+Use `django-htmx` for:
+
+- `request.htmx`;
+- middleware typing;
+- HTTP helpers.
+
+Do not load a second vendored HTMX copy from its template tag if HTMX is already bundled through Vite.
+
+One browser asset pipeline owns JavaScript.
+
+---
+
+## ADR-044 — Native web platform APIs precede UI libraries
+
+**Status:** accepted
+
+Default dependency order:
+
+```text
+semantic HTML
+→ native browser API
+→ small focused dependency
+→ custom component
+→ broad framework
+```
+
+Examples:
+
+- dialog → `<dialog>`;
+- disclosure → `<details>/<summary>`;
+- historical date → `<input type="date">`;
+- formatting → `Intl`.
+
+No Alpine/Stimulus layer is added initially.
+
+---
+
+## ADR-045 — Use a focused combobox-navigation primitive, not a component framework
+
+**Status:** accepted
+
+The country/currency search is complex enough to justify `@github/combobox-nav` for ARIA keyboard navigation.
+
+The project still owns:
+
+- markup;
+- Django/HTMX search;
+- styles;
+- selection;
+- fallback;
+- accessibility testing.
+
+If the enhanced combobox proves unreliable in assistive-technology testing, prefer a simpler dialog/list fallback over adding a full UI framework.
+
+---
+
+## ADR-046 — Chart.js is web-history-only and lazy loaded
+
+**Status:** accepted
+
+Use Chart.js 4 only for historical line-chart surfaces.
+
+It is dynamically imported so ordinary conversion does not pay the chart runtime cost.
+
+The canvas chart is supplemental; text summary/table remains the accessible information source.
+
+Do not add a trading visualization framework.
+
+---
+
+## ADR-047 — Web client state stays local and bounded
+
+**Status:** accepted
+
+Do not introduce Redux/Zustand/global web stores.
+
+Use:
+
+- server state in Django/HTML;
+- local element/module state;
+- bounded versioned localStorage only for small anonymous convenience data.
+
+No IndexedDB or service worker is required in P0/P1.
+
+---
+
+## ADR-048 — Web frontend targets CSP-friendly external behavior
+
+**Status:** accepted
+
+Avoid:
+
+- inline event handlers;
+- inline behavior scripts;
+- `hx-on` JavaScript expressions by default;
+- runtime CDN scripts/fonts.
+
+Prefer external TypeScript listeners and self-hosted assets.
+
+Evaluate HTMX hardening options such as disabling eval/script-tag processing after E2E confirms no required behavior breaks.
+
+---
+
+## ADR-049 — Expo stable compatibility matrix wins over standalone RN version chasing
+
+**Status:** accepted
+
+At the 2026-09-19 research point, select:
+
+```text
+Expo SDK 57 stable
+React Native 0.86.x
+React 19.2.3
+```
+
+even though standalone RN 0.87 is newer.
+
+Reason:
+
+- the Expo compatibility matrix is the mobile runtime product;
+- stable integrated dependencies matter more than a higher RN number;
+- Expo beta SDKs are not production defaults.
+
+Re-check immediately before mobile implementation.
+
+---
+
+## ADR-050 — Expo Router is the mobile navigation layer
+
+**Status:** accepted
+
+Use stable Expo Router navigation.
+
+Do not use experimental/alpha navigation stack APIs for core production flows.
+
+Routes/deep links can model current conversion, historical conversion, Explore, Saved and Trips as those features ship.
+
+---
+
+## ADR-051 — Mobile remote state and durable offline state are separate
+
+**Status:** accepted
+
+Use:
+
+- TanStack Query for active remote server-state lifecycle;
+- Expo SQLite for intentionally durable offline product data.
+
+Do not persist the whole QueryClient as the primary offline architecture.
+
+This keeps:
+
+- cache keys;
+- effective dates;
+- stale semantics;
+- migrations
+
+explicit and auditable.
+
+---
+
+## ADR-052 — Mobile API types are generated from Django OpenAPI
+
+**Status:** accepted
+
+Use:
+
+- `openapi-typescript`;
+- `openapi-fetch`.
+
+Do not hand-maintain duplicate endpoint DTO types.
+
+Generated schema drift is a CI failure.
+
+---
+
+## ADR-053 — React Native StyleSheet + typed Quiet Atlas tokens, not NativeWind
+
+**Status:** accepted
+
+Share design-token meaning between web/mobile, not CSS utility classes.
+
+Reasons:
+
+- native layout semantics differ;
+- StyleSheet keeps platform behavior explicit;
+- avoids a styling abstraction that primarily exists to mimic the web.
+
+Revisit only if implementation demonstrates materially lower complexity with another approach.
+
+---
+
+## ADR-054 — No Redux/Zustand in the initial mobile client
+
+**Status:** accepted
+
+State ownership is already covered by:
+
+- React local state;
+- Expo Router navigation;
+- TanStack Query remote state;
+- Expo SQLite durable state;
+- SecureStore later for secrets.
+
+A generic global store would currently add overlap, not clarity.
+
+---
+
+## ADR-055 — Mobile historical chart uses react-native-svg + project-owned LineChart
+
+**Status:** accepted
+
+The mobile history visualization is intentionally narrow:
+
+- one line;
+- selected/latest markers;
+- simple axes;
+- high/low.
+
+Use `react-native-svg` and small typed project-owned geometry code rather than a full chart framework.
+
+The accessible text summary remains authoritative.
+
+---
+
+## ADR-056 — Mobile testing uses Expo-native Jest/RNTL plus Maestro smoke
+
+**Status:** accepted
+
+Use:
+
+- Jest;
+- jest-expo;
+- @testing-library/react-native;
+- Expo Router testing utilities;
+- Maestro for high-value black-box E2E.
+
+Do not use UI snapshot testing as the primary correctness signal.

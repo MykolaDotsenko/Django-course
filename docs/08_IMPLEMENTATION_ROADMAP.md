@@ -65,7 +65,13 @@ Acceptance:
 
 Deliverables:
 
-- Tailwind 4 build;
+- Node 24 LTS build-tool baseline;
+- Vite 8 asset pipeline using the official backend-manifest pattern;
+- repo-owned, tested Django Vite manifest template tag;
+- TypeScript 5.9 strict;
+- Biome 2 checks;
+- djLint template checks;
+- Tailwind 4 through `@tailwindcss/vite`;
 - semantic CSS/theme-token layer based on `03A_VISUAL_FOUNDATIONS.md`;
 - self-hosted primary typography strategy with system fallback;
 - responsive app shell;
@@ -77,7 +83,12 @@ Deliverables:
 - explicit hover/focus/pressed/loading/error states from `03C_COMPONENT_STATES_AND_MICROINTERACTIONS.md`;
 - container-query behavior for reusable components;
 - 320px/reflow and mobile layouts;
-- no React on web;
+- django-template-partials for Django 5.2 named fragments;
+- django-htmx integration;
+- stable HTMX 2.x bundled through Vite;
+- local self-hosted Inter Variable asset;
+- small local SVG icon partial strategy;
+- no React/Alpine/Stimulus on web;
 - no decorative above-fold media dependency.
 
 Acceptance:
@@ -88,6 +99,9 @@ Acceptance:
 - component behavior survives 320px/reflow and text expansion;
 - reduced-motion mode contains no essential animated information;
 - no raw one-off colour values bypass semantic tokens without justification;
+- Vite development and production manifest paths are tested;
+- strict TypeScript/Biome/Vite build gates are green;
+- core page remains useful without JavaScript;
 - visual design review reaches the documented 95+/100 target with no critical accessibility/trust defect.
 
 ---
@@ -156,6 +170,9 @@ Deliverables:
 
 - amount validation;
 - source/destination controls;
+- progressively enhanced searchable country/currency picker using native dialog + server-rendered HTMX results;
+- @github/combobox-nav only for accessible keyboard navigation of enhanced search;
+- explicit accessible fallback when enhancement is unavailable;
 - explicit first Convert;
 - progressive HTMX updates after success;
 - swap;
@@ -164,7 +181,9 @@ Deliverables:
 - stale fallback semantics;
 - browser history/bookmark strategy;
 - accessible result announcement;
-- Playwright P0 flow.
+- HTMX request synchronization so obsolete responses cannot overwrite newer pair state;
+- CSP-friendly external TypeScript behavior with no inline event-handler dependency;
+- Playwright P0 flow + axe state scans.
 
 At this point the basic product is useful.
 
@@ -205,6 +224,7 @@ Acceptance:
 Deliverables:
 
 - time-series provider path;
+- Chart.js 4 web visualization loaded as a lazy/dynamic Vite chunk only on historical chart surfaces;
 - 1Y / 5Y / 10Y/custom ranges where coverage supports them;
 - selected historical point;
 - latest comparison for semantically valid pairs;
@@ -332,6 +352,7 @@ Deliverables:
 - destination context;
 - story endpoint/embedded story contract only if justified;
 - schema/OpenAPI;
+- schema generation suitable for openapi-typescript;
 - contract tests;
 - throttling/rate-abuse baseline where necessary.
 
@@ -343,13 +364,29 @@ Deliverables:
 
 Deliverables:
 
-- Expo stable SDK;
+- Expo SDK 57 stable compatibility matrix as current baseline, re-checked immediately before implementation;
+- React Native 0.86.x / React 19.2.3 through Expo matrix;
+- Node 24 LTS;
 - TypeScript strict configuration;
-- navigation shell;
-- API client;
+- Expo Router stable navigation shell;
+- React Native StyleSheet + typed Quiet Atlas tokens;
+- @expo/ui selective native-control baseline;
+- openapi-typescript generated contracts;
+- openapi-fetch typed API client;
+- TanStack Query remote-state layer;
+- Expo SQLite database + migrations for explicit durable offline data;
 - environment config;
-- typed server contracts;
+- Jest/jest-expo + React Native Testing Library;
+- Maestro smoke-test setup;
 - loading/error/offline design foundation.
+
+Acceptance:
+
+- no beta Expo SDK/experimental navigation dependency is required;
+- no Redux/Zustand/NativeWind is introduced without a demonstrated need;
+- OpenAPI generated types match backend schema;
+- SQLite migration and relaunch persistence are tested;
+- navigation and core accessibility semantics are covered.
 
 ---
 
@@ -362,9 +399,13 @@ Deliverables:
 - swap;
 - destination money context;
 - historical story entry point;
-- cached last-successful data;
+- native historical date selection through @expo/ui;
+- cached last-successful data persisted in Expo SQLite with exact semantic pair/date keys;
+- TanStack Query cancellation/refresh integration;
 - explicit stale/offline state;
-- saved pairs.
+- saved pairs;
+- historical mobile line chart using react-native-svg + small project-owned typed LineChart when the chart surface is introduced;
+- Maestro high-value conversion/offline smoke path.
 
 ---
 
@@ -452,3 +493,26 @@ For source decisions, implementation must reference:
 
 - `11_API_RESEARCH_AND_DATA_SOURCES.md`;
 - `12_EXTERNAL_API_CONTRACTS.md`.
+
+
+# Frontend technology sequencing rule
+
+Frontend work follows:
+
+```text
+UX/design requirement
+→ native/platform capability check
+→ selected architecture contract
+→ smallest justified dependency
+→ accessibility/failure state
+→ tests
+→ implementation
+```
+
+For frontend technology decisions, implementation PRs must consult:
+
+- `13_FRONTEND_TECHNOLOGY_STRATEGY.md`;
+- `14_WEB_FRONTEND_ARCHITECTURE.md`;
+- `15_MOBILE_FRONTEND_ARCHITECTURE.md`.
+
+Do not add a client framework or state library as a convenience shortcut around the documented ownership model.

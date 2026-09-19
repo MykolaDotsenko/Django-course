@@ -4,15 +4,26 @@
 
 The mobile app is a **separate React Native client**, not a wrapped web view.
 
-Recommended delivery stack:
+Selected delivery stack at the 2026-09-19 research point:
 
-- React Native;
-- TypeScript;
-- Expo stable SDK compatible with the chosen React Native line;
-- native navigation appropriate to Expo/RN;
+- Expo SDK 57 stable;
+- React Native 0.86.x through the Expo compatibility matrix;
+- React 19.2.3;
+- TypeScript strict;
+- Expo Router;
+- @expo/ui selectively for native controls;
+- openapi-typescript + openapi-fetch;
+- TanStack Query for remote server state;
+- Expo SQLite for durable offline product data;
+- React Native StyleSheet + typed Quiet Atlas tokens;
+- react-native-svg for the intentionally small historical line chart;
 - the Django backend as the source of truth.
 
-Avoid pinning the mobile project to a raw React Native version before the Expo compatibility matrix is selected during implementation.
+The standalone React Native 0.87 release is newer than Expo 57's supported RN line, but the product deliberately prefers the current stable Expo compatibility matrix over mixing framework versions.
+
+Re-check the stable Expo matrix immediately before mobile implementation. Do not select a beta SDK merely for a higher version number.
+
+Detailed implementation rules live in `15_MOBILE_FRONTEND_ARCHITECTURE.md`.
 
 ## 2. Mobile product goal
 
@@ -144,7 +155,7 @@ Example:
 ```json
 {
   "code": "rate_unavailable",
-  "detail": "A live EUR/JPY rate is temporarily unavailable.",
+  "detail": "The EUR/JPY reference rate is temporarily unavailable.",
   "retryable": true
 }
 ```
@@ -306,3 +317,102 @@ The mobile app must not:
 - attach current local prices to a historical story without current-context labeling;
 - infer investment return from Then & now;
 - generate story facts locally without server-provided sourced context.
+
+
+## 19. Mobile state architecture
+
+State ownership is deliberately split.
+
+### React local state
+
+Owns transient interface state:
+
+- input drafts;
+- picker search;
+- sheet/dialog state;
+- local presentation toggles.
+
+### TanStack Query
+
+Owns active remote server state:
+
+- conversion quote;
+- destination context;
+- historical series;
+- story;
+- server-backed saved state later.
+
+### Expo SQLite
+
+Owns durable offline product data:
+
+- exact-key cached quotes;
+- country/currency metadata;
+- destination context snapshots;
+- favourites;
+- recent conversions;
+- trip drafts later.
+
+Do not use Redux/Zustand merely as an additional middle layer.
+
+## 20. OpenAPI-generated client
+
+The backend OpenAPI schema is the mobile type source.
+
+Use:
+
+- `openapi-typescript` to generate endpoint types;
+- `openapi-fetch` to make typed requests.
+
+Generated schema files are never edited manually.
+
+CI should detect schema/type drift.
+
+## 21. Stable Expo rule
+
+As of this documentation update:
+
+```text
+Expo 57 stable
+→ React Native 0.86
+→ React 19.2.3
+```
+
+Expo's next SDK line is not selected until stable.
+
+React Native standalone releases do not override the Expo compatibility matrix.
+
+## 22. Native control policy
+
+Prefer current platform-native controls where they reduce custom behavior.
+
+Historical date selection uses the Expo UI DateTimePicker, backed by:
+
+- SwiftUI on iOS;
+- Material 3 / Jetpack Compose on Android.
+
+Large searchable currency/country selection remains a dedicated product search screen rather than a small native picker.
+
+## 23. Mobile chart policy
+
+Historical chart:
+
+```text
+react-native-svg
++ project-owned LineChart
+```
+
+No full chart framework initially.
+
+The chart remains supplemental to text summaries and accessible values.
+
+## 24. Mobile testing stack
+
+Use:
+
+- Jest + jest-expo;
+- @testing-library/react-native;
+- Expo Router testing utilities where navigation integration matters;
+- Maestro for high-value black-box E2E smoke flows.
+
+Maestro cloud execution may be limited to selected PR/release workflows depending on cost and current EAS workflow maturity.

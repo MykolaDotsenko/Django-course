@@ -660,3 +660,267 @@ Key rules:
 - secrets stay server-side;
 - normal CI uses fixtures rather than the internet;
 - health checks do not synchronously depend on all external services.
+
+
+## 35. Web frontend delivery architecture
+
+The web delivery path is intentionally HTML-first:
+
+```text
+Browser
+  ↓
+Django view
+  ↓
+Django template / named partial
+  ↓
+HTML
+  ↓
+HTMX progressively replaces small regions
+```
+
+A Vite/TypeScript asset layer enhances the rendered document but does not become a client application runtime.
+
+Selected web frontend technologies are governed by:
+
+- `13_FRONTEND_TECHNOLOGY_STRATEGY.md`;
+- `14_WEB_FRONTEND_ARCHITECTURE.md`.
+
+## 36. Frontend build-time/runtime separation
+
+Build/development:
+
+```text
+Node 24 LTS
+Vite 8
+TypeScript 5.9
+Tailwind 4
+Biome
+```
+
+Production request path:
+
+```text
+browser
+→ static built assets
+→ Django
+```
+
+There is no Node server in the production request path.
+
+## 37. Vite backend integration
+
+Use Vite's official backend-manifest integration pattern.
+
+Development:
+
+- Vite dev server serves modules/HMR;
+- Django serves HTML.
+
+Production:
+
+- `vite build` emits hashed static assets;
+- `.vite/manifest.json` maps source entries to output;
+- a small repo-owned Django template tag renders production asset tags.
+
+Do not make a third-party Django/Vite integration package architecturally mandatory.
+
+The repo-owned bridge is intentionally thin and unit-tested.
+
+## 38. Web JavaScript ownership
+
+Web TypeScript may own:
+
+- HTMX lifecycle glue;
+- accessible picker enhancement;
+- dialog behavior;
+- small anonymous local persistence;
+- copy/share helpers;
+- historical chart rendering.
+
+It may not own:
+
+- FX arithmetic;
+- provider/source selection;
+- historical observation fallback;
+- country/currency domain validity;
+- trust/freshness rules;
+- story facts.
+
+If those rules start appearing in TypeScript, the architecture has drifted.
+
+## 39. Template fragment architecture
+
+On Django 5.2 LTS, use `django-template-partials` for named inline fragments.
+
+Reasons:
+
+- shared initial/HTMX markup;
+- fewer duplicate template branches;
+- clean mapping between UI component and fragment response.
+
+This is a compatibility choice.
+
+Django 6+ native template partials should replace it when the backend eventually upgrades and the migration is justified.
+
+## 40. HTMX integration
+
+Use stable HTMX 2.x and `django-htmx`.
+
+`django-htmx` provides:
+
+- `request.htmx`;
+- typed Django integration;
+- HTTP helpers.
+
+Vite owns the browser HTMX asset rather than loading a second vendored copy.
+
+Cacheable views returning different full/partial representations must vary on `HX-Request`.
+
+## 41. HTMX response integrity
+
+For conversion and historical state, fragment boundaries are atomic.
+
+A response that changes the result must include enough result-local metadata that the displayed:
+
+- amount;
+- pair;
+- requested date;
+- effective date;
+- source status
+
+always belong together.
+
+Use HTMX synchronization/cancellation patterns to prevent obsolete requests from overwriting newer state.
+
+## 42. Web native-platform preference
+
+Before adding JavaScript UI libraries, prefer:
+
+```text
+semantic HTML
+→ native browser API
+→ focused small dependency
+→ project-owned component
+→ broad framework
+```
+
+Current examples:
+
+- `<dialog>` for modal picker surfaces;
+- `<details>/<summary>` for suitable disclosures;
+- `<input type="date">` for web historical-date input;
+- `Intl` for formatting;
+- Clipboard/Web Share APIs when useful.
+
+## 43. Mobile frontend architecture
+
+The native mobile delivery path is:
+
+```text
+React Native / Expo
+       ↓
+typed API client
+       ↓
+TanStack Query
+       ↓
+Django /api/v1
+```
+
+Durable offline data is separate:
+
+```text
+Expo SQLite
+       ↑ ↓
+feature repositories
+       ↑ ↓
+screens/query functions
+```
+
+Detailed mobile frontend rules live in `15_MOBILE_FRONTEND_ARCHITECTURE.md`.
+
+## 44. Mobile state ownership
+
+Use three explicit state classes.
+
+### UI state
+
+React component/hooks.
+
+Examples:
+
+- search text;
+- sheet open/closed;
+- field draft.
+
+### Remote server state
+
+TanStack Query.
+
+Examples:
+
+- latest quote;
+- destination context;
+- story;
+- time series.
+
+### Durable local product state
+
+Expo SQLite.
+
+Examples:
+
+- cached quotes;
+- country/currency metadata;
+- favourites;
+- recent conversions;
+- cached destination context.
+
+Do not introduce a general global client-state store until a concrete unowned state problem appears.
+
+## 45. Mobile API typing
+
+Django's OpenAPI schema is the contract source.
+
+Use:
+
+- `openapi-typescript` for generated types;
+- `openapi-fetch` for a small typed Fetch client.
+
+Hand-written duplicate endpoint interfaces are discouraged.
+
+## 46. Mobile historical visualization
+
+The web and mobile chart implementations are presentation-specific.
+
+Web:
+
+- Chart.js.
+
+Mobile:
+
+- `react-native-svg`;
+- a project-owned simple line-chart component.
+
+Both consume the same normalized backend time-series contract.
+
+Neither chart implementation owns rate semantics.
+
+## 47. Frontend dependency principle
+
+The project intentionally avoids cross-platform code sharing that creates worse platform code.
+
+Share:
+
+- domain/API semantics;
+- copy terminology;
+- design-token meaning;
+- UX invariants.
+
+Do not force sharing of:
+
+- HTML/CSS components;
+- React Native components;
+- navigation primitives;
+- chart rendering.
+
+Architecture optimizes for clarity rather than percentage of shared frontend code.
