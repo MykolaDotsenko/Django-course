@@ -890,3 +890,235 @@ Every major UX PR should verify at least:
 - screen-reader-oriented semantics.
 
 This matrix is a minimum, not exhaustive test code.
+
+
+# Historical and Story State Extension
+
+## 35. Historical state model
+
+Historical conversion adds these states:
+
+```text
+historical-editing
+historical-ready
+historical-loading
+historical-success-exact
+historical-success-previous-observation
+historical-out-of-coverage
+historical-pair-unavailable
+historical-archived-currency-suggested
+story-loading
+story-ready
+story-partial
+story-unavailable
+```
+
+These extend, rather than replace, the current converter model.
+
+The arithmetic conversion state and story state remain independent.
+
+---
+
+## 36. Historical date state
+
+When Historical date mode is selected:
+
+Required UI state includes:
+
+- requested date;
+- base;
+- quote;
+- amount.
+
+Optional:
+
+- source country;
+- destination country.
+
+The system must not collapse requested date into provider observation date.
+
+---
+
+## 37. Historical exact observation
+
+State:
+
+`historical-success-exact`
+
+Conditions:
+
+- requested date is valid;
+- provider returns a supported observation for the relevant effective date;
+- no fallback substitution is required.
+
+UI:
+
+- historical result;
+- historical/reference label;
+- requested date;
+- effective date;
+- source/provider.
+
+If requested/effective dates are equal, the UI can avoid redundant repeated wording while keeping the data model distinct.
+
+---
+
+## 38. Historical previous-observation state
+
+State:
+
+`historical-success-previous-observation`
+
+Conditions:
+
+- no observation exists exactly on requested date;
+- fallback policy finds a valid earlier observation.
+
+UI must explicitly display:
+
+- requested date;
+- actual observation/effective date;
+- explanation that previous available reference data is used.
+
+This is degraded temporal precision, not an error.
+
+---
+
+## 39. Historical out-of-coverage state
+
+State:
+
+`historical-out-of-coverage`
+
+UI must explain:
+
+- selected date;
+- supported start/end where known;
+- whether limitation comes from base currency, quote currency or provider coverage when that detail is reliable.
+
+Actions:
+
+- use earliest supported date;
+- change currency;
+- return to latest reference.
+
+Do not show a zero/blank rate as if conversion succeeded.
+
+---
+
+## 40. Historical archived-currency suggestion state
+
+State:
+
+`historical-archived-currency-suggested`
+
+Example:
+
+Finland + 1998 + EUR.
+
+The suggestion appears without blocking the user's chosen conversion path:
+
+> Finland used FIM on this date.
+
+Actions:
+
+- Use FIM;
+- Keep EUR.
+
+The suggestion state must never mutate form fields without user action.
+
+---
+
+## 41. Story state model
+
+Historical conversion can transition:
+
+```text
+historical-success-*
+       │
+       ├── no story requested → conversion remains complete
+       │
+       └── story requested
+               ↓
+          story-loading
+            ├── all relevant chapters → story-ready
+            ├── some chapters only → story-partial
+            └── no valid chapters → story-unavailable
+```
+
+Story failure does not downgrade conversion success.
+
+---
+
+## 42. Story-partial state
+
+A story is partial when, for example:
+
+- currency era known;
+- transition known;
+- no reliable contextual historical event.
+
+Render only valid chapters.
+
+Do not show empty chapter headings.
+
+Do not create generic filler to make stories look equally long.
+
+---
+
+## 43. Historical chart relationship
+
+Opening a chart does not initiate a new independent conversion model.
+
+The chart receives:
+
+- pair;
+- selected/requested date;
+- normalized rate semantics.
+
+The highlighted point must correspond to the same effective observation shown by the converter.
+
+If chart aggregation is monthly, communicate this rather than placing an invented exact-day point.
+
+---
+
+## 44. Historical vs current local context
+
+In historical state:
+
+Current `What this buys` and current payment-guidance modules are not automatically presented as historical.
+
+Allowed state:
+
+```text
+Historical conversion
++ historical story
++ optional explicit “See today's destination context”
+```
+
+Forbidden state:
+
+```text
+1998 historical conversion
++ 2026 coffee prices presented without temporal label
+```
+
+---
+
+## 45. Historical integrity invariants
+
+16. Requested date is never silently replaced by effective date.
+17. A historical result always exposes the observation/effective date used.
+18. Future requested dates cannot produce historical success.
+19. Historical pair coverage is evaluated per query/provider, not inferred from global provider history.
+20. Archived currency suggestions never silently change explicit user selection.
+21. Retired currencies never receive fabricated current market quotes.
+22. Current typical-price context never masquerades as historical purchasing power.
+23. A historical story can fail without invalidating the conversion.
+24. Story facts require provenance.
+25. Story context cannot claim causality from temporal coincidence.
+26. Then & now comparisons use the same directional rate definition.
+27. Historical deep-link state reproduces requested date independently from effective observation.
+28. Lower-frequency observations expose their granularity.
+29. An old chart response cannot overwrite a newer selected historical date.
+30. Historical conversion, chart and story reference the same normalized quote when describing the selected observation.
