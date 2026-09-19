@@ -161,3 +161,68 @@ AI cannot generate exchange rates, fees, prices or unsourced factual claims used
 **Status:** accepted
 
 Accessibility is an implementation constraint, not a final polish phase.
+
+
+---
+
+## ADR-015 — Historical FX is separate from historical purchasing power
+
+**Status:** accepted
+
+The historical converter uses published historical exchange-rate observations.
+
+It does not infer inflation-adjusted buying power from FX rates.
+
+A future historical purchasing-power feature requires its own CPI/PPP/price-level methodology and source adapters.
+
+---
+
+## ADR-016 — Requested date and effective observation date are separate concepts
+
+**Status:** accepted
+
+Historical queries preserve:
+
+- the date selected by the user;
+- the actual provider observation date used.
+
+Weekend/holiday/low-frequency fallback can never be hidden by overwriting requested date.
+
+---
+
+## ADR-017 — Archived currencies are first-class historical entities
+
+**Status:** accepted
+
+Historical mode may expose provider-supported archived currencies such as FIM/DEM/etc.
+
+Current/default conversion UI prioritizes active currencies.
+
+Country/date may suggest a relevant historical currency, but an explicit user currency choice is never silently changed.
+
+---
+
+## ADR-018 — Storytelling is deterministic and source-backed by default
+
+**Status:** accepted
+
+The story layer is composed from:
+
+- normalized conversion data;
+- sourced currency-era/transition facts;
+- sourced StoryMoment records;
+- semantically valid comparisons.
+
+An LLM is not required for core storytelling and cannot be the source of historical facts, rates or causal claims.
+
+---
+
+## ADR-019 — Story failure cannot invalidate conversion
+
+**Status:** accepted
+
+Historical/current conversion is the source-of-truth task.
+
+Story/chart/cultural modules are progressive enrichment.
+
+If story data is incomplete or unavailable, the successful conversion remains unchanged.
