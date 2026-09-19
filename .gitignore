@@ -10,6 +10,8 @@ artifacts/
 build/
 dist/
 *.egg-info/
+node_modules/
+static/build/
 .env
 .env.*
 !.env.example

@@ -1,0 +1,29 @@
+{
+  "name": "cultural-currency-converter-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": "24.x",
+    "npm": ">=11 <12"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "check": "biome check .",
+    "check:write": "biome check --write .",
+    "quality": "npm run typecheck && npm run check && npm run build"
+  },
+  "dependencies": {
+    "htmx.org": "2.0.10"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "@tailwindcss/vite": "4.3.3",
+    "@types/node": "24.13.6",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3",
+    "vite": "8.3.0"
+  }
+}

@@ -91,6 +91,19 @@ Acceptance:
 
 ## Implementation PR 2 — Design system and server-rendered shell
 
+**Execution split:** this product milestone is delivered as bounded, independently reviewable slices:
+
+1. **PR 2A — frontend toolchain:** Node 24, npm lockfile, Vite 8, TypeScript 5.9 strict, Biome 2, Tailwind 4, HTMX 2 and read-only frontend CI;
+2. **PR 2B — Django↔Vite bridge:** repo-owned manifest template tag, development tags, production manifest resolution and focused Python tests;
+3. **PR 2C — Quiet Atlas foundations:** semantic tokens, typography, global shell and country-atmosphere scopes;
+4. **PR 2D — converter primitives:** AmountField, CountryCurrencyTrigger, SwapButton, ConvertButton and initial Result/provenance primitives;
+5. **PR 2E — responsive bilateral experience:** desktop dual-context composition, mobile stacked identity, container-query/reflow behavior and interaction states;
+6. **PR 2F — browser quality:** djLint completion, Playwright/axe coverage, responsive/reduced-motion/high-contrast QA and performance evidence.
+
+Each slice must preserve the PR 2 acceptance criteria relevant to its scope. Later slices must not bypass the ownership model established in `14_WEB_FRONTEND_ARCHITECTURE.md`.
+
+**Execution status after PR 2A:** the locked frontend build/tooling baseline and CI gate are implemented. PR 2B is next; no converter business logic or Django↔Vite manifest bridge is claimed complete by PR 2A.
+
 **Goal:** establish visual/accessibility foundation before domain complexity.
 
 Deliverables:
