@@ -10,6 +10,10 @@ This handbook is the single source of truth for the Cultural Currency Converter 
    - [Interaction and state specification](02B_INTERACTION_AND_STATE_SPEC.md)
    - [Storytelling and historical converter](02C_STORYTELLING_AND_HISTORICAL_CONVERTER.md)
 3. [UI design system](03_UI_DESIGN_SYSTEM.md)
+   - [Visual foundations](03A_VISUAL_FOUNDATIONS.md)
+   - [Screen-by-screen blueprints](03B_SCREEN_BLUEPRINTS.md)
+   - [Component states and microinteractions](03C_COMPONENT_STATES_AND_MICROINTERACTIONS.md)
+   - [Responsive, motion, accessibility and design QA](03D_RESPONSIVE_MOTION_ACCESSIBILITY.md)
 4. [Architecture](04_ARCHITECTURE.md)
 5. [Domain model](05_DOMAIN_MODEL.md)
 6. [Mobile and API](06_MOBILE_AND_API.md)
@@ -29,7 +33,11 @@ Before an implementation PR changes the user experience, read in this order:
 3. `02A_USER_CASE_CATALOG.md` — concrete scenarios the product must support;
 4. `02B_INTERACTION_AND_STATE_SPEC.md` — state transitions and recovery rules;
 5. `02C_STORYTELLING_AND_HISTORICAL_CONVERTER.md` — historical FX, money stories and temporal trust rules;
-6. `03_UI_DESIGN_SYSTEM.md` — visual/component implementation constraints.
+6. `03_UI_DESIGN_SYSTEM.md` — executive visual/component contract;
+7. `03A_VISUAL_FOUNDATIONS.md` — tokens, hierarchy, typography, color, grid and visual language;
+8. `03B_SCREEN_BLUEPRINTS.md` — screen composition and information density;
+9. `03C_COMPONENT_STATES_AND_MICROINTERACTIONS.md` — component state behavior;
+10. `03D_RESPONSIVE_MOTION_ACCESSIBILITY.md` — adaptive/accessibility/motion QA.
 
 A visually attractive implementation that violates the UX state model is not considered correct.
 
