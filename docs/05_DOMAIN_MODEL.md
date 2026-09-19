@@ -764,3 +764,115 @@ SelectedMedia
 ```
 
 This makes it possible to explain/test why a particular image appears for a country/year.
+
+
+## 42. StorySourcePacket
+
+AI narrative generation accepts a structured source packet rather than database rows or arbitrary text.
+
+Candidate:
+
+```text
+StorySourcePacket
+- version
+- country
+- currencies[]
+- requested_date
+- effective_date
+- rate_facts[]
+- currency_era_facts[]
+- story_facts[]
+- source_refs[]
+- style_constraints[]
+- forbidden_inferences[]
+- content_hash
+```
+
+Each factual item has a stable fact ID.
+
+## 43. NarrativeDraftCandidate
+
+Candidate:
+
+```text
+NarrativeDraftCandidate
+- title
+- summary
+- chapters[]
+  - heading
+  - body
+  - used_fact_ids[]
+- caveats[]
+- unsupported_claims[]
+- provider
+- model
+- prompt_version
+- packet_hash
+- generation_metadata
+- review_status
+```
+
+A draft is not published content.
+
+## 44. AI fact-support invariant
+
+Every factual claim in AI-derived historical prose must be supportable by the supplied source packet.
+
+Unknown fact IDs invalidate the candidate.
+
+Model knowledge does not create a source.
+
+## 45. AI model metadata
+
+Published AI-derived editorial/media content should retain enough metadata to identify:
+
+- provider;
+- model/snapshot where known;
+- prompt version;
+- source packet/input hash;
+- generated_at;
+- reviewed_at.
+
+Do not expose secrets or raw private provider metadata.
+
+## 46. AI candidate review state
+
+Candidate states may include:
+
+- generated;
+- validation_failed;
+- needs_review;
+- rejected;
+- approved;
+- superseded.
+
+Publication remains a separate domain/editorial state.
+
+## 47. AI generation cost metadata
+
+Operational generation metadata may record:
+
+- input tokens;
+- output tokens;
+- image count;
+- estimated provider cost;
+- latency.
+
+Cost metadata is operational, not domain truth.
+
+## 48. Runtime AI explanation result — future
+
+If user-facing explanation later ships:
+
+```text
+ExplanationResult
+- headline
+- bullets[]
+  - text
+  - supporting_fact_ids[]
+- caveat
+- generated
+- model_version class/internal metadata
+```
+
+The explanation does not replace ConversionResult or DestinationContext.

@@ -531,21 +531,18 @@ This is a strong reason for keeping provider identity behind our own adapter ins
 
 # 21. Provider selection status
 
-**No permanent AI provider is selected yet.**
+**OpenAI is selected as the initial primary AI provider**, behind the provider-neutral adapter defined in the AI architecture documents.
 
-Reason:
+Current image routing:
 
-AI generation is an editorial/build-time enrichment capability, not a core P0 dependency.
+- GPT-Image-2.5 Flare — fast candidate/concept generation;
+- GPT-Image-2.5 Sunburst — high-value final/featured generation and precise editing.
 
-Choose provider only after:
+The selection is not a permanent domain dependency.
 
-- prompt benchmark;
-- current pricing;
-- API stability;
-- output licence/terms review;
-- implementation timing.
+Before implementation and model upgrades, re-run the documented prompt/image eval set and review current pricing, API stability and terms.
 
-This avoids documenting a provider choice months before actual usage.
+Google and Stability remain benchmark/fallback candidates rather than parallel production dependencies.
 
 ---
 

@@ -300,6 +300,44 @@ Acceptance:
 
 ---
 
+## Implementation PR 7B — AI integration foundation
+
+**Goal:** add bounded, provider-isolated editorial AI without making AI a source of truth or runtime requirement.
+
+Deliverables:
+
+- OpenAI server-side provider adapter;
+- capability-specific interfaces instead of generic free-form LLM service;
+- Responses API Structured Outputs for text capabilities;
+- initial model routing:
+  - GPT-5.6 Luna for narrow low-cost structured tasks;
+  - GPT-5.6 Terra for quality editorial drafting;
+  - GPT-5.6 Sol only for rare audit/eval escalation;
+  - GPT-Image-2.5 Flare for image candidates;
+  - GPT-Image-2.5 Sunburst for featured/final generation;
+  - omni-moderation-latest for safety classification;
+- StorySourcePacket / fact-ID grounding contracts;
+- versioned prompts and JSON schemas;
+- normalized provider errors;
+- usage/latency/cost logging;
+- fake provider for CI;
+- explicit feature flags;
+- no AI call inside DB transaction;
+- no web-search/tool-agent loop;
+- no user-request-path AI requirement.
+
+Acceptance:
+
+- the whole product works with no AI API key when AI features are disabled;
+- normal CI makes zero live provider calls;
+- unknown fact IDs invalidate narrative candidates;
+- historical AI output cannot auto-publish;
+- AI keys never reach browser/mobile;
+- model names are configuration/provider concerns rather than domain imports;
+- live eval command can compare model/prompt versions before promotion.
+
+---
+
 ## Implementation PR 8 — Currency eras and deterministic storytelling
 
 **Goal:** add the “story behind this rate” without sacrificing trust.
@@ -317,6 +355,9 @@ Deliverables:
 - progressive story disclosure;
 - story partial/unavailable states;
 - editorial/admin workflow;
+- optional AI narrative draft action built on the PR 7B capability layer;
+- deterministic StoryComposer remains canonical fallback;
+- AI draft shows supporting fact IDs and remains review-gated;
 - accessibility coverage.
 
 Acceptance:
@@ -641,3 +682,32 @@ need for visual
 ```
 
 Do not put image search/generation into the conversion request path.
+
+
+# AI implementation sequencing rule
+
+AI changes follow:
+
+```text
+deterministic source data
+→ capability-specific typed input packet
+→ model routing/config
+→ structured provider call
+→ semantic validation
+→ moderation/review where required
+→ candidate persistence
+→ explicit publication/use
+```
+
+Before an AI PR merges, it must answer:
+
+- Why is AI better than deterministic code for this exact task?
+- What happens when AI is disabled/unavailable?
+- What facts is the model allowed to use?
+- What schema and validators constrain the output?
+- What eval set proves the model/prompt is acceptable?
+- What is the cost/latency budget?
+- Does any personal data leave our system?
+- Can the model trigger side effects? If yes, why is that necessary?
+
+Default answer for side effects is **no**.

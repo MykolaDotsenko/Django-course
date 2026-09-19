@@ -1099,3 +1099,190 @@ The application domain does not depend on OpenAI/Stability/Google-specific outpu
 Provider/model identity is recorded for provenance/operations, but published-media selection works against MediaAsset.
 
 This makes model deprecation a generation-tooling issue rather than a page-runtime outage.
+
+
+# 51. OpenAI text-generation contract
+
+OpenAI is the initial primary AI provider.
+
+Text application integration uses:
+
+```text
+POST /v1/responses
+```
+
+through the official/server-side SDK.
+
+Normal AI text tasks request Structured Outputs with a strict JSON Schema.
+
+Provider-specific response objects stop inside the adapter.
+
+## 52. Text model routing
+
+Initial capability routing:
+
+```text
+fast structured assist → gpt-5.6-luna
+quality editorial      → gpt-5.6-terra
+rare audit/eval        → gpt-5.6-sol
+```
+
+Model aliases/snapshots are configuration.
+
+The application asks for a capability, not a model name.
+
+## 53. OpenAI image-generation contract
+
+Initial image routing:
+
+```text
+candidate/concept → gpt-image-2.5-flare
+featured/final    → gpt-image-2.5-sunburst
+```
+
+Use the Image API for simple one-shot generation/editing.
+
+Use Responses image-generation tooling only if a future genuinely multi-step multimodal workflow benefits.
+
+Do not introduce the more complex interaction path without need.
+
+## 54. OpenAI moderation contract
+
+Use:
+
+```text
+omni-moderation-latest
+```
+
+where product moderation adds value for generated text/image candidates.
+
+Moderation is safety classification, not historical/factual validation.
+
+A clean moderation result does not mean an image/fact is historically accurate.
+
+## 55. AI timeout/retry
+
+Text and image capabilities have separate bounded policies.
+
+Retry only selected transient conditions:
+
+- connection failure;
+- provider 5xx;
+- 429 under bounded Retry-After policy.
+
+Do not blind-retry:
+
+- refusal;
+- moderation/safety block;
+- invalid input;
+- budget block;
+- auth/config error.
+
+## 56. Structured-output semantic validation
+
+Provider schema adherence is followed by application validation.
+
+Examples:
+
+- fact IDs must exist in supplied packet;
+- output cannot introduce unknown source URLs;
+- dates/currencies must match packet;
+- lengths are bounded;
+- historical causal claims follow policy.
+
+AI output is not accepted merely because JSON parses.
+
+## 57. AI source packet
+
+Text generation receives a normalized packet created by application/domain code.
+
+Do not send:
+
+- raw QuerySet serialization;
+- arbitrary HTML;
+- database credentials;
+- complete application state;
+- arbitrary user prompt as system-level instruction.
+
+## 58. AI tool policy
+
+P0/P1 OpenAI calls do not enable:
+
+- web search;
+- file search;
+- shell/code execution;
+- arbitrary function tools;
+- MCP;
+- database access.
+
+All source retrieval occurs before the AI call through deterministic application code.
+
+## 59. Provider error normalization
+
+Map OpenAI SDK/provider failures into project-level categories:
+
+```text
+AIProviderTimeout
+AIProviderUnavailable
+AIRateLimited
+AIInvalidResponse
+AIRefusal
+AISafetyBlocked
+AIBudgetExceeded
+AIConfigurationError
+```
+
+Raw provider exceptions never reach templates/mobile.
+
+## 60. Usage metadata
+
+Capture when available:
+
+- provider/model;
+- input/output tokens;
+- reasoning/usage metadata;
+- image count;
+- latency;
+- response/provider request ID;
+- estimated cost.
+
+Usage metadata is operational.
+
+It does not enter historical/domain truth.
+
+## 61. Prompt caching
+
+OpenAI GPT-5.6 supports prompt-cache controls.
+
+Use only as an optimization when repeated stable prompt prefixes justify it.
+
+Correctness/fallback must not depend on a prompt-cache hit.
+
+## 62. AI privacy/data controls
+
+OpenAI API business inputs/outputs are not used to train provider models by default unless the organization opts in, according to current OpenAI business/API data-control documentation.
+
+This does not remove the need to:
+
+- minimize payload;
+- understand current retention/abuse-monitoring policy;
+- avoid personal data for editorial use cases;
+- review deployment-specific data controls before future user-facing AI.
+
+Do not promise zero retention unless the actual API project/configuration provides it.
+
+## 63. Provider model lifecycle
+
+AI model names can change/deprecate.
+
+Model upgrade procedure:
+
+```text
+provider announces/desired upgrade
+→ run project eval set
+→ compare trust/style/cost/latency
+→ update routing config
+→ deploy
+```
+
+Existing published AI-derived media/prose does not regenerate automatically.

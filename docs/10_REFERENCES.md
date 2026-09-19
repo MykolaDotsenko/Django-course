@@ -1527,3 +1527,218 @@ When choosing an image:
 7. novelty.
 
 AI visual novelty never outranks historical truth.
+
+
+# AI Architecture References
+
+Research reviewed: **2026-09-19**.
+
+## OpenAI current model catalog
+
+https://developers.openai.com/api/docs/models
+
+Current guidance identifies:
+
+- GPT-5.6 Sol as flagship professional model;
+- GPT-5.6 Terra as balanced intelligence/cost tier;
+- GPT-5.6 Luna as cost-sensitive/high-volume tier;
+- GPT-Image-2.5 Sunburst as the most capable image-generation/editing model;
+- GPT-Image-2.5 Flare as the fast high-quality image model.
+
+Project conclusion:
+
+- use capability-tier routing rather than one expensive model everywhere.
+
+## GPT-5.6 Terra
+
+https://developers.openai.com/api/docs/models/gpt-5.6-terra
+
+Current documented pricing at research date:
+
+- input: USD 2 / 1M tokens;
+- cached input: USD 0.20 / 1M;
+- output: USD 12 / 1M.
+
+Supports:
+
+- Responses;
+- function calling;
+- Structured Outputs;
+- image input;
+- reasoning levels.
+
+Project use:
+
+- primary editorial structured generation.
+
+## GPT-5.6 Luna
+
+https://developers.openai.com/api/docs/models/gpt-5.6-luna
+
+Current documented pricing at research date:
+
+- input: USD 0.20 / 1M tokens;
+- cached input: USD 0.02 / 1M;
+- output: USD 1.20 / 1M.
+
+Project use:
+
+- narrow low-risk/high-volume structured tasks only.
+
+## GPT-5.6 Sol
+
+https://developers.openai.com/api/docs/models
+
+Current documented pricing at research date:
+
+- input: USD 4 / 1M tokens;
+- cached input: USD 0.40 / 1M;
+- output: USD 20 / 1M.
+
+Project use:
+
+- rare audit/eval escalation rather than default generation.
+
+## OpenAI Structured Outputs
+
+https://developers.openai.com/api/docs/guides/structured-outputs
+
+OpenAI recommends Structured Outputs over legacy JSON mode when supported.
+
+Structured Outputs constrain model responses to a supplied JSON Schema.
+
+Project conclusion:
+
+- use strict structured output for application-integrated text generation;
+- still run semantic/factual validators after schema parsing.
+
+## OpenAI Responses API
+
+https://developers.openai.com/api/reference
+
+The Responses API supports text/image inputs, structured text output and tools.
+
+Project conclusion:
+
+- use Responses for bounded structured text capabilities;
+- do not enable web/file/tool orchestration in P1 editorial workflows.
+
+## OpenAI prompt caching
+
+https://developers.openai.com/api/docs/guides/prompt-caching
+
+GPT-5.6 supports current prompt-cache controls.
+
+Project conclusion:
+
+- stable prompt prefixes can benefit from caching later;
+- cache is an optimization, not correctness dependency.
+
+## GPT-Image-2.5 Sunburst
+
+https://developers.openai.com/api/docs/models/gpt-image-2.5-sunburst
+
+OpenAI currently describes Sunburst as its most capable image-generation/editing model.
+
+Project use:
+
+- high-value final/featured image generation or precise edit.
+
+## OpenAI image generation API
+
+https://developers.openai.com/api/reference
+
+The current Image API supports GPT-Image-2.5 Sunburst/Flare, multiple quality settings, common output formats and flexible supported dimensions.
+
+Project conclusion:
+
+- Image API is the simplest path for one-shot editorial generation;
+- Responses image tooling is reserved for a genuinely multi-step multimodal workflow.
+
+## OpenAI moderation
+
+https://developers.openai.com/api/reference
+
+https://developers.openai.com/api/docs/models/omni-moderation-latest
+
+`omni-moderation-latest` accepts text and image inputs and is the current capable multimodal moderation model.
+
+Project conclusion:
+
+- moderation is an additional safety layer;
+- it is not historical truth or licensing validation.
+
+## OpenAI API data/privacy
+
+https://openai.com/business-data/
+
+https://platform.openai.com/docs/models/default-usage-policies-by-endpoint
+
+Current OpenAI business/API policy states API inputs/outputs are not used to train or improve models by default unless the customer explicitly opts in.
+
+Provider retention/abuse-monitoring behavior can still apply depending on endpoint/account controls.
+
+Project conclusion:
+
+- minimize AI payloads;
+- P0/P1 editorial AI uses public/curated product content only;
+- do not promise zero retention unless deployment configuration actually provides it.
+
+## Gemini Interactions API
+
+https://ai.google.dev/gemini-api/docs/interactions-overview
+
+Google currently recommends the Interactions API for new Gemini applications and supports structured outputs and multimodal workflows.
+
+## Gemini structured output
+
+https://ai.google.dev/gemini-api/docs/structured-output
+
+Gemini supports schema-constrained JSON, while documentation still recommends application-level value validation.
+
+Project conclusion:
+
+- viable benchmark/fallback provider for structured generation;
+- not a parallel production dependency initially.
+
+## Gemini image generation
+
+https://ai.google.dev/gemini-api/docs/image-generation
+
+Current Gemini image models support text-to-image and image editing with configurable formats/sizes.
+
+Project conclusion:
+
+- viable image-provider benchmark;
+- provider lifecycle remains isolated behind the project's ImageGenerator capability.
+
+## Anthropic tool/JSON-schema patterns
+
+https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/overview
+
+Claude supports tool inputs described with JSON Schema and strong structured tool workflows.
+
+Project conclusion:
+
+- strong text benchmark candidate;
+- not selected as the initial unified provider because this project also needs a first-party image generation stack.
+
+## Anthropic model lifecycle
+
+https://docs.anthropic.com/en/docs/about-claude/model-deprecations
+
+The current deprecation history demonstrates why provider model IDs must remain configuration and why model upgrades need eval gates.
+
+## AI source precedence
+
+When an AI design choice conflicts:
+
+1. product/domain truth and provenance;
+2. deterministic validation/security/privacy;
+3. graceful AI-free fallback;
+4. eval-measured quality;
+5. operational cost/latency;
+6. provider convenience;
+7. novelty.
+
+AI capability breadth never outranks trust.
