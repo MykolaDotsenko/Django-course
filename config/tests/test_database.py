@@ -157,7 +157,7 @@ def test_duplicate_database_query_options_fail_fast() -> None:
     ],
 )
 def test_invalid_query_options_fail_fast(url: str) -> None:
-    with pytest.raises(ConfigurationError, match="invalid query options|empty query option"):
+    with pytest.raises(ConfigurationError, match="malformed query options|empty query option"):
         load_database_config(
             environ={"DATABASE_URL": url},
             environment=RuntimeEnvironment.TEST,
