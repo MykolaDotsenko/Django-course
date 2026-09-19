@@ -81,6 +81,10 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
+VITE_DEV_SERVER_ENABLED = APP_ENV == "local" and DEBUG
+VITE_DEV_SERVER_ORIGIN = "http://127.0.0.1:5173"
+VITE_MANIFEST_PATH = BASE_DIR / "static" / "build" / ".vite" / "manifest.json"
+
 SESSION_COOKIE_SECURE = RUNTIME_CONFIG.is_production
 CSRF_COOKIE_SECURE = RUNTIME_CONFIG.is_production
 
