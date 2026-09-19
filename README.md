@@ -45,8 +45,14 @@ Convert → Understand → Explore → Save → Return
                  └──────────────┬───┘                  │
                                 │                      │
                        Django Templates          React Native
-                         + HTMX 2.x             + TypeScript
-                         + Tailwind 4               + Expo
+                         + HTMX 2.x              + Expo 57*
+                         + Tailwind 4             + Expo Router
+                         + TypeScript             + TanStack Query
+                         + Vite 8                 + Expo SQLite
+                                                  + TypeScript
+
+                    * stable compatibility matrix re-checked
+                      immediately before mobile implementation
 ```
 
 ## Engineering principles
@@ -56,7 +62,7 @@ Convert → Understand → Explore → Save → Return
 3. **JSON only at explicit API boundaries.** The mobile client uses a versioned API.
 4. **Financial correctness.** Money and FX calculations use `Decimal`, explicit rounding and currency metadata.
 5. **Source attribution.** Exchange rates, purchasing-power data and cultural facts must have provenance.
-6. **Progressive enhancement.** Core conversion remains usable without client-side application state.
+6. **Progressive enhancement.** Core conversion remains usable without client-side application state; Vite/TypeScript enhance HTML rather than create a SPA.
 7. **Accessibility by default.** WCAG 2.2 AA is the baseline.
 8. **Proportional architecture.** No microservices, event buses or repository layers without a concrete problem.
 9. **Explicit stale-data semantics.** Cached/offline rates are labelled with their source time.
@@ -71,9 +77,10 @@ The handbook covers:
 - product scope and success criteria;
 - user journeys and UX states;
 - design-system principles;
-- Django/HTMX/Tailwind architecture;
+- Django/HTMX/Tailwind/Vite/TypeScript web architecture;
 - domain models and financial rules;
-- React Native/API boundaries;
+- React Native/Expo/API/offline architecture;
+- explicit frontend technology decisions and rejected alternatives;
 - quality, security and accessibility;
 - implementation sequencing and ADRs;
 - official references.
