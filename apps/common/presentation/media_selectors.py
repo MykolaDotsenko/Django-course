@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from .media_assets import StaticMediaAsset, get_static_media_asset
 
-
 COUNTRY_MEDIA_KEYS = {
     "FI": "country_finland",
     "JP": "country_japan",
