@@ -1,5 +1,19 @@
 # UI Design System
 
+This file is the executive design contract. Detailed implementation guidance lives in:
+
+- [Visual foundations](03A_VISUAL_FOUNDATIONS.md)
+- [Screen-by-screen blueprints](03B_SCREEN_BLUEPRINTS.md)
+- [Component states and microinteractions](03C_COMPONENT_STATES_AND_MICROINTERACTIONS.md)
+- [Responsive, motion, accessibility and design QA](03D_RESPONSIVE_MOTION_ACCESSIBILITY.md)
+
+The design language is named:
+
+> **Nordic editorial utility — calm enough for money, warm enough for culture.**
+
+The detailed documents are normative. If a visual implementation conflicts with them, the implementation must be changed or the design decision explicitly revised in documentation/ADR.
+
+
 ## 1. Design direction
 
 The product should feel like a **calm premium travel utility**, not a banking dashboard and not a tourism collage.
@@ -855,3 +869,33 @@ Do not make historical mode sepia/brown merely to signal “old”.
 That can make the product feel nostalgic rather than authoritative.
 
 Use the same trust-oriented design system, with subtle temporal cues in typography/metadata rather than theme gimmicks.
+
+
+---
+
+## 42. Design implementation contract
+
+All implementation work must preserve these system-level decisions:
+
+1. **The product itself is the hero.** No marketing hero may push the converter below the initial viewport without a strong reason.
+2. **Trust is visible.** Rate type, effective date and provenance cannot be reduced to visually inaccessible fine print.
+3. **Semantic tokens before raw values.** Color, spacing, radius and motion use documented roles/scales.
+4. **Country theme is atmosphere, not a new UI.** Layout and component behavior remain stable.
+5. **Historical mode is archival, not nostalgic.** No sepia/typewriter visual cliché.
+6. **Whitespace before extra containers.** Do not solve hierarchy by turning every section into a card.
+7. **Motion is functional.** No count-up numbers, bounce, looping decoration or timeline theater.
+8. **Touch targets exceed minimum where practical.** Frequent controls are designed for real travel conditions.
+9. **Component state completeness matters.** Loading/error/stale/offline/focus/reduced-motion states are part of design, not later polish.
+10. **Mobile is intentionally redesigned, not desktop compressed.**
+11. **Accessibility is visible design quality.** Strong focus, readable metadata and resilient layout are considered premium design.
+12. **Performance is a design constraint.** The visual language cannot require heavy web JavaScript or large above-fold media.
+
+## 43. Design review requirement
+
+Before a key screen is accepted, review it against the /100 scorecard in `03A_VISUAL_FOUNDATIONS.md`.
+
+Target:
+
+> **95+/100 with zero critical trust, accessibility or state-integrity issue.**
+
+This target describes the implementation bar. It is not a claim about code that does not yet exist.
