@@ -215,3 +215,74 @@ A feature is not done until:
 - accessibility is reviewed;
 - docs/ADR are updated when needed;
 - no new secret or unsourced trust-sensitive datum is introduced.
+
+
+## 13. Historical conversion quality strategy
+
+Historical FX introduces trust-sensitive temporal behaviour that requires dedicated tests.
+
+Minimum unit/contract coverage:
+
+- exact historical date;
+- weekend/holiday missing observation;
+- requested vs effective date preservation;
+- out-of-coverage date;
+- archived currency;
+- unsupported pair/date;
+- observation granularity;
+- Decimal correctness;
+- Then & now directional comparison;
+- provider correction/cache invalidation path where applicable.
+
+Browser/E2E coverage:
+
+- switch Latest available → Historical date;
+- choose date and convert;
+- clearly identify effective observation date;
+- archived currency discoverability;
+- country/date historical-currency suggestion;
+- historical deep-link reload;
+- story unavailable while conversion remains successful.
+
+## 14. Story quality and provenance tests
+
+Story composition should be testable as deterministic output over structured facts.
+
+Verify:
+
+- no chapter without required source metadata;
+- temporal filtering excludes irrelevant future/past facts;
+- missing optional facts shorten story rather than create filler;
+- no story path modifies numeric conversion;
+- archived currencies do not get fabricated current quote chapters;
+- causal phrasing is never generated merely from date proximity;
+- story order follows product relevance;
+- source links/labels remain available to presentation.
+
+## 15. Temporal accessibility
+
+Historical date controls and stories must preserve WCAG 2.2 AA baseline.
+
+Test:
+
+- date selection by keyboard;
+- understandable label for historical/latest mode;
+- requested/effective dates announced/read in logical order;
+- timeline milestones available as semantic text/list;
+- historical chart has text/table alternative;
+- story loading does not announce the entire narrative through a live region;
+- no colour-only difference between historical/current/cached states.
+
+## 16. Historical trust regression rule
+
+Any bug that can cause one of the following is severity-high:
+
+- wrong pair shown with a valid-looking historical result;
+- wrong effective date;
+- current rate labelled historical;
+- archived currency given fabricated current quote;
+- current price context presented as historical purchasing power;
+- story claim shown without provenance;
+- user-requested date silently changed.
+
+These failures are more serious than cosmetic rendering defects because they undermine product trust.
