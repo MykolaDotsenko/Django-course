@@ -40,9 +40,9 @@ Decoration is never allowed to outrank the conversion result.
 
 ---
 
-## 2. Stable shell, contextual atmosphere
+## 2. Stable shell, bilateral contextual atmosphere
 
-Country selection may influence:
+Source and destination country selection may independently influence:
 
 - subtle accent token;
 - background artwork/pattern;
@@ -57,7 +57,15 @@ It must not change:
 - validation language;
 - fundamental component behaviour.
 
-This prevents every country from becoming a custom mini-site and protects learnability when users switch destinations repeatedly.
+This prevents every country from becoming a custom mini-site and protects learnability when users switch contexts repeatedly.
+
+The product should preserve a visible bilateral identity:
+
+```text
+source context ↔ conversion ↔ destination context
+```
+
+Destination atmosphere may be somewhat stronger because local interpretation is destination-oriented, but source atmosphere must not disappear.
 
 ---
 
@@ -127,9 +135,11 @@ A component must represent a stable user/interface concept, not merely a visual 
 
 ### Large screens
 
-Use a balanced source/destination comparison when it improves scanning.
+Use a balanced bilateral source/destination comparison as the signature converter layout whenever the container comfortably supports it.
 
-The result should visually bridge the two contexts rather than feel like a third competing column.
+The result should visually bridge the two cultural/currency contexts rather than feel like a third competing column.
+
+A rigid 50/50 split is not required. The signature is the relationship, not the percentage.
 
 ### Medium screens
 
@@ -1023,3 +1033,66 @@ Use `trust-rate-provenance-v1.svg` for source/provenance education:
 - source empty state.
 
 Do not show it beside every quote; repeated trust illustration reduces information density and weakens the primary result hierarchy.
+
+
+## 54. Signature cultural workspace
+
+The converter itself should communicate movement between two contexts.
+
+Required large-screen visual model:
+
+```text
+FROM                                  TO
+country / currency                    country / currency
+restrained source atmosphere          restrained destination atmosphere
+
+             conversion result
+          provenance / effective date
+```
+
+The visual system must still feel like one Quiet Atlas product.
+
+## 55. Bilateral atmosphere channels
+
+Per side, use no more than:
+
+- one approved editorial/static visual;
+- one semantic tint;
+- one restrained texture/pattern;
+- one compact country/context label.
+
+Do not change:
+
+- component anatomy;
+- typography family;
+- focus order;
+- validation;
+- trust semantics;
+- spacing system.
+
+> **Country changes atmosphere, never usability.**
+
+## 56. Compact Explore presentation
+
+P0 deeper context has exactly three first-level categories:
+
+1. Everyday value;
+2. Payment context;
+3. Money & culture.
+
+They may be presented as compact links/disclosures/sections rather than three large decorative cards.
+
+The Explore layer starts after a successful conversion and visible trust metadata.
+
+## 57. Mobile preservation of the signature
+
+Mobile does not reproduce the desktop split.
+
+It preserves:
+
+- source identity;
+- transition/conversion;
+- destination identity;
+- destination interpretation.
+
+The cultural relationship survives; the horizontal layout does not.
