@@ -768,3 +768,43 @@ Desired design maturity:
 | Overall product design | 98/100 |
 
 These are design targets, not claims about current implementation.
+
+
+---
+
+# 45. Bilateral responsive invariant
+
+The source/destination cultural relationship is semantic, not tied to horizontal positioning.
+
+## Wide
+
+Prefer simultaneous bilateral presentation when readable.
+
+## Medium
+
+Keep two sides together only while:
+
+- country/currency names fit;
+- amount/result hierarchy remains dominant;
+- touch/focus targets stay comfortable.
+
+Otherwise stack.
+
+## Compact
+
+Preserve this semantic order:
+
+```text
+source identity
+→ amount/action
+→ result
+→ destination identity
+→ trust
+→ local context
+```
+
+Do not use CSS visual reordering that makes screen-reader/keyboard order differ from the logical task flow.
+
+Cultural visuals may disappear at narrow widths before any core information or control is removed.
+
+This is an intentional degradation path, not a loss of product identity.
