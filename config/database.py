@@ -9,6 +9,9 @@ from urllib.parse import parse_qsl, unquote, urlparse
 from config.environment import ConfigurationError, RuntimeEnvironment
 
 
+_RESERVED_QUERY_OPTIONS = frozenset({"user", "password", "host", "port", "dbname"})
+
+
 @dataclass(frozen=True, slots=True)
 class DatabaseConfig:
     """Normalized database settings independent from Django's global settings."""
@@ -64,7 +67,7 @@ def _parse_query_options(query: str) -> tuple[tuple[str, str], ...]:
     try:
         pairs = parse_qsl(query, keep_blank_values=False, strict_parsing=True)
     except ValueError as exc:
-        raise ConfigurationError("DATABASE_URL contains malformed query options.") from exc
+        raise ConfigurationError("DATABASE_URL contains invalid query options.") from exc
 
     seen: set[str] = set()
     normalized: list[tuple[str, str]] = []
@@ -92,9 +95,7 @@ def _parse_postgresql_url(database_url: str) -> DatabaseConfig:
     parsed = urlparse(database_url)
 
     if parsed.scheme not in {"postgres", "postgresql"}:
-        raise ConfigurationError(
-            "DATABASE_URL must use the postgresql:// scheme when configured."
-        )
+        raise ConfigurationError("DATABASE_URL must use the postgresql:// scheme when configured.")
 
     if parsed.fragment:
         raise ConfigurationError("DATABASE_URL must not contain a URL fragment.")
