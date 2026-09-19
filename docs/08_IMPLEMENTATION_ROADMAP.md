@@ -269,6 +269,37 @@ Acceptance:
 
 ---
 
+## Implementation PR 8A — Media asset pipeline
+
+**Goal:** support sourced historical/editorial media and optional reviewed AI illustrations without making images a runtime dependency.
+
+Deliverables:
+
+- MediaAsset model and publication states;
+- source/licence/creator/rights metadata;
+- temporal precision/date ranges;
+- Django FileSystemStorage in development;
+- production-ready Django Storage abstraction for S3-compatible media;
+- media selection service by country/currency/date/role;
+- responsive derivatives and content hashes;
+- Wikimedia Commons / Europeana candidate-ingestion tooling;
+- no hot search API in user request path;
+- Quiet Atlas programmatic fallback;
+- generated-media metadata/AI label contract;
+- optional management-command ImageGenerator adapter proof of concept after provider benchmark;
+- no auto-publishing;
+- security validation for image bytes/SVG.
+
+Acceptance:
+
+- missing image never breaks a page;
+- selecting a country/year creates no AI API call;
+- sourced media cannot publish without required provenance/rights;
+- historical AI illustration cannot masquerade as archival evidence;
+- media bytes are not stored in PostgreSQL or committed as a growing content library.
+
+---
+
 ## Implementation PR 8 — Currency eras and deterministic storytelling
 
 **Goal:** add the “story behind this rate” without sacrificing trust.
@@ -590,3 +621,23 @@ Before adding an abstraction, answer:
 - Does it reduce or increase the number of places where business truth can exist?
 
 Do not introduce generic repository, DI, async, Redis, Celery, CQRS or event-bus infrastructure without a documented scenario that requires it.
+
+
+# Media implementation sequencing rule
+
+Media follows:
+
+```text
+need for visual
+→ is factual evidence required?
+   ├─ yes → sourced archival/editorial media
+   └─ no  → can CSS/SVG solve it?
+             ├─ yes → programmatic Quiet Atlas visual
+             └─ no  → reviewed generated illustration
+→ rights/provenance/authenticity metadata
+→ optimized derivative
+→ publish
+→ local/stored selection at runtime
+```
+
+Do not put image search/generation into the conversion request path.
