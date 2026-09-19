@@ -35,10 +35,36 @@ def _assert_shell_integrity(page: Page) -> None:
     if page.locator('[data-country-theme="jp"]').count() != 1:
         raise RuntimeError("Destination Japan atmosphere scope is missing")
 
-    page.evaluate("document.fonts.ready")
-    inter_loaded = page.evaluate("document.fonts.check('16px Inter Variable')")
-    if not inter_loaded:
-        raise RuntimeError("Self-hosted Inter Variable did not load")
+    font_state = page.evaluate(
+        """async () => {
+            await document.fonts.ready;
+            const matches = await document.fonts.load(
+                "400 16px 'Inter Variable'",
+                "Quiet Atlas",
+            );
+            const family = getComputedStyle(document.body).fontFamily;
+            const resources = performance
+                .getEntriesByType("resource")
+                .map((entry) => entry.name)
+                .filter(
+                    (name) =>
+                        name.includes("/static/build/assets/inter-") &&
+                        name.endsWith(".woff2"),
+                );
+
+            return {
+                matchCount: matches.length,
+                family,
+                resources,
+            };
+        }"""
+    )
+    if (
+        font_state["matchCount"] < 1
+        or "Inter Variable" not in font_state["family"]
+        or not font_state["resources"]
+    ):
+        raise RuntimeError(f"Self-hosted Inter Variable did not load: {font_state!r}")
 
     overflow = page.evaluate(
         """() => ({
