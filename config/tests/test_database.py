@@ -128,7 +128,7 @@ def test_database_password_is_redacted_from_repr() -> None:
 
 
 def test_malformed_database_query_options_fail_fast() -> None:
-    with pytest.raises(ConfigurationError, match="malformed query options"):
+    with pytest.raises(ConfigurationError, match="invalid query options"):
         load_database_config(
             environ={"DATABASE_URL": "postgresql://user:pass@localhost/db?broken"},
             environment=RuntimeEnvironment.TEST,
@@ -169,9 +169,7 @@ def test_invalid_query_options_fail_fast(url: str) -> None:
 def test_query_options_cannot_override_core_connection_fields(option: str) -> None:
     with pytest.raises(ConfigurationError, match="duplicates a core connection field"):
         load_database_config(
-            environ={
-                "DATABASE_URL": f"postgresql://user:pass@localhost/db?{option}=override"
-            },
+            environ={"DATABASE_URL": f"postgresql://user:pass@localhost/db?{option}=override"},
             environment=RuntimeEnvironment.TEST,
             base_dir=BASE_DIR,
         )
