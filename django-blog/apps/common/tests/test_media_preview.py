@@ -15,9 +15,10 @@ class MediaPreviewViewTests(SimpleTestCase):
         self.assertEqual(len(response.context["country_cards"]), 10)
         self.assertEqual(len(response.context["story_cards"]), 5)
         self.assertEqual(len(response.context["history_cards"]), 3)
+        self.assertEqual(len(response.context["derivative_cards"]), 5)
 
         self.assertContains(response, "Quiet Atlas media system")
-        self.assertContains(response, "23 assets")
+        self.assertContains(response, "28 assets")
         self.assertContains(response, "Convert money with context.")
         self.assertContains(response, 'loading="eager"')
         self.assertContains(response, 'fetchpriority="high"')
@@ -36,6 +37,9 @@ class MediaPreviewViewTests(SimpleTestCase):
             "Then &amp; Now",
             "Why trust this rate?",
             "Illustrative visual",
+            "Mobile home hero",
+            "Home OpenGraph",
+            "Local value OpenGraph",
         ):
             with self.subTest(text=text):
                 self.assertContains(response, text)
