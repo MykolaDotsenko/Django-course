@@ -19,6 +19,8 @@ class StaticMediaAsset:
     ratio: str
     kind: AssetKind
     label: str
+    width: int
+    height: int
     decorative: bool = True
     alt: str = ""
 
@@ -30,6 +32,8 @@ def _asset(
     kind: AssetKind,
     label: str,
     ratio: str = "4 / 3",
+    width: int = 1200,
+    height: int = 900,
 ) -> StaticMediaAsset:
     return StaticMediaAsset(
         key=key,
@@ -37,6 +41,8 @@ def _asset(
         ratio=ratio,
         kind=kind,
         label=label,
+        width=width,
+        height=height,
     )
 
 
@@ -47,6 +53,8 @@ _assets = {
         kind="hero",
         label="Home hero global value",
         ratio="16 / 9",
+        width=1600,
+        height=900,
     ),
     "fallback_local_value": _asset(
         "fallback_local_value",
