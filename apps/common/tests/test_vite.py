@@ -42,6 +42,14 @@ class ViteDevelopmentAssetTests(SimpleTestCase):
         with self.assertRaisesRegex(ViteManifestError, "without credentials"):
             render_vite_asset()
 
+    def test_entry_must_be_non_empty(self) -> None:
+        with self.assertRaisesRegex(ViteManifestError, "non-empty relative path"):
+            render_vite_asset("")
+
+    def test_entry_rejects_url_syntax(self) -> None:
+        with self.assertRaisesRegex(ViteManifestError, "plain relative POSIX path"):
+            render_vite_asset("frontend/src/app.ts?cache=1")
+
     def test_entry_must_be_canonical_relative_path(self) -> None:
         with self.assertRaisesRegex(ViteManifestError, "canonical relative POSIX path"):
             render_vite_asset("../frontend/src/app.ts")
