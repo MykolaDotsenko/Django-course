@@ -34,6 +34,7 @@ This handbook is the single source of truth for the Cultural Currency Converter 
 20. [API, security, observability and operations](20_API_SECURITY_OBSERVABILITY_AND_OPERATIONS.md)
 21. [Backend scenario catalog](21_BACKEND_SCENARIO_CATALOG.md)
 22. [Data import, scheduled jobs and maintenance](22_DATA_IMPORT_JOBS_AND_MAINTENANCE.md)
+23. [Media, historical imagery and generative image strategy](23_MEDIA_AND_GENERATIVE_IMAGE_STRATEGY.md)
 
 ## UX decision hierarchy
 
@@ -153,3 +154,18 @@ Before implementing or changing backend behavior, read in this order:
 Every backend implementation PR should list the relevant BE-* scenario IDs.
 
 A backend abstraction is accepted only if it protects a real invariant, integration boundary, transaction, repeated query shape or measurable operational need.
+
+
+## Media decision hierarchy
+
+Before adding a sourced or generated image flow, read:
+
+1. `23_MEDIA_AND_GENERATIVE_IMAGE_STRATEGY.md` — media classes, storage, AI policy, rights/provenance and selection rules;
+2. `03_UI_DESIGN_SYSTEM.md` — visual hierarchy and media restraint;
+3. `05_DOMAIN_MODEL.md` — MediaAsset metadata/provenance;
+4. `22_DATA_IMPORT_JOBS_AND_MAINTENANCE.md` — ingestion/generation jobs;
+5. `10_REFERENCES.md` — source/licensing/provider references.
+
+A missing image is an acceptable state.
+
+A misleading historical image is not.

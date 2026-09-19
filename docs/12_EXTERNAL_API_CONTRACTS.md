@@ -1015,3 +1015,87 @@ If the same job can overlap, use one simple overlap-prevention mechanism appropr
 - import-run lock row.
 
 Do not introduce a distributed task framework only to solve duplicate cron starts.
+
+
+# 46. Image-generation provider contract
+
+Image generation is not part of the normal conversion request path.
+
+A provider adapter receives a structured request:
+
+```text
+GeneratedImageRequest
+- role
+- country
+- currency nullable
+- target_date nullable
+- temporal_scope
+- verified_visual_facts[]
+- style_version
+- aspect_ratio
+- prompt_version
+```
+
+It returns:
+
+```text
+GeneratedImageCandidate
+- bytes/file
+- mime_type
+- width
+- height
+- provider
+- model
+- generation_id nullable
+- created_at
+- provider_safety_metadata
+- seed/parameters nullable
+```
+
+Raw provider response does not become MediaAsset directly.
+
+## 47. Generation prompt ownership
+
+The backend builds prompts from structured normalized fields.
+
+Browser/mobile cannot provide arbitrary provider prompt strings in automatic flows.
+
+Prompt template and style are versioned.
+
+Historical facts included in the prompt must come from curated/sourced domain data.
+
+## 48. Generation timeout/retry
+
+Because editorial generation is off the user request path, its timeout/retry policy may be longer than FX.
+
+Still:
+
+- finite timeout;
+- bounded retries;
+- provider 4xx/safety refusal not retried blindly;
+- 429 respects reasonable Retry-After;
+- command/job failure remains visible.
+
+Core product never waits for generation.
+
+## 49. Image provider secrets
+
+Provider API keys are server-only.
+
+No key enters:
+
+- Vite public config;
+- Expo config;
+- HTML;
+- generated media metadata returned to clients;
+- logs.
+
+Published clients only receive approved MediaAsset URLs/metadata.
+
+## 50. AI provider portability
+
+The application domain does not depend on OpenAI/Stability/Google-specific output fields.
+
+Provider/model identity is recorded for provenance/operations, but published-media selection works against MediaAsset.
+
+This makes model deprecation a generation-tooling issue rather than a page-runtime outage.

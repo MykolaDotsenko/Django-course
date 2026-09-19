@@ -900,3 +900,73 @@ Target:
 > **95+/100 with zero critical trust, accessibility or state-integrity issue.**
 
 This target describes the implementation bar. It is not a claim about code that does not yet exist.
+
+
+## 44. Media authenticity hierarchy
+
+Visual media follows this order:
+
+1. real sourced historical/editorial media when the visual itself carries factual meaning;
+2. reviewed AI-generated illustration only as illustration;
+3. Quiet Atlas programmatic CSS/SVG atmosphere when no media is appropriate.
+
+Do not generate a new image on every country/year selection.
+
+## 45. Historical imagery
+
+Historical photography/artifacts must expose enough visible/source context that users can distinguish:
+
+- exact-dated archival media;
+- approximate-era media;
+- AI-generated reconstruction.
+
+Do not visually style AI reconstruction as an unlabeled archival photograph.
+
+## 46. Country imagery
+
+Country theming cannot depend on stereotypical landmark/costume imagery.
+
+The layout remains complete with:
+
+- design tokens;
+- typography;
+- subtle pattern;
+- no raster image.
+
+Country images are optional enrichment.
+
+## 47. Comparison imagery
+
+Then/Now media does not need artificial symmetry.
+
+If only one trustworthy side has a suitable image:
+
+- allow asymmetry;
+- or use neutral programmatic fallback.
+
+Never generate fake evidence just to make two cards visually match.
+
+## 48. Media performance
+
+No mandatory large photograph may delay the primary conversion flow.
+
+Media below the primary task:
+
+- responsive derivative;
+- explicit dimensions;
+- lazy load;
+- graceful failure.
+
+The converter/result remains the visual anchor.
+
+## 49. AI illustration label
+
+Where generated imagery could reasonably be mistaken for a historical/factual source, show a visible label such as:
+
+> AI-generated editorial illustration
+
+or:
+
+> Artistic reconstruction · not an archival photograph
+
+Accessibility text alone is not enough.

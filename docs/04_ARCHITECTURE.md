@@ -1025,3 +1025,122 @@ Implementation is architecturally incorrect if:
 - raw upstream exceptions reach clients;
 - a mutable user object can be updated without ownership enforcement;
 - an import can wipe valid local data because the upstream response was partial.
+
+
+## 57. Media architecture
+
+Media is split into two delivery classes.
+
+### Static release assets
+
+Owned by the codebase:
+
+- logo;
+- icons;
+- Quiet Atlas SVG patterns;
+- small timeless illustrations.
+
+Delivered through:
+
+- Vite;
+- Django staticfiles.
+
+### Content media
+
+Owned by product/editorial data:
+
+- sourced archival media;
+- contemporary editorial images;
+- generated illustrations;
+- derivatives.
+
+Stored through Django's media Storage API, not Git.
+
+## 58. Runtime media boundary
+
+Normal user requests do not call:
+
+- Wikimedia Commons search;
+- Europeana search;
+- OpenAI image generation;
+- Stability image generation;
+- Google image generation.
+
+The request path reads only:
+
+- published MediaAsset metadata from PostgreSQL;
+- stored image derivatives.
+
+This keeps imagery optional and failure-isolated.
+
+## 59. Media ingestion/generation path
+
+```text
+source search / AI generator
+        ↓
+candidate
+        ↓
+rights / safety / relevance review
+        ↓
+MediaAsset metadata
+        ↓
+managed object storage
+        ↓
+publish
+        ↓
+user request can select it
+```
+
+No candidate auto-publishes.
+
+## 60. Media storage
+
+Development:
+
+- FileSystemStorage / MEDIA_ROOT.
+
+Production:
+
+- Django Storage API;
+- S3-compatible object storage through a backend such as django-storages when deployment requires it;
+- CDN optional.
+
+Application code must not depend directly on one cloud vendor.
+
+## 61. AI generation boundary
+
+AI generation is an editorial/background capability.
+
+A provider adapter receives structured normalized generation requests.
+
+The frontend/mobile never holds provider credentials or calls the image provider directly.
+
+Core conversion does not wait for image generation.
+
+## 62. Future on-demand generation
+
+If a future user explicitly requests a generated illustration, generation becomes an asynchronous job.
+
+That future feature is one concrete workload that can justify:
+
+- task queue;
+- broker;
+- job states;
+- per-user quota;
+- idempotency;
+- spend controls.
+
+Do not add that infrastructure before the feature exists.
+
+## 63. Historical visual truth boundary
+
+A MediaAsset's visual authenticity class is part of domain truth.
+
+Presentation must distinguish:
+
+- real archival source;
+- contemporary sourced media;
+- AI-generated illustration;
+- decorative asset.
+
+AI output cannot be upgraded into evidence by styling or placement.

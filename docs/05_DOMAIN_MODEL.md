@@ -638,3 +638,129 @@ Durable correctness is protected at the lowest sensible layer:
 - application validation for cross-entity/domain rules.
 
 Do not rely only on a pre-save "does this exist?" query where a concurrent request can race it.
+
+
+## 36. MediaAsset
+
+Candidate normalized media model:
+
+```text
+MediaAsset
+- id
+- kind
+- source_kind
+- role
+- country nullable
+- currency nullable
+- city nullable
+- valid_from nullable
+- valid_to nullable
+- date_precision
+- title
+- alt_text
+- caption
+- storage_file
+- width
+- height
+- aspect_ratio
+- focal_x nullable
+- focal_y nullable
+- content_hash
+- source_name
+- source_url
+- external_id nullable
+- creator nullable
+- licence_id nullable
+- licence_url nullable
+- rights_statement nullable
+- attribution_text nullable
+- generated_by_ai
+- ai_label nullable
+- generation_provider nullable
+- generation_model nullable
+- prompt_version nullable
+- prompt_hash nullable
+- generated_at nullable
+- reviewed_at nullable
+- published_at nullable
+- status
+```
+
+Database stores metadata/storage key; image bytes remain in file/object storage.
+
+## 37. Media kinds
+
+Candidate semantic kinds:
+
+- contemporary_photo
+- archival_photo
+- artwork
+- heritage_object
+- map
+- generated_illustration
+- decorative_pattern
+- brand_asset
+
+Source is separate.
+
+Example:
+
+```text
+kind = archival_photo
+source_kind = wikimedia_commons
+```
+
+## 38. Media temporal precision
+
+Historical media must represent dating precision honestly.
+
+Candidate values:
+
+- exact_day
+- month
+- year
+- decade
+- range
+- era
+- unknown
+
+Do not normalize "circa 1950s" into an invented exact year.
+
+## 39. Publishable sourced media invariant
+
+A sourced media asset is publishable only when required fields for its class are present, including where applicable:
+
+- canonical source URL;
+- rights/licence statement;
+- creator/institution;
+- temporal scope;
+- attribution;
+- verified/reviewed state.
+
+## 40. Publishable AI media invariant
+
+Generated historical/editorial illustration is publishable only when it contains:
+
+- generated_by_ai=true;
+- provider/model metadata;
+- prompt version/hash;
+- review status;
+- visible authenticity label policy;
+- no claim of archival provenance.
+
+## 41. Media selector result
+
+Media selection should return a structured result rather than a URL string.
+
+Concept:
+
+```text
+SelectedMedia
+- asset
+- selection_reason
+- temporal_match_quality
+- authenticity_class
+- fallback_level
+```
+
+This makes it possible to explain/test why a particular image appears for a country/year.

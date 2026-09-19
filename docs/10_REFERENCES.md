@@ -1393,3 +1393,137 @@ When backend guidance conflicts:
 7. architectural fashion.
 
 A more sophisticated pattern is not better if it introduces a second source of truth or hides control flow.
+
+
+# Media and Generative Image References
+
+Research reviewed: **2026-09-19**.
+
+## Django staticfiles
+
+https://docs.djangoproject.com/en/5.2/ref/contrib/staticfiles/
+
+Use for files that belong to the code/release:
+
+- CSS;
+- JavaScript;
+- logo;
+- icons;
+- versioned UI art.
+
+Do not use staticfiles as the growing editorial/historical media library.
+
+## Django file storage
+
+https://docs.djangoproject.com/en/5.2/ref/files/storage/
+
+Django's Storage API is the abstraction boundary for media files.
+
+Project conclusion:
+
+- FileSystemStorage for local development;
+- object storage through a compatible backend in production;
+- MediaAsset stores metadata/storage key rather than binary image data in PostgreSQL.
+
+## django-storages S3 backend
+
+https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html
+
+## django-storages S3-compatible providers
+
+https://django-storages.readthedocs.io/en/latest/backends/s3_compatible/
+
+Useful if deployment chooses Amazon S3, Cloudflare R2, Backblaze B2 or another S3-compatible service.
+
+The media domain stays vendor-neutral.
+
+## Wikimedia Commons ImageInfo API
+
+https://www.mediawiki.org/wiki/API:Imageinfo/en
+
+Can retrieve file information/upload history and is a useful ingestion metadata source.
+
+## Wikimedia Commons reuse guidance
+
+https://commons.wikimedia.org/wiki/Commons:Contact_us/Reuse
+
+https://commons.wikimedia.org/wiki/Commons:First_steps/Reuse
+
+https://commons.wikimedia.org/wiki/Commons:Reusing_content_outside_Wikimedia/licenses/en
+
+Important:
+
+- individual files have their own licence requirements;
+- attribution/licence terms must be followed;
+- Commons itself does not guarantee every description/licensing statement is error-free;
+- approved media should retain canonical source/creator/licence metadata.
+
+Wikimedia's reuse guidance notes that downloading a file for reuse is a normal supported approach; this aligns with the project's managed-copy strategy after rights review.
+
+## Europeana APIs
+
+https://www.europeana.eu/en/apis
+
+Europeana exposes Search, Record and IIIF APIs for cultural-heritage discovery/metadata.
+
+Use in ingestion/editorial workflows, not the user request path.
+
+## Europeana metadata and rights
+
+https://www.europeana.eu/eu/rights/europeana-data-sources
+
+Europeana descriptive metadata is broadly reusable under CC0 terms, but this does **not** mean every underlying digital object/image has unrestricted reuse.
+
+The media pipeline must inspect the object's own rights statement.
+
+## OpenAI image generation
+
+https://openai.com/index/image-generation-api/
+
+OpenAI documents server-side image generation with moderation controls and usage-based pricing.
+
+Project conclusion:
+
+- suitable benchmark candidate;
+- variable generation cost reinforces pre-generation/caching rather than generation on every selector change;
+- provider is not selected permanently until implementation-time comparison.
+
+## Stability AI Platform
+
+https://platform.stability.ai/docs/api-reference
+
+https://platform.stability.ai/pricing
+
+Stability exposes multiple image-generation quality/speed tiers and credit-based pricing.
+
+At the research date, 1 Platform API credit is documented as USD 0.01, with generation services priced by model/tier.
+
+Project conclusion:
+
+- suitable benchmark candidate for controlled editorial generation;
+- never called directly from browser/mobile.
+
+## Google Vertex AI image model lifecycle
+
+https://docs.cloud.google.com/vertex-ai/generative-ai/docs/release-notes
+
+Google's 2026 release notes show active image-model endpoint deprecations/migrations across Imagen/Gemini generations.
+
+Project conclusion:
+
+- image-provider identity/model names must remain isolated behind an adapter;
+- published assets are not regenerated simply because provider model lifecycle changes.
+
+## Media source precedence
+
+When choosing an image:
+
+1. factual relevance and authenticity;
+2. rights/licence clarity;
+3. temporal/geographic accuracy;
+4. accessibility/attribution;
+5. visual quality;
+6. performance;
+7. novelty.
+
+AI visual novelty never outranks historical truth.
