@@ -16,60 +16,81 @@ The application remains fully useful when every AI provider is unavailable.
 
 ## Primary AI provider
 
-**OpenAI API** is the initial primary provider.
+**Google Gemini Developer API free tier** is the initial runtime AI provider for the portfolio demo.
+
+Primary runtime model:
+
+```text
+gemini-3.1-flash-lite
+```
 
 Reasons:
 
-- strong structured-output support through the Responses API;
-- current GPT-5.6 model family provides clear cost/intelligence tiers;
-- first-party image generation through GPT-Image-2.5;
-- first-party text/image moderation;
-- one provider can cover the project's initial text + image assist use cases;
-- current SDK/API surface supports structured schemas and multimodal inputs.
+- the current Gemini Developer API pricing page lists free-tier input and output for Gemini 3.1 Flash-Lite;
+- it supports Structured Outputs;
+- it is explicitly optimized for low-latency, cost-efficient lightweight/high-volume tasks;
+- no paid runtime AI is required for the portfolio demo;
+- our source-packet/validator architecture means the runtime task is intentionally narrow;
+- the product already has a deterministic fallback, so free-tier quota exhaustion is harmless.
 
 This is an implementation choice, not a domain dependency.
 
-The product domain never imports OpenAI model names.
+The product domain never imports Gemini model names.
 
 ## Secondary providers
 
-Google Gemini and Anthropic Claude remain:
+OpenRouter's free tier is a possible development/emergency experiment, but it is **not** an automatic production fallback because its free router can select among changing free models.
 
-- benchmark candidates;
-- future fallback candidates;
-- not parallel production dependencies initially.
+OpenAI, Anthropic and paid Gemini tiers remain quality benchmark/upgrade candidates only.
 
-Do not pay operational complexity for three providers before one provider has demonstrated a real failure or quality limitation.
+Do not add multiple production SDKs for a portfolio demo.
 
 ---
 
-# 2. Why OpenAI is the best current fit
+# 2. Why Gemini free tier is the best portfolio fit
 
-The project needs two different model families:
+For this project the highest-ROI goal is:
 
-1. structured text intelligence;
-2. image generation.
+```text
+show real AI architecture
++ show one useful live AI interaction
++ pay €0 in normal demo usage
+```
 
-OpenAI currently provides both behind one platform.
+Gemini 3.1 Flash-Lite is sufficient for the live task because the model does not research facts. It receives a small verified structured packet and produces a bounded structured explanation.
 
-Current model tiers relevant to this project:
+Current demo routing:
 
-| Capability | Selected initial model tier | Intended use |
-|---|---|---|
-| cheap structured text | GPT-5.6 Luna | classification, metadata suggestions, low-risk transformations |
-| quality structured text | GPT-5.6 Terra | editorial draft, prompt composition, bounded explanation |
-| rare quality/audit pass | GPT-5.6 Sol | evaluation/adjudication only when Terra is insufficient |
-| draft image candidates | GPT-Image-2.5 Flare | quick candidate generation |
-| final featured image | GPT-Image-2.5 Sunburst | high-quality approved candidate generation/edit |
-| moderation | omni-moderation-latest | text/image safety classification |
+| Capability | Selected approach | Runtime cost target |
+|---|---|---:|
+| live “Explain this” | Gemini 3.1 Flash-Lite free tier | €0 |
+| tags/metadata assist | Gemini 3.1 Flash-Lite free tier or deterministic code | €0 |
+| story content | deterministic + pre-generated/reviewed stored draft | €0 runtime |
+| image generation | pre-generated/manual development workflow | €0 runtime |
+| moderation of stored assets | editorial review / optional dev tooling | €0 runtime |
 
-Model names are configuration.
+Model IDs remain configuration.
 
 Application code uses capability names.
 
 ---
 
-# 3. Why not GPT-6 Astra by default
+# 3. Paid-model policy
+
+Paid models are **not part of the normal portfolio runtime**.
+
+A paid OpenAI/Gemini/Anthropic model may be used manually during development only if:
+
+- a one-off quality benchmark is useful;
+- cost is consciously accepted;
+- generated output is stored;
+- no page request depends on it.
+
+The public demo never silently escalates from free Gemini to a paid model.
+
+---
+
+# 3A. Historical note — why not use a premium model by default
 
 The most capable model is not automatically the best product choice.
 
@@ -97,82 +118,86 @@ No architecture assumes it.
 
 ---
 
-# 4. Why Terra is the main text model
+# 4. Why Gemini 3.1 Flash-Lite is the main runtime text model
 
-GPT-5.6 Terra is currently positioned as the balance between intelligence and cost.
+Gemini 3.1 Flash-Lite is currently positioned by Google as a low-latency, cost-efficient model for lightweight/high-volume tasks and supports Structured Outputs.
 
-That matches:
+Our live task is deliberately narrow:
 
-- story drafting from structured facts;
-- image-prompt synthesis;
-- editorial rewriting;
-- concise contextual explanation;
-- title/caption drafting.
+```text
+verified Conversion/Context packet
+→ short structured explanation
+```
 
-These are not trillion-token or autonomous-agent tasks.
+It does not need premium open-ended reasoning.
 
-Terra is the default quality lane.
-
----
-
-# 5. Why Luna exists in the routing table
-
-Use Luna only for narrow, easy-to-evaluate tasks.
-
-Examples:
-
-- classify a candidate into a small enum;
-- normalize a draft title;
-- suggest tags;
-- draft alt-text candidate from already structured visual metadata;
-- detect whether a generated paragraph mentions a fact ID not supplied;
-- prompt/style linting.
-
-If a task needs nuanced historical writing, use Terra.
-
-Do not route only by price.
+For the portfolio demo this gives a much better ROI than a paid “quality lane”.
 
 ---
 
-# 6. Why Sol is not the default
+# 5. One-model runtime policy
 
-Sol is reserved for:
+Use one live text model initially:
 
-- difficult evaluation disagreements;
-- rare high-value editorial quality pass;
-- benchmark comparison;
-- complex prompt/template redesign.
+```text
+gemini-3.1-flash-lite
+```
 
-It should not silently become the default because it is “better”.
+Benefits:
 
-A more expensive model requires measured improvement.
+- one SDK;
+- one error model;
+- one free quota;
+- one eval target;
+- less configuration.
+
+If a task cannot meet quality gates on Flash-Lite, prefer deterministic/manual/pre-generated content before adding a paid runtime model.
 
 ---
 
-# 7. Image model routing
+# 6. No automatic premium escalation
 
-## GPT-Image-2.5 Flare
+Do not implement:
 
-Use for:
+```text
+Flash-Lite quota/quality issue
+→ paid Gemini
+→ OpenAI
+→ Anthropic
+```
 
-- candidate previews;
-- style exploration;
-- multiple low-cost/fast composition attempts;
-- non-featured illustrative variants.
+automatically.
 
-## GPT-Image-2.5 Sunburst
+If free AI is unavailable or quota-limited:
 
-Use for:
+```text
+cached AI result
+→ deterministic explanation
+```
 
-- final featured editorial illustration;
-- high-value story cover;
-- controlled image edit;
-- difficult composition;
-- image where precision/style adherence matters.
+The demo stays free and predictable.
 
-The workflow can generate 2–4 Flare candidates, select/rework the best concept, then optionally create one Sunburst final.
+---
 
-Do not generate Sunburst at every selector change.
+# 7. Image generation is offline/pre-generated
+
+The public portfolio deployment performs **zero image-generation API calls**.
+
+Why:
+
+- current Gemini 3.1 Flash Image and Flash Lite Image pricing lists no API free tier;
+- paid image generation adds no meaningful recruiter value when assets can be generated once;
+- stored images are more stable for visual regression and demos.
+
+Use:
+
+1. sourced Wikimedia/Europeana media where factual;
+2. a small set of pre-generated AI illustrations created manually during development;
+3. Quiet Atlas CSS/SVG fallback.
+
+Generated assets are reviewed and stored through MediaAsset.
+
+The image-generation adapter remains documented as a future/optional development tool, but `AI_IMAGE_GENERATION_ENABLED=false` in the public demo.
 
 ---
 
@@ -447,20 +472,22 @@ This allows model upgrades without changing domain code.
 
 # 18. Initial routing map
 
-Concept:
+Portfolio-demo configuration:
 
 ```text
-AI_TEXT_FAST_MODEL      = gpt-5.6-luna
-AI_TEXT_QUALITY_MODEL   = gpt-5.6-terra
-AI_TEXT_AUDIT_MODEL     = gpt-5.6-sol
+AI_PROVIDER                     = google
+AI_TEXT_MODEL                   = gemini-3.1-flash-lite
 
-AI_IMAGE_DRAFT_MODEL    = gpt-image-2.5-flare
-AI_IMAGE_FINAL_MODEL    = gpt-image-2.5-sunburst
+AI_RUNTIME_EXPLANATION_ENABLED  = true
+AI_EDITORIAL_GENERATION_ENABLED = false
+AI_IMAGE_GENERATION_ENABLED     = false
 
-AI_MODERATION_MODEL     = omni-moderation-latest
+AI_FALLBACK_MODE                = deterministic
 ```
 
-Exact aliases/snapshots are deployment configuration and re-checked before implementation.
+The exact free-tier quota is checked in Google AI Studio because Google documents that limits vary by model, project and account status.
+
+No billing account is required by architecture.
 
 ---
 
@@ -677,31 +704,30 @@ AI is a leaf dependency.
 
 # 31. P0 launch AI scope
 
-Recommended:
+Recommended public demo:
 
-**No user-request-path AI.**
+- core converter/history: no AI;
+- one explicit **“Explain this”** button may call Gemini 3.1 Flash-Lite free tier;
+- result is cached by normalized packet hash;
+- deterministic explanation is the fallback;
+- no automatic AI call on page load/change;
+- no image-generation API;
+- stories/media are stored/pre-generated.
 
-AI may be used before launch internally to:
-
-- generate selected image candidates;
-- draft selected story prose;
-- draft alt/captions;
-- assist editorial QA.
-
-All published assets are reviewed/stored.
+This provides visible AI integration without turning every page view into quota consumption.
 
 ---
 
 # 32. P1 AI scope
 
-After media/story data model exists:
+Optional later portfolio polish:
 
-- admin “Draft with AI” action;
-- admin “Generate image candidates” action;
+- admin “Draft with AI” using the same Gemini free tier when quota allows;
 - stored prompt/model metadata;
-- moderation;
 - eval suite;
-- usage/cost logging.
+- usage/quota logging.
+
+Image generation remains offline/manual unless a genuinely free and stable API tier exists at implementation time.
 
 Still no core runtime dependency.
 
@@ -755,16 +781,16 @@ Metrics can include:
 
 ## Selected
 
-- OpenAI primary provider;
-- Responses API for structured text;
-- GPT-5.6 Terra as default quality model;
-- GPT-5.6 Luna for narrow cheap tasks;
-- GPT-5.6 Sol for rare audit/eval escalation;
-- GPT-Image-2.5 Flare for image candidates;
-- GPT-Image-2.5 Sunburst for final high-value image generation/edit;
-- omni-moderation-latest for moderation;
+- Google Gemini Developer API free tier as primary runtime AI;
+- Gemini 3.1 Flash-Lite as the single live text model;
+- structured JSON output / schema-constrained responses;
+- one recruiter-visible live feature: “Explain this”;
+- persistent cache/reuse by normalized packet hash;
+- deterministic fallback on quota/provider failure;
+- zero runtime image-generation calls;
+- sourced + pre-generated stored images;
 - provider-neutral capability interfaces;
-- editorial/background AI first.
+- €0 normal-demo runtime target.
 
 ## Rejected initially
 
