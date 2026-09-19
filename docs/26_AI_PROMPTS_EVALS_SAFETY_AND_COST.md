@@ -278,21 +278,21 @@ A beautiful but historically misleading image fails regardless of total aestheti
 
 # 16. Model routing evals
 
-Every capability benchmark compares at least:
-
-- current selected model;
-- cheaper candidate;
-- stronger candidate if relevant.
-
-Example narrative:
+For the portfolio demo, the production comparison is deliberately simple:
 
 ```text
-Luna
-Terra
-Sol
+Gemini 3.1 Flash-Lite
+vs
+deterministic fallback
 ```
 
-Do not assume a more expensive model is better enough to justify cost.
+Optional development benchmarking may compare:
+
+- Gemini 3.8 Flash free tier;
+- OpenRouter free models;
+- paid models manually.
+
+Do not add a paid runtime model unless free-tier quality demonstrably fails a recruiter-visible requirement.
 
 ---
 
@@ -590,29 +590,35 @@ Core product remains unaffected.
 
 # 34. Cost model
 
-AI cost is an operational budget, not business logic.
+Portfolio target:
 
-Track by:
+> **€0/month normal AI runtime cost.**
 
-- capability;
-- provider/model;
-- environment;
-- job/user if appropriate;
-- month.
+Track:
 
-Do not optimize cost by lowering trust quality below thresholds.
+- free-tier live calls;
+- persistent-cache hits;
+- provider 429/quota exhaustion;
+- deterministic fallbacks;
+- any accidental paid configuration.
+
+A paid model is off by default and must never be reached automatically.
 
 ---
 
-# 35. Current text price anchors
+# 35. Current free-tier anchor
 
-At research date, OpenAI documents:
+At research date, Google's Gemini Developer API pricing lists **Gemini 3.1 Flash-Lite input and output as free of charge on the Free Tier**.
 
-- GPT-5.6 Luna: low-cost tier;
-- GPT-5.6 Terra: balanced tier;
-- GPT-5.6 Sol: flagship tier.
+Google also documents that free-tier usage limits vary by model/project/account and should be checked in AI Studio.
 
-Exact prices belong in current provider configuration/reference docs, not deeply hard-coded across application code.
+Therefore architecture relies on:
+
+- quota-aware failure handling;
+- cache;
+- deterministic fallback;
+
+not on a promised fixed number of requests per day.
 
 ---
 
@@ -634,56 +640,62 @@ Measure acceptance rate.
 
 ---
 
-# 37. Default editorial budget strategy
+# 37. Default portfolio budget strategy
 
-Start conservative.
+Default production policy:
 
-Example policy:
+- live text: Gemini 3.1 Flash-Lite Free Tier only;
+- stories: deterministic/pre-generated stored content;
+- image candidates: generated manually/offline during development;
+- final images: stored assets;
+- no background mass generation;
+- no paid API key required.
 
-- text drafts: cheap enough for manual use;
-- image candidate generation: explicit action only;
-- final high-quality image generation: explicit editor confirmation;
-- no background mass generation across every country/year.
+Budget target remains €0.
 
-Budget grows only with demonstrated editorial value.
+If a developer intentionally benchmarks a paid model, that is a one-off development expense, not product runtime.
 
 ---
 
-# 38. Spend ceilings
+# 38. Quota ceilings
 
-Deployment config can include:
+Because default runtime is free-tier only, configure:
 
-- per-operation max;
-- daily AI budget;
-- monthly soft alert;
-- monthly hard ceiling for non-critical generation.
+- application daily live-call ceiling;
+- per-session/IP guard where needed;
+- maximum retries = 0 or one tightly bounded retry;
+- persistent cache before provider call.
 
-When hard ceiling is reached:
+When application or provider quota is exhausted:
 
-- AI candidate generation is disabled;
+- stop live AI calls;
+- serve cached/deterministic output;
 - core product stays available.
 
+No paid overflow.
+
 ---
 
-# 39. No automatic expensive escalation
+# 39. No paid escalation
 
 Do not implement:
 
 ```text
-Luna failed
-→ Terra
-→ Sol
-→ Astra
+Gemini free quota exhausted
+→ paid Gemini
+→ OpenAI
+→ another paid provider
 ```
-
-without explicit bounded routing.
-
-This can multiply cost unpredictably.
 
 Selected behavior:
 
-- one configured model;
-- at most specific known fallback/escalation when a task policy defines it.
+```text
+Gemini free unavailable
+→ cached output
+→ deterministic fallback
+```
+
+This guarantees predictable demo cost.
 
 ---
 
@@ -733,28 +745,30 @@ Do not redesign source packets solely to chase cache hits.
 
 # 43. Image cost control
 
-Image cost controls:
+Public demo:
 
-- explicit button/job;
-- candidate count limit;
-- draft/final model routing;
-- reuse by content/prompt hash;
-- no auto-generation on page view;
+```text
+runtime image-generation cost = €0
+```
+
+Controls:
+
+- image API disabled in production;
+- pre-generate a small curated set during development;
+- reuse stored MediaAsset;
+- sourced archive media preferred;
 - no auto-regenerate on deploy;
-- monthly budget.
+- no generation on page view/selector change.
 
 ---
 
-# 44. Image quality tier policy
+# 44. Image generation policy
 
-Default:
+No production image-model tier is selected because current relevant Gemini image-generation API pricing lists no Free Tier.
 
-- Flare for concept/candidate;
-- Sunburst for featured/final only.
+Development can use whichever manually available tool/provider gives the best one-off result.
 
-Do not request maximum resolution/quality when final display is a 400px card.
-
-Render target determines output settings.
+The final application only sees reviewed stored media.
 
 ---
 
@@ -832,18 +846,19 @@ Send only fields needed for the AI capability.
 
 ---
 
-# 50. Provider data use
+# 50. Free-tier provider data use
 
-The OpenAI API currently states business/API inputs and outputs are not used for model training by default unless explicitly opted in.
+Google currently marks Gemini Developer API Free Tier content as used to improve Google products.
 
-This does not eliminate retention/security review.
+Therefore the live demo AI payload contains only non-sensitive/public product data.
 
-Before user-facing AI ships:
+Before sending any personal/private data:
 
-- review current API data controls;
-- review retention configuration;
-- update privacy documentation;
-- confirm no unsupported promises.
+- disable free-tier AI for that feature;
+- reassess paid/data-control options;
+- update privacy documentation.
+
+The current design needs no personal data.
 
 ---
 
@@ -863,15 +878,15 @@ If future use requires it, that is a separate privacy/security decision and ADR.
 
 Useful aggregate views:
 
-- calls by capability;
-- cost by capability/model;
+- live calls by capability;
+- cache hit rate;
+- free-tier 429/quota exhaustion;
+- deterministic fallback rate;
 - p50/p95 latency;
-- refusals;
-- moderation flags;
-- validation failures;
-- editor acceptance rate;
-- retry rate;
-- image acceptance rate.
+- schema/semantic validation failures;
+- any non-zero paid spend alert.
+
+For this demo, zero-cost compliance is itself an operational metric.
 
 Avoid dashboards containing full prompt/user content by default.
 
@@ -911,7 +926,9 @@ Do not mass-regenerate content because a model was retired.
 
 # 55. Multi-provider fallback threshold
 
-Add a second production provider only when one of these occurs:
+For the portfolio demo, prefer **no second production provider**.
+
+Add one only when one of these occurs:
 
 - unacceptable sustained outage risk for a user-facing AI feature;
 - cost difference materially changes economics;
@@ -1053,3 +1070,20 @@ without changing:
 - what must be reviewed;
 - what counts as a valid historical statement;
 - what users can trust.
+
+
+# 63. Zero-cost recruiter-demo scorecard
+
+The selected architecture is successful when:
+
+| Goal | Target |
+|---|---:|
+| monthly AI runtime bill in normal demo use | €0 |
+| paid provider automatic calls | 0 |
+| runtime image-generation calls | 0 |
+| AI calls before explicit user action | 0 |
+| repeated identical explanation cache reuse | ~100% after first success |
+| core feature availability after AI quota exhaustion | 100% |
+| live AI architecture visible to recruiter | yes |
+
+A portfolio project does not gain extra engineering value from spending money on invisible model quality that the use case does not require.
