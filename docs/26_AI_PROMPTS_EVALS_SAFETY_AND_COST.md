@@ -683,7 +683,7 @@ Do not implement:
 ```text
 Gemini free quota exhausted
 → paid Gemini
-→ OpenAI
+→ optional paid benchmark provider
 → another paid provider
 ```
 
@@ -1058,9 +1058,9 @@ The product contract is not.
 We should be able to switch:
 
 ```text
-GPT-5.6 Terra
-→ future OpenAI model
-→ approved Gemini/Claude equivalent
+Gemini 3.1 Flash-Lite
+→ future free/approved Gemini model
+→ optional benchmark provider only if justified
 ```
 
 without changing:
