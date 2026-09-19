@@ -40,22 +40,24 @@ This handbook is the single source of truth for the Cultural Currency Converter 
 26. [AI prompting, evaluations, safety and cost](26_AI_PROMPTS_EVALS_SAFETY_AND_COST.md)
 27. [Static image generation plan](27_STATIC_IMAGE_GENERATION_PLAN.md)
 28. [Static media UI integration architecture](28_STATIC_MEDIA_UI_INTEGRATION.md)
+29. [Original concept traceability and signature experience](29_ORIGINAL_CONCEPT_TRACEABILITY.md)
 
 ## UX decision hierarchy
 
 Before an implementation PR changes the user experience, read in this order:
 
 1. `01_PRODUCT_SPEC.md` — why the product exists and what is in scope;
-2. `02_UX_RESEARCH_AND_FLOWS.md` — experience principles and end-to-end behaviour;
-3. `02A_USER_CASE_CATALOG.md` — concrete scenarios the product must support;
-4. `02B_INTERACTION_AND_STATE_SPEC.md` — state transitions and recovery rules;
-5. `02C_STORYTELLING_AND_HISTORICAL_CONVERTER.md` — historical FX, money stories and temporal trust rules;
-6. `03_UI_DESIGN_SYSTEM.md` — executive visual/component contract;
-7. `03A_VISUAL_FOUNDATIONS.md` — tokens, hierarchy, typography, color, grid and visual language;
-8. `03B_SCREEN_BLUEPRINTS.md` — screen composition and information density;
-9. `03C1_COMPONENT_ANATOMY_AND_DIMENSIONS.md` — exact component anatomy, sizing and hierarchy;
-10. `03C_COMPONENT_STATES_AND_MICROINTERACTIONS.md` — component state behavior;
-11. `03D_RESPONSIVE_MOTION_ACCESSIBILITY.md` — adaptive/accessibility/motion QA.
+2. `29_ORIGINAL_CONCEPT_TRACEABILITY.md` — which original ideas are preserved/evolved/rejected and the signature bilateral invariant;
+3. `02_UX_RESEARCH_AND_FLOWS.md` — experience principles and end-to-end behaviour;
+4. `02A_USER_CASE_CATALOG.md` — concrete scenarios the product must support;
+5. `02B_INTERACTION_AND_STATE_SPEC.md` — state transitions and recovery rules;
+6. `02C_STORYTELLING_AND_HISTORICAL_CONVERTER.md` — historical FX, money stories and temporal trust rules;
+7. `03_UI_DESIGN_SYSTEM.md` — executive visual/component contract;
+8. `03A_VISUAL_FOUNDATIONS.md` — tokens, hierarchy, typography, color, grid and visual language;
+9. `03B_SCREEN_BLUEPRINTS.md` — screen composition and information density;
+10. `03C1_COMPONENT_ANATOMY_AND_DIMENSIONS.md` — exact component anatomy, sizing and hierarchy;
+11. `03C_COMPONENT_STATES_AND_MICROINTERACTIONS.md` — component state behavior;
+12. `03D_RESPONSIVE_MOTION_ACCESSIBILITY.md` — adaptive/accessibility/motion QA.
 
 A visually attractive implementation that violates the UX state model is not considered correct.
 
@@ -213,3 +215,19 @@ When wiring release-owned visuals into Django/HTMX:
 4. `23_MEDIA_AND_GENERATIVE_IMAGE_STRATEGY.md` — future sourced/AI MediaAsset migration.
 
 Do not hardcode Quiet Atlas filenames throughout page templates.
+
+
+## Signature experience guardrail
+
+The product must not regress into a conventional converter with culture appended only below the result.
+
+Before changing the main converter composition, read:
+
+1. `29_ORIGINAL_CONCEPT_TRACEABILITY.md`;
+2. `01_PRODUCT_SPEC.md`;
+3. `02_UX_RESEARCH_AND_FLOWS.md`;
+4. `03_UI_DESIGN_SYSTEM.md`.
+
+The settled invariant is:
+
+> Source and destination may independently influence atmosphere and context, while arithmetic, controls, trust, accessibility and interaction mechanics remain stable.

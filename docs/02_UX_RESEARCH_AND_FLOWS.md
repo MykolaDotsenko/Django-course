@@ -34,11 +34,17 @@ The product fails if culture, animations, account prompts, charts or monetizatio
 
 ## 2. Core UX principles
 
-### 2.1 Utility first, context second, culture third
+### 2.1 Utility first; culture within the interaction; deeper context on demand
 
 The converter is the product's front door.
 
-Cultural content is differentiation, not a tax on conversion.
+Culture must not become a tax on conversion, but it should not be detached from the conversion either.
+
+The source and destination may independently influence restrained atmosphere and context from the first interaction. Deeper cultural content remains progressive and optional.
+
+The working principle is:
+
+> **Utility first. Culture within the interaction. Deeper context on demand.**
 
 ### 2.2 Trust must be visible
 
@@ -158,7 +164,7 @@ Design consequence:
 - large touch targets;
 - easy swap;
 - cached mobile state later;
-- cultural exploration stays below the fold.
+- deeper cultural exploration stays below the fold; lightweight bilateral country atmosphere may be present in the converter itself.
 
 ### Tier 1 — Traveller planning a trip
 
@@ -1367,3 +1373,75 @@ Test:
 5. Is “The story behind this rate” compelling enough without becoming gimmicky?
 6. Do people understand Then & now as an FX comparison rather than investment return?
 7. Should historical story open inline, on a dedicated page, or in a mobile sheet?
+
+
+---
+
+## 30. Signature bilateral conversion experience
+
+The original product idea is preserved through one interaction invariant:
+
+> **A conversion connects two cultural contexts, not only two ISO currency codes.**
+
+### 30.1 Large-screen behavior
+
+Large screens should present:
+
+- source country/currency identity;
+- destination country/currency identity;
+- restrained independent atmosphere for both sides;
+- one conversion result that visually connects them;
+- trust metadata immediately adjacent to the result.
+
+The source side may be visually quieter than the destination because destination interpretation is usually the primary user need, but it must remain culturally identifiable.
+
+### 30.2 Cultural atmosphere budget
+
+Each side may use:
+
+1. one approved visual;
+2. subtle semantic tint;
+3. restrained texture/pattern;
+4. country/context label.
+
+Do not use culture to alter controls, validation, focus order or component anatomy.
+
+### 30.3 Compact Explore layer
+
+After successful conversion, expose at most three first-level deeper paths:
+
+```text
+Everyday value
+Payment context
+Money & culture
+```
+
+Do not show a dense cultural dashboard before the user has understood the conversion.
+
+### 30.4 Mobile
+
+Mobile preserves bilateral identity but not a desktop split.
+
+Recommended task order:
+
+```text
+Source country/currency
+Amount
+Conversion result
+Destination country/currency
+Trust metadata
+Local meaning
+Explore
+```
+
+No horizontal dependency is required to understand the result.
+
+### 30.5 P1 audio rule
+
+Optional pronunciation or short cultural audio may be introduced later only if it is:
+
+- click-to-play;
+- sourced/licensed/public-domain where applicable;
+- non-essential to conversion;
+- never autoplayed;
+- never background music.

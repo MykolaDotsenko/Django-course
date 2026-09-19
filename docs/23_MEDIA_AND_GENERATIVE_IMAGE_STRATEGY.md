@@ -150,12 +150,25 @@ No image is preferable to misleading image.
 
 # 4. Country selection behavior
 
-Changing destination country should primarily change:
+Changing source or destination country may change its own presentation context.
 
-- country token/theme;
+Source-side changes may affect:
+
+- source country token/theme;
+- optional source editorial/static atmosphere;
+- source country/context label.
+
+Destination-side changes may affect:
+
+- destination country token/theme;
 - flag where appropriate;
 - payment/local context;
-- optional existing editorial media.
+- purchasing context;
+- optional destination editorial media.
+
+Neither side may change FX arithmetic or control mechanics.
+
+The destination remains the primary home for practical local-value/payment enrichment; bilateral source atmosphere does not require duplicating destination-context data.
 
 Do **not** trigger image generation.
 

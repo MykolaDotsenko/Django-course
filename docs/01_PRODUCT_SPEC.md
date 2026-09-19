@@ -8,6 +8,22 @@ Tagline:
 
 > **Convert money. Understand local value. Discover culture.**
 
+### 1.1 Signature product invariant
+
+Cultural Currency Converter is not a conventional converter with cultural content attached underneath it.
+
+The conversion itself connects two cultural contexts.
+
+> **Source and destination may independently influence atmosphere and context, while arithmetic, controls, trust, accessibility and interaction mechanics remain stable.**
+
+Supporting principle:
+
+> **Utility first. Culture within the interaction. Deeper context on demand.**
+
+On larger screens, source and destination should read as two related sides of one conversion workspace. On mobile, the same bilateral identity is preserved in a stacked task flow rather than by compressing a desktop split layout.
+
+See [Original Concept Traceability and Signature Experience](29_ORIGINAL_CONCEPT_TRACEABILITY.md).
+
 ## 2. Problem
 
 Conventional currency converters answer the arithmetic question but leave three practical questions unanswered:
@@ -73,7 +89,10 @@ A P0 release is successful when an anonymous visitor can:
 7. see an explicit loading/error/stale state;
 8. see destination payment/cash/tipping context;
 9. see a small set of sourced typical-price examples;
-10. use the complete flow with keyboard and mobile viewport.
+10. use the complete flow with keyboard and mobile viewport;
+11. identify both source and destination cultural contexts in the converter itself on larger screens;
+12. experience restrained, independent source/destination atmosphere without changes to control mechanics;
+13. enter a compact Explore layer with at most three first-level paths: Everyday value, Payment context and Money & culture.
 
 ## 7. P1 scope
 
@@ -88,7 +107,10 @@ A P0 release is successful when an anonymous visitor can:
 - optional account sync;
 - richer cultural profile;
 - shareable/bookmarkable current and historical conversion URLs;
-- progressive enhancement polish.
+- progressive enhancement polish;
+- optional click-to-play currency/country pronunciation or short sourced cultural audio;
+- sourced source↔destination money-culture comparisons where evidence quality supports them;
+- saved cultural pairs that preserve both country and currency context.
 
 ## 8. Later scope
 
@@ -176,7 +198,8 @@ The differentiation is not “more exchange rates”.
 It is:
 
 ```text
-FX conversion
+bilateral source ↔ destination context
++ trusted FX conversion
 + local purchasing context
 + payment customs
 + travel-oriented interpretation
@@ -184,6 +207,28 @@ FX conversion
 ```
 
 The cultural layer should increase understanding, not compete with the conversion task.
+
+The preferred experience is not:
+
+```text
+converter
+→ result
+→ culture added somewhere below
+```
+
+It is:
+
+```text
+source cultural context
+          ↘
+       conversion
+          ↗
+destination cultural context
+          ↓
+ local meaning / payment / story
+```
+
+Country atmosphere is therefore part of the interaction, while deeper cultural content remains progressive.
 
 
 ## 13. Storytelling layer
