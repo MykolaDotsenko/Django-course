@@ -103,12 +103,12 @@ The handbook covers:
 
 ## Delivery strategy
 
-The rebuild is intentionally incremental. The repository/Django foundation is now complete: root product shell, consolidated Python quality tooling, validated environment configuration, PostgreSQL-backed CI, health endpoints, request correlation and structured logging. The next implementation milestone is the server-rendered Quiet Atlas design system and converter shell.
+The rebuild is intentionally incremental. The repository/Django foundation is complete, and PR2A now establishes the locked Node 24/Vite 8/TypeScript 5.9/Biome 2/Tailwind 4/HTMX 2 frontend build baseline with read-only CI. The next bounded slice is the repo-owned Django↔Vite manifest bridge before Quiet Atlas presentation work begins.
 
 See [docs/08_IMPLEMENTATION_ROADMAP.md](docs/08_IMPLEMENTATION_ROADMAP.md).
 
 ## Current status
 
-**Phase:** foundation complete → server-rendered product shell next.
+**Phase:** PR2A frontend toolchain complete → PR2B Django↔Vite bridge next.
 
-The Django product shell, runtime configuration, PostgreSQL path and observability baseline are executable and CI-backed. Product implementation can now build on this foundation without carrying legacy course scaffolding or speculative infrastructure.
+The Django product shell, runtime configuration, PostgreSQL path, observability baseline and frontend asset toolchain are executable and CI-backed. Product implementation can now connect Django templates to the Vite manifest without introducing a second web application runtime.

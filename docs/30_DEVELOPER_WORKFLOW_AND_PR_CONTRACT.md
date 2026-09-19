@@ -185,7 +185,33 @@ Ruff owns Python formatting and linting. Black/isort are intentionally not part 
 
 Runtime configuration is explicit through process environment variables. The canonical template is `.env.example`; Django does not silently load arbitrary `.env` files. Normal CI runs as `APP_ENV=test` and requires no secret credentials.
 
-PostgreSQL and the phase-1 observability baseline are implemented and covered by CI. The next product work starts with the server-rendered design-system shell; later provider/cache observability is added only with the features that need it.
+PostgreSQL and the phase-1 observability baseline are implemented and covered by CI.
+
+## Current frontend development commands
+
+The web asset toolchain lives in `frontend/` and is pinned by `.nvmrc`, `package.json` and `package-lock.json`.
+
+Install exactly the locked dependency graph and run the CI-equivalent gate:
+
+```bash
+cd frontend
+npm ci --no-audit --no-fund
+npm run quality
+```
+
+The aggregate `quality` script runs, in order:
+
+```text
+TypeScript strict typecheck
+→ Biome lint/format check
+→ Vite production build
+```
+
+The production build emits the Vite backend manifest under `static/build/.vite/manifest.json`. Generated build output and `node_modules/` are not committed.
+
+Node is build/development tooling only. Django remains responsible for HTML, routing and application state; PR 2A does not introduce a client application framework or web business logic.
+
+The next bounded product slice is PR 2B: the tested repo-owned Django↔Vite manifest bridge.
 
 ---
 
