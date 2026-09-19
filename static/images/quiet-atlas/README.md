@@ -40,6 +40,16 @@ This directory contains release-owned static illustrations for Cultural Currency
 - `history-euro-transition-2002-v1.svg`
 - `history-finland-markka-1998-v1.svg`
 
+### P1 expansion
+
+- `countries-germany-local-value-v1.svg`
+- `countries-spain-local-value-v1.svg`
+- `story-market-basket-value-v1.svg`
+- `story-cafe-affordability-v1.svg`
+- `story-street-food-affordability-v1.svg`
+
+Total current pack: **19 SVG assets**.
+
 Full prompt, usage and authenticity documentation:
 
 - `docs/27_STATIC_IMAGE_GENERATION_PLAN.md`
