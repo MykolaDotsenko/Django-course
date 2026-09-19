@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, override_settings
 
 
+@override_settings(DEBUG=True)
 class MediaPreviewViewTests(SimpleTestCase):
     def test_debug_preview_renders_real_media_system(self):
         response = self.client.get("/_design/media/")
@@ -38,3 +39,11 @@ class MediaPreviewViewTests(SimpleTestCase):
         ):
             with self.subTest(text=text):
                 self.assertContains(response, text)
+
+
+class MediaPreviewProductionGuardTests(SimpleTestCase):
+    @override_settings(DEBUG=False)
+    def test_preview_is_not_available_when_debug_is_disabled(self):
+        response = self.client.get("/_design/media/")
+
+        self.assertEqual(response.status_code, 404)
