@@ -15,10 +15,12 @@
         spellcheck="false"
         value="{{ component.value }}"
         placeholder="{{ component.placeholder }}"
-        {% if component.error or component.hint %}aria-describedby="{{ component.id }}-message"{% endif %}
+        aria-describedby="{{ component.id }}-currency{% if component.error or component.hint %} {{ component.id }}-message{% endif %}"
         {% if component.error %}aria-invalid="true"{% endif %}
       >
-      <span class="qa-amount-control__currency" aria-hidden="true">{{ component.currency_code }}</span>
+      <span class="qa-amount-control__currency" id="{{ component.id }}-currency">
+        {{ component.currency_code }}
+      </span>
     </div>
     {% if component.error %}
       <p class="qa-field__message qa-field__message--error" id="{{ component.id }}-message">
@@ -38,7 +40,7 @@
       type="button"
       aria-haspopup="dialog"
       aria-expanded="false"
-      aria-labelledby="{{ component.id }}-label {{ component.id }}-country {{ component.id }}-currency"
+      aria-labelledby="{{ component.id }}-label {{ component.id }}-country {{ component.id }}-currency{% if component.historical %} {{ component.id }}-status{% endif %}"
     >
       <span class="qa-selector-trigger__media" aria-hidden="true">{{ component.media_text }}</span>
       <span class="qa-selector-trigger__copy">
@@ -50,7 +52,10 @@
         </span>
       </span>
       {% if component.historical %}
-        <span class="qa-status-badge qa-status-badge--historical">Historical</span>
+        <span
+          class="qa-status-badge qa-status-badge--historical"
+          id="{{ component.id }}-status"
+        >Historical</span>
       {% endif %}
       <span class="qa-selector-trigger__chevron" aria-hidden="true">
         {% include "components/icons/chevron_down.html" %}
