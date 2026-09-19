@@ -38,6 +38,7 @@ This handbook is the single source of truth for the Cultural Currency Converter 
 24. [AI product strategy and model selection](24_AI_PRODUCT_STRATEGY.md)
 25. [AI integration architecture](25_AI_INTEGRATION_ARCHITECTURE.md)
 26. [AI prompting, evaluations, safety and cost](26_AI_PROMPTS_EVALS_SAFETY_AND_COST.md)
+27. [Static image generation plan](27_STATIC_IMAGE_GENERATION_PLAN.md)
 
 ## UX decision hierarchy
 
@@ -188,3 +189,14 @@ Before adding or changing AI behavior, read:
 AI may transform trusted data into candidates.
 
 AI may not become a new source of financial or historical truth.
+
+
+## Static image implementation contract
+
+Before adding or replacing release-owned imagery, read:
+
+1. `27_STATIC_IMAGE_GENERATION_PLAN.md` — asset inventory, prompts, mapping, accessibility and authenticity rules;
+2. `23_MEDIA_AND_GENERATIVE_IMAGE_STRATEGY.md` — sourced/generated media boundaries;
+3. `03_UI_DESIGN_SYSTEM.md` — Quiet Atlas visual hierarchy.
+
+The initial P0 pack lives under `static/images/quiet-atlas/` and is designed to work with zero runtime image-generation cost.

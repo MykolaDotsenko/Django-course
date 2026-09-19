@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" aria-hidden="true"><defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8F0EE"/><stop offset="1" stop-color="#E8D9BF"/></linearGradient>
+<linearGradient id="water" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C3D9D7"/><stop offset="1" stop-color="#96B9B8"/></linearGradient>
+<linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F3ECDC"/><stop offset="1" stop-color="#D8CAB0"/></linearGradient>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#14211D" flood-opacity=".13"/></filter>
+<filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="2" seed="21"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 .03"/></feComponentTransfer></filter>
+</defs><rect width="1200" height="900" fill="url(#sky)"/>
+<rect width="1200" height="900" fill="#E9EEE7"/>
+<path d="M0 470Q220 405 400 455T820 420T1200 440V640H0Z" fill="#B6C7B6"/>
+<g opacity=".45" fill="#70867A"><circle cx="180" cy="390" r="52"/><circle cx="300" cy="360" r="68"/><circle cx="1010" cy="390" r="72"/></g>
+<rect y="640" width="1200" height="260" fill="#76594B"/>
+<g transform="translate(160 650)" filter="url(#shadow)"><rect x="0" y="48" width="240" height="170" rx="26" fill="#D5BD8C"/><path d="M45 65C45-25 195-25 195 65" fill="none" stroke="#9C825B" stroke-width="15"/><circle cx="68" cy="87" r="33" fill="#BF6959"/><circle cx="132" cy="94" r="40" fill="#779A6E"/><path d="M172 55l22-38 18 45z" fill="#D89B52"/><rect x="72" y="140" width="42" height="60" rx="8" fill="#E7D8AE"/><rect x="132" y="135" width="56" height="65" rx="9" fill="#A8B89A"/></g>
+<g transform="translate(530 700)" filter="url(#shadow)"><rect width="215" height="126" rx="24" fill="#0B6B61"/><path d="M157 38q18 18 0 36M138 29q30 27 0 54M119 21q42 36 0 70" fill="none" stroke="#EAF2EE" stroke-width="5" stroke-linecap="round" opacity=".88"/></g><g transform="translate(805 680)" filter="url(#shadow)"><rect width="240" height="160" rx="28" fill="#EEE5D3"/><circle cx="62" cy="56" r="26" fill="#C56A5E"/><circle cx="126" cy="54" r="24" fill="#7D9D70"/><rect x="50" y="96" width="55" height="40" rx="8" fill="#D7BE89"/><rect x="122" y="93" width="70" height="43" rx="8" fill="#BAC59F"/></g>
+<rect width="1200" height="900" filter="url(#grain)" opacity=".42"/></svg>
