@@ -1060,6 +1060,32 @@ Fallback remains a high-quality system sans stack.
 
 The app must look correct if custom font fails.
 
+## Implemented PR 2C typography and shell foundation
+
+The web bundle pins `@fontsource-variable/inter==5.3.0` and imports its variable weight axis through Vite. Font files are emitted as same-origin hashed WOFF2 assets with Fontsource unicode ranges; no runtime font CDN is used.
+
+Quiet Atlas styling is split by responsibility:
+
+```text
+app.css
+├── Tailwind 4
+├── tokens.css   → semantic palette/type/spacing/radius/elevation/motion
+├── base.css     → document defaults, focus, selection, forced-colors basics
+└── shell.css    → AppShell, design-QA layout and bilateral atmosphere scopes
+```
+
+The base Django template owns:
+
+- one reusable Vite entry;
+- skip-link target;
+- semantic header/main/footer landmarks;
+- stable page frame;
+- no navigation destination that does not yet exist.
+
+Country atmosphere is represented by vetted `data-country-theme` scopes. The first QA examples are Finland and Japan. Their accents affect only decorative presentation variables; text/status semantics, focus order and component mechanics remain global Quiet Atlas behavior.
+
+A DEBUG-only `/_design/shell/` surface exists to inspect these foundations without exposing unfinished product UI. It contains no converter form and makes no FX claim.
+
 ---
 
 # 45. localStorage scope

@@ -231,7 +231,11 @@ npm run build
 
 Django then resolves `static/build/.vite/manifest.json` through `{% vite_asset "frontend/src/app.ts" %}`. Missing/malformed production manifests fail fast rather than silently serving stale or unhashed asset paths.
 
-The next bounded product slice is PR 2C: Quiet Atlas semantic tokens, typography and global shell.
+The Quiet Atlas foundation is now executable. In DEBUG mode, use `/_design/shell/` to inspect semantic landmarks, typography and bilateral atmosphere without pretending the converter is implemented.
+
+PR 2C's Chromium smoke captures 1440px, 768px, 390px and 320px widths and rejects horizontal overflow, missing self-hosted Inter or a broken first-tab skip-link order. Full cross-browser/axe/high-contrast quality remains PR 2F.
+
+The next bounded product slice is PR 2D: converter primitives.
 
 ---
 
