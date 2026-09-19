@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - "frontend/**"
+      - "apps/common/templatetags/vite.py"
+      - "config/settings.py"
       - ".nvmrc"
       - ".github/workflows/frontend-quality.yml"
   push:
@@ -11,6 +13,8 @@ on:
       - master
     paths:
       - "frontend/**"
+      - "apps/common/templatetags/vite.py"
+      - "config/settings.py"
       - ".nvmrc"
       - ".github/workflows/frontend-quality.yml"
 
@@ -57,4 +61,13 @@ jobs:
         run: npm run build
 
       - name: Verify Vite backend manifest
-        run: test -s static/build/.vite/manifest.json
+        run: |
+          test -s static/build/.vite/manifest.json
+          node --input-type=module -e "
+            import { readFileSync } from 'node:fs';
+            const manifest = JSON.parse(readFileSync('static/build/.vite/manifest.json', 'utf8'));
+            const entry = manifest['frontend/src/app.ts'];
+            if (!entry?.file || entry.isEntry !== true) {
+              throw new Error('Expected Vite entry frontend/src/app.ts is missing or invalid');
+            }
+          "

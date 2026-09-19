@@ -103,12 +103,12 @@ The handbook covers:
 
 ## Delivery strategy
 
-The rebuild is intentionally incremental. The repository/Django foundation is complete, and PR2A now establishes the locked Node 24/Vite 8/TypeScript 5.9/Biome 2/Tailwind 4/HTMX 2 frontend build baseline with read-only CI. The next bounded slice is the repo-owned Django↔Vite manifest bridge before Quiet Atlas presentation work begins.
+The rebuild is intentionally incremental. PR2A established the locked frontend build baseline, and PR2B now connects Django to Vite through a repo-owned, tested development/production asset bridge. The next bounded slice is the Quiet Atlas semantic-token, typography and global-shell foundation.
 
 See [docs/08_IMPLEMENTATION_ROADMAP.md](docs/08_IMPLEMENTATION_ROADMAP.md).
 
 ## Current status
 
-**Phase:** PR2A frontend toolchain complete → PR2B Django↔Vite bridge next.
+**Phase:** PR2B Django↔Vite bridge complete → PR2C Quiet Atlas foundations next.
 
-The Django product shell, runtime configuration, PostgreSQL path, observability baseline and frontend asset toolchain are executable and CI-backed. Product implementation can now connect Django templates to the Vite manifest without introducing a second web application runtime.
+The Django product shell, runtime configuration, PostgreSQL path, observability baseline, frontend build and Vite asset bridge are executable and CI-backed. Django templates can now consume the Vite dev server locally and hashed manifest assets outside local debug without introducing a second web application runtime.

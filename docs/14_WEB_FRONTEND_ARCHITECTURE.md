@@ -259,6 +259,34 @@ The bridge should be:
 
 Unit tests cover representative manifest graphs.
 
+## Implemented PR 2B bridge
+
+The repository now owns the bridge in `apps/common/templatetags/vite.py`.
+
+Runtime policy:
+
+- local + `DEBUG=True` uses the Vite development server;
+- test, preview and production use the generated manifest path;
+- development renders `@vite/client` before the configured entry module;
+- production renders entry CSS first, recursively imported CSS second, the entry module third and recursive static-import modulepreloads last, matching Vite's documented backend integration order;
+- dynamic imports are not eagerly preloaded;
+- repeated imported CSS is deduplicated while preserving first-seen order;
+- the parsed production manifest is cached per manifest path for process lifetime;
+- missing or malformed manifests/chunks fail fast with `ViteManifestError`;
+- entry/output paths are constrained to canonical relative POSIX paths;
+- development origin rejects credentials, paths, query strings and fragments;
+- HTML is produced with Django `format_html()` / `format_html_join()`, not raw `mark_safe()`.
+
+Current settings:
+
+```text
+VITE_DEV_SERVER_ENABLED = local environment AND DEBUG
+VITE_DEV_SERVER_ORIGIN = http://127.0.0.1:5173
+VITE_MANIFEST_PATH = static/build/.vite/manifest.json
+```
+
+The bridge intentionally adds no environment variable or third-party Django/Vite package. If deployment later needs a configurable non-local asset origin, that becomes an explicit configuration-contract change rather than an accidental runtime knob.
+
 ---
 
 # 9. Vite configuration

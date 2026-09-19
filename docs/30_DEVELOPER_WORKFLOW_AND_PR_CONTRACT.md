@@ -211,7 +211,27 @@ The production build emits the Vite backend manifest under `static/build/.vite/m
 
 Node is build/development tooling only. Django remains responsible for HTML, routing and application state; PR 2A does not introduce a client application framework or web business logic.
 
-The next bounded product slice is PR 2B: the tested repo-owned Django↔Vite manifest bridge.
+The repo-owned Vite bridge is now implemented. For local asset development, run the two processes independently:
+
+```bash
+# terminal 1
+python manage.py runserver
+
+# terminal 2
+cd frontend
+npm run dev
+```
+
+Outside local debug, build assets before rendering templates that load the Vite entry:
+
+```bash
+cd frontend
+npm run build
+```
+
+Django then resolves `static/build/.vite/manifest.json` through `{% vite_asset "frontend/src/app.ts" %}`. Missing/malformed production manifests fail fast rather than silently serving stale or unhashed asset paths.
+
+The next bounded product slice is PR 2C: Quiet Atlas semantic tokens, typography and global shell.
 
 ---
 
