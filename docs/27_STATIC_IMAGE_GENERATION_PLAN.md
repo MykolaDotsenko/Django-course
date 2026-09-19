@@ -25,7 +25,12 @@ The first image pack must:
 
 # 2. Current implementation
 
-The first P0 pack contains **14 static SVG illustrations** under:
+The current pack contains **19 static SVG illustrations** under:
+
+- 14 P0 assets;
+- 5 focused P1 expansion assets.
+
+All are stored under:
 
 ```text
 static/images/quiet-atlas/
@@ -94,6 +99,11 @@ gold     #C29B61
 | IMG-12 | history-euro-transition-2002-v1.svg | euro transition story | 4:3 SVG | generated |
 | IMG-13 | history-finland-markka-1998-v1.svg | Finland markka story | 4:3 SVG | generated |
 | IMG-14 | fallback-payment-culture-v1.svg | payment guidance fallback | 4:3 SVG | generated |
+| IMG-15 | countries-germany-local-value-v1.svg | Germany context | 4:3 SVG | generated |
+| IMG-16 | countries-spain-local-value-v1.svg | Spain context | 4:3 SVG | generated |
+| IMG-17 | story-market-basket-value-v1.svg | purchasing-power story | 4:3 SVG | generated |
+| IMG-18 | story-cafe-affordability-v1.svg | café affordability story | 4:3 SVG | generated |
+| IMG-19 | story-street-food-affordability-v1.svg | street-food affordability story | 4:3 SVG | generated |
 
 ---
 
@@ -397,6 +407,103 @@ for cash/card/mobile-payment guidance.
 
 ---
 
+## IMG-15 — Germany local value
+
+File:
+
+```text
+countries-germany-local-value-v1.svg
+```
+
+Prompt:
+
+```text
+Show everyday German spending through a calm bakery/café and public-
+transport context: coffee, bakery food, a generic contactless payment
+card and understated Central European urban architecture. Focus on
+practical local life and affordability, not festival or landmark
+tourism.
+```
+
+---
+
+## IMG-16 — Spain local value
+
+File:
+
+```text
+countries-spain-local-value-v1.svg
+```
+
+Prompt:
+
+```text
+Show normal Spanish everyday spending in a warm but restrained café/
+market setting: coffee, a simple casual meal, generic payment context
+and compact Mediterranean urban architecture. Emphasize ordinary local
+value, not resort or holiday imagery.
+```
+
+---
+
+## IMG-17 — Market basket value
+
+File:
+
+```text
+story-market-basket-value-v1.svg
+```
+
+Prompt:
+
+```text
+Create a premium editorial purchasing-power illustration centered on
+one everyday grocery basket with produce, pantry staples, a generic
+payment card and a few coins. The image should visually support the
+question “what can this amount buy here?” without showing prices,
+currency symbols or text.
+```
+
+---
+
+## IMG-18 — Café affordability
+
+File:
+
+```text
+story-cafe-affordability-v1.svg
+```
+
+Prompt:
+
+```text
+Show a calm café affordability story using coffee, pastry, generic
+coins/payment context and understated urban surroundings. Make the
+composition useful for explaining equivalent everyday purchases rather
+than depicting a luxury café or lifestyle advertisement.
+```
+
+---
+
+## IMG-19 — Street-food affordability
+
+File:
+
+```text
+story-street-food-affordability-v1.svg
+```
+
+Prompt:
+
+```text
+Show a culturally neutral, respectful everyday street-food market scene
+with two simple meal options, a generic payment card, market bag and
+warm practical atmosphere. The image should communicate affordable
+daily food choices without exoticizing a specific culture.
+```
+
+---
+
 # 7. Accessibility contract
 
 The SVG files are decorative presentation assets by default and therefore contain no embedded text.
@@ -444,25 +551,27 @@ If real historical evidence is needed, use sourced media through the MediaAsset 
 
 # 10. Next image batch
 
-After the P0 pack is wired into real screens and evaluated, the next candidates are:
+The focused P1 expansion is now complete.
 
-- Germany local-value card;
-- Spain local-value card;
-- generic market-basket scene;
-- café affordability story;
-- street-food affordability story;
-- one sourced real historical image for the Finland markka story;
-- one sourced real image for the euro transition story.
+Do **not** add more decorative static country cards until the 19 current assets
+are wired into real layouts and inspected in desktop/mobile screenshots.
 
-Do not expand the asset count before the first 14 prove useful in actual layouts.
+The next media work should be higher-value and evidence-based:
+
+- one rights-cleared real historical image/object for the Finland markka story;
+- one rights-cleared real historical image/object for the euro transition story;
+- raster social/OG derivative only if the deployment surface requires it;
+- replace any static illustration that proves visually redundant in real UI.
+
+The goal is not a large gallery. The goal is maximum explanatory value per asset.
 
 ---
 
 # 11. Definition of done
 
-The static P0 pack is done when:
+The static P0 + focused P1 pack is done when:
 
-- all 14 assets exist in the repository;
+- all 19 assets exist in the repository;
 - each maps to a concrete component/screen;
 - no asset contains baked text;
 - no asset makes unsupported historical claims;
