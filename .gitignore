@@ -1,1 +1,8 @@
-.venv\n__pycache__\n*.pyc
+.venv/
+__pycache__/
+*.py[cod]
+*.sqlite3
+.pytest_cache/
+.coverage
+htmlcov/
+artifacts/
