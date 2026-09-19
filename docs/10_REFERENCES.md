@@ -1742,3 +1742,91 @@ When an AI design choice conflicts:
 7. novelty.
 
 AI capability breadth never outranks trust.
+
+
+# Zero-Cost Portfolio AI References
+
+Research reviewed: **2026-09-19**.
+
+## Gemini Developer API pricing
+
+https://ai.google.dev/gemini-api/docs/pricing
+
+Current pricing page lists Free Tier input/output as free of charge for multiple text models including Gemini 3.1 Flash-Lite.
+
+Project decision:
+
+- use Gemini 3.1 Flash-Lite for the one live recruiter-visible text feature;
+- do not attach paid fallback to the public demo.
+
+The same pricing page lists Gemini 3.1 Flash Image and Flash Lite Image with **Free Tier: Not available**.
+
+Project decision:
+
+- zero runtime image-generation calls;
+- images are sourced/pre-generated/stored.
+
+## Gemini 3.1 Flash-Lite
+
+https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite
+
+Google describes it as a low-latency, cost-effective model for lightweight/high-volume tasks and documents Structured Outputs support.
+
+Project use:
+
+- bounded “Explain this” structured explanation over already verified facts.
+
+## Gemini rate limits
+
+https://ai.google.dev/gemini-api/docs/rate-limits
+
+Google documents RPM/TPM/RPD rate limiting, but actual limits vary by model/project/account and are visible in AI Studio.
+
+Project conclusion:
+
+- do not hard-code a provider daily quota as a business invariant;
+- handle 429 with cache/deterministic fallback;
+- add an application-level live-call ceiling.
+
+## Gemini API keys
+
+https://ai.google.dev/gemini-api/docs/api-key
+
+Current Gemini API documentation requires current restricted/auth-key handling and rejects unrestricted standard keys during the 2026 migration.
+
+Project conclusion:
+
+- server-only key;
+- never browser/mobile/public environment.
+
+## Free-tier data handling
+
+The Gemini pricing page marks Free Tier content as used to improve Google products.
+
+Project conclusion:
+
+- send public/non-sensitive data only;
+- no user profile/private trip/personal location data to free-tier AI.
+
+## OpenRouter free plan
+
+https://openrouter.ai/pricing
+
+https://openrouter.ai/openrouter/free/
+
+OpenRouter currently offers free models and a free plan with a documented request limit.
+
+Project conclusion:
+
+- useful for local experiments only;
+- not automatic production fallback because free model availability/routing can change.
+
+## Hugging Face Inference Providers pricing
+
+https://huggingface.co/docs/inference-providers/en/pricing
+
+Hugging Face currently provides only a very small monthly free credit for free accounts.
+
+Project conclusion:
+
+- not competitive as the primary zero-cost runtime path for this demo.
