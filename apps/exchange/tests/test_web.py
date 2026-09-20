@@ -38,6 +38,11 @@ class UnavailableGateway:
         raise FxProviderUnavailable("down")
 
 
+@pytest.fixture(autouse=True)
+def use_vite_dev_mode(settings):
+    settings.VITE_DEV_SERVER_ENABLED = True
+
+
 @pytest.fixture
 def reference_data(db):
     fi = Country.objects.create(iso2="FI", iso3="FIN", name="Finland")
