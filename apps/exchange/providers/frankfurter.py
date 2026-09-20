@@ -16,6 +16,7 @@ from apps.exchange.domain import (
     ObservationGranularity,
     ProviderPolicyMode,
     RateQuote,
+    normalize_currency_code,
 )
 from apps.exchange.providers.base import (
     FxProviderInvalidPayload,
@@ -126,8 +127,11 @@ class FrankfurterProvider:
         requested_date: date | None,
         policy: FxSourcePolicy,
     ) -> RateQuote:
-        base_code = base.upper().strip()
-        quote_code = quote.upper().strip()
+        try:
+            base_code = normalize_currency_code(base)
+            quote_code = normalize_currency_code(quote)
+        except FxDomainError as exc:
+            raise FxProviderUnsupportedPair("Invalid currency code for Frankfurter query.") from exc
         params: dict[str, str] = {}
         if requested_date is not None:
             params["date"] = requested_date.isoformat()
