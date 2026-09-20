@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 from django.urls import reverse
 from django.utils.formats import date_format
 
-from apps.exchange.domain import RateSeriesResult
+from apps.exchange.domain import RateSeriesResult, ThenNowComparison
 
 
 def _rate_text(value) -> str:
@@ -22,6 +22,7 @@ def _series_url(
     selected_date,
     requested_date,
     period: str,
+    amount=None,
     start_date=None,
     end_date=None,
 ) -> str:
@@ -33,11 +34,67 @@ def _series_url(
     }
     if requested_date is not None:
         params["requested_date"] = requested_date.isoformat()
+    if amount is not None:
+        params["amount"] = format(amount, "f")
     if start_date is not None:
         params["start_date"] = start_date.isoformat()
     if end_date is not None:
         params["end_date"] = end_date.isoformat()
     return f"{reverse('historical_series')}?{urlencode(params)}"
+
+
+def build_then_now_component(
+    comparison: ThenNowComparison,
+    *,
+    base_minor_units: int,
+    quote_minor_units: int,
+) -> dict[str, object]:
+    historical = comparison.historical
+    latest = comparison.latest
+    difference = comparison.rate_difference_percent
+    magnitude = abs(difference)
+    input_text = f"{historical.input_amount:.{base_minor_units}f}"
+    historical_output = f"{historical.output_amount:.{quote_minor_units}f}"
+    latest_output = f"{latest.output_amount:.{quote_minor_units}f}"
+    if difference > 0:
+        difference_text = (
+            f"The {latest.quote.quote_currency} amount per {input_text} "
+            f"{latest.quote.base_currency} is about {magnitude}% higher in the latest "
+            "reference rate than in the selected historical observation."
+        )
+    elif difference < 0:
+        difference_text = (
+            f"The {latest.quote.quote_currency} amount per {input_text} "
+            f"{latest.quote.base_currency} is about {magnitude}% lower in the latest "
+            "reference rate than in the selected historical observation."
+        )
+    else:
+        difference_text = (
+            f"The latest and selected historical reference rates produce the same "
+            f"{latest.quote.quote_currency} amount per {input_text} "
+            f"{latest.quote.base_currency} at this display precision."
+        )
+
+    return {
+        "input_amount": input_text,
+        "base_currency": historical.quote.base_currency,
+        "quote_currency": historical.quote.quote_currency,
+        "then": {
+            "date_label": date_format(historical.quote.effective_date, "j M Y"),
+            "output_amount": historical_output,
+            "rate": _rate_text(historical.quote.rate),
+            "providers": ", ".join(key.upper() for key in historical.quote.provider_keys),
+        },
+        "latest": {
+            "date_label": date_format(latest.quote.effective_date, "j M Y"),
+            "output_amount": latest_output,
+            "rate": _rate_text(latest.quote.rate),
+            "providers": ", ".join(key.upper() for key in latest.quote.provider_keys),
+            "stale": latest.stale,
+        },
+        "difference_percent": _rate_text(difference),
+        "difference_text": difference_text,
+    }
 
 
 def build_rate_series_component(
@@ -46,6 +103,9 @@ def build_rate_series_component(
     selected_date,
     requested_date=None,
     period: str,
+    amount=None,
+    then_now: dict[str, object] | None = None,
+    comparison_notice: str | None = None,
 ) -> dict[str, object]:
     series = result.series
     points = [
@@ -82,6 +142,7 @@ def build_rate_series_component(
                     selected_date=selected_date,
                     requested_date=requested_date,
                     period=key,
+                    amount=amount,
                 ),
             }
         )
@@ -112,6 +173,7 @@ def build_rate_series_component(
         ),
         "period": period,
         "period_links": period_links,
+        "amount": format(amount, "f") if amount is not None else None,
         "start_date": series.start_date,
         "start_date_iso": series.start_date.isoformat(),
         "end_date": series.end_date,
@@ -121,6 +183,21 @@ def build_rate_series_component(
         "stale": result.stale,
         "points": points,
         "point_count": len(points),
+        "chart_payload": {
+            "pair": f"{series.base_currency} → {series.quote_currency}",
+            "baseCurrency": series.base_currency,
+            "quoteCurrency": series.quote_currency,
+            "selectedDate": selected_date.isoformat(),
+            "labels": [point["date_label"] for point in points],
+            "dates": [point["date_iso"] for point in points],
+            "rates": [point["rate"] for point in points],
+            "selectedIndex": next(
+                (index for index, point in enumerate(points) if point["selected"]),
+                None,
+            ),
+        },
+        "then_now": then_now,
+        "comparison_notice": comparison_notice,
         "selected_point": (
             {
                 "date_label": date_format(selected_point.observation_date, "j M Y"),
@@ -161,6 +238,7 @@ def build_rate_series_component(
             selected_date=selected_date,
             requested_date=requested_date,
             period="custom",
+            amount=amount,
             start_date=series.start_date,
             end_date=series.end_date,
         ),
