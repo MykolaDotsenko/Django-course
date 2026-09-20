@@ -76,8 +76,14 @@ class ConverterPrimitivePreviewTests(SimpleTestCase):
         self.assertIn('data-country-theme="fi"', workspace)
         self.assertIn('data-country-theme="jp"', workspace)
         self.assertIn('aria-live="polite"', workspace)
-        self.assertIn('id="workspace-reference-result-title"', workspace)
-        self.assertEqual(html.count('id="workspace-reference-result-title"'), 1)
+        self.assertIn(
+            'id="workspace-reference-result-title"',
+            workspace,
+        )
+        self.assertEqual(
+            html.count('id="workspace-reference-result-title"'),
+            1,
+        )
 
     def test_bilateral_workspace_is_a_layout_fixture_not_business_behavior(self) -> None:
         response = self.client.get("/_design/converter/")
