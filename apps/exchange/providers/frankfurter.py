@@ -17,28 +17,14 @@ from apps.exchange.domain import (
     ProviderPolicyMode,
     RateQuote,
 )
+from apps.exchange.providers.base import (
+    FxProviderInvalidPayload,
+    FxProviderRateLimited,
+    FxProviderUnavailable,
+    FxProviderUnsupportedPair,
+)
 
 DEFAULT_BASE_URL = "https://api.frankfurter.dev/v2"
-
-
-class FxProviderError(RuntimeError):
-    pass
-
-
-class FxProviderUnavailable(FxProviderError):
-    pass
-
-
-class FxProviderRateLimited(FxProviderUnavailable):
-    pass
-
-
-class FxProviderUnsupportedPair(FxProviderError):
-    pass
-
-
-class FxProviderInvalidPayload(FxProviderError):
-    pass
 
 
 def _currency_code(value: Any) -> str:
