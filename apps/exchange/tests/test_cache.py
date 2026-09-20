@@ -152,3 +152,38 @@ def test_provider_quote_identity_is_rechecked_before_caching():
         gateway.get("EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW)
 
     assert cache.get(latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY)) is None
+
+
+def test_cache_read_failure_falls_through_to_provider(monkeypatch):
+    provider_quote = make_quote()
+    provider = FakeProvider(result=provider_quote)
+
+    def fail_get(*args, **kwargs):
+        raise RuntimeError("cache unavailable")
+
+    monkeypatch.setattr(cache, "get", fail_get)
+
+    result, stale = LatestQuoteGateway(provider).get(
+        "EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW
+    )
+
+    assert result == provider_quote
+    assert stale is False
+    assert provider.calls == 1
+
+
+def test_cache_write_failure_does_not_invalidate_provider_result(monkeypatch):
+    provider_quote = make_quote()
+    provider = FakeProvider(result=provider_quote)
+
+    def fail_set(*args, **kwargs):
+        raise RuntimeError("cache unavailable")
+
+    monkeypatch.setattr(cache, "set", fail_set)
+
+    result, stale = LatestQuoteGateway(provider).get(
+        "EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW
+    )
+
+    assert result == provider_quote
+    assert stale is False
