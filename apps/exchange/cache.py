@@ -150,6 +150,7 @@ class LatestQuoteGateway:
 
         try:
             fresh = self.provider.latest_quote(base, quote, policy)
+            self._assert_quote_identity(fresh, base=base, quote=quote, policy=policy)
         except (FxProviderUnavailable, FxProviderInvalidPayload):
             if (
                 cached
@@ -161,7 +162,6 @@ class LatestQuoteGateway:
                 return cached, True
             raise
 
-        self._assert_quote_identity(fresh, base=base, quote=quote, policy=policy)
         self._cache_set(key, fresh)
         return fresh, False
 
