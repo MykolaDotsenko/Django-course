@@ -177,9 +177,7 @@ def test_cache_write_failure_does_not_invalidate_provider_result(monkeypatch):
 
     monkeypatch.setattr(cache, "set", fail_set)
 
-    result, stale = LatestQuoteGateway(provider).get(
-        "EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW
-    )
+    result, stale = LatestQuoteGateway(provider).get("EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW)
 
     assert result == provider_quote
     assert stale is False
