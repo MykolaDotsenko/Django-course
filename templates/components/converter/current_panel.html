@@ -215,7 +215,9 @@
         <span>Convert</span>
       </button>
     </div>
-    <div class="qa-workspace__result" id="conversion-result-region">
+    <div class="qa-workspace__result"
+         id="conversion-result-region"
+         {% if preserve_previous_result %}hx-preserve="true"{% endif %}>
       {% if result_component %}
         <p class="qa-result-update-note"
            data-previous-result-note
