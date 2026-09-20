@@ -101,6 +101,21 @@ class CurrentConversionForm(forms.Form):
             Currency.objects.all() if historical_mode else Currency.objects.filter(is_active=True)
         )
         currencies = list(currency_query.order_by("code"))
+
+        archived_bound_codes: set[str] = set()
+        if self.is_bound and not historical_mode:
+            for field_name in ("source_currency", "destination_currency"):
+                raw_code = str(self.data.get(field_name) or "").upper().strip()
+                if not raw_code:
+                    continue
+                archived = (
+                    Currency.objects.filter(code=raw_code, is_active=False)
+                    .only("code", "name")
+                    .first()
+                )
+                if archived is not None:
+                    archived_bound_codes.add(archived.code)
+                    currencies.append(archived)
         countries = list(Country.objects.filter(is_active=True).order_by("name"))
 
         self._currency_by_code = {currency.code: currency for currency in currencies}
@@ -180,6 +195,15 @@ class CurrentConversionForm(forms.Form):
                 self.add_error("amount", exc)
 
         if rate_mode == RATE_MODE_LATEST:
+            for side in ("source", "destination"):
+                raw_code = str(self.data.get(f"{side}_currency") or "").upper().strip()
+                currency = Currency.objects.filter(code=raw_code).first() if raw_code else None
+                if currency is not None and not currency.is_active:
+                    self.add_error(
+                        f"{side}_currency",
+                        f"{currency.name} ({currency.code}) is archived and has no current-market "
+                        "interpretation. Switch Rate date to Historical date to use it.",
+                    )
             self._validate_country_currency("source", cleaned)
             self._validate_country_currency("destination", cleaned)
         return cleaned
