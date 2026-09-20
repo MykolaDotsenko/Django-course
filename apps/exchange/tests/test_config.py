@@ -12,7 +12,16 @@ def test_fx_runtime_config_defaults_to_https_v2_endpoint():
 @pytest.mark.parametrize(
     ("values", "message"),
     [
-        ({"FRANKFURTER_BASE_URL": "http://example.test/v2"}, "must use HTTPS"),
+        ({"FRANKFURTER_BASE_URL": "http://example.test/v2"}, "absolute HTTPS"),
+        ({"FRANKFURTER_BASE_URL": "https://"}, "absolute HTTPS"),
+        (
+            {"FRANKFURTER_BASE_URL": "https://user:pass@example.test/v2"},
+            "must not contain credentials",
+        ),
+        (
+            {"FRANKFURTER_BASE_URL": "https://example.test/v2?mode=test"},
+            "must not contain credentials",
+        ),
         ({"FRANKFURTER_TIMEOUT_SECONDS": "slow"}, "must be numeric"),
         ({"FRANKFURTER_TIMEOUT_SECONDS": "30"}, "must be > 0 and <= 10"),
     ],

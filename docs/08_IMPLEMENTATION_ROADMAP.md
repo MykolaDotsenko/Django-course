@@ -155,7 +155,7 @@ Acceptance:
 
 ## Implementation PR 3 — Countries, currencies and temporal relationships
 
-**Execution status for PR 3:** in review. This slice adds the canonical Country, Currency and temporal CountryCurrency schema, current/historical query rules, deterministic seed data, and an import-only REST Countries v5 boundary with full-snapshot validation, dry-run and idempotent non-destructive sync semantics.
+**Execution status for PR 3:** complete. The merged slice adds the canonical Country, Currency and temporal CountryCurrency schema, current/historical query rules, deterministic seed data, and an import-only REST Countries v5 boundary with full-snapshot validation, dry-run and idempotent non-destructive sync semantics.
 
 **Goal:** model country/currency relationships correctly for both current and historical modes.
 
@@ -189,7 +189,7 @@ Acceptance:
 
 ## Implementation PR 4 — FX domain and Frankfurter adapter
 
-**Execution status for PR 4:** in review. The slice implements normalized Decimal RateQuote semantics, explicit blend/pinned source policy, Frankfurter v2 isolation, bounded transient retry, semantic current/historical cache keys, freshness-vs-retention classification, safe same-key stale fallback, and same-currency provider bypass. Historical requested-date resolution policy remains PR6.
+**Execution status for PR 4:** complete after PR4.1 contract hardening. The merged implementation provides normalized Decimal RateQuote semantics, explicit blend/pinned source policy, Frankfurter v2 isolation, conservative transient retry, semantic current/historical cache keys, freshness-vs-retention classification, safe same-key stale fallback, same-currency provider bypass, pegged-rate attribution handling, normalized auth/timeout failures, bounded response size, and validated HTTPS provider configuration. Historical requested-date resolution policy remains PR6.
 
 **Goal:** implement trusted normalized exchange-rate data.
 

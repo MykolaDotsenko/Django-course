@@ -19,13 +19,17 @@ from apps.exchange.domain import (
     normalize_currency_code,
 )
 from apps.exchange.providers.base import (
+    FxProviderAuthenticationError,
     FxProviderInvalidPayload,
     FxProviderRateLimited,
+    FxProviderTimeout,
     FxProviderUnavailable,
     FxProviderUnsupportedPair,
 )
 
 DEFAULT_BASE_URL = "https://api.frankfurter.dev/v2"
+MAX_RESPONSE_BYTES = 64 * 1024
+RETRYABLE_HTTP_STATUSES = frozenset({408, 500, 502, 503, 504})
 
 
 def _currency_code(value: Any) -> str:
@@ -67,9 +71,11 @@ def parse_rate_payload(
 
     raw_providers = payload.get("providers")
     if raw_providers is None:
-        if policy.include_attribution:
-            raise FxProviderInvalidPayload("Frankfurter omitted requested provider attribution.")
         raw_providers = []
+        if policy.mode is ProviderPolicyMode.PINNED and policy.include_attribution:
+            raise FxProviderInvalidPayload(
+                "Frankfurter omitted attribution for a pinned-provider quote."
+            )
     if not isinstance(raw_providers, list):
         raise FxProviderInvalidPayload("Frankfurter provider attribution must be an array.")
     provider_keys = tuple(str(key).lower().strip() for key in raw_providers if str(key).strip())
@@ -152,19 +158,40 @@ class FrankfurterProvider:
         for attempt in range(self.max_attempts):
             try:
                 with urlopen(request, timeout=self.timeout_seconds) as response:
-                    raw = response.read()
+                    raw = response.read(MAX_RESPONSE_BYTES + 1)
+                if len(raw) > MAX_RESPONSE_BYTES:
+                    raise FxProviderInvalidPayload("Frankfurter response exceeded the size limit.")
                 break
             except HTTPError as exc:
                 if exc.code == 429:
                     raise FxProviderRateLimited("Frankfurter rate limit reached.") from exc
+                if exc.code in {401, 403}:
+                    raise FxProviderAuthenticationError(
+                        "Frankfurter authentication or authorization failed."
+                    ) from exc
                 if exc.code in {400, 404, 422}:
                     raise FxProviderUnsupportedPair(
                         "Frankfurter does not support this rate query."
                     ) from exc
+                if exc.code not in RETRYABLE_HTTP_STATUSES:
+                    raise FxProviderUnavailable(f"Frankfurter returned HTTP {exc.code}.") from exc
                 last_transient_error = exc
                 if attempt + 1 == self.max_attempts:
                     raise FxProviderUnavailable(f"Frankfurter returned HTTP {exc.code}.") from exc
-            except (URLError, TimeoutError, socket.timeout, HTTPException) as exc:
+            except (TimeoutError, socket.timeout) as exc:
+                last_transient_error = exc
+                if attempt + 1 == self.max_attempts:
+                    raise FxProviderTimeout("Frankfurter request timed out.") from exc
+            except URLError as exc:
+                if isinstance(exc.reason, (TimeoutError, socket.timeout)):
+                    last_transient_error = exc
+                    if attempt + 1 == self.max_attempts:
+                        raise FxProviderTimeout("Frankfurter request timed out.") from exc
+                    continue
+                last_transient_error = exc
+                if attempt + 1 == self.max_attempts:
+                    raise FxProviderUnavailable("Frankfurter request failed.") from exc
+            except HTTPException as exc:
                 last_transient_error = exc
                 if attempt + 1 == self.max_attempts:
                     raise FxProviderUnavailable("Frankfurter request failed.") from exc

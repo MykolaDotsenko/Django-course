@@ -18,6 +18,14 @@ class FxProviderRateLimited(FxProviderUnavailable):
     pass
 
 
+class FxProviderAuthenticationError(FxProviderUnavailable):
+    pass
+
+
+class FxProviderTimeout(FxProviderUnavailable):
+    pass
+
+
 class FxProviderUnsupportedPair(FxProviderError):
     pass
 

@@ -103,12 +103,12 @@ The handbook covers:
 
 ## Delivery strategy
 
-The rebuild is intentionally incremental. PR2A established the locked frontend build, PR2B connected Django to Vite, PR2D added reusable accessible converter primitives, and PR2E composed them into the responsive bilateral Quiet Atlas experience. PR2F and its corrective follow-up now harden that surface with template, accessibility, 200% text-reflow, exact container-transition, contrast and compressed-payload quality gates. PR3 introduces the canonical country/currency domain and import boundary.
+The rebuild is intentionally incremental. PR2A established the locked frontend build, PR2B connected Django to Vite, PR2D added reusable accessible converter primitives, and PR2E composed them into the responsive bilateral Quiet Atlas experience. PR2F and its corrective follow-up now harden that surface with template, accessibility, 200% text-reflow, exact container-transition, contrast and compressed-payload quality gates. PR3 introduced the canonical country/currency domain and import boundary. PR4 added the Decimal-safe FX domain, Frankfurter v2 adapter, semantic cache and bounded stale fallback.
 
 See [docs/08_IMPLEMENTATION_ROADMAP.md](docs/08_IMPLEMENTATION_ROADMAP.md).
 
 ## Current status
 
-**Phase:** PR3 country/currency domain complete → PR4 FX domain and Frankfurter adapter in review → PR5 HTMX current-conversion vertical slice next.
+**Phase:** PR4 FX domain complete and contract-hardened → PR5 HTMX current-conversion vertical slice next.
 
 The Django product shell, runtime configuration, PostgreSQL path, observability baseline, frontend build, Vite bridge and Quiet Atlas shell are executable and CI-backed. DEBUG-only design surfaces exercise the semantic shell, converter primitives and responsive bilateral composition without claiming FX business behavior.
