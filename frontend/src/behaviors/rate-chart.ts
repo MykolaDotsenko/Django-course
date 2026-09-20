@@ -1,9 +1,9 @@
 import {
   CategoryScale,
   Chart,
+  LinearScale,
   LineController,
   LineElement,
-  LinearScale,
   PointElement,
   Tooltip,
 } from "chart.js";
@@ -102,12 +102,9 @@ function renderRateChart(canvas: HTMLCanvasElement): void {
             fill: false,
             tension: 0,
             spanGaps: false,
-            pointRadius: (context) =>
-              context.dataIndex === payload.selectedIndex ? 4 : 0,
-            pointHoverRadius: (context) =>
-              context.dataIndex === payload.selectedIndex ? 6 : 4,
-            pointBorderWidth: (context) =>
-              context.dataIndex === payload.selectedIndex ? 2 : 0,
+            pointRadius: (context) => (context.dataIndex === payload.selectedIndex ? 4 : 0),
+            pointHoverRadius: (context) => (context.dataIndex === payload.selectedIndex ? 6 : 4),
+            pointBorderWidth: (context) => (context.dataIndex === payload.selectedIndex ? 2 : 0),
             pointBorderColor: ink,
           },
         ],
@@ -187,7 +184,6 @@ export function enhanceRateCharts(root: ParentNode = document): void {
     renderRateChart(canvas);
   }
 }
-
 
 export function destroyRateCharts(root: ParentNode): void {
   const canvases: HTMLCanvasElement[] = [];
