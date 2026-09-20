@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import asdict
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from enum import StrEnum
@@ -16,7 +15,7 @@ from apps.exchange.domain import (
     RateQuote,
 )
 from apps.exchange.providers.base import FxProvider
-from apps.exchange.providers.frankfurter import FxProviderUnavailable
+from apps.exchange.providers.frankfurter import FxProviderInvalidPayload, FxProviderUnavailable
 
 logger = logging.getLogger(__name__)
 CACHE_VERSION = "v1"
@@ -135,7 +134,7 @@ class LatestQuoteGateway:
 
         try:
             fresh = self.provider.latest_quote(base, quote, policy)
-        except FxProviderUnavailable:
+        except (FxProviderUnavailable, FxProviderInvalidPayload):
             if cached and classify_quote_freshness(
                 cached, now=now, fresh_for=self.fresh_for, stale_for=self.stale_for
             ) is QuoteFreshness.STALE:
