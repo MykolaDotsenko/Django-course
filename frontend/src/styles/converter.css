@@ -617,10 +617,14 @@
   justify-content: center;
 }
 
+.qa-workspace__amount,
 .qa-workspace__action {
-  display: grid;
   min-width: 0;
-  gap: var(--qa-space-4);
+}
+
+.qa-workspace__action {
+  display: flex;
+  justify-content: flex-end;
   padding-block-start: var(--qa-space-2);
 }
 
@@ -646,11 +650,6 @@
 
   .qa-workspace__swap {
     align-self: center;
-  }
-
-  .qa-workspace__action {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
   }
 
   .qa-workspace__action .qa-primary-button {
@@ -681,6 +680,10 @@
 
   .qa-workspace__swap .qa-icon {
     transform: rotate(90deg);
+  }
+
+  .qa-workspace__action {
+    display: block;
   }
 
   .qa-workspace__action .qa-primary-button {
