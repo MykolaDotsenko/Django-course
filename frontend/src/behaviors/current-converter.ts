@@ -31,6 +31,11 @@ function enhanceAutoRefresh(form: HTMLFormElement): void {
 function enhanceCurrentConverterBehavior(): void {
   const form = document.querySelector<HTMLFormElement>("[data-current-conversion-form]");
   if (form) enhanceAutoRefresh(form);
+
+  const resultRegion = document.getElementById("conversion-result-region");
+  if (resultRegion?.querySelector("#current-conversion-result")) {
+    resultRegion.setAttribute("hx-preserve", "true");
+  }
 }
 
 document.addEventListener("click", (event) => {
