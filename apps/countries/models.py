@@ -5,6 +5,7 @@ from datetime import date
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 
 class Country(models.Model):
@@ -58,12 +59,13 @@ class Currency(models.Model):
 
 
 class CountryCurrencyQuerySet(models.QuerySet):
-    def current(self):
+    def current(self, as_of: date | None = None):
+        selected_date = as_of or timezone.localdate()
         return self.filter(
             country__is_active=True,
             currency__is_active=True,
             valid_to__isnull=True,
-        )
+        ).filter(Q(valid_from__isnull=True) | Q(valid_from__lte=selected_date))
 
     def on_date(self, selected_date: date):
         return self.filter(
