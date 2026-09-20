@@ -210,7 +210,9 @@ def picker_options(request: HttpRequest) -> HttpResponse:
             {
                 "id": f"{side}-currency-{currency.code.lower()}",
                 "country_code": "",
+                "country_name": "",
                 "currency_code": currency.code,
+                "currency_name": currency.name,
                 "label": f"{currency.name} · {currency.code}",
                 "meta": "Currency only",
             }
@@ -229,7 +231,9 @@ def picker_options(request: HttpRequest) -> HttpResponse:
                     f"{link.currency.code.lower()}"
                 ),
                 "country_code": link.country.iso2,
+                "country_name": link.country.name,
                 "currency_code": link.currency.code,
+                "currency_name": link.currency.name,
                 "label": f"{link.country.name} · {link.currency.name}",
                 "meta": f"{link.country.iso2} · {link.currency.code}",
             }
