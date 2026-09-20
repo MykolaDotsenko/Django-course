@@ -189,3 +189,42 @@
     border-color: CanvasText;
   }
 }
+
+
+.qa-secondary-button {
+  min-height: 2.75rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--color-border-control);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-weight: 650;
+}
+
+.qa-secondary-button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.qa-result-actions {
+  display: flex;
+  margin-block-start: var(--qa-space-4);
+}
+
+.qa-error-summary {
+  margin-block: var(--qa-space-3) 0;
+  padding-inline-start: 1.25rem;
+}
+
+.qa-rate-meta__disclaimer {
+  margin-block: var(--qa-space-3);
+  color: var(--color-muted);
+}
+
+.qa-picker-option {
+  cursor: pointer;
+}
+
+.qa-status-badge--exact {
+  border-color: var(--color-border-control);
+}
