@@ -40,6 +40,8 @@ def test_frankfurter_v2_rate_normalizes_decimal_and_attribution():
     [
         {"date": "2026-09-18", "base": "USD", "quote": "JPY", "rate": Decimal("174.5")},
         {"date": "2026-09-18", "base": "EUR", "quote": "JPY", "rate": Decimal("0")},
+        {"date": "2026-09-18", "base": "EUR", "quote": "JPY", "rate": Decimal("NaN")},
+        {"date": "2026-09-18", "base": "EUR", "quote": "JPY", "rate": Decimal("Infinity")},
         {"date": "not-a-date", "base": "EUR", "quote": "JPY", "rate": Decimal("174.5")},
         {"date": "2026-09-18", "base": "EUR", "quote": "JPY", "rate": True},
     ],
