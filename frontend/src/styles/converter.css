@@ -767,3 +767,26 @@
     border-inline-start-color: CanvasText;
   }
 }
+
+
+/* Master hotfix — keep the bilateral converter within a 320px viewport at 200% text zoom. */
+.qa-workspace__identity,
+.qa-workspace__identity h3,
+.qa-workspace__identity p,
+.qa-workspace__amount,
+.qa-amount-control {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.qa-workspace__identity h3,
+.qa-workspace__identity p {
+  overflow-wrap: anywhere;
+}
+
+.qa-amount-control__input {
+  flex: 1 1 0;
+  inline-size: 0;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
