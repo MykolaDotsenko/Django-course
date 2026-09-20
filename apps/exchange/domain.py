@@ -237,6 +237,12 @@ class RateSeries:
         quote = normalize_currency_code(self.quote_currency)
         if self.end_date < self.start_date:
             raise RateSeriesRangeError("FX series end date cannot precede start date.")
+        if not isinstance(self.grouping, RateSeriesGrouping):
+            raise FxDomainError("FX series grouping must be a RateSeriesGrouping.")
+        if not isinstance(self.observation_granularity, ObservationGranularity):
+            raise FxDomainError(
+                "FX series observation granularity must be an ObservationGranularity."
+            )
         if self.fetched_at.tzinfo is None:
             raise FxDomainError("FX series fetched_at must be timezone-aware.")
 
