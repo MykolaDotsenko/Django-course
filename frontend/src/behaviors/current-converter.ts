@@ -40,6 +40,17 @@ document.addEventListener("click", (event) => {
   if (swap) restoreFocusId = swap.id;
 });
 
+document.addEventListener("htmx:beforeRequest", (event) => {
+  const target = event.target;
+  if (!(target instanceof Element) || !target.closest("[data-current-conversion-form]")) return;
+
+  const note = document.querySelector<HTMLElement>("[data-previous-result-note]");
+  if (note) {
+    note.hidden = false;
+    note.textContent = "Updating — this result still belongs to the previous inputs.";
+  }
+});
+
 document.addEventListener("htmx:beforeSwap", (event) => {
   const detail = (
     event as CustomEvent<{
@@ -48,7 +59,19 @@ document.addEventListener("htmx:beforeSwap", (event) => {
       isError: boolean;
     }>
   ).detail;
+
   if (![422, 502, 503].includes(detail.xhr.status)) return;
+
+  const note = document
+    .getElementById("conversion-result-region")
+    ?.querySelector<HTMLElement>("[data-previous-result-note]");
+  if (note) {
+    note.hidden = false;
+    note.textContent =
+      detail.xhr.status === 422
+        ? "Previous result — fix the changed inputs to update it."
+        : "Previous result — the new rate could not be loaded.";
+  }
 
   detail.shouldSwap = true;
   detail.isError = false;

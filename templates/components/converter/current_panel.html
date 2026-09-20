@@ -49,11 +49,11 @@
         hx-sync="this:replace"
         hx-indicator="#conversion-loading"
         data-current-conversion-form
-        data-has-result="{% if has_result %}true{% else %}false{% endif %}">
+        data-has-result="{% if conversion_active %}true{% else %}false{% endif %}">
     {% csrf_token %}
     <input type="hidden"
            name="conversion_active"
-           value="{% if has_result %}1{% else %}0{% endif %}">
+           value="{% if conversion_active %}1{% else %}0{% endif %}">
     <div class="qa-workspace__amount">
       <div class="qa-field{% if form.amount.errors %} qa-field--error{% endif %}">
         <label class="qa-field__label" for="{{ form.amount.id_for_label }}">Amount</label>
@@ -215,8 +215,13 @@
         <span>Convert</span>
       </button>
     </div>
-    <div class="qa-workspace__result">
+    <div class="qa-workspace__result"
+         id="conversion-result-region"
+         {% if preserve_previous_result %}hx-preserve="true"{% endif %}>
       {% if result_component %}
+        <p class="qa-result-update-note"
+           data-previous-result-note
+           hidden>Previous result — waiting for a successful update.</p>
         {% with component=result_component %}
           {% include "components/converter/primitives.html#conversion-result" %}
         {% endwith %}

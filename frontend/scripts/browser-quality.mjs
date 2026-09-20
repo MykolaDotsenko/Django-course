@@ -146,6 +146,31 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
 
   await assertAxe(page, "current-converter/result");
 
+  const previousAmount = await page
+    .locator("#current-conversion-result .qa-result__input")
+    .innerText();
+  const invalidRefresh = waitForPost();
+  await page.locator("#id_amount").fill("-1");
+  await invalidRefresh;
+  await page.getByText("Enter zero or a positive amount.").waitFor();
+
+  const preservedAmount = await page
+    .locator("#current-conversion-result .qa-result__input")
+    .innerText();
+  assert(
+    preservedAmount === previousAmount,
+    "current-converter: failed refresh replaced the previous successful result",
+  );
+  await page.getByText("Previous result — fix the changed inputs to update it.").waitFor();
+
+  const correctedRefresh = waitForPost();
+  await page.locator("#id_amount").fill("12.50");
+  await correctedRefresh;
+  await page.locator("#current-conversion-result").waitFor();
+  await page.waitForFunction(
+    () => document.querySelector("[data-previous-result-note]")?.hidden === true,
+  );
+
   await Promise.all([waitForPost(), page.locator("#swap-contexts").click()]);
   const focused = await page.evaluate(() => document.activeElement?.id ?? "");
   assert(focused === "swap-contexts", `current-converter: swap focus moved to ${focused}`);
@@ -154,10 +179,12 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     message.includes("status of 422 (Unprocessable Content)"),
   );
   assert(
-    expectedValidationErrors.length === 1,
-    `current-converter: expected exactly one validation 422 console message, found ${expectedValidationErrors.length}`,
+    expectedValidationErrors.length === 2,
+    `current-converter: expected exactly two handled validation 422 console messages, found ${expectedValidationErrors.length}`,
   );
-  consoleErrors.splice(consoleErrors.indexOf(expectedValidationErrors[0]), 1);
+  for (const message of expectedValidationErrors) {
+    consoleErrors.splice(consoleErrors.indexOf(message), 1);
+  }
 }
 
 async function assertReducedMotion(page, surface) {
