@@ -159,24 +159,45 @@ async function assertTextExpansion(page, surface) {
   );
 }
 
-async function assertConverterTransitionLayout(page, viewportName) {
-  const source = await page.locator(".qa-workspace__context--source").boundingBox();
-  const destination = await page.locator(".qa-workspace__context--destination").boundingBox();
-  assert(source && destination, `converter/${viewportName}: bilateral contexts are not measurable`);
+async function assertConverterTransitionLayout(page) {
+  const workspace = page.locator(".qa-workspace");
+  const source = page.locator(".qa-workspace__context--source");
+  const destination = page.locator(".qa-workspace__context--destination");
 
-  if (viewportName === "transition-1023") {
+  for (const state of [
+    { width: 767, mode: "compact" },
+    { width: 768, mode: "wide" },
+    { width: 769, mode: "wide" },
+  ]) {
+    await workspace.evaluate((element, width) => {
+      element.style.width = `${width}px`;
+      element.style.maxWidth = "none";
+    }, state.width);
+
+    const sourceBox = await source.boundingBox();
+    const destinationBox = await destination.boundingBox();
     assert(
-      destination.y > source.y + 2,
-      "converter/transition-1023: expected compact stacked bilateral layout",
+      sourceBox && destinationBox,
+      `converter/container-${state.width}: bilateral contexts are not measurable`,
     );
+
+    if (state.mode === "compact") {
+      assert(
+        destinationBox.y > sourceBox.y + 2,
+        `converter/container-${state.width}: expected compact stacked bilateral layout`,
+      );
+    } else {
+      assert(
+        Math.abs(destinationBox.y - sourceBox.y) <= 2,
+        `converter/container-${state.width}: expected wide simultaneous bilateral layout`,
+      );
+    }
   }
 
-  if (viewportName === "transition-1025") {
-    assert(
-      Math.abs(destination.y - source.y) <= 2,
-      "converter/transition-1025: expected wide simultaneous bilateral layout",
-    );
-  }
+  await workspace.evaluate((element) => {
+    element.style.removeProperty("width");
+    element.style.removeProperty("max-width");
+  });
 }
 
 async function collectCompressedAssetEvidence() {
@@ -269,11 +290,8 @@ try {
         await assertAxe(page, `${surface.name}/${viewport.name}`);
       }
 
-      if (
-        surface.name === "converter" &&
-        (viewport.name === "transition-1023" || viewport.name === "transition-1025")
-      ) {
-        await assertConverterTransitionLayout(page, viewport.name);
+      if (surface.name === "converter" && viewport.name === "wide-1440") {
+        await assertConverterTransitionLayout(page);
       }
 
       if (viewport.name === "mobile-390") {
