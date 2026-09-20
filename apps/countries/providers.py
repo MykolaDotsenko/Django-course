@@ -13,11 +13,11 @@ RESPONSE_FIELDS = (
     "names.official",
     "codes.alpha_2",
     "codes.alpha_3",
-    "capital",
+    "capitals",
     "region",
     "subregion",
     "currencies",
-    "flag.svg",
+    "flag.url_svg",
 )
 
 
@@ -110,10 +110,10 @@ def parse_country_object(raw: dict[str, Any], *, fetched_at: datetime) -> Countr
         iso3=iso3,
         name=name,
         official_name=str(names.get("official") or name).strip(),
-        capital=_first_text(raw.get("capital")),
+        capital=_first_text(raw.get("capitals")),
         region=_first_text(raw.get("region")),
         subregion=_first_text(raw.get("subregion")),
-        flag_url=str(flag.get("svg") or "").strip(),
+        flag_url=str(flag.get("url_svg") or "").strip(),
         currencies=_parse_currencies(raw.get("currencies")),
         source_version="rest-countries-v5",
         fetched_at=fetched_at,
