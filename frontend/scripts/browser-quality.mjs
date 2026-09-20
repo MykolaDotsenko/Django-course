@@ -155,8 +155,8 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
 
   const historicalText = await page.locator("#current-conversion-result").innerText();
   assert(
-    historicalText.includes("Historical reference"),
-    "current-converter: historical status is missing",
+    historicalText.includes("Historical exact 1:1"),
+    "current-converter: historical identity status is missing",
   );
   assert(
     historicalText.includes("Requested date") && historicalText.includes("15 Jun 1998"),
