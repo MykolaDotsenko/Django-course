@@ -66,7 +66,7 @@ class RateQuote:
             raise FxDomainError("FX quotes require three-letter alphabetic currency codes.")
         if not isinstance(self.rate, Decimal):
             raise FxDomainError("FX rate must be a Decimal.")
-        if self.rate <= 0 or not self.rate.is_finite():
+        if not self.rate.is_finite() or self.rate <= 0:
             raise FxDomainError("FX rate must be a finite positive Decimal.")
         if self.fetched_at.tzinfo is None:
             raise FxDomainError("FX fetched_at must be timezone-aware.")
