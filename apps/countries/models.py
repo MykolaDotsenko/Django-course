@@ -18,6 +18,7 @@ class Country(models.Model):
     flag_url = models.URLField(blank=True)
     is_active = models.BooleanField(default=True)
     metadata_source = models.CharField(max_length=80, blank=True)
+    metadata_fetched_at = models.DateTimeField(null=True, blank=True)
     metadata_verified_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
