@@ -1,6 +1,6 @@
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
-import { gzipSync } from "node:zlib";
 import { resolve } from "node:path";
+import { gzipSync } from "node:zlib";
 
 import AxeBuilder from "@axe-core/playwright";
 import { chromium } from "playwright";
@@ -203,6 +203,7 @@ async function assertConverterTransitionLayout(page) {
 async function collectCompressedAssetEvidence() {
   const names = await readdir(BUILD_ASSET_DIR);
   const javascript = names.filter((name) => name.endsWith(".js")).sort();
+  assert(javascript.length > 0, "production build contains no JavaScript assets to measure");
   const files = [];
 
   for (const name of javascript) {
