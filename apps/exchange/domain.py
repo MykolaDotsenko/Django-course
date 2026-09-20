@@ -300,7 +300,9 @@ class ThenNowComparison:
             self.historical.quote.base_currency != self.latest.quote.base_currency
             or self.historical.quote.quote_currency != self.latest.quote.quote_currency
         ):
-            raise FxDomainError("Then & now comparisons require the same directional currency pair.")
+            raise FxDomainError(
+                "Then & now comparisons require the same directional currency pair."
+            )
         if not self.historical.quote.historical:
             raise FxDomainError("Then & now historical side must use a historical quote.")
         if self.latest.quote.historical:
