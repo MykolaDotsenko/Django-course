@@ -39,8 +39,7 @@ function enhanceAutoRefresh(form: HTMLFormElement): void {
       if (form.dataset.hasResult !== "true") return;
 
       if (target.value === "historical") {
-        const requestedDate =
-          form.querySelector<HTMLInputElement>("#id_requested_date");
+        const requestedDate = form.querySelector<HTMLInputElement>("#id_requested_date");
         if (!requestedDate?.value) {
           requestedDate?.focus();
           return;
