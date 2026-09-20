@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "template_partials",
     "apps.common",
+    "apps.countries",
 ]
 
 MIDDLEWARE = [
