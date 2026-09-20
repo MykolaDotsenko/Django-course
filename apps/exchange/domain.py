@@ -38,7 +38,9 @@ class FxSourcePolicy:
 
     @property
     def cache_identity(self) -> str:
-        return self.provider_key or "all"
+        provider = self.provider_key or "all"
+        attribution = "attr" if self.include_attribution else "noattr"
+        return f"{provider}:{attribution}"
 
 
 DEFAULT_SOURCE_POLICY = FxSourcePolicy()
