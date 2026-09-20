@@ -260,6 +260,7 @@ def _subtract_years(value, years: int):
 class HistoricalSeriesForm(forms.Form):
     base = forms.CharField(max_length=3)
     quote = forms.CharField(max_length=3)
+    amount = forms.CharField(required=False, max_length=64)
     selected_date = forms.DateField()
     requested_date = forms.DateField(required=False)
     period = forms.ChoiceField(choices=SERIES_PERIOD_CHOICES, initial="1y")
@@ -280,6 +281,26 @@ class HistoricalSeriesForm(forms.Form):
 
         base = cleaned.get("base")
         quote = cleaned.get("quote")
+
+        raw_amount = cleaned.get("amount")
+        if base and raw_amount:
+            source_currency = Currency.objects.filter(code=base).only("minor_units").first()
+            if source_currency is not None:
+                try:
+                    cleaned["amount_decimal"] = parse_amount_text(
+                        raw_amount,
+                        minor_units=source_currency.minor_units,
+                    )
+                except forms.ValidationError:
+                    cleaned["comparison_amount_error"] = (
+                        "Then & now comparison is unavailable because the amount is invalid."
+                    )
+            else:
+                cleaned["comparison_amount_error"] = (
+                    "Then & now comparison is unavailable because currency precision metadata "
+                    "is missing."
+                )
+
         if base and quote and base == quote:
             raise forms.ValidationError(
                 "Historical trend is not shown for identical currencies because the rate is exactly 1:1."

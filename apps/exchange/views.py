@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import date
+from decimal import Decimal
 from urllib.parse import urlencode
 
 from django.http import HttpRequest, HttpResponse
@@ -15,11 +16,14 @@ from apps.countries.services import historical_currency_suggestion
 from apps.exchange.cache import HistoricalQuoteGateway, HistoricalSeriesGateway, LatestQuoteGateway
 from apps.exchange.config import load_fx_runtime_config
 from apps.exchange.domain import (
+    ConversionResult,
     HistoricalCoverageReason,
     HistoricalCurrencyMetadata,
     HistoricalObservationUnavailable,
     HistoricalOutOfCoverage,
+    RateQuote,
     RateSeriesRangeError,
+    convert_amount,
 )
 from apps.exchange.forms import (
     RATE_MODE_HISTORICAL,
@@ -33,8 +37,16 @@ from apps.exchange.providers.base import (
     FxProviderUnavailable,
     FxProviderUnsupportedPair,
 )
-from apps.exchange.series_presentation import build_rate_series_component
-from apps.exchange.services import get_rate_series, quote_conversion, quote_historical_conversion
+from apps.exchange.series_presentation import (
+    build_rate_series_component,
+    build_then_now_component,
+)
+from apps.exchange.services import (
+    compare_historical_to_latest,
+    get_rate_series,
+    quote_conversion,
+    quote_historical_conversion,
+)
 
 logger = logging.getLogger("cultural_currency.exchange")
 
@@ -188,6 +200,14 @@ def _conversion_error(
             "detail": (
                 "No published observation falls within the allowed window for this dataset's "
                 "observation frequency. Choose another date."
+            ),
+        }
+    if isinstance(exc, HistoricalObservationUnavailable):
+        return 422, {
+            "title": "Historical trend cannot confirm the selected observation.",
+            "detail": (
+                "The selected normalized quote is outside the accepted observation window. "
+                "The original conversion remains intact."
             ),
         }
     if isinstance(exc, FxProviderUnsupportedPair):
@@ -419,8 +439,99 @@ def picker_options(request: HttpRequest) -> HttpResponse:
     )
 
 
+def _build_then_now_enrichment(cleaned, series_result):
+    base_currency = Currency.objects.filter(code=cleaned["base"]).first()
+    quote_currency = Currency.objects.filter(code=cleaned["quote"]).first()
+    if base_currency is None or quote_currency is None:
+        return None, "Latest comparison is unavailable because currency metadata is incomplete."
+
+    amount = cleaned.get("amount_decimal")
+    comparison_amount_error = cleaned.get("comparison_amount_error")
+
+    historical_amount = amount if amount is not None else Decimal("1")
+    requested_date = cleaned.get("requested_date") or cleaned["selected_date"]
+    exact_series_point = next(
+        (
+            point
+            for point in series_result.series.points
+            if point.observation_date == cleaned["selected_date"]
+        ),
+        None,
+    )
+    if exact_series_point is None:
+        return (
+            None,
+            "Then & Now comparison is unavailable because the selected observation "
+            "is not present in the loaded series.",
+        )
+
+    historical_quote = RateQuote(
+        base_currency=series_result.series.base_currency,
+        quote_currency=series_result.series.quote_currency,
+        rate=exact_series_point.rate,
+        requested_date=requested_date,
+        effective_date=exact_series_point.observation_date,
+        fetched_at=series_result.series.fetched_at,
+        provider_policy=series_result.series.provider_policy,
+        provider_keys=exact_series_point.provider_keys,
+        historical=True,
+        observation_granularity=series_result.series.observation_granularity,
+    )
+    historical = ConversionResult(
+        input_amount=historical_amount,
+        output_amount=convert_amount(
+            historical_amount,
+            historical_quote,
+            minor_units=quote_currency.minor_units,
+        ),
+        quote=historical_quote,
+        stale=series_result.stale,
+    )
+
+    if comparison_amount_error:
+        return None, comparison_amount_error
+    if amount is None:
+        return None, None
+
+    inactive = [
+        currency.code for currency in (base_currency, quote_currency) if not currency.is_active
+    ]
+    if inactive:
+        codes = ", ".join(inactive)
+        return (
+            None,
+            f"Latest reference comparison is not shown because {codes} is archived "
+            "and has no current-market interpretation.",
+        )
+
+    try:
+        latest = quote_conversion(
+            amount=amount,
+            base_currency=cleaned["base"],
+            quote_currency=cleaned["quote"],
+            quote_minor_units=quote_currency.minor_units,
+            gateway=build_latest_quote_gateway(),
+        )
+    except FxProviderError:
+        return (
+            None,
+            "Latest reference comparison is temporarily unavailable. "
+            "The historical trend remains valid.",
+        )
+
+    comparison = compare_historical_to_latest(historical, latest)
+    return (
+        build_then_now_component(
+            comparison,
+            base_minor_units=base_currency.minor_units,
+            quote_minor_units=quote_currency.minor_units,
+        ),
+        None,
+    )
+
+
 def _series_error(exc: Exception) -> tuple[int, dict[str, str]]:
-    if isinstance(exc, RateSeriesRangeError):
+    if isinstance(exc, (RateSeriesRangeError, HistoricalOutOfCoverage)):
         return 422, {
             "title": "Choose a supported historical range.",
             "detail": str(exc),
@@ -458,13 +569,22 @@ def historical_series(request: HttpRequest) -> HttpResponse:
                 end_date=cleaned["end_date_resolved"],
                 gateway=build_historical_series_gateway,
             )
+            then_now, comparison_notice = _build_then_now_enrichment(cleaned, result)
             component = build_rate_series_component(
                 result,
                 selected_date=cleaned["selected_date"],
                 requested_date=cleaned.get("requested_date"),
                 period=cleaned["period"],
+                amount=cleaned.get("amount_decimal"),
+                then_now=then_now,
+                comparison_notice=comparison_notice,
             )
-        except (RateSeriesRangeError, FxProviderError) as exc:
+        except (
+            RateSeriesRangeError,
+            HistoricalObservationUnavailable,
+            HistoricalOutOfCoverage,
+            FxProviderError,
+        ) as exc:
             response_status, error = _series_error(exc)
     else:
         response_status = 422
