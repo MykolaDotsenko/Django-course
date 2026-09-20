@@ -1,13 +1,16 @@
 import Combobox from "@github/combobox-nav";
 
+import { requestFocusRestore } from "./current-converter";
+
 const activeComboboxes = new WeakMap<HTMLInputElement, Combobox>();
 
 function currentConversionForm(): HTMLFormElement | null {
   return document.querySelector<HTMLFormElement>("[data-current-conversion-form]");
 }
 
-function refreshAfterSelection(form: HTMLFormElement): void {
+function refreshAfterSelection(form: HTMLFormElement, focusId: string): void {
   if (form.dataset.hasResult === "true") {
+    requestFocusRestore(focusId);
     form.requestSubmit();
   }
 }
@@ -44,10 +47,12 @@ function commitOption(dialog: HTMLDialogElement, option: HTMLElement): void {
   if (input) input.value = "";
 
   dialog.close();
-  refreshAfterSelection(form);
+  refreshAfterSelection(form, trigger.id);
 }
 
 function wireCombobox(dialog: HTMLDialogElement): void {
+  if (!dialog.open) return;
+
   const input = dialog.querySelector<HTMLInputElement>('input[role="combobox"]');
   const list = dialog.querySelector<HTMLElement>('[role="listbox"]');
   if (!input || !list) return;
@@ -82,15 +87,26 @@ function enhanceDialog(dialog: HTMLDialogElement): void {
     const trigger = document.querySelector<HTMLButtonElement>(`[data-picker-trigger="${side}"]`);
     const fallback = document.querySelector<HTMLElement>(`[data-native-selection="${side}"]`);
     const close = dialog.querySelector<HTMLButtonElement>(`[data-picker-close="${side}"]`);
+    const input = dialog.querySelector<HTMLInputElement>('input[type="search"]');
 
     const hasFallbackErrors = fallback?.dataset.hasErrors === "true";
     if (trigger && !hasFallbackErrors) {
       trigger.hidden = false;
+      trigger.setAttribute("aria-expanded", "false");
       trigger.addEventListener("click", () => {
         if (!dialog.open) dialog.showModal();
-        dialog.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
+        trigger.setAttribute("aria-expanded", "true");
+        input?.focus();
+      });
+
+      dialog.addEventListener("close", () => {
+        const comboboxInput = dialog.querySelector<HTMLInputElement>('input[role="combobox"]');
+        if (comboboxInput) activeComboboxes.get(comboboxInput)?.stop();
+        trigger.setAttribute("aria-expanded", "false");
+        trigger.focus();
       });
     }
+
     if (fallback && !hasFallbackErrors) fallback.hidden = true;
     close?.addEventListener("click", () => dialog.close());
   }
@@ -98,23 +114,7 @@ function enhanceDialog(dialog: HTMLDialogElement): void {
   wireCombobox(dialog);
 }
 
-function enhanceAutoRefresh(form: HTMLFormElement): void {
-  if (form.dataset.autoRefreshWired === "true") return;
-  form.dataset.autoRefreshWired = "true";
-
-  form.addEventListener("change", (event) => {
-    if (form.dataset.hasResult !== "true") return;
-    const target = event.target;
-    if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
-    if (target.type === "hidden") return;
-    form.requestSubmit();
-  });
-}
-
 export function enhanceCurrentConverter(): void {
-  const form = document.querySelector<HTMLFormElement>("[data-current-conversion-form]");
-  if (form) enhanceAutoRefresh(form);
-
   for (const dialog of document.querySelectorAll<HTMLDialogElement>("[data-picker-dialog]")) {
     enhanceDialog(dialog);
   }
