@@ -8,7 +8,6 @@ from apps.exchange.domain import (
     ConversionResult,
     FxDomainError,
     FxSourcePolicy,
-    ObservationGranularity,
     ProviderPolicyMode,
     RateQuote,
     RateSeries,
