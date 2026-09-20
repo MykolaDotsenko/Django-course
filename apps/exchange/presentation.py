@@ -73,7 +73,12 @@ def build_result_component(
             "different rates or add fees."
         )
 
-    effective_date = date_format(result.quote.effective_date, "j M Y")
+    effective_date = None if same_currency else date_format(result.quote.effective_date, "j M Y")
+    fetched_at = (
+        None
+        if same_currency
+        else result.quote.fetched_at.strftime("%d %b %Y · %H:%M UTC")
+    )
     input_text = _money_text(result.input_amount, minor_units=base_minor_units)
     output_text = _money_text(result.output_amount, minor_units=quote_minor_units)
     rate_text = _decimal_text(result.quote.rate)
@@ -84,6 +89,8 @@ def build_result_component(
         "input_currency": result.quote.base_currency,
         "output_amount": output_text,
         "output_currency": result.quote.quote_currency,
+        "exact": same_currency,
+        "stale": result.stale,
         "status": (
             {"kind": "exact", "label": "Exact 1:1"}
             if same_currency
@@ -99,7 +106,7 @@ def build_result_component(
             "data_class": data_class,
             "effective_date": effective_date,
             "provider": provider,
-            "fetched_at": result.quote.fetched_at.strftime("%d %b %Y · %H:%M UTC"),
+            "fetched_at": fetched_at,
             "explanation": explanation,
         },
         "announcement": (
@@ -118,11 +125,41 @@ def build_result_component(
     }
 
 
+def _build_error_summary(form: CurrentConversionForm) -> list[dict[str, str]]:
+    if len(form.errors) < 2:
+        return []
+
+    summary: list[dict[str, str]] = []
+    for field_name, errors in form.errors.items():
+        if not errors:
+            continue
+        if field_name == "__all__":
+            summary.append(
+                {
+                    "href": "#current-conversion-form",
+                    "label": "Conversion",
+                    "message": str(errors[0]),
+                }
+            )
+            continue
+
+        bound_field = form[field_name]
+        summary.append(
+            {
+                "href": f"#{bound_field.id_for_label}",
+                "label": bound_field.label,
+                "message": str(errors[0]),
+            }
+        )
+    return summary
+
+
 def build_converter_context(
     form: CurrentConversionForm,
     *,
     result: ConversionResult | None = None,
     conversion_error: dict[str, str] | None = None,
+    validation_attempted: bool = False,
 ) -> dict[str, object]:
     return {
         "form": form,
@@ -130,6 +167,7 @@ def build_converter_context(
         "destination": _selection_context(form, "destination"),
         "result_component": build_result_component(result, form=form) if result else None,
         "conversion_error": conversion_error,
+        "error_summary": _build_error_summary(form) if validation_attempted else [],
         "has_result": result is not None,
         "reference_data_ready": form.reference_data_ready,
     }
