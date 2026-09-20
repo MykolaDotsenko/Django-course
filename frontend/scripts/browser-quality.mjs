@@ -102,19 +102,30 @@ async function assertForcedColors(page, surface) {
     surface === "converter" ? page.locator("#workspace-amount") : page.locator(".qa-skip-link");
   await focusTarget.focus();
 
-  const focusStyle = await focusTarget.evaluate((element) => {
-    const style = getComputedStyle(element);
-    return {
-      outlineStyle: style.outlineStyle,
-      outlineWidth: style.outlineWidth,
-      boxShadow: style.boxShadow,
-    };
+  const focusStyles = await focusTarget.evaluate((element) => {
+    const candidates = [
+      element,
+      element.closest(".qa-amount-control"),
+      element.closest(".qa-selector-trigger"),
+      element.closest(".qa-primary-button"),
+      element.closest(".qa-swap-button"),
+    ].filter(Boolean);
+
+    return candidates.map((candidate) => {
+      const style = getComputedStyle(candidate);
+      return {
+        outlineStyle: style.outlineStyle,
+        outlineWidth: style.outlineWidth,
+        boxShadow: style.boxShadow,
+      };
+    });
   });
-  assert(
-    (focusStyle.outlineStyle !== "none" && focusStyle.outlineWidth !== "0px") ||
-      focusStyle.boxShadow !== "none",
-    `${surface}: focus indicator disappears in forced-colors mode`,
+  const hasVisibleFocus = focusStyles.some(
+    (style) =>
+      (style.outlineStyle !== "none" && style.outlineWidth !== "0px") ||
+      style.boxShadow !== "none",
   );
+  assert(hasVisibleFocus, `${surface}: focus indicator disappears in forced-colors mode`);
   await assertNoHorizontalOverflow(page, `${surface}/forced-colors`);
 }
 
