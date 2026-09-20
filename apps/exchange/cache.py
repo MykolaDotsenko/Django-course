@@ -14,8 +14,7 @@ from apps.exchange.domain import (
     ProviderPolicyMode,
     RateQuote,
 )
-from apps.exchange.providers.base import FxProvider
-from apps.exchange.providers.frankfurter import FxProviderInvalidPayload, FxProviderUnavailable
+from apps.exchange.providers.base import FxProvider, FxProviderInvalidPayload, FxProviderUnavailable
 
 logger = logging.getLogger(__name__)
 CACHE_VERSION = "v1"
