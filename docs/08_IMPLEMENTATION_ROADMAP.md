@@ -155,6 +155,8 @@ Acceptance:
 
 ## Implementation PR 3 — Countries, currencies and temporal relationships
 
+**Execution status for PR 3:** in review. This slice adds the canonical Country, Currency and temporal CountryCurrency schema, current/historical query rules, deterministic seed data, and an import-only REST Countries v5 boundary with full-snapshot validation, dry-run and idempotent non-destructive sync semantics.
+
 **Goal:** model country/currency relationships correctly for both current and historical modes.
 
 Deliverables:
