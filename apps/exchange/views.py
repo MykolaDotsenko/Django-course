@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import date
+from decimal import Decimal
 from urllib.parse import urlencode
 
 from django.http import HttpRequest, HttpResponse
@@ -196,6 +197,14 @@ def _conversion_error(
             "detail": (
                 "No published observation falls within the allowed window for this dataset's "
                 "observation frequency. Choose another date."
+            ),
+        }
+    if isinstance(exc, HistoricalObservationUnavailable):
+        return 422, {
+            "title": "Historical trend cannot confirm the selected observation.",
+            "detail": (
+                "The selected normalized quote is outside the accepted observation window. "
+                "The original conversion remains intact."
             ),
         }
     if isinstance(exc, FxProviderUnsupportedPair):
@@ -511,7 +520,7 @@ def _build_then_now_enrichment(cleaned, series_result):
 
 
 def _series_error(exc: Exception) -> tuple[int, dict[str, str]]:
-    if isinstance(exc, RateSeriesRangeError):
+    if isinstance(exc, (RateSeriesRangeError, HistoricalOutOfCoverage)):
         return 422, {
             "title": "Choose a supported historical range.",
             "detail": str(exc),
@@ -559,7 +568,12 @@ def historical_series(request: HttpRequest) -> HttpResponse:
                 then_now=then_now,
                 comparison_notice=comparison_notice,
             )
-        except (RateSeriesRangeError, FxProviderError) as exc:
+        except (
+            RateSeriesRangeError,
+            HistoricalObservationUnavailable,
+            HistoricalOutOfCoverage,
+            FxProviderError,
+        ) as exc:
             response_status, error = _series_error(exc)
     else:
         response_status = 422
