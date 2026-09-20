@@ -109,6 +109,7 @@ def _historical_currency_metadata(currency: Currency | None) -> HistoricalCurren
         active_to=currency.active_to,
         coverage_from=currency.coverage_from,
         coverage_to=currency.coverage_to,
+        coverage_to_is_terminal=currency.coverage_to_is_terminal,
     )
 
 
