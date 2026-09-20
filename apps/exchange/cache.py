@@ -342,6 +342,20 @@ class HistoricalSeriesGateway:
             policy,
         )
         cached = self._cache_get(key)
+        if cached is not None:
+            try:
+                self._assert_series_identity(
+                    cached,
+                    base=base,
+                    quote=quote,
+                    start_date=start_date,
+                    end_date=end_date,
+                    grouping=grouping,
+                    policy=policy,
+                )
+            except FxProviderInvalidPayload:
+                cached = None
+
         if (
             cached is not None
             and classify_quote_freshness(
