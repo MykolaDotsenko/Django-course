@@ -98,9 +98,7 @@ class CurrentConversionForm(forms.Form):
         )
         historical_mode = raw_mode == RATE_MODE_HISTORICAL
         currency_query = (
-            Currency.objects.all()
-            if historical_mode
-            else Currency.objects.filter(is_active=True)
+            Currency.objects.all() if historical_mode else Currency.objects.filter(is_active=True)
         )
         currencies = list(currency_query.order_by("code"))
         countries = list(Country.objects.filter(is_active=True).order_by("name"))
