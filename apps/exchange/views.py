@@ -175,8 +175,8 @@ def _conversion_error(
         return {
             "title": "No nearby historical observation is available.",
             "detail": (
-                "The nearest published observation is outside the allowed seven-day "
-                "previous-observation window. Choose another date."
+                "No published observation falls within the allowed window for this dataset's "
+                "observation frequency. Choose another date."
             ),
         }
     if isinstance(exc, FxProviderUnsupportedPair):
