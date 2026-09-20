@@ -13,6 +13,7 @@ const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const SURFACES = [
   { name: "shell", path: "/_design/shell/" },
   { name: "converter", path: "/_design/converter/" },
+  { name: "current-converter", path: "/" },
 ];
 
 const VIEWPORTS = [
@@ -67,14 +68,56 @@ async function assertKeyboardFocus(page, surface) {
     `${surface}: skip link is not the first keyboard target: ${JSON.stringify(first)}`,
   );
 
-  if (surface === "converter") {
+  if (surface === "converter" || surface === "current-converter") {
     await page.keyboard.press("Tab");
     const activeId = await page.evaluate(() => document.activeElement?.id ?? "");
+    const expected = surface === "converter" ? "workspace-amount" : "id_amount";
     assert(
-      activeId === "workspace-amount",
-      `converter: unexpected second focus target ${activeId}`,
+      activeId === expected,
+      `${surface}: unexpected second focus target ${activeId}`,
     );
   }
+}
+
+async function assertCurrentConverterFlow(page) {
+  const waitForPost = () =>
+    page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" && new URL(response.url()).pathname === "/",
+    );
+
+  await page.locator("#id_amount").fill("-1");
+  await Promise.all([waitForPost(), page.locator(".qa-primary-button").click()]);
+  await page.getByText("Enter zero or a positive amount.").waitFor();
+
+  await page.locator("#destination-picker-trigger").click();
+  const search = page.locator("#destination-picker-search");
+  await search.fill("euro");
+  await page.locator("#destination-picker-listbox").waitFor();
+  await search.press("ArrowDown");
+  await search.press("Enter");
+  await page.locator('[data-picker-dialog="destination"]').waitFor({ state: "hidden" });
+
+  await page.locator("#id_amount").fill("12.50");
+  await Promise.all([waitForPost(), page.locator(".qa-primary-button").click()]);
+  await page.locator("#current-conversion-result").waitFor();
+
+  const resultText = await page.locator("#current-conversion-result").innerText();
+  assert(resultText.includes("12.50 EUR"), "current-converter: same-currency input is missing");
+  assert(
+    resultText.includes("Exact same-currency rate"),
+    "current-converter: same-currency provenance is missing",
+  );
+  assert(
+    new URL(page.url()).searchParams.get("convert") === "1",
+    "current-converter: successful HTMX conversion did not push a bookmarkable URL",
+  );
+
+  await assertAxe(page, "current-converter/result");
+
+  await Promise.all([waitForPost(), page.locator("#swap-contexts").click()]);
+  const focused = await page.evaluate(() => document.activeElement?.id ?? "");
+  assert(focused === "swap-contexts", `current-converter: swap focus moved to ${focused}`);
 }
 
 async function assertReducedMotion(page, surface) {
@@ -293,6 +336,10 @@ try {
 
       if (surface.name === "converter" && viewport.name === "wide-1440") {
         await assertConverterTransitionLayout(page);
+      }
+
+      if (surface.name === "current-converter" && viewport.name === "wide-1440") {
+        await assertCurrentConverterFlow(page);
       }
 
       if (viewport.name === "mobile-390") {
