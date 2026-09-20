@@ -17,8 +17,8 @@ from apps.exchange.presentation import build_converter_context
 from apps.exchange.providers.base import (
     FxProviderError,
     FxProviderInvalidPayload,
-    FxProviderUnsupportedPair,
     FxProviderUnavailable,
+    FxProviderUnsupportedPair,
 )
 from apps.exchange.services import quote_conversion
 
