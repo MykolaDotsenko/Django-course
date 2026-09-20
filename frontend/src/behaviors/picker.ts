@@ -83,14 +83,15 @@ function enhanceDialog(dialog: HTMLDialogElement): void {
     const fallback = document.querySelector<HTMLElement>(`[data-native-selection="${side}"]`);
     const close = dialog.querySelector<HTMLButtonElement>(`[data-picker-close="${side}"]`);
 
-    if (trigger) {
+    const hasFallbackErrors = fallback?.dataset.hasErrors === "true";
+    if (trigger && !hasFallbackErrors) {
       trigger.hidden = false;
       trigger.addEventListener("click", () => {
         if (!dialog.open) dialog.showModal();
         dialog.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
       });
     }
-    if (fallback) fallback.hidden = true;
+    if (fallback && !hasFallbackErrors) fallback.hidden = true;
     close?.addEventListener("click", () => dialog.close());
   }
 
