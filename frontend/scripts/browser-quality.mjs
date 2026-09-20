@@ -1,4 +1,5 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { gzipSync } from "node:zlib";
 import { resolve } from "node:path";
 
 import AxeBuilder from "@axe-core/playwright";
@@ -6,6 +7,7 @@ import { chromium } from "playwright";
 
 const BASE_URL = process.env.BROWSER_QUALITY_BASE_URL ?? "http://127.0.0.1:8000";
 const OUTPUT_DIR = resolve(process.cwd(), "../artifacts/browser-quality");
+const BUILD_ASSET_DIR = resolve(process.cwd(), "../static/build/assets");
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
 const SURFACES = [
@@ -130,8 +132,8 @@ async function assertForcedColors(page, surface) {
 
 async function assertTextExpansion(page, surface) {
   await page.emulateMedia({ forcedColors: "none", reducedMotion: "reduce" });
-  await page.addStyleTag({ content: "html { font-size: 125% !important; }" });
-  await assertNoHorizontalOverflow(page, `${surface}/text-125`);
+  await page.addStyleTag({ content: "html { font-size: 200% !important; }" });
+  await assertNoHorizontalOverflow(page, `${surface}/text-200`);
 
   const clippedInteractive = await page
     .locator("button, input, summary, a")
@@ -155,6 +157,47 @@ async function assertTextExpansion(page, surface) {
     clippedInteractive.length === 0,
     `${surface}: clipped interactive text after expansion: ${clippedInteractive.join(", ")}`,
   );
+}
+
+async function assertConverterTransitionLayout(page, viewportName) {
+  const source = await page.locator(".qa-workspace__context--source").boundingBox();
+  const destination = await page.locator(".qa-workspace__context--destination").boundingBox();
+  assert(source && destination, `converter/${viewportName}: bilateral contexts are not measurable`);
+
+  if (viewportName === "transition-1023") {
+    assert(
+      destination.y > source.y + 2,
+      "converter/transition-1023: expected compact stacked bilateral layout",
+    );
+  }
+
+  if (viewportName === "transition-1025") {
+    assert(
+      Math.abs(destination.y - source.y) <= 2,
+      "converter/transition-1025: expected wide simultaneous bilateral layout",
+    );
+  }
+}
+
+async function collectCompressedAssetEvidence() {
+  const names = await readdir(BUILD_ASSET_DIR);
+  const javascript = names.filter((name) => name.endsWith(".js")).sort();
+  const files = [];
+
+  for (const name of javascript) {
+    const bytes = await readFile(resolve(BUILD_ASSET_DIR, name));
+    files.push({
+      name,
+      rawBytes: bytes.length,
+      gzipBytes: gzipSync(bytes, { level: 9 }).length,
+    });
+  }
+
+  return {
+    files,
+    totalRawBytes: files.reduce((total, file) => total + file.rawBytes, 0),
+    totalGzipBytes: files.reduce((total, file) => total + file.gzipBytes, 0),
+  };
 }
 
 async function collectPerformance(page) {
@@ -198,7 +241,7 @@ const evidence = {
   generatedAt: new Date().toISOString(),
   surfaces: {},
   budgets: {
-    coreJavaScriptEncodedBodyBytes: 100 * 1024,
+    coreJavaScriptGzipBytes: 100 * 1024,
     source: "docs/36_PERFORMANCE_BUDGETS_AND_PROFILING.md",
   },
 };
@@ -226,6 +269,13 @@ try {
         await assertAxe(page, `${surface.name}/${viewport.name}`);
       }
 
+      if (
+        surface.name === "converter" &&
+        (viewport.name === "transition-1023" || viewport.name === "transition-1025")
+      ) {
+        await assertConverterTransitionLayout(page, viewport.name);
+      }
+
       if (viewport.name === "mobile-390") {
         await assertReducedMotion(page, surface.name);
         await assertForcedColors(page, surface.name);
@@ -243,13 +293,6 @@ try {
       const performanceEvidence = await collectPerformance(page);
       evidence.surfaces[surface.name][viewport.name] = performanceEvidence;
 
-      if (surface.name === "converter" && viewport.name === "wide-1440") {
-        assert(
-          performanceEvidence.jsEncodedBodyBytes <= evidence.budgets.coreJavaScriptEncodedBodyBytes,
-          `converter: core JavaScript ${performanceEvidence.jsEncodedBodyBytes} B exceeds 100 KiB budget`,
-        );
-      }
-
       await page.screenshot({
         path: resolve(OUTPUT_DIR, `${surface.name}-${viewport.name}.png`),
         fullPage: true,
@@ -257,6 +300,12 @@ try {
       await context.close();
     }
   }
+
+  evidence.compressedAssets = await collectCompressedAssetEvidence();
+  assert(
+    evidence.compressedAssets.totalGzipBytes <= evidence.budgets.coreJavaScriptGzipBytes,
+    `core JavaScript gzip size ${evidence.compressedAssets.totalGzipBytes} B exceeds 100 KiB budget`,
+  );
 
   await writeFile(
     resolve(OUTPUT_DIR, "performance-evidence.json"),
