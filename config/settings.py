@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "template_partials",
     "apps.common",
     "apps.countries",
+    "apps.exchange",
 ]
 
 MIDDLEWARE = [

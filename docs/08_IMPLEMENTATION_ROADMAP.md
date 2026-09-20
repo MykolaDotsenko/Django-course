@@ -189,6 +189,8 @@ Acceptance:
 
 ## Implementation PR 4 — FX domain and Frankfurter adapter
 
+**Execution status for PR 4:** in review. The slice implements normalized Decimal RateQuote semantics, explicit blend/pinned source policy, Frankfurter v2 isolation, bounded transient retry, semantic current/historical cache keys, freshness-vs-retention classification, safe same-key stale fallback, and same-currency provider bypass. Historical requested-date resolution policy remains PR6.
+
 **Goal:** implement trusted normalized exchange-rate data.
 
 Deliverables:
