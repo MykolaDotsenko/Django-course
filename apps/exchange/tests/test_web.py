@@ -817,7 +817,6 @@ def test_same_currency_historical_result_does_not_offer_redundant_trend(client, 
     factory.assert_not_called()
 
 
-
 @pytest.mark.django_db
 def test_historical_series_amount_builds_then_now_from_series_observation(client, reference_data):
     series_gateway = FakeSeriesGateway()
