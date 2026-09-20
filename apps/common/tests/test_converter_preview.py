@@ -60,6 +60,34 @@ class ConverterPrimitivePreviewTests(SimpleTestCase):
         )
         self.assertIn(">Historical<", html)
 
+    def test_bilateral_workspace_preserves_semantic_source_to_destination_order(self) -> None:
+        response = self.client.get("/_design/converter/")
+        html = response.content.decode()
+
+        workspace_start = html.index('class="qa-workspace"')
+        workspace_end = html.index("Illustrative layout fixture only.", workspace_start)
+        workspace = html[workspace_start:workspace_end]
+
+        self.assertLess(workspace.index(">Source<"), workspace.index(">Destination<"))
+        self.assertLess(
+            workspace.index('id="workspace-source"'),
+            workspace.index('id="workspace-destination"'),
+        )
+        self.assertIn('data-country-theme="fi"', workspace)
+        self.assertIn('data-country-theme="jp"', workspace)
+        self.assertIn('aria-live="polite"', workspace)
+        self.assertIn('id="workspace-reference-result-title"', workspace)
+        self.assertEqual(html.count('id="workspace-reference-result-title"'), 1)
+
+    def test_bilateral_workspace_is_a_layout_fixture_not_business_behavior(self) -> None:
+        response = self.client.get("/_design/converter/")
+        html = response.content.decode()
+
+        self.assertIn("PR2E validates composition and reflow", html)
+        self.assertIn("FX behavior remains", html)
+        self.assertNotIn("hx-post=", html)
+        self.assertNotIn("hx-get=", html)
+
     def test_named_partial_loader_renders_status_badge_in_isolation(self) -> None:
         html = render_to_string(
             "components/converter/primitives.html#status-badge",

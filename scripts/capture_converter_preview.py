@@ -59,7 +59,7 @@ def _assert_preview_integrity(page: Page, *, viewport_width: int) -> None:
         """() => ({
             scrollWidth: document.documentElement.scrollWidth,
             clientWidth: document.documentElement.clientWidth,
-        })"""
+        })""",
     )
     if overflow["scrollWidth"] > overflow["clientWidth"] + 1:
         raise RuntimeError(
@@ -76,20 +76,21 @@ def _assert_preview_integrity(page: Page, *, viewport_width: int) -> None:
         label="Amount control",
     )
     _assert_minimum_size(
-        page.locator("#preview-source"),
+        page.locator("#workspace-source"),
         min_height=selector_height,
         label="Source trigger",
     )
+    workspace = page.locator(".qa-workspace")
     _assert_minimum_size(
-        page.get_by_role("button", name="Swap source and destination"),
+        workspace.get_by_role("button", name="Swap source and destination"),
         min_width=48,
         min_height=48,
-        label="Swap button",
+        label="Workspace swap",
     )
     _assert_minimum_size(
-        page.get_by_role("button", name="Convert"),
+        workspace.get_by_role("button", name="Convert"),
         min_height=convert_height,
-        label="Convert button",
+        label="Workspace convert",
     )
 
     error_input = page.locator("#preview-amount-error")
@@ -103,11 +104,11 @@ def _assert_preview_integrity(page: Page, *, viewport_width: int) -> None:
 
     page.keyboard.press("Tab")
     active_id = page.evaluate("document.activeElement?.id ?? ''")
-    if active_id != "preview-amount":
+    if active_id != "workspace-amount":
         raise RuntimeError(f"Amount input is not second keyboard target: {active_id!r}")
 
     focus_shadow = page.locator(".qa-amount-control").first.evaluate(
-        "element => getComputedStyle(element).boxShadow"
+        "element => getComputedStyle(element).boxShadow",
     )
     if focus_shadow == "none":
         raise RuntimeError("Amount focus treatment is not visibly rendered")
@@ -118,6 +119,15 @@ def _assert_preview_integrity(page: Page, *, viewport_width: int) -> None:
         raise RuntimeError("Cached status text is missing")
     if page.get_by_text("Historical", exact=True).count() < 1:
         raise RuntimeError("Historical status text is missing")
+
+    source_box = _box(page.locator(".qa-workspace__context--source"))
+    destination_box = _box(page.locator(".qa-workspace__context--destination"))
+    if viewport_width >= 1024 and abs(source_box["y"] - destination_box["y"]) > 2:
+        raise RuntimeError("Wide bilateral contexts must remain simultaneous")
+    if viewport_width < 1024 and destination_box["y"] <= source_box["y"]:
+        raise RuntimeError(
+            "Compact bilateral contexts must preserve source-before-destination order"
+        )
 
 
 def main() -> None:

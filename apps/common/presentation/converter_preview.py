@@ -6,6 +6,34 @@ def build_converter_preview_context() -> dict[str, object]:
 
     return {
         "preview_disclaimer": "Illustrative component data · not a rate quote.",
+        "workspace_amount": {
+            "id": "workspace-amount",
+            "name": "workspace_amount",
+            "label": "Amount",
+            "value": "100.00",
+            "placeholder": "0.00",
+            "currency_code": "EUR",
+            "hint": "",
+            "error": "",
+        },
+        "workspace_source": {
+            "id": "workspace-source",
+            "role_label": "From",
+            "country_name": "Finland",
+            "currency_name": "Euro",
+            "currency_code": "EUR",
+            "media_text": "FI",
+            "historical": False,
+        },
+        "workspace_destination": {
+            "id": "workspace-destination",
+            "role_label": "To",
+            "country_name": "Japan",
+            "currency_name": "Japanese yen",
+            "currency_code": "JPY",
+            "media_text": "JP",
+            "historical": False,
+        },
         "amount_default": {
             "id": "preview-amount",
             "name": "amount",
@@ -52,6 +80,27 @@ def build_converter_preview_context() -> dict[str, object]:
             "currency_code": "FIM",
             "media_text": "FI",
             "historical": True,
+        },
+        "workspace_result": {
+            "id": "workspace-reference-result",
+            "input_amount": "100",
+            "input_currency": "EUR",
+            "output_amount": "17,450",
+            "output_currency": "JPY",
+            "status": {
+                "kind": "reference",
+                "label": "Reference rate",
+            },
+            "rate_meta": {
+                "rate_line": "1 EUR = 174.50 JPY",
+                "data_class": "Reference rate",
+                "effective_date": "18 Sep 2026",
+                "provider": "Frankfurter",
+                "fetched_at": "",
+                "explanation": (
+                    "Illustrative result for layout QA only; no FX calculation is performed."
+                ),
+            },
         },
         "reference_result": {
             "id": "preview-reference-result",
