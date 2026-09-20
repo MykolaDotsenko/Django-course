@@ -663,7 +663,6 @@ def test_historical_htmx_and_full_get_render_equivalent_numeric_semantics(client
         assert b"Previous available observation" in response.content
 
 
-
 @pytest.mark.django_db
 def test_historical_series_page_uses_bounded_one_year_range(client, reference_data):
     gateway = FakeSeriesGateway()
