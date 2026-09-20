@@ -68,7 +68,10 @@ async function assertKeyboardFocus(page, surface) {
   if (surface === "converter") {
     await page.keyboard.press("Tab");
     const activeId = await page.evaluate(() => document.activeElement?.id ?? "");
-    assert(activeId === "workspace-amount", `converter: unexpected second focus target ${activeId}`);
+    assert(
+      activeId === "workspace-amount",
+      `converter: unexpected second focus target ${activeId}`,
+    );
   }
 }
 
@@ -119,19 +122,24 @@ async function assertTextExpansion(page, surface) {
   await page.addStyleTag({ content: "html { font-size: 125% !important; }" });
   await assertNoHorizontalOverflow(page, `${surface}/text-125`);
 
-  const clippedInteractive = await page.locator("button, input, summary, a").evaluateAll((elements) =>
-    elements
-      .filter((element) => {
-        const style = getComputedStyle(element);
-        return (
-          element.clientWidth > 0 &&
-          element.scrollWidth > element.clientWidth + 1 &&
-          style.overflowX === "hidden"
-        );
-      })
-      .map((element) => element.id || element.getAttribute("aria-label") || element.textContent?.trim())
-      .filter(Boolean),
-  );
+  const clippedInteractive = await page
+    .locator("button, input, summary, a")
+    .evaluateAll((elements) =>
+      elements
+        .filter((element) => {
+          const style = getComputedStyle(element);
+          return (
+            element.clientWidth > 0 &&
+            element.scrollWidth > element.clientWidth + 1 &&
+            style.overflowX === "hidden"
+          );
+        })
+        .map(
+          (element) =>
+            element.id || element.getAttribute("aria-label") || element.textContent?.trim(),
+        )
+        .filter(Boolean),
+    );
   assert(
     clippedInteractive.length === 0,
     `${surface}: clipped interactive text after expansion: ${clippedInteractive.join(", ")}`,
@@ -165,7 +173,10 @@ async function collectPerformance(page) {
 
 async function openSurface(page, surface) {
   const response = await page.goto(`${BASE_URL}${surface.path}`, { waitUntil: "networkidle" });
-  assert(response?.ok(), `${surface.name}: request failed with ${response?.status() ?? "no response"}`);
+  assert(
+    response?.ok(),
+    `${surface.name}: request failed with ${response?.status() ?? "no response"}`,
+  );
   const h1Count = await page.locator("h1").count();
   assert(h1Count === 1, `${surface.name}: expected exactly one H1, found ${h1Count}`);
 }
