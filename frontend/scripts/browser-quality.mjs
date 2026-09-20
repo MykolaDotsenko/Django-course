@@ -217,12 +217,12 @@ try {
       }
 
       if (viewport.name === "mobile-390") {
-        await assertReducedMotion(page, surface);
-        await assertForcedColors(page, surface);
+        await assertReducedMotion(page, surface.name);
+        await assertForcedColors(page, surface.name);
       }
 
       if (viewport.name === "reflow-320") {
-        await assertTextExpansion(page, surface);
+        await assertTextExpansion(page, surface.name);
       }
 
       assert(
