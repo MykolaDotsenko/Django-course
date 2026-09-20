@@ -60,6 +60,7 @@ class Currency(models.Model):
     coverage_to = models.DateField(null=True, blank=True)
     coverage_source = models.CharField(max_length=80, blank=True)
     coverage_fetched_at = models.DateTimeField(null=True, blank=True)
+    coverage_to_is_terminal = models.BooleanField(default=False)
 
     objects = CurrencyQuerySet.as_manager()
 
