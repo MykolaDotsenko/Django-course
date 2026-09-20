@@ -64,6 +64,11 @@
                  name="requested_date"
                  value="{{ series_component.requested_date|date:'Y-m-d' }}">
         {% endif %}
+        {% if series_component.amount %}
+          <input type="hidden"
+                 name="amount"
+                 value="{{ series_component.amount }}">
+        {% endif %}
         <input type="hidden" name="period" value="custom">
         <div class="qa-rate-series__custom-grid">
           <label class="qa-field">
@@ -85,6 +90,39 @@
         <button class="qa-secondary-button" type="submit">Apply custom range</button>
       </form>
     </details>
+    {% if series_component.points %}
+      <section class="qa-rate-chart"
+               aria-labelledby="historical-rate-chart-title">
+        <div class="qa-rate-chart__heading">
+          <div>
+            <p class="qa-foundation-kicker">Visual trend</p>
+            <h3 id="historical-rate-chart-title">Rate movement</h3>
+          </div>
+          {% if series_component.selected_point %}
+            <span class="qa-rate-chart__selected-key">
+              <span aria-hidden="true"></span>
+              Selected observation
+            </span>
+          {% endif %}
+        </div>
+        <div class="qa-rate-chart__canvas">
+          <canvas data-rate-chart
+                  data-chart-data-id="historical-rate-chart-data"
+                  role="img"
+                  aria-label="{{ series_component.pair }} historical reference-rate line chart"
+                  aria-describedby="historical-rate-chart-status"></canvas>
+        </div>
+        <p id="historical-rate-chart-status"
+           class="qa-visually-hidden"
+           aria-live="polite">Loading visual chart. The data table below contains the same reference-rate observations.</p>
+        <noscript>
+          <p class="qa-field__message">
+            The visual chart requires JavaScript. The summary and data table remain fully available.
+          </p>
+        </noscript>
+        {{ series_component.chart_payload|json_script:"historical-rate-chart-data" }}
+      </section>
+    {% endif %}
     <p class="qa-rate-series__summary">{{ series_component.summary }}</p>
     <dl class="qa-rate-series__facts">
       {% if series_component.selected_point %}
@@ -150,6 +188,58 @@
         </dd>
       </div>
     </dl>
+    {% if series_component.then_now %}
+      {% with comparison=series_component.then_now %}
+        <section class="qa-then-now"
+                 aria-labelledby="then-now-title">
+          <div class="qa-then-now__heading">
+            <div>
+              <p class="qa-foundation-kicker">Then &amp; now</p>
+              <h3 id="then-now-title">Same amount, two reference observations</h3>
+            </div>
+          </div>
+          <div class="qa-then-now__grid">
+            <article>
+              <p class="qa-workspace__role">Then</p>
+              <h4>{{ comparison.then.date_label }}</h4>
+              <p class="qa-then-now__amount">
+                {{ comparison.input_amount }} {{ comparison.base_currency }}
+                ≈ {{ comparison.then.output_amount }} {{ comparison.quote_currency }}
+              </p>
+              <p class="qa-field__message">
+                1 {{ comparison.base_currency }} = {{ comparison.then.rate }} {{ comparison.quote_currency }}
+              </p>
+              {% if comparison.then.providers %}
+                <p class="qa-field__message">Source: {{ comparison.then.providers }}</p>
+              {% endif %}
+            </article>
+            <article>
+              <p class="qa-workspace__role">Latest reference</p>
+              <h4>{{ comparison.latest.date_label }}</h4>
+              <p class="qa-then-now__amount">
+                {{ comparison.input_amount }} {{ comparison.base_currency }}
+                ≈ {{ comparison.latest.output_amount }} {{ comparison.quote_currency }}
+              </p>
+              <p class="qa-field__message">
+                1 {{ comparison.base_currency }} = {{ comparison.latest.rate }} {{ comparison.quote_currency }}
+              </p>
+              {% if comparison.latest.providers %}
+                <p class="qa-field__message">Source: {{ comparison.latest.providers }}</p>
+              {% endif %}
+              {% if comparison.latest.stale %}
+                <span class="qa-status-badge qa-status-badge--cached">Cached latest reference</span>
+              {% endif %}
+            </article>
+          </div>
+          <p class="qa-then-now__difference">{{ comparison.difference_text }}</p>
+        </section>
+      {% endwith %}
+    {% elif series_component.comparison_notice %}
+      <aside class="qa-rate-series__comparison-note">
+        <p class="qa-foundation-kicker">Then &amp; now</p>
+        <p>{{ series_component.comparison_notice }}</p>
+      </aside>
+    {% endif %}
     {% if series_component.points %}
       <details class="qa-rate-series__table">
         <summary>View data table</summary>
