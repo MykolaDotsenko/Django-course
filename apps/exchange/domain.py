@@ -230,6 +230,7 @@ class RateSeries:
     points: tuple[RateSeriesPoint, ...]
     fetched_at: datetime
     provider_policy: FxSourcePolicy
+    observation_granularity: ObservationGranularity = ObservationGranularity.DAILY
 
     def __post_init__(self) -> None:
         base = normalize_currency_code(self.base_currency)
