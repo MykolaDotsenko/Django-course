@@ -3,7 +3,12 @@ from decimal import Decimal
 
 import pytest
 
-from apps.exchange.domain import DEFAULT_SOURCE_POLICY, FxDomainError, HistoricalDateError, RateQuote
+from apps.exchange.domain import (
+    DEFAULT_SOURCE_POLICY,
+    FxDomainError,
+    HistoricalDateError,
+    RateQuote,
+)
 from apps.exchange.services import quote_conversion, quote_historical_conversion
 
 
@@ -42,7 +47,9 @@ def test_invalid_currency_syntax_is_rejected_before_gateway(base_currency):
 
 class HistoricalExplodingGateway:
     def get(self, *args, **kwargs):
-        raise AssertionError("historical same-currency conversion must not call the provider gateway")
+        raise AssertionError(
+            "historical same-currency conversion must not call the provider gateway"
+        )
 
 
 class HistoricalGateway:
