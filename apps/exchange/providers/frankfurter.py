@@ -155,7 +155,6 @@ class FrankfurterProvider:
             f"{self.base_url}/rate/{base_code}/{quote_code}{query}",
             headers={"Accept": "application/json", "User-Agent": "cultural-currency-converter/0.1"},
         )
-        fetched_at = datetime.now(UTC)
         raw: bytes | None = None
         last_transient_error: Exception | None = None
         for attempt in range(self.max_attempts):
@@ -183,6 +182,7 @@ class FrankfurterProvider:
         if raw is None:
             raise FxProviderUnavailable("Frankfurter request failed.") from last_transient_error
 
+        fetched_at = datetime.now(UTC)
         try:
             payload = json.loads(raw, parse_float=Decimal, parse_int=Decimal)
         except (json.JSONDecodeError, UnicodeDecodeError) as exc:
