@@ -112,3 +112,10 @@ def test_wrong_pair_cache_key_is_never_reused_on_failure():
 
     with pytest.raises(FxProviderUnavailable):
         gateway.get("EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW)
+
+
+def test_attribution_mode_changes_cache_identity():
+    without_attribution = FxSourcePolicy(include_attribution=False)
+    assert latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY) != latest_cache_key(
+        "EUR", "JPY", without_attribution
+    )
