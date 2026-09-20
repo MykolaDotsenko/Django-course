@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 import pytest
+from django.core.exceptions import ValidationError
 
 from apps.countries.models import Country, CountryCurrency, Currency
 from apps.exchange.forms import CurrentConversionForm, parse_amount_text
@@ -21,17 +22,17 @@ def test_amount_parser_accepts_unambiguous_decimal_input(raw, minor_units, expec
 
 @pytest.mark.parametrize("raw", ["-1", "100 euros", "1,234.56"])
 def test_amount_parser_rejects_invalid_or_grouped_input(raw):
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         parse_amount_text(raw, minor_units=2)
 
 
 def test_amount_parser_rejects_ambiguous_three_digit_fraction_for_eur():
-    with pytest.raises(Exception, match="ambiguous"):
+    with pytest.raises(ValidationError, match="ambiguous"):
         parse_amount_text("1.234", minor_units=2)
 
 
 def test_amount_parser_rejects_excess_precision():
-    with pytest.raises(Exception, match="at most 2 decimal places"):
+    with pytest.raises(ValidationError, match="at most 2 decimal places"):
         parse_amount_text("12.3456", minor_units=2)
 
 
