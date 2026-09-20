@@ -69,7 +69,7 @@ def sync_country_metadata(
                     "flag_url": snapshot.flag_url,
                     "is_active": True,
                     "metadata_source": snapshot.source_version,
-                    "metadata_verified_at": snapshot.fetched_at,
+                    "metadata_fetched_at": snapshot.fetched_at,
                 },
             )
             counts["countries_created" if created else "countries_updated"] += 1
