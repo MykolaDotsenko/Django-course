@@ -156,6 +156,7 @@ def build_converter_context(
     result: ConversionResult | None = None,
     conversion_error: dict[str, str] | None = None,
     validation_attempted: bool = False,
+    conversion_active: bool = False,
 ) -> dict[str, object]:
     return {
         "form": form,
@@ -165,5 +166,6 @@ def build_converter_context(
         "conversion_error": conversion_error,
         "error_summary": _build_error_summary(form) if validation_attempted else [],
         "has_result": result is not None,
+        "conversion_active": conversion_active or result is not None,
         "reference_data_ready": form.reference_data_ready,
     }
