@@ -91,6 +91,9 @@ async function assertCurrentConverterFlow(page) {
   const search = page.locator("#destination-picker-search");
   await search.fill("euro");
   await page.locator("#destination-picker-listbox").waitFor();
+  await page.waitForFunction(
+    () => document.querySelector("#destination-picker-listbox")?.dataset.commitWired === "true",
+  );
   await search.press("ArrowDown");
   await search.press("Enter");
   await page.locator('[data-picker-dialog="destination"]').waitFor({ state: "hidden" });
