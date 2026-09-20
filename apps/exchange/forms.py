@@ -27,12 +27,19 @@ def parse_amount_text(value: str, *, minor_units: int) -> Decimal:
     separator = "," if "," in text else "." if "." in text else None
     fraction = text.split(separator, 1)[1] if separator else ""
     integer = text.split(separator, 1)[0] if separator else text
+    significant_fraction = fraction.rstrip("0")
 
-    if separator and len(fraction) == 3 and len(integer) <= 3 and minor_units != 3:
+    if (
+        separator
+        and len(fraction) == 3
+        and len(significant_fraction) == 3
+        and len(integer) <= 3
+        and minor_units != 3
+    ):
         raise forms.ValidationError(
             "This amount is ambiguous. Enter it without thousands separators."
         )
-    if len(fraction) > minor_units:
+    if len(significant_fraction) > minor_units:
         unit_label = "decimal place" if minor_units == 1 else "decimal places"
         raise forms.ValidationError(
             f"This currency supports at most {minor_units} {unit_label}."
