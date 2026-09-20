@@ -4,6 +4,7 @@
 @import "./shell.css";
 @import "./converter.css";
 @import "./current-converter.css";
+@import "./rate-series.css";
 
 @source "../../../templates";
 
