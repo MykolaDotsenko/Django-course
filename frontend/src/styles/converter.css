@@ -515,3 +515,212 @@
     color: CanvasText;
   }
 }
+
+
+/* PR2E — responsive bilateral converter composition */
+.qa-workspace {
+  container-type: inline-size;
+}
+
+.qa-workspace__heading {
+  max-width: var(--qa-reading-max);
+  margin-block-end: var(--qa-space-6);
+}
+
+.qa-workspace__heading h2 {
+  margin-block-end: var(--qa-space-3);
+}
+
+.qa-workspace__heading p:last-child,
+.qa-workspace__note {
+  margin-block-end: 0;
+  color: var(--color-muted);
+}
+
+.qa-workspace__stage {
+  display: grid;
+  gap: var(--qa-space-6);
+  padding: clamp(1.25rem, 4cqi, 2rem);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+}
+
+.qa-workspace__pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--qa-space-4);
+}
+
+.qa-workspace__context {
+  --qa-context-accent: var(--color-brand);
+  --qa-context-soft: var(--color-surface-soft);
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-width: 0;
+  gap: var(--qa-space-5);
+  overflow: clip;
+  padding: var(--qa-space-5);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.qa-workspace__context::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--qa-context-soft) 88%, transparent), transparent 54%),
+    linear-gradient(145deg, color-mix(in srgb, var(--qa-context-soft) 55%, transparent), transparent 72%);
+  content: "";
+  pointer-events: none;
+}
+
+.qa-workspace__context--source::before {
+  opacity: 0.48;
+}
+
+.qa-workspace__context--destination::before {
+  opacity: 0.72;
+}
+
+.qa-workspace__identity {
+  min-width: 0;
+  padding-inline-start: var(--qa-space-3);
+  border-inline-start: 0.25rem solid var(--qa-context-accent);
+}
+
+.qa-workspace__identity h3 {
+  margin-block-end: var(--qa-space-1);
+  font-size: clamp(1.25rem, 5cqi, 1.75rem);
+}
+
+.qa-workspace__identity p {
+  margin-block-end: 0;
+  color: var(--color-muted);
+}
+
+.qa-workspace__role {
+  margin-block-end: var(--qa-space-1) !important;
+  color: var(--color-ink) !important;
+  font-size: var(--text-meta);
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.qa-workspace__swap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qa-workspace__action {
+  display: grid;
+  min-width: 0;
+  gap: var(--qa-space-4);
+  padding-block-start: var(--qa-space-2);
+}
+
+.qa-workspace__result {
+  min-width: 0;
+}
+
+.qa-workspace__result .qa-result {
+  border-color: var(--color-border-control);
+}
+
+.qa-workspace__note {
+  margin-block-start: var(--qa-space-4);
+  font-size: var(--text-body-sm);
+}
+
+@container (min-width: 48rem) {
+  .qa-workspace__pair {
+    grid-template-columns: minmax(0, 1fr) 3rem minmax(0, 1fr);
+    align-items: stretch;
+    gap: var(--qa-space-4);
+  }
+
+  .qa-workspace__swap {
+    align-self: center;
+  }
+
+  .qa-workspace__action {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+  .qa-workspace__action .qa-primary-button {
+    min-width: 9rem;
+  }
+}
+
+@container (max-width: 47.999rem) {
+  .qa-workspace__pair {
+    grid-template-areas:
+      "source"
+      "swap"
+      "destination";
+  }
+
+  .qa-workspace__context--source {
+    grid-area: source;
+  }
+
+  .qa-workspace__swap {
+    grid-area: swap;
+    min-height: 3rem;
+  }
+
+  .qa-workspace__context--destination {
+    grid-area: destination;
+  }
+
+  .qa-workspace__swap .qa-icon {
+    transform: rotate(90deg);
+  }
+
+  .qa-workspace__action .qa-primary-button {
+    width: 100%;
+    min-height: 3.25rem;
+  }
+}
+
+@container (max-width: 24rem) {
+  .qa-workspace__stage,
+  .qa-workspace__context {
+    padding: var(--qa-space-4);
+  }
+
+  .qa-workspace__context {
+    border-radius: var(--radius-md);
+  }
+
+  .qa-workspace__identity h3 {
+    font-size: var(--text-heading-3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qa-workspace__swap .qa-icon {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .qa-workspace__stage,
+  .qa-workspace__context {
+    border-color: CanvasText;
+  }
+
+  .qa-workspace__context::before {
+    display: none;
+  }
+
+  .qa-workspace__identity {
+    border-inline-start-color: CanvasText;
+  }
+}
