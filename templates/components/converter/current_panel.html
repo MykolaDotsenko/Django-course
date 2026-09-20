@@ -51,6 +51,30 @@
         data-current-conversion-form
         data-has-result="{% if conversion_active %}true{% else %}false{% endif %}">
     {% csrf_token %}
+    <fieldset class="qa-rate-date">
+      <legend class="qa-field__label">Rate date</legend>
+      <div class="qa-rate-date__choices">
+        {% for option in form.rate_mode %}
+          <label class="qa-rate-date__choice">
+            {{ option.tag }}
+            <span>{{ option.choice_label }}</span>
+          </label>
+        {% endfor %}
+      </div>
+      <div class="qa-field{% if form.requested_date.errors %} qa-field--error{% endif %}">
+        <label class="qa-field__label"
+               for="{{ form.requested_date.id_for_label }}">Historical date</label>
+        {{ form.requested_date }}
+        {% if form.requested_date.errors %}
+          <p class="qa-field__message qa-field__message--error"
+             id="requested_date-error">{{ form.requested_date.errors.0 }}</p>
+        {% else %}
+          <p class="qa-field__message" id="requested-date-hint">
+            Required only for Historical date. Future dates are not allowed.
+          </p>
+        {% endif %}
+      </div>
+    </fieldset>
     <input type="hidden"
            name="conversion_active"
            value="{% if conversion_active %}1{% else %}0{% endif %}">
