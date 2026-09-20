@@ -1,0 +1,23 @@
+<ul class="qa-picker-options"
+    id="{{ side }}-picker-listbox"
+    role="listbox"
+    aria-label="{{ side|capfirst }} country and currency options">
+  {% for option in options %}
+    <li>
+      <button class="qa-picker-option"
+              id="{{ option.id }}"
+              type="button"
+              role="option"
+              data-picker-option
+              data-country-code="{{ option.country_code }}"
+              data-currency-code="{{ option.currency_code }}">
+        <span>{{ option.label }}</span>
+        <span class="qa-picker-option__meta">{{ option.meta }}</span>
+      </button>
+    </li>
+  {% empty %}
+    <li class="qa-picker-results__empty">
+      No supported country or currency matches{% if query %} “{{ query }}”{% endif %}.
+    </li>
+  {% endfor %}
+</ul>

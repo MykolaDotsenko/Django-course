@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Cultural Currency Converter{% endblock %}
+{% block head_meta %}
+  <meta name="description"
+        content="Convert reference exchange rates while keeping source and destination country context distinct.">
+{% endblock %}
+{% block content %}
+  <section class="qa-foundation-intro qa-product-intro" aria-labelledby="converter-page-title">
+    <p class="qa-foundation-kicker">Travel money, with context</p>
+    <h1 id="converter-page-title">What does your money mean there?</h1>
+    <p class="qa-foundation-lede">
+      Convert a trusted reference rate first. Country context stays separate from currency, so the
+      same money can later explain local value without changing the arithmetic.
+    </p>
+  </section>
+  {% include "components/converter/current_panel.html" %}
+{% endblock %}

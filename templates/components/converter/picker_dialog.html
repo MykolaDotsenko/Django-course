@@ -1,0 +1,45 @@
+<dialog class="qa-picker-dialog"
+        data-picker-dialog="{{ side }}"
+        aria-labelledby="{{ side }}-picker-title">
+  <div class="qa-picker-dialog__panel">
+    <div class="qa-picker-dialog__header">
+      <div>
+        <p class="qa-foundation-kicker">Search</p>
+        <h2 id="{{ side }}-picker-title">Choose {{ role_label }} country or currency</h2>
+      </div>
+      <button class="qa-picker-dialog__close"
+              type="button"
+              data-picker-close="{{ side }}"
+              aria-label="Close {{ role_label }} picker">
+        Close
+      </button>
+    </div>
+
+    <div class="qa-field">
+      <label class="qa-field__label" for="{{ side }}-picker-search">
+        Search by country, currency name or code
+      </label>
+      <input class="qa-picker-search"
+             id="{{ side }}-picker-search"
+             type="search"
+             name="q"
+             autocomplete="off"
+             role="combobox"
+             aria-autocomplete="list"
+             aria-expanded="true"
+             aria-controls="{{ side }}-picker-listbox"
+             hx-get="{% url 'picker_options' %}"
+             hx-trigger="focus, input changed delay:250ms, search"
+             hx-target="#{{ side }}-picker-results"
+             hx-include="#{{ side }}-picker-side"
+             hx-sync="this:replace">
+      <input id="{{ side }}-picker-side" type="hidden" name="side" value="{{ side }}">
+    </div>
+
+    <div id="{{ side }}-picker-results"
+         class="qa-picker-results"
+         data-picker-results="{{ side }}">
+      <p class="qa-picker-results__hint">Start typing, or focus the search field to see options.</p>
+    </div>
+  </div>
+</dialog>
