@@ -19,6 +19,8 @@ on:
       - "frontend/**"
       - "templates/**"
       - "apps/common/**"
+      - "apps/countries/**"
+      - "apps/exchange/**"
       - "config/**"
       - "scripts/**"
       - "pyproject.toml"
