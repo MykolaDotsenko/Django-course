@@ -227,3 +227,15 @@
 .qa-status-badge--exact {
   border-color: var(--color-border-control);
 }
+
+
+.qa-rate-meta__rate,
+.qa-rate-meta__facts dd,
+.qa-rate-meta__disclaimer,
+.qa-source-details__body,
+.qa-status-badge,
+.qa-result__input,
+.qa-result__output > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
