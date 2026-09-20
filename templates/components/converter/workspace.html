@@ -17,6 +17,12 @@
       action="{% url 'converter_preview' %}"
       aria-describedby="converter-preview-disclaimer"
     >
+      <div class="qa-workspace__amount">
+        {% with component=amount_default %}
+          {% include "components/converter/primitives.html#amount-field" %}
+        {% endwith %}
+      </div>
+
       <div class="qa-workspace__pair">
         <section class="qa-workspace__context qa-workspace__context--source" data-country-theme="fi" aria-labelledby="workspace-source-title">
           <div class="qa-workspace__identity">
@@ -46,9 +52,6 @@
       </div>
 
       <div class="qa-workspace__action">
-        {% with component=amount_default %}
-          {% include "components/converter/primitives.html#amount-field" %}
-        {% endwith %}
         {% include "components/converter/primitives.html#convert-button" %}
       </div>
 
