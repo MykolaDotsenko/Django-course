@@ -1,0 +1,245 @@
+{% load partials %}
+<section id="converter-panel"
+         class="qa-workspace qa-current-converter"
+         aria-labelledby="current-converter-title">
+  <div class="qa-workspace__heading">
+    <p class="qa-foundation-kicker">Convert</p>
+    <h2 id="current-converter-title">One amount, two local contexts.</h2>
+    <p>Choose currencies directly, or add country context when it is useful.</p>
+  </div>
+  {% if not reference_data_ready %}
+    <div class="qa-inline-alert qa-inline-alert--error" role="alert">
+      <h3>Reference data is not ready.</h3>
+      <p>Load the country and currency reference data before using the converter.</p>
+    </div>
+  {% endif %}
+  {% if conversion_error %}
+    <div class="qa-inline-alert qa-inline-alert--error" role="alert">
+      <h3>{{ conversion_error.title }}</h3>
+      <p>{{ conversion_error.detail }}</p>
+      <button class="qa-secondary-button"
+              type="submit"
+              form="current-conversion-form"
+              name="action"
+              value="retry">Retry reference rate</button>
+    </div>
+  {% endif %}
+  {% if error_summary %}
+    <div class="qa-inline-alert qa-inline-alert--error"
+         id="conversion-error-summary"
+         role="alert"
+         tabindex="-1">
+      <h3>Check these fields</h3>
+      <ul class="qa-error-summary">
+        {% for item in error_summary %}
+          <li>
+            <a href="{{ item.href }}">{{ item.label }}: {{ item.message }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+  <form id="current-conversion-form"
+        class="qa-workspace__stage"
+        method="post"
+        action="{% url 'converter' %}"
+        hx-post="{% url 'converter' %}"
+        hx-target="#converter-panel"
+        hx-swap="outerHTML"
+        hx-sync="this:replace"
+        hx-indicator="#conversion-loading"
+        data-current-conversion-form
+        data-has-result="{% if has_result %}true{% else %}false{% endif %}">
+    {% csrf_token %}
+    <input type="hidden"
+           name="conversion_active"
+           value="{% if has_result %}1{% else %}0{% endif %}">
+    <div class="qa-workspace__amount">
+      <div class="qa-field{% if form.amount.errors %} qa-field--error{% endif %}">
+        <label class="qa-field__label" for="{{ form.amount.id_for_label }}">Amount</label>
+        <div class="qa-amount-control">
+          <input class="qa-amount-control__input"
+                 id="{{ form.amount.id_for_label }}"
+                 name="{{ form.amount.html_name }}"
+                 type="text"
+                 inputmode="decimal"
+                 autocomplete="off"
+                 autocapitalize="off"
+                 spellcheck="false"
+                 value="{{ form.amount.value|default_if_none:'' }}"
+                 placeholder="0.00"
+                 aria-describedby="amount-currency{% if form.amount.errors %} amount-error{% else %} amount-hint{% endif %}"
+                 {% if form.amount.errors %}aria-invalid="true"{% endif %}>
+          <span class="qa-amount-control__currency" id="amount-currency">
+            {{ source.currency_code|default:"—" }}
+          </span>
+        </div>
+        {% if form.amount.errors %}
+          <p class="qa-field__message qa-field__message--error" id="amount-error">
+            {{ form.amount.errors.0 }}
+          </p>
+        {% else %}
+          <p class="qa-field__message" id="amount-hint">
+            Decimal point or comma accepted. Do not use thousands separators.
+          </p>
+        {% endif %}
+      </div>
+    </div>
+    <div class="qa-workspace__pair">
+      <section class="qa-workspace__context qa-workspace__context--source"
+               {% if source.theme %}data-country-theme="{{ source.theme }}"{% endif %}
+               aria-labelledby="current-source-title">
+        <div class="qa-workspace__identity">
+          <p class="qa-workspace__role">Source</p>
+          <h3 id="current-source-title">{{ source.country_name }}</h3>
+          <p>{{ source.currency_name }}{% if source.currency_code %} · {{ source.currency_code }}{% endif %}</p>
+        </div>
+        <div class="qa-selection-fallback"
+             data-native-selection="source"
+             data-has-errors="{% if form.source_country.errors or form.source_currency.errors %}true{% else %}false{% endif %}">
+          <div class="qa-field">
+            <label class="qa-field__label"
+                   for="{{ form.source_country.id_for_label }}">Source country</label>
+            {{ form.source_country }}
+            {% if form.source_country.errors %}
+              <p class="qa-field__message qa-field__message--error"
+                 id="source_country-error">{{ form.source_country.errors.0 }}</p>
+            {% endif %}
+          </div>
+          <div class="qa-field">
+            <label class="qa-field__label" for="{{ form.source_currency.id_for_label }}">
+              Source currency
+            </label>
+            {{ form.source_currency }}
+            {% if form.source_currency.errors %}
+              <p class="qa-field__message qa-field__message--error"
+                 id="source_currency-error">{{ form.source_currency.errors.0 }}</p>
+            {% endif %}
+          </div>
+        </div>
+        <button class="qa-selector-trigger"
+                id="source-picker-trigger"
+                type="button"
+                hidden
+                data-picker-trigger="source"
+                aria-haspopup="dialog">
+          <span class="qa-selector-trigger__media" aria-hidden="true">
+            {{ source.country_code|default:source.currency_code|default:"FX" }}
+          </span>
+          <span class="qa-selector-trigger__copy">
+            <span class="qa-selector-trigger__country">{{ source.country_name }}</span>
+            <span class="qa-selector-trigger__currency">
+              {{ source.currency_name }}{% if source.currency_code %} · {{ source.currency_code }}{% endif %}
+            </span>
+          </span>
+          <span class="qa-selector-trigger__chevron" aria-hidden="true">
+            {% include "components/icons/chevron_down.html" %}
+          </span>
+        </button>
+      </section>
+      <div class="qa-workspace__swap">
+        <button class="qa-swap-button"
+                id="swap-contexts"
+                type="submit"
+                name="action"
+                value="swap"
+                aria-label="Swap source and destination">
+          {% include "components/icons/swap.html" %}
+        </button>
+      </div>
+      <section class="qa-workspace__context qa-workspace__context--destination"
+               {% if destination.theme %}data-country-theme="{{ destination.theme }}"{% endif %}
+               aria-labelledby="current-destination-title">
+        <div class="qa-workspace__identity">
+          <p class="qa-workspace__role">Destination</p>
+          <h3 id="current-destination-title">{{ destination.country_name }}</h3>
+          <p>
+            {{ destination.currency_name }}{% if destination.currency_code %} · {{ destination.currency_code }}{% endif %}
+          </p>
+        </div>
+        <div class="qa-selection-fallback"
+             data-native-selection="destination"
+             data-has-errors="{% if form.destination_country.errors or form.destination_currency.errors %}true{% else %}false{% endif %}">
+          <div class="qa-field">
+            <label class="qa-field__label"
+                   for="{{ form.destination_country.id_for_label }}">Destination country</label>
+            {{ form.destination_country }}
+            {% if form.destination_country.errors %}
+              <p class="qa-field__message qa-field__message--error"
+                 id="destination_country-error">{{ form.destination_country.errors.0 }}</p>
+            {% endif %}
+          </div>
+          <div class="qa-field">
+            <label class="qa-field__label"
+                   for="{{ form.destination_currency.id_for_label }}">Destination currency</label>
+            {{ form.destination_currency }}
+            {% if form.destination_currency.errors %}
+              <p class="qa-field__message qa-field__message--error"
+                 id="destination_currency-error">{{ form.destination_currency.errors.0 }}</p>
+            {% endif %}
+          </div>
+        </div>
+        <button class="qa-selector-trigger"
+                id="destination-picker-trigger"
+                type="button"
+                hidden
+                data-picker-trigger="destination"
+                aria-haspopup="dialog">
+          <span class="qa-selector-trigger__media" aria-hidden="true">
+            {{ destination.country_code|default:destination.currency_code|default:"FX" }}
+          </span>
+          <span class="qa-selector-trigger__copy">
+            <span class="qa-selector-trigger__country">{{ destination.country_name }}</span>
+            <span class="qa-selector-trigger__currency">
+              {{ destination.currency_name }}{% if destination.currency_code %} · {{ destination.currency_code }}{% endif %}
+            </span>
+          </span>
+          <span class="qa-selector-trigger__chevron" aria-hidden="true">
+            {% include "components/icons/chevron_down.html" %}
+          </span>
+        </button>
+      </section>
+    </div>
+    {% if form.non_field_errors %}
+      <div class="qa-inline-alert qa-inline-alert--error" role="alert">
+        <p>{{ form.non_field_errors.0 }}</p>
+      </div>
+    {% endif %}
+    <div class="qa-workspace__action">
+      <span id="conversion-loading"
+            class="qa-loading-indicator htmx-indicator"
+            aria-live="polite">Updating reference rate…</span>
+      <button class="qa-primary-button"
+              type="submit"
+              {% if not reference_data_ready %}disabled{% endif %}>
+        <span>Convert</span>
+      </button>
+    </div>
+    <div class="qa-workspace__result">
+      {% if result_component %}
+        {% with component=result_component %}
+          {% include "components/converter/primitives.html#conversion-result" %}
+        {% endwith %}
+        {% if result_component.stale %}
+          <div class="qa-result-actions">
+            <button class="qa-secondary-button"
+                    type="submit"
+                    name="action"
+                    value="retry">Retry reference rate</button>
+          </div>
+        {% endif %}
+        <p class="qa-visually-hidden"
+           role="status"
+           aria-live="polite"
+           aria-atomic="true">{{ result_component.announcement }}</p>
+      {% else %}
+        <div class="qa-result qa-result--empty">
+          <h2 class="qa-result__title">Ready when you are.</h2>
+          <p>Choose your contexts and press Convert to request a reference rate.</p>
+        </div>
+      {% endif %}
+    </div>
+  </form>
+  {% include "components/converter/picker_dialog.html" with side="source" role_label="source" %}
+  {% include "components/converter/picker_dialog.html" with side="destination" role_label="destination" %}
+</section>

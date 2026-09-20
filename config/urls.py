@@ -5,8 +5,11 @@ from django.urls import path
 
 from apps.common.health import health_live, health_ready
 from apps.common.views import converter_preview, media_preview, shell_preview
+from apps.exchange.views import converter, picker_options
 
 urlpatterns = [
+    path("", converter, name="converter"),
+    path("picker/options/", picker_options, name="picker_options"),
     path("health/live/", health_live, name="health_live"),
     path("health/ready/", health_ready, name="health_ready"),
     path("admin/", admin.site.urls),

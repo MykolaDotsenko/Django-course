@@ -81,12 +81,14 @@
           {{ component.data_class }}
         </dd>
       </div>
-      <div>
-        <dt>Effective date</dt>
-        <dd>
-          {{ component.effective_date }}
-        </dd>
-      </div>
+      {% if component.effective_date %}
+        <div>
+          <dt>Effective date</dt>
+          <dd>
+            {{ component.effective_date }}
+          </dd>
+        </div>
+      {% endif %}
       <div>
         <dt>Provider</dt>
         <dd>
@@ -102,17 +104,19 @@
         </div>
       {% endif %}
     </dl>
+    <p class="qa-rate-meta__disclaimer">{{ component.explanation }}</p>
     <details class="qa-source-details">
       <summary>Source details</summary>
       <div class="qa-source-details__body">
-        <p>{{ component.explanation }}</p>
         <p>Provider: {{ component.provider }}</p>
       </div>
     </details>
   </div>
 {% endpartialdef rate-meta %}
 {% partialdef conversion-result %}
-  <section class="qa-result" aria-labelledby="{{ component.id }}-title">
+  <section class="qa-result"
+           id="{{ component.id }}"
+           aria-labelledby="{{ component.id }}-title">
     <div class="qa-result__header">
       <h2 class="qa-result__title" id="{{ component.id }}-title">Conversion result</h2>
       {% with component=component.status %}
@@ -122,7 +126,12 @@
     <div class="qa-result__amounts">
       <p class="qa-result__input">{{ component.input_amount }} {{ component.input_currency }}</p>
       <p class="qa-result__output">
-        <span class="qa-result__approximation" aria-hidden="true">≈</span>
+        <span class="qa-result__approximation" aria-hidden="true">
+          {% if component.exact %}={% else %}≈{% endif %}
+        </span>
+        <span class="qa-visually-hidden">
+          {% if component.exact %}equals{% else %}approximately{% endif %}
+        </span>
         <span>{{ component.output_amount }}</span>
         <span class="qa-result__currency">{{ component.output_currency }}</span>
       </p>
