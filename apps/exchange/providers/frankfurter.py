@@ -16,6 +16,9 @@ from apps.exchange.domain import (
     ObservationGranularity,
     ProviderPolicyMode,
     RateQuote,
+    RateSeries,
+    RateSeriesGrouping,
+    RateSeriesPoint,
     normalize_currency_code,
 )
 from apps.exchange.providers.base import (
@@ -29,6 +32,7 @@ from apps.exchange.providers.base import (
 
 DEFAULT_BASE_URL = "https://api.frankfurter.dev/v2"
 MAX_RESPONSE_BYTES = 64 * 1024
+MAX_SERIES_RESPONSE_BYTES = 2 * 1024 * 1024
 RETRYABLE_HTTP_STATUSES = frozenset({408, 500, 502, 503, 504})
 _NON_DAILY_PROVIDER_GRANULARITY = {
     "hmrc": ObservationGranularity.MONTHLY,
@@ -47,9 +51,37 @@ def _observation_granularity(policy: FxSourcePolicy) -> ObservationGranularity:
 
 def _currency_code(value: Any) -> str:
     code = str(value or "").upper().strip()
-    if len(code) != 3 or not code.isalpha():
+    if len(code) != 3 or not code.isascii() or not code.isalpha():
         raise FxProviderInvalidPayload("Frankfurter returned an invalid currency code.")
     return code
+
+
+def _provider_keys(payload: dict[str, Any], policy: FxSourcePolicy) -> tuple[str, ...]:
+    raw_providers = payload.get("providers")
+    if raw_providers is None:
+        raw_providers = []
+        if policy.mode is ProviderPolicyMode.PINNED and policy.include_attribution:
+            raise FxProviderInvalidPayload(
+                "Frankfurter omitted attribution for a pinned-provider quote."
+            )
+    if not isinstance(raw_providers, list):
+        raise FxProviderInvalidPayload("Frankfurter provider attribution must be an array.")
+    provider_keys = tuple(str(key).lower().strip() for key in raw_providers if str(key).strip())
+    if policy.mode is ProviderPolicyMode.PINNED and not provider_keys:
+        provider_keys = (policy.provider_key or "",)
+    return provider_keys
+
+
+def _rate_decimal(value: Any) -> Decimal:
+    if isinstance(value, bool):
+        raise FxProviderInvalidPayload("Frankfurter returned an invalid rate.")
+    try:
+        rate = value if isinstance(value, Decimal) else Decimal(str(value))
+    except (ArithmeticError, ValueError) as exc:
+        raise FxProviderInvalidPayload("Frankfurter returned a non-decimal rate.") from exc
+    if not rate.is_finite() or rate <= 0:
+        raise FxProviderInvalidPayload("Frankfurter returned an invalid rate.")
+    return rate
 
 
 def parse_rate_payload(
@@ -69,31 +101,14 @@ def parse_rate_payload(
     if base != expected_base.upper() or quote != expected_quote.upper():
         raise FxProviderInvalidPayload("Frankfurter returned a different currency pair.")
 
-    raw_rate = payload.get("rate")
-    if isinstance(raw_rate, bool):
-        raise FxProviderInvalidPayload("Frankfurter returned an invalid rate.")
-    try:
-        rate = raw_rate if isinstance(raw_rate, Decimal) else Decimal(str(raw_rate))
-    except (ArithmeticError, ValueError) as exc:
-        raise FxProviderInvalidPayload("Frankfurter returned a non-decimal rate.") from exc
+    rate = _rate_decimal(payload.get("rate"))
 
     try:
         effective_date = date.fromisoformat(str(payload.get("date")))
     except ValueError as exc:
         raise FxProviderInvalidPayload("Frankfurter returned an invalid observation date.") from exc
 
-    raw_providers = payload.get("providers")
-    if raw_providers is None:
-        raw_providers = []
-        if policy.mode is ProviderPolicyMode.PINNED and policy.include_attribution:
-            raise FxProviderInvalidPayload(
-                "Frankfurter omitted attribution for a pinned-provider quote."
-            )
-    if not isinstance(raw_providers, list):
-        raise FxProviderInvalidPayload("Frankfurter provider attribution must be an array.")
-    provider_keys = tuple(str(key).lower().strip() for key in raw_providers if str(key).strip())
-    if policy.mode is ProviderPolicyMode.PINNED and not provider_keys:
-        provider_keys = (policy.provider_key or "",)
+    provider_keys = _provider_keys(payload, policy)
 
     try:
         return RateQuote(
@@ -106,6 +121,69 @@ def parse_rate_payload(
             provider_policy=policy,
             provider_keys=provider_keys,
             historical=requested_date is not None,
+            observation_granularity=_observation_granularity(policy),
+        )
+    except FxDomainError as exc:
+        raise FxProviderInvalidPayload(str(exc)) from exc
+
+
+def parse_series_payload(
+    payload: Any,
+    *,
+    expected_base: str,
+    expected_quote: str,
+    start_date: date,
+    end_date: date,
+    grouping: RateSeriesGrouping,
+    policy: FxSourcePolicy,
+    fetched_at: datetime,
+) -> RateSeries:
+    if not isinstance(payload, list):
+        raise FxProviderInvalidPayload("Frankfurter series response must be an array.")
+
+    points: list[RateSeriesPoint] = []
+    seen_dates: set[date] = set()
+    for row in payload:
+        if not isinstance(row, dict):
+            raise FxProviderInvalidPayload("Frankfurter series row must be an object.")
+        base = _currency_code(row.get("base"))
+        quote = _currency_code(row.get("quote"))
+        if base != expected_base.upper() or quote != expected_quote.upper():
+            raise FxProviderInvalidPayload("Frankfurter series returned a different currency pair.")
+        try:
+            observation_date = date.fromisoformat(str(row.get("date")))
+        except ValueError as exc:
+            raise FxProviderInvalidPayload(
+                "Frankfurter series returned an invalid observation date."
+            ) from exc
+        if not start_date <= observation_date <= end_date:
+            raise FxProviderInvalidPayload(
+                "Frankfurter series returned an observation outside the requested range."
+            )
+        if observation_date in seen_dates:
+            raise FxProviderInvalidPayload(
+                "Frankfurter series returned duplicate observation dates."
+            )
+        seen_dates.add(observation_date)
+        points.append(
+            RateSeriesPoint(
+                observation_date=observation_date,
+                rate=_rate_decimal(row.get("rate")),
+                provider_keys=_provider_keys(row, policy),
+            )
+        )
+
+    points.sort(key=lambda point: point.observation_date)
+    try:
+        return RateSeries(
+            base_currency=expected_base,
+            quote_currency=expected_quote,
+            start_date=start_date,
+            end_date=end_date,
+            grouping=grouping,
+            points=tuple(points),
+            fetched_at=fetched_at,
+            provider_policy=policy,
             observation_granularity=_observation_granularity(policy),
         )
     except FxDomainError as exc:
@@ -140,6 +218,50 @@ class FrankfurterProvider:
     ) -> RateQuote:
         return self._fetch_quote(base, quote, requested_date=requested_date, policy=policy)
 
+    def rate_series(
+        self,
+        base: str,
+        quote: str,
+        start_date: date,
+        end_date: date,
+        grouping: RateSeriesGrouping,
+        policy: FxSourcePolicy,
+    ) -> RateSeries:
+        try:
+            base_code = normalize_currency_code(base)
+            quote_code = normalize_currency_code(quote)
+        except FxDomainError as exc:
+            raise FxProviderUnsupportedPair("Invalid currency code for Frankfurter query.") from exc
+
+        params: dict[str, str] = {
+            "from": start_date.isoformat(),
+            "to": end_date.isoformat(),
+            "base": base_code,
+            "quotes": quote_code,
+        }
+        if grouping is not RateSeriesGrouping.DAILY:
+            params["group"] = grouping.value
+        if policy.mode is ProviderPolicyMode.PINNED:
+            params["providers"] = policy.provider_key or ""
+        if policy.include_attribution:
+            params["expand"] = "providers"
+
+        request = Request(
+            f"{self.base_url}/rates?{urlencode(params)}",
+            headers={"Accept": "application/json", "User-Agent": "cultural-currency-converter/0.1"},
+        )
+        payload = self._request_json(request, max_response_bytes=MAX_SERIES_RESPONSE_BYTES)
+        return parse_series_payload(
+            payload,
+            expected_base=base_code,
+            expected_quote=quote_code,
+            start_date=start_date,
+            end_date=end_date,
+            grouping=grouping,
+            policy=policy,
+            fetched_at=datetime.now(UTC),
+        )
+
     def _fetch_quote(
         self,
         base: str,
@@ -166,13 +288,26 @@ class FrankfurterProvider:
             f"{self.base_url}/rate/{base_code}/{quote_code}{query}",
             headers={"Accept": "application/json", "User-Agent": "cultural-currency-converter/0.1"},
         )
+        payload = self._request_json(request, max_response_bytes=MAX_RESPONSE_BYTES)
+        fetched_at = datetime.now(UTC)
+
+        return parse_rate_payload(
+            payload,
+            expected_base=base_code,
+            expected_quote=quote_code,
+            requested_date=requested_date,
+            policy=policy,
+            fetched_at=fetched_at,
+        )
+
+    def _request_json(self, request: Request, *, max_response_bytes: int) -> Any:
         raw: bytes | None = None
         last_transient_error: Exception | None = None
         for attempt in range(self.max_attempts):
             try:
                 with urlopen(request, timeout=self.timeout_seconds) as response:
-                    raw = response.read(MAX_RESPONSE_BYTES + 1)
-                if len(raw) > MAX_RESPONSE_BYTES:
+                    raw = response.read(max_response_bytes + 1)
+                if len(raw) > max_response_bytes:
                     raise FxProviderInvalidPayload("Frankfurter response exceeded the size limit.")
                 break
             except HTTPError as exc:
@@ -212,17 +347,7 @@ class FrankfurterProvider:
         if raw is None:
             raise FxProviderUnavailable("Frankfurter request failed.") from last_transient_error
 
-        fetched_at = datetime.now(UTC)
         try:
-            payload = json.loads(raw, parse_float=Decimal, parse_int=Decimal)
+            return json.loads(raw, parse_float=Decimal, parse_int=Decimal)
         except (json.JSONDecodeError, UnicodeDecodeError) as exc:
             raise FxProviderInvalidPayload("Frankfurter returned malformed JSON.") from exc
-
-        return parse_rate_payload(
-            payload,
-            expected_base=base_code,
-            expected_quote=quote_code,
-            requested_date=requested_date,
-            policy=policy,
-            fetched_at=fetched_at,
-        )

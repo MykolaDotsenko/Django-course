@@ -4,13 +4,16 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Callable
 
-from apps.exchange.cache import HistoricalQuoteGateway, LatestQuoteGateway
+from apps.exchange.cache import HistoricalQuoteGateway, HistoricalSeriesGateway, LatestQuoteGateway
 from apps.exchange.domain import (
     DEFAULT_SOURCE_POLICY,
     ConversionResult,
     FxSourcePolicy,
     HistoricalCurrencyMetadata,
     HistoricalDateError,
+    RateSeriesGrouping,
+    RateSeriesRangeError,
+    RateSeriesResult,
     convert_amount,
     normalize_currency_code,
     same_currency_quote,
@@ -94,3 +97,56 @@ def quote_historical_conversion(
         quote=quote,
         stale=False,
     )
+
+
+MAX_RATE_SERIES_DAYS = 10 * 366
+DAILY_SERIES_MAX_DAYS = 366
+WEEKLY_SERIES_MAX_DAYS = 5 * 366
+
+
+def select_rate_series_grouping(start_date: date, end_date: date) -> RateSeriesGrouping:
+    if end_date < start_date:
+        raise RateSeriesRangeError("FX series end date cannot precede start date.")
+    span_days = (end_date - start_date).days
+    if span_days <= DAILY_SERIES_MAX_DAYS:
+        return RateSeriesGrouping.DAILY
+    if span_days <= WEEKLY_SERIES_MAX_DAYS:
+        return RateSeriesGrouping.WEEK
+    return RateSeriesGrouping.MONTH
+
+
+def get_rate_series(
+    *,
+    base_currency: str,
+    quote_currency: str,
+    start_date: date,
+    end_date: date,
+    gateway: HistoricalSeriesGateway | Callable[[], HistoricalSeriesGateway],
+    grouping: RateSeriesGrouping | None = None,
+    policy: FxSourcePolicy = DEFAULT_SOURCE_POLICY,
+    now: datetime | None = None,
+) -> RateSeriesResult:
+    current_time = now or datetime.now(UTC)
+    if end_date < start_date:
+        raise RateSeriesRangeError("FX series end date cannot precede start date.")
+    if end_date > current_time.date():
+        raise RateSeriesRangeError("FX series end date cannot be in the future.")
+    if (end_date - start_date).days > MAX_RATE_SERIES_DAYS:
+        raise RateSeriesRangeError(
+            f"FX series range cannot exceed {MAX_RATE_SERIES_DAYS} calendar days."
+        )
+
+    base_code = normalize_currency_code(base_currency)
+    quote_code = normalize_currency_code(quote_currency)
+    resolved_grouping = grouping or select_rate_series_grouping(start_date, end_date)
+    resolved_gateway = gateway() if callable(gateway) else gateway
+    series, stale = resolved_gateway.get(
+        base_code,
+        quote_code,
+        start_date,
+        end_date,
+        resolved_grouping,
+        policy,
+        now=current_time,
+    )
+    return RateSeriesResult(series=series, stale=stale)

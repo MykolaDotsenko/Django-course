@@ -6,11 +6,14 @@ from django.core.cache import cache
 
 from apps.exchange.cache import (
     HistoricalQuoteGateway,
+    HistoricalSeriesGateway,
     LatestQuoteGateway,
     historical_cache_key,
     historical_resolution_cache_key,
     latest_cache_key,
+    rate_series_cache_key,
     serialize_quote,
+    serialize_series,
 )
 from apps.exchange.domain import (
     DEFAULT_SOURCE_POLICY,
@@ -19,6 +22,9 @@ from apps.exchange.domain import (
     ObservationGranularity,
     ProviderPolicyMode,
     RateQuote,
+    RateSeries,
+    RateSeriesGrouping,
+    RateSeriesPoint,
 )
 from apps.exchange.providers.base import FxProviderInvalidPayload, FxProviderUnavailable
 
@@ -52,6 +58,12 @@ class FakeProvider:
         return self.result
 
     def historical_quote(self, base, quote, requested_date, policy):
+        self.calls += 1
+        if self.error:
+            raise self.error
+        return self.result
+
+    def rate_series(self, base, quote, start_date, end_date, grouping, policy):
         self.calls += 1
         if self.error:
             raise self.error
@@ -466,3 +478,237 @@ def test_historical_invalidation_removes_resolution_and_observation_keys():
 
     assert cache.get(resolution_key) is None
     assert cache.get(observation_key) is None
+
+
+def make_rate_series(
+    *,
+    start_date=date(2026, 1, 1),
+    end_date=date(2026, 1, 7),
+    grouping=RateSeriesGrouping.DAILY,
+    fetched_at=NOW,
+    policy=DEFAULT_SOURCE_POLICY,
+):
+    providers = (policy.provider_key,) if policy.provider_key else ("ecb",)
+    return RateSeries(
+        base_currency="EUR",
+        quote_currency="JPY",
+        start_date=start_date,
+        end_date=end_date,
+        grouping=grouping,
+        points=(
+            RateSeriesPoint(date(2026, 1, 2), Decimal("179.8"), providers),
+            RateSeriesPoint(date(2026, 1, 5), Decimal("181.2"), providers),
+        ),
+        fetched_at=fetched_at,
+        provider_policy=policy,
+    )
+
+
+def test_rate_series_cache_key_includes_range_grouping_and_policy():
+    pinned = FxSourcePolicy(mode=ProviderPolicyMode.PINNED, provider_key="ecb")
+    daily = rate_series_cache_key(
+        "EUR",
+        "JPY",
+        date(2026, 1, 1),
+        date(2026, 1, 7),
+        RateSeriesGrouping.DAILY,
+        DEFAULT_SOURCE_POLICY,
+    )
+    monthly = rate_series_cache_key(
+        "EUR",
+        "JPY",
+        date(2026, 1, 1),
+        date(2026, 1, 7),
+        RateSeriesGrouping.MONTH,
+        DEFAULT_SOURCE_POLICY,
+    )
+    other_range = rate_series_cache_key(
+        "EUR",
+        "JPY",
+        date(2026, 1, 1),
+        date(2026, 1, 8),
+        RateSeriesGrouping.DAILY,
+        DEFAULT_SOURCE_POLICY,
+    )
+    other_policy = rate_series_cache_key(
+        "EUR",
+        "JPY",
+        date(2026, 1, 1),
+        date(2026, 1, 7),
+        RateSeriesGrouping.DAILY,
+        pinned,
+    )
+
+    assert len({daily, monthly, other_range, other_policy}) == 4
+
+
+def test_rate_series_fresh_cache_hit_skips_provider():
+    series = make_rate_series(fetched_at=NOW - timedelta(hours=1))
+    key = rate_series_cache_key(
+        "EUR",
+        "JPY",
+        series.start_date,
+        series.end_date,
+        series.grouping,
+        DEFAULT_SOURCE_POLICY,
+    )
+    cache.set(key, serialize_series(series), 100)
+    provider = FakeProvider(error=AssertionError("series provider must not be called"))
+
+    result, stale = HistoricalSeriesGateway(provider).get(
+        "EUR",
+        "JPY",
+        series.start_date,
+        series.end_date,
+        series.grouping,
+        DEFAULT_SOURCE_POLICY,
+        now=NOW,
+    )
+
+    assert result == series
+    assert stale is False
+    assert provider.calls == 0
+
+
+def test_rate_series_provider_failure_uses_only_matching_stale_series():
+    series = make_rate_series(fetched_at=NOW - timedelta(days=2))
+    key = rate_series_cache_key(
+        "EUR",
+        "JPY",
+        series.start_date,
+        series.end_date,
+        series.grouping,
+        DEFAULT_SOURCE_POLICY,
+    )
+    cache.set(key, serialize_series(series), 100)
+    provider = FakeProvider(error=FxProviderUnavailable("down"))
+
+    result, stale = HistoricalSeriesGateway(provider).get(
+        "EUR",
+        "JPY",
+        series.start_date,
+        series.end_date,
+        series.grouping,
+        DEFAULT_SOURCE_POLICY,
+        now=NOW,
+    )
+
+    assert result == series
+    assert stale is True
+
+
+def test_rate_series_too_old_stale_data_is_rejected():
+    series = make_rate_series(fetched_at=NOW - timedelta(days=31))
+    key = rate_series_cache_key(
+        "EUR",
+        "JPY",
+        series.start_date,
+        series.end_date,
+        series.grouping,
+        DEFAULT_SOURCE_POLICY,
+    )
+    cache.set(key, serialize_series(series), 100)
+    gateway = HistoricalSeriesGateway(FakeProvider(error=FxProviderUnavailable("down")))
+
+    with pytest.raises(FxProviderUnavailable):
+        gateway.get(
+            "EUR",
+            "JPY",
+            series.start_date,
+            series.end_date,
+            series.grouping,
+            DEFAULT_SOURCE_POLICY,
+            now=NOW,
+        )
+
+
+def test_rate_series_wrong_grouping_cache_is_not_reused():
+    series = make_rate_series(
+        grouping=RateSeriesGrouping.MONTH,
+        start_date=date(2026, 1, 1),
+        end_date=date(2026, 1, 7),
+    )
+    key = rate_series_cache_key(
+        "EUR",
+        "JPY",
+        series.start_date,
+        series.end_date,
+        series.grouping,
+        DEFAULT_SOURCE_POLICY,
+    )
+    cache.set(key, serialize_series(series), 100)
+    gateway = HistoricalSeriesGateway(FakeProvider(error=FxProviderUnavailable("down")))
+
+    with pytest.raises(FxProviderUnavailable):
+        gateway.get(
+            "EUR",
+            "JPY",
+            series.start_date,
+            series.end_date,
+            RateSeriesGrouping.DAILY,
+            DEFAULT_SOURCE_POLICY,
+            now=NOW,
+        )
+
+
+def test_rate_series_provider_identity_is_verified_before_caching():
+    wrong_pair = RateSeries(
+        base_currency="EUR",
+        quote_currency="USD",
+        start_date=date(2026, 1, 1),
+        end_date=date(2026, 1, 7),
+        grouping=RateSeriesGrouping.DAILY,
+        points=(RateSeriesPoint(date(2026, 1, 2), Decimal("1.1"), ("ecb",)),),
+        fetched_at=NOW,
+        provider_policy=DEFAULT_SOURCE_POLICY,
+    )
+    gateway = HistoricalSeriesGateway(FakeProvider(result=wrong_pair))
+
+    with pytest.raises(FxProviderInvalidPayload, match="different pair"):
+        gateway.get(
+            "EUR",
+            "JPY",
+            date(2026, 1, 1),
+            date(2026, 1, 7),
+            RateSeriesGrouping.DAILY,
+            DEFAULT_SOURCE_POLICY,
+            now=NOW,
+        )
+
+
+def test_rate_series_semantically_wrong_fresh_cache_is_ignored():
+    requested = make_rate_series(fetched_at=NOW - timedelta(hours=1))
+    wrong = RateSeries(
+        base_currency="EUR",
+        quote_currency="USD",
+        start_date=requested.start_date,
+        end_date=requested.end_date,
+        grouping=requested.grouping,
+        points=(RateSeriesPoint(date(2026, 1, 2), Decimal("1.1"), ("ecb",)),),
+        fetched_at=NOW - timedelta(hours=1),
+        provider_policy=DEFAULT_SOURCE_POLICY,
+    )
+    key = rate_series_cache_key(
+        "EUR",
+        "JPY",
+        requested.start_date,
+        requested.end_date,
+        requested.grouping,
+        DEFAULT_SOURCE_POLICY,
+    )
+    cache.set(key, serialize_series(wrong), 100)
+    provider = FakeProvider(result=requested)
+
+    result, stale = HistoricalSeriesGateway(provider).get(
+        "EUR",
+        "JPY",
+        requested.start_date,
+        requested.end_date,
+        requested.grouping,
+        DEFAULT_SOURCE_POLICY,
+        now=NOW,
+    )
+
+    assert result == requested
+    assert stale is False
+    assert provider.calls == 1
