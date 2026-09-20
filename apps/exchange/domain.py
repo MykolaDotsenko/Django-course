@@ -46,6 +46,15 @@ class FxSourcePolicy:
 DEFAULT_SOURCE_POLICY = FxSourcePolicy()
 
 
+def normalize_currency_code(value: str) -> str:
+    if not isinstance(value, str):
+        raise FxDomainError("Currency code must be text.")
+    code = value.upper().strip()
+    if len(code) != 3 or not code.isascii() or not code.isalpha():
+        raise FxDomainError("Currency code must be three ASCII letters.")
+    return code
+
+
 @dataclass(frozen=True)
 class RateQuote:
     base_currency: str
@@ -60,10 +69,8 @@ class RateQuote:
     observation_granularity: ObservationGranularity = ObservationGranularity.DAILY
 
     def __post_init__(self) -> None:
-        base = self.base_currency.upper().strip()
-        quote = self.quote_currency.upper().strip()
-        if len(base) != 3 or len(quote) != 3 or not base.isalpha() or not quote.isalpha():
-            raise FxDomainError("FX quotes require three-letter alphabetic currency codes.")
+        base = normalize_currency_code(self.base_currency)
+        quote = normalize_currency_code(self.quote_currency)
         if not isinstance(self.rate, Decimal):
             raise FxDomainError("FX rate must be a Decimal.")
         if not self.rate.is_finite() or self.rate <= 0:
@@ -110,7 +117,7 @@ def convert_amount(amount: Decimal, quote: RateQuote, *, minor_units: int) -> De
 
 
 def same_currency_quote(currency: str, *, fetched_at: datetime) -> RateQuote:
-    code = currency.upper().strip()
+    code = normalize_currency_code(currency)
     return RateQuote(
         base_currency=code,
         quote_currency=code,
