@@ -5,7 +5,12 @@ from urllib.error import HTTPError, URLError
 
 import pytest
 
-from apps.exchange.domain import DEFAULT_SOURCE_POLICY, FxSourcePolicy, ProviderPolicyMode
+from apps.exchange.domain import (
+    DEFAULT_SOURCE_POLICY,
+    FxSourcePolicy,
+    ObservationGranularity,
+    ProviderPolicyMode,
+)
 from apps.exchange.providers.frankfurter import (
     FrankfurterProvider,
     FxProviderInvalidPayload,
@@ -34,6 +39,7 @@ def test_frankfurter_v2_rate_normalizes_decimal_and_attribution():
     assert result.rate == Decimal("174.50")
     assert result.provider_keys == ("boj", "ecb")
     assert result.effective_date == date(2026, 9, 18)
+    assert result.observation_granularity is ObservationGranularity.UNKNOWN
 
 
 @pytest.mark.parametrize(
