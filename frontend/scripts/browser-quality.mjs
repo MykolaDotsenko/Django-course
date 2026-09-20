@@ -72,10 +72,7 @@ async function assertKeyboardFocus(page, surface) {
     await page.keyboard.press("Tab");
     const activeId = await page.evaluate(() => document.activeElement?.id ?? "");
     const expected = surface === "converter" ? "workspace-amount" : "id_amount";
-    assert(
-      activeId === expected,
-      `${surface}: unexpected second focus target ${activeId}`,
-    );
+    assert(activeId === expected, `${surface}: unexpected second focus target ${activeId}`);
   }
 }
 
