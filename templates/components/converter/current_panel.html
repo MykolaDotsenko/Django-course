@@ -98,7 +98,8 @@
              data-native-selection="source"
              data-has-errors="{% if form.source_country.errors or form.source_currency.errors %}true{% else %}false{% endif %}">
           <div class="qa-field">
-            <label class="qa-field__label" for="{{ form.source_country.id_for_label }}">Source country</label>
+            <label class="qa-field__label"
+                   for="{{ form.source_country.id_for_label }}">Source country</label>
             {{ form.source_country }}
             {% if form.source_country.errors %}
               <p class="qa-field__message qa-field__message--error"
