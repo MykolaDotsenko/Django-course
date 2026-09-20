@@ -122,10 +122,9 @@ def _assert_preview_integrity(page: Page, *, viewport_width: int) -> None:
 
     source_box = _box(page.locator(".qa-workspace__context--source"))
     destination_box = _box(page.locator(".qa-workspace__context--destination"))
-    if viewport_width >= 1024:
-        if abs(source_box["y"] - destination_box["y"]) > 2:
-            raise RuntimeError("Wide bilateral contexts must remain simultaneous")
-    elif destination_box["y"] <= source_box["y"]:
+    if viewport_width >= 1024 and abs(source_box["y"] - destination_box["y"]) > 2:
+        raise RuntimeError("Wide bilateral contexts must remain simultaneous")
+    if viewport_width < 1024 and destination_box["y"] <= source_box["y"]:
         raise RuntimeError("Compact bilateral contexts must preserve source-before-destination order")
 
 
