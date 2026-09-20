@@ -1,5 +1,5 @@
 html {
-  min-width: 20rem;
+  min-width: 320px;
   background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);

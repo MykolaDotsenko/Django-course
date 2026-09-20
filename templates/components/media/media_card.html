@@ -1,11 +1,9 @@
 <article class="qa-media-card">
   {% include "components/media/image_frame.html" with image=card.image loading="lazy" only %}
-
   <div class="qa-media-card__content">
     {% if card.eyebrow %}
       <p class="qa-media-card__eyebrow">{{ card.eyebrow }}</p>
     {% endif %}
-
     <h3 class="qa-media-card__title">
       {% if card.href %}
         <a href="{{ card.href }}">{{ card.title }}</a>
@@ -13,11 +11,9 @@
         {{ card.title }}
       {% endif %}
     </h3>
-
     {% if card.summary %}
       <p class="qa-media-card__summary">{{ card.summary }}</p>
     {% endif %}
-
     {% if card.badge %}
       <span class="qa-media-card__badge">{{ card.badge }}</span>
     {% endif %}

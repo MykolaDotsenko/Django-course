@@ -16,6 +16,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "coverage==7.16.1",
+    "djlint==1.46.1",
     "pip-audit==2.10.1",
     "playwright==1.63.0",
     "pre-commit==4.6.2",
@@ -63,3 +64,12 @@ exclude_also = [
     "if TYPE_CHECKING:",
     "if __name__ == .__main__.:",
 ]
+
+[tool.djlint]
+profile = "django"
+indent = 2
+max_line_length = 100
+
+# The media contract intentionally uses a trusted dynamic aspect-ratio style; see docs/28.
+[tool.djlint.per-file-ignores]
+"templates/components/media/image_frame.html" = "H021"

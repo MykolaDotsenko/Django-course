@@ -1,11 +1,9 @@
 {% extends "base.html" %}
-
 {% block title %}Converter primitives · Quiet Atlas{% endblock %}
-
 {% block head_meta %}
-  <meta name="description" content="Quiet Atlas converter component QA preview.">
+  <meta name="description"
+        content="Quiet Atlas converter component QA preview.">
 {% endblock %}
-
 {% block content %}
   <section class="qa-foundation-intro" aria-labelledby="converter-preview-title">
     <p class="qa-foundation-kicker">Component QA · DEBUG only</p>
@@ -14,11 +12,8 @@
       Reusable server-rendered controls and result/provenance primitives. Interaction wiring,
       picker behavior and FX logic are intentionally outside this preview.
     </p>
-    <p class="qa-preview-disclaimer" id="converter-preview-disclaimer">
-      {{ preview_disclaimer }}
-    </p>
+    <p class="qa-preview-disclaimer" id="converter-preview-disclaimer">{{ preview_disclaimer }}</p>
   </section>
-
   <section class="qa-component-section" aria-labelledby="bilateral-title">
     <div class="qa-foundation-section__heading">
       <p class="qa-foundation-kicker">Responsive composition</p>
@@ -28,52 +23,39 @@
         order without CSS reordering or compressed side-by-side controls.
       </p>
     </div>
-
     {% include "components/converter/workspace.html#bilateral-workspace" %}
   </section>
-
   <section class="qa-component-section" aria-labelledby="controls-title">
     <div class="qa-foundation-section__heading">
       <p class="qa-foundation-kicker">Primary controls</p>
       <h2 id="controls-title">Readable first, enhanced later.</h2>
       <p>Visible labels, comfortable targets and native semantics exist before HTMX enhancement.</p>
     </div>
-
-    <form
-      class="qa-converter-stage"
-      method="get"
-      action="{% url 'converter_preview' %}"
-      aria-describedby="converter-preview-disclaimer"
-    >
+    <form class="qa-converter-stage"
+          method="get"
+          action="{% url 'converter_preview' %}"
+          aria-describedby="converter-preview-disclaimer">
       <div class="qa-component-stack">
         {% with component=amount_default %}
           {% include "components/converter/primitives.html#amount-field" %}
         {% endwith %}
-
         {% with component=source_selection %}
           {% include "components/converter/primitives.html#country-currency-trigger" %}
         {% endwith %}
-
-        <div class="qa-swap-row">
-          {% include "components/converter/primitives.html#swap-button" %}
-        </div>
-
+        <div class="qa-swap-row">{% include "components/converter/primitives.html#swap-button" %}</div>
         {% with component=destination_selection %}
           {% include "components/converter/primitives.html#country-currency-trigger" %}
         {% endwith %}
-
         {% include "components/converter/primitives.html#convert-button" %}
       </div>
     </form>
   </section>
-
   <section class="qa-component-section" aria-labelledby="states-title">
     <div class="qa-foundation-section__heading">
       <p class="qa-foundation-kicker">State anatomy</p>
       <h2 id="states-title">Errors and history keep their meaning in text.</h2>
       <p>No state depends on color, motion or an icon alone.</p>
     </div>
-
     <div class="qa-component-grid">
       <article class="qa-component-sample">
         <h3>Amount error</h3>
@@ -81,7 +63,6 @@
           {% include "components/converter/primitives.html#amount-field" %}
         {% endwith %}
       </article>
-
       <article class="qa-component-sample">
         <h3>Historical selection</h3>
         {% with component=historical_selection %}
@@ -90,19 +71,16 @@
       </article>
     </div>
   </section>
-
   <section class="qa-component-section" aria-labelledby="results-title">
     <div class="qa-foundation-section__heading">
       <p class="qa-foundation-kicker">Result and provenance</p>
       <h2 id="results-title">The number and its trust context stay together.</h2>
       <p>These values are illustrative UI fixtures, not current exchange-rate claims.</p>
     </div>
-
     <div class="qa-result-grid">
       {% with component=reference_result %}
         {% include "components/converter/primitives.html#conversion-result" %}
       {% endwith %}
-
       {% with component=cached_result %}
         {% include "components/converter/primitives.html#conversion-result" %}
       {% endwith %}

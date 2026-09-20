@@ -233,9 +233,11 @@ Django then resolves `static/build/.vite/manifest.json` through `{% vite_asset "
 
 The Quiet Atlas foundation is now executable. In DEBUG mode, use `/_design/shell/` to inspect semantic landmarks, typography and bilateral atmosphere without pretending the converter is implemented.
 
-PR 2C's Chromium smoke captures 1440px, 768px, 390px and 320px widths and rejects horizontal overflow, missing self-hosted Inter or a broken first-tab skip-link order. Full cross-browser/axe/high-contrast quality remains PR 2F.
+PR 2C's Chromium smoke captures 1440px, 768px, 390px and 320px widths and rejects horizontal overflow, missing self-hosted Inter or a broken first-tab skip-link order. PR 2D/2E extend that evidence to converter primitives and responsive bilateral composition.
 
-The next bounded product slice is PR 2D: converter primitives.
+PR 2F adds the milestone browser-quality gate: `djlint templates --check`, locked Playwright + `@axe-core/playwright`, transition-edge/reflow checks, reduced-motion and forced-colors emulation, and machine-readable browser performance evidence. These checks validate the DEBUG QA surfaces without introducing client-side business logic.
+
+The next bounded product slice after PR 2F is PR 3: countries, currencies and temporal relationships.
 
 ---
 

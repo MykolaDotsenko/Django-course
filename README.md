@@ -103,12 +103,12 @@ The handbook covers:
 
 ## Delivery strategy
 
-The rebuild is intentionally incremental. PR2A established the locked frontend build, PR2B connected Django to Vite, and PR2D added reusable accessible converter primitives, and PR2E composes them into the responsive bilateral Quiet Atlas experience. The next bounded slice is browser-quality hardening.
+The rebuild is intentionally incremental. PR2A established the locked frontend build, PR2B connected Django to Vite, PR2D added reusable accessible converter primitives, and PR2E composed them into the responsive bilateral Quiet Atlas experience. PR2F now hardens that surface with template, accessibility, reflow, contrast and performance quality gates.
 
 See [docs/08_IMPLEMENTATION_ROADMAP.md](docs/08_IMPLEMENTATION_ROADMAP.md).
 
 ## Current status
 
-**Phase:** PR2D converter primitives complete → PR2E responsive bilateral experience in review → PR2F browser quality next.
+**Phase:** PR2E responsive bilateral experience complete → PR2F browser quality in review → PR3 country/currency domain next.
 
 The Django product shell, runtime configuration, PostgreSQL path, observability baseline, frontend build, Vite bridge and Quiet Atlas shell are executable and CI-backed. DEBUG-only design surfaces exercise the semantic shell, converter primitives and responsive bilateral composition without claiming FX business behavior.

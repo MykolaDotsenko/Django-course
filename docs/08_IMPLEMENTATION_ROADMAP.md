@@ -102,7 +102,7 @@ Acceptance:
 
 Each slice must preserve the PR 2 acceptance criteria relevant to its scope. Later slices must not bypass the ownership model established in `14_WEB_FRONTEND_ARCHITECTURE.md`.
 
-**Execution status after PR 2D:** PR 2A–2D are implemented. The build baseline and Django↔Vite bridge feed the Quiet Atlas foundation plus reusable accessible AmountField, CountryCurrencyTrigger, SwapButton, ConvertButton and result/provenance primitives. PR 2E composes those primitives into the responsive bilateral workspace; FX business behavior remains deferred to the domain and vertical-slice PRs.
+**Execution status after PR 2E:** PR 2A–2E are implemented. The build baseline and Django↔Vite bridge feed the Quiet Atlas foundation, reusable accessible converter primitives and the responsive bilateral workspace. PR 2F adds the final browser-quality gate for this milestone: djLint, axe, reflow/text-expansion, reduced-motion, forced-colors and recorded performance evidence. FX business behavior remains deferred to the domain and vertical-slice PRs.
 
 **Goal:** establish visual/accessibility foundation before domain complexity.
 
