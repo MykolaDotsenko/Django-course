@@ -86,6 +86,16 @@ class CurrentConversionForm(forms.Form):
         ):
             self.fields[field_name].widget.attrs["class"] = "qa-native-select"
 
+    def add_error(self, field, error):
+        super().add_error(field, error)
+        if field and field in self.fields and field != "amount":
+            self.fields[field].widget.attrs.update(
+                {
+                    "aria-invalid": "true",
+                    "aria-describedby": f"{field}-error",
+                }
+            )
+
     @property
     def reference_data_ready(self) -> bool:
         return bool(self._currency_by_code)
