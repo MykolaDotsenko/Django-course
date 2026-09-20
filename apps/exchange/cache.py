@@ -70,6 +70,16 @@ def deserialize_quote(value: Any) -> RateQuote | None:
         return None
     try:
         raw_policy = value["provider_policy"]
+        raw_provider_keys = value["provider_keys"]
+        raw_historical = value["historical"]
+        if not isinstance(raw_policy, dict):
+            return None
+        if not isinstance(raw_provider_keys, (list, tuple)) or not all(
+            isinstance(key, str) for key in raw_provider_keys
+        ):
+            return None
+        if not isinstance(raw_historical, bool):
+            return None
         policy = FxSourcePolicy(
             mode=ProviderPolicyMode(raw_policy["mode"]),
             provider_key=raw_policy.get("provider_key"),
@@ -85,8 +95,8 @@ def deserialize_quote(value: Any) -> RateQuote | None:
             effective_date=date.fromisoformat(value["effective_date"]),
             fetched_at=datetime.fromisoformat(value["fetched_at"]),
             provider_policy=policy,
-            provider_keys=tuple(value["provider_keys"]),
-            historical=bool(value["historical"]),
+            provider_keys=tuple(raw_provider_keys),
+            historical=raw_historical,
             observation_granularity=ObservationGranularity(value["observation_granularity"]),
         )
     except (KeyError, TypeError, ValueError, ArithmeticError):
@@ -151,8 +161,24 @@ class LatestQuoteGateway:
                 return cached, True
             raise
 
+        self._assert_quote_identity(fresh, base=base, quote=quote, policy=policy)
         self._cache_set(key, fresh)
         return fresh, False
+
+    @staticmethod
+    def _assert_quote_identity(
+        quote_value: RateQuote,
+        *,
+        base: str,
+        quote: str,
+        policy: FxSourcePolicy,
+    ) -> None:
+        if quote_value.base_currency != base.upper() or quote_value.quote_currency != quote.upper():
+            raise FxProviderInvalidPayload("Provider returned a quote for a different pair.")
+        if quote_value.provider_policy != policy:
+            raise FxProviderInvalidPayload("Provider returned a quote under a different source policy.")
+        if quote_value.historical or quote_value.requested_date is not None:
+            raise FxProviderInvalidPayload("Latest quote gateway received historical semantics.")
 
     def _cache_get(self, key: str) -> RateQuote | None:
         try:
