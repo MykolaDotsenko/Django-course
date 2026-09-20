@@ -8,6 +8,7 @@ from apps.exchange.cache import HistoricalQuoteGateway, HistoricalSeriesGateway,
 from apps.exchange.domain import (
     DEFAULT_SOURCE_POLICY,
     ConversionResult,
+    FxDomainError,
     FxSourcePolicy,
     HistoricalCurrencyMetadata,
     HistoricalDateError,
