@@ -102,7 +102,7 @@ Acceptance:
 
 Each slice must preserve the PR 2 acceptance criteria relevant to its scope. Later slices must not bypass the ownership model established in `14_WEB_FRONTEND_ARCHITECTURE.md`.
 
-**Execution status after PR 2E:** PR 2A–2E are implemented. The build baseline and Django↔Vite bridge feed the Quiet Atlas foundation, reusable accessible converter primitives and the responsive bilateral workspace. PR 2F adds the final browser-quality gate for this milestone: djLint, axe, reflow/text-expansion, reduced-motion, forced-colors and recorded performance evidence. FX business behavior remains deferred to the domain and vertical-slice PRs.
+**Execution status after PR 2F:** PR 2A–2F are implemented. The build baseline and Django↔Vite bridge feed the Quiet Atlas foundation, reusable accessible converter primitives and responsive bilateral workspace, while the browser-quality gate now covers djLint, axe, 320px/200% reflow and text expansion, reduced motion, forced colors and recorded performance evidence. The presentation milestone is complete; later product slices must preserve these gates rather than recreate them.
 
 **Goal:** establish visual/accessibility foundation before domain complexity.
 
@@ -226,7 +226,9 @@ Acceptance:
 
 ## Implementation PR 5 — HTMX current-conversion vertical slice
 
-**Execution status for PR 5:** in review. The slice connects the country/currency domain and Decimal FX gateway to a progressively enhanced server-rendered converter. Current amount policy accepts zero, caps input at 1,000,000,000, rejects ambiguous thousands-like input, and enforces source-currency minor-unit precision before any provider request. The first conversion is explicit; successful state enables progressive refresh, searchable dialog selection, swap, bookmarkable history, stale trust metadata and browser-level race protection.\n\n**Goal:** deliver the first complete user flow.
+**Execution status for PR 5:** complete. The merged slice connects the country/currency domain and Decimal FX gateway to a progressively enhanced server-rendered converter. Current amount policy accepts zero, caps input at 1,000,000,000, rejects ambiguous thousands-like input, and enforces source-currency minor-unit precision before any provider request. The first conversion is explicit; successful state enables progressive refresh, searchable dialog selection, swap, bookmarkable history, stale trust metadata and browser-level race protection. No-JavaScript POST remains functional, successful non-HTMX POST redirects to the same canonical GET state, and successful HTMX POST replaces only the converter panel while pushing that canonical URL.
+
+**Goal:** deliver the first complete user flow.
 
 Deliverables:
 

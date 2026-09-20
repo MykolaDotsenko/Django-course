@@ -807,6 +807,26 @@ Do not use `django-htmx` to inject a separate vendored HTMX script if our Vite b
 
 One asset path only.
 
+## Implemented PR 5 current-conversion ownership
+
+The current converter now exercises this architecture on the real product route:
+
+- Django owns form binding, validation, selected country/currency context, conversion results, errors and server-rendered picker markup;
+- the exchange domain/service owns Decimal arithmetic, rate selection, freshness and rounding semantics;
+- HTMX owns fragment submission/replacement and canonical history updates only;
+- TypeScript owns native-dialog lifecycle, combobox navigation, presentation-only selection synchronization, progressive refresh and focus restoration;
+- no FX, historical-validity, freshness or rounding business rule lives in TypeScript;
+- the initial GET does not fetch an FX rate;
+- first conversion is explicit;
+- a normal no-JavaScript POST completes the flow;
+- successful non-HTMX POST redirects to the bookmarkable canonical GET URL;
+- successful HTMX POST swaps only the converter panel and pushes the same URL;
+- `hx-sync="this:replace"` prevents an obsolete in-flight response from winning;
+- local country/currency search has no request-path dependency on REST Countries;
+- provider failure never invents a numeric result, while safe stale fallback remains visibly dated and sourced.
+
+PR 6 extends this same ownership model to requested historical dates; it must not move temporal or FX truth into browser code.
+
 ---
 
 # 31. Country/currency picker progressive enhancement
