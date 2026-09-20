@@ -183,6 +183,7 @@ def parse_series_payload(
             points=tuple(points),
             fetched_at=fetched_at,
             provider_policy=policy,
+            observation_granularity=_observation_granularity(policy),
         )
     except FxDomainError as exc:
         raise FxProviderInvalidPayload(str(exc)) from exc
