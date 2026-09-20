@@ -514,6 +514,26 @@
     background: Canvas;
     color: CanvasText;
   }
+
+  .qa-amount-control:focus-within {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+
+  .qa-amount-control__input:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  .qa-selector-trigger:focus-visible,
+  .qa-primary-button:focus-visible,
+  .qa-swap-button:focus-visible,
+  .qa-source-details summary:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+    box-shadow: none;
+  }
 }
 
 /* PR2E — responsive bilateral converter composition */
