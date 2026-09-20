@@ -29,7 +29,6 @@
         <span class="qa-status-badge qa-status-badge--cached">Cached series</span>
       {% endif %}
     </div>
-
     <nav class="qa-chart-period-control" aria-label="Historical trend period">
       {% for period in series_component.period_links %}
         <a class="qa-chart-period-control__item{% if period.active %} is-active{% endif %}"
@@ -37,12 +36,9 @@
            {% if period.active %}aria-current="page"{% endif %}
            hx-get="{{ period.url }}"
            hx-target="#historical-trend"
-           hx-swap="outerHTML">
-          {{ period.label }}
-        </a>
+           hx-swap="outerHTML">{{ period.label }}</a>
       {% endfor %}
     </nav>
-
     <details id="historical-custom-range"
              class="qa-rate-series__custom"
              {% if series_component.period == 'custom' %}open{% endif %}>
@@ -54,11 +50,19 @@
             hx-get="{% url 'historical_series' %}"
             hx-target="#historical-trend"
             hx-swap="outerHTML">
-        <input type="hidden" name="base" value="{{ series_component.base_currency }}">
-        <input type="hidden" name="quote" value="{{ series_component.quote_currency }}">
-        <input type="hidden" name="selected_date" value="{{ series_component.selected_date|date:'Y-m-d' }}">
+        <input type="hidden"
+               name="base"
+               value="{{ series_component.base_currency }}">
+        <input type="hidden"
+               name="quote"
+               value="{{ series_component.quote_currency }}">
+        <input type="hidden"
+               name="selected_date"
+               value="{{ series_component.selected_date|date:'Y-m-d' }}">
         {% if series_component.requested_date %}
-          <input type="hidden" name="requested_date" value="{{ series_component.requested_date|date:'Y-m-d' }}">
+          <input type="hidden"
+                 name="requested_date"
+                 value="{{ series_component.requested_date|date:'Y-m-d' }}">
         {% endif %}
         <input type="hidden" name="period" value="custom">
         <div class="qa-rate-series__custom-grid">
@@ -67,8 +71,7 @@
             <input class="qa-date-input"
                    type="date"
                    name="start_date"
-                   value="{{ series_component.start_date_iso }}"
-                   >
+                   value="{{ series_component.start_date_iso }}">
           </label>
           <label class="qa-field">
             <span class="qa-field__label">End date</span>
@@ -82,9 +85,7 @@
         <button class="qa-secondary-button" type="submit">Apply custom range</button>
       </form>
     </details>
-
     <p class="qa-rate-series__summary">{{ series_component.summary }}</p>
-
     <dl class="qa-rate-series__facts">
       {% if series_component.selected_point %}
         <div>
@@ -132,22 +133,29 @@
       {% endif %}
       <div>
         <dt>Series grouping</dt>
-        <dd>{{ series_component.grouping }}</dd>
+        <dd>
+          {{ series_component.grouping }}
+        </dd>
       </div>
       <div>
         <dt>Observation granularity</dt>
-        <dd>{{ series_component.observation_granularity }}</dd>
+        <dd>
+          {{ series_component.observation_granularity }}
+        </dd>
       </div>
       <div>
         <dt>Providers</dt>
-        <dd>{{ series_component.providers }}</dd>
+        <dd>
+          {{ series_component.providers }}
+        </dd>
       </div>
     </dl>
-
     {% if series_component.points %}
       <details class="qa-rate-series__table">
         <summary>View data table</summary>
-        <div class="qa-table-scroll" tabindex="0" aria-label="Historical rate observations">
+        <div class="qa-table-scroll"
+             tabindex="0"
+             aria-label="Historical rate observations">
           <table>
             <caption>
               {{ series_component.pair }} reference-rate observations
@@ -177,7 +185,6 @@
         </div>
       </details>
     {% endif %}
-
     <p class="qa-rate-series__disclaimer">
       This is reference exchange-rate history, not an investment return or historical purchasing-power calculation.
     </p>
