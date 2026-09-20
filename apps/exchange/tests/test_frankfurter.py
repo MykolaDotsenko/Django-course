@@ -10,6 +10,7 @@ from apps.exchange.domain import (
     FxSourcePolicy,
     ObservationGranularity,
     ProviderPolicyMode,
+    RateSeriesGrouping,
 )
 from apps.exchange.providers.base import (
     FxProviderAuthenticationError,
@@ -21,8 +22,10 @@ from apps.exchange.providers.base import (
 )
 from apps.exchange.providers.frankfurter import (
     MAX_RESPONSE_BYTES,
+    MAX_SERIES_RESPONSE_BYTES,
     FrankfurterProvider,
     parse_rate_payload,
+    parse_series_payload,
 )
 
 
@@ -257,3 +260,160 @@ def test_pinned_provider_frequency_is_normalized(provider_key, expected):
     )
 
     assert result.observation_granularity is expected
+
+
+
+def test_series_payload_sorts_observations_and_preserves_missing_dates():
+    result = parse_series_payload(
+        [
+            {
+                "date": "2026-01-05",
+                "base": "EUR",
+                "quote": "JPY",
+                "rate": Decimal("181.2"),
+                "providers": ["ECB"],
+            },
+            {
+                "date": "2026-01-02",
+                "base": "EUR",
+                "quote": "JPY",
+                "rate": Decimal("179.8"),
+                "providers": ["ECB"],
+            },
+        ],
+        expected_base="EUR",
+        expected_quote="JPY",
+        start_date=date(2026, 1, 1),
+        end_date=date(2026, 1, 7),
+        grouping=RateSeriesGrouping.DAILY,
+        policy=DEFAULT_SOURCE_POLICY,
+        fetched_at=datetime(2026, 1, 8, tzinfo=UTC),
+    )
+
+    assert [point.observation_date for point in result.points] == [
+        date(2026, 1, 2),
+        date(2026, 1, 5),
+    ]
+    assert [point.rate for point in result.points] == [
+        Decimal("179.8"),
+        Decimal("181.2"),
+    ]
+
+
+def test_series_payload_rejects_duplicate_observation_date():
+    payload = [
+        {
+            "date": "2026-01-02",
+            "base": "EUR",
+            "quote": "JPY",
+            "rate": Decimal("179.8"),
+            "providers": ["ECB"],
+        },
+        {
+            "date": "2026-01-02",
+            "base": "EUR",
+            "quote": "JPY",
+            "rate": Decimal("180.0"),
+            "providers": ["ECB"],
+        },
+    ]
+
+    with pytest.raises(FxProviderInvalidPayload, match="duplicate"):
+        parse_series_payload(
+            payload,
+            expected_base="EUR",
+            expected_quote="JPY",
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 1, 7),
+            grouping=RateSeriesGrouping.DAILY,
+            policy=DEFAULT_SOURCE_POLICY,
+            fetched_at=datetime(2026, 1, 8, tzinfo=UTC),
+        )
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        [{"date": "2026-01-02", "base": "USD", "quote": "JPY", "rate": 180}],
+        [{"date": "2025-12-31", "base": "EUR", "quote": "JPY", "rate": 180}],
+        [{"date": "2026-01-02", "base": "EUR", "quote": "JPY", "rate": 0}],
+        [{"date": "bad-date", "base": "EUR", "quote": "JPY", "rate": 180}],
+    ],
+)
+def test_series_payload_rejects_wrong_identity_range_or_value(payload):
+    with pytest.raises(FxProviderInvalidPayload):
+        parse_series_payload(
+            payload,
+            expected_base="EUR",
+            expected_quote="JPY",
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 1, 7),
+            grouping=RateSeriesGrouping.DAILY,
+            policy=FxSourcePolicy(include_attribution=False),
+            fetched_at=datetime(2026, 1, 8, tzinfo=UTC),
+        )
+
+
+def test_rate_series_builds_bounded_monthly_query():
+    payload = (
+        b'[{"date":"2025-01-31","base":"EUR","quote":"JPY",'
+        b'"rate":161.2,"providers":["ECB"]}]'
+    )
+    provider = FrankfurterProvider(base_url="https://example.test/v2", max_attempts=1)
+
+    with patch("apps.exchange.providers.frankfurter.urlopen", return_value=FakeResponse(payload)) as mocked:
+        result = provider.rate_series(
+            "EUR",
+            "JPY",
+            date(2025, 1, 1),
+            date(2025, 12, 31),
+            RateSeriesGrouping.MONTH,
+            DEFAULT_SOURCE_POLICY,
+        )
+
+    request = mocked.call_args.args[0]
+    assert request.full_url.startswith("https://example.test/v2/rates?")
+    assert "from=2025-01-01" in request.full_url
+    assert "to=2025-12-31" in request.full_url
+    assert "base=EUR" in request.full_url
+    assert "quotes=JPY" in request.full_url
+    assert "group=month" in request.full_url
+    assert "expand=providers" in request.full_url
+    assert result.grouping is RateSeriesGrouping.MONTH
+
+
+def test_daily_rate_series_omits_group_query_parameter():
+    payload = (
+        b'[{"date":"2026-01-02","base":"EUR","quote":"JPY",'
+        b'"rate":179.8,"providers":["ECB"]}]'
+    )
+    provider = FrankfurterProvider(base_url="https://example.test/v2", max_attempts=1)
+
+    with patch("apps.exchange.providers.frankfurter.urlopen", return_value=FakeResponse(payload)) as mocked:
+        provider.rate_series(
+            "EUR",
+            "JPY",
+            date(2026, 1, 1),
+            date(2026, 1, 7),
+            RateSeriesGrouping.DAILY,
+            DEFAULT_SOURCE_POLICY,
+        )
+
+    request = mocked.call_args.args[0]
+    assert "group=" not in request.full_url
+
+
+def test_oversized_series_response_is_rejected_before_json_parsing():
+    provider = FrankfurterProvider(max_attempts=1)
+    response = FakeResponse(b"x" * (MAX_SERIES_RESPONSE_BYTES + 1))
+
+    with patch("apps.exchange.providers.frankfurter.urlopen", return_value=response):
+        with pytest.raises(FxProviderInvalidPayload, match="size limit"):
+            provider.rate_series(
+                "EUR",
+                "JPY",
+                date(2026, 1, 1),
+                date(2026, 1, 7),
+                RateSeriesGrouping.DAILY,
+                DEFAULT_SOURCE_POLICY,
+            )
