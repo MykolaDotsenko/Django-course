@@ -21,6 +21,16 @@ class Migration(migrations.Migration):
             name="coverage_to",
             field=models.DateField(blank=True, null=True),
         ),
+        migrations.AddField(
+            model_name="currency",
+            name="coverage_source",
+            field=models.CharField(blank=True, max_length=80),
+        ),
+        migrations.AddField(
+            model_name="currency",
+            name="coverage_fetched_at",
+            field=models.DateTimeField(blank=True, null=True),
+        ),
         migrations.AddConstraint(
             model_name="currency",
             constraint=models.CheckConstraint(
