@@ -69,7 +69,10 @@ class ConverterPrimitivePreviewTests(SimpleTestCase):
         workspace = html[workspace_start:workspace_end]
 
         self.assertLess(workspace.index(">Source<"), workspace.index(">Destination<"))
-        self.assertLess(workspace.index('id="workspace-source"'), workspace.index('id="workspace-destination"'))
+        self.assertLess(
+            workspace.index('id="workspace-source"'),
+            workspace.index('id="workspace-destination"'),
+        )
         self.assertIn('data-country-theme="fi"', workspace)
         self.assertIn('data-country-theme="jp"', workspace)
         self.assertIn('aria-live="polite"', workspace)
