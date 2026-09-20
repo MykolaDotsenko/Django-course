@@ -65,8 +65,12 @@ def test_malformed_or_wrong_pair_payload_is_rejected(payload):
         )
 
 
-def test_pinned_quote_retains_pinned_provider_identity_without_expand_field():
-    policy = FxSourcePolicy(mode=ProviderPolicyMode.PINNED, provider_key="ecb")
+def test_pinned_quote_retains_identity_when_attribution_expansion_is_disabled():
+    policy = FxSourcePolicy(
+        mode=ProviderPolicyMode.PINNED,
+        provider_key="ecb",
+        include_attribution=False,
+    )
     result = parse_rate_payload(
         {"date": "2026-09-18", "base": "EUR", "quote": "JPY", "rate": Decimal("174.5")},
         expected_base="EUR",
@@ -97,7 +101,10 @@ def test_transient_network_failure_retries_at_most_once():
     attempts = [URLError("temporary"), FakeResponse(payload)]
 
     def fake_urlopen(*args, **kwargs):
-        return attempts.pop(0)
+        result = attempts.pop(0)
+        if isinstance(result, Exception):
+            raise result
+        return result
 
     provider = FrankfurterProvider(max_attempts=2)
     with patch("apps.exchange.providers.frankfurter.urlopen", side_effect=fake_urlopen) as mocked:
@@ -132,3 +139,15 @@ def test_invalid_currency_code_is_rejected_before_network_call():
             provider.latest_quote("EUR/USD", "JPY", DEFAULT_SOURCE_POLICY)
 
     mocked.assert_not_called()
+
+
+def test_missing_requested_provider_attribution_is_rejected():
+    with pytest.raises(FxProviderInvalidPayload, match="omitted requested provider attribution"):
+        parse_rate_payload(
+            {"date": "2026-09-18", "base": "EUR", "quote": "JPY", "rate": Decimal("174.5")},
+            expected_base="EUR",
+            expected_quote="JPY",
+            requested_date=None,
+            policy=DEFAULT_SOURCE_POLICY,
+            fetched_at=datetime(2026, 9, 20, tzinfo=UTC),
+        )
