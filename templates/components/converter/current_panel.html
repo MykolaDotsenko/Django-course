@@ -17,6 +17,26 @@
     <div class="qa-inline-alert qa-inline-alert--error" role="alert">
       <h3>{{ conversion_error.title }}</h3>
       <p>{{ conversion_error.detail }}</p>
+      <button class="qa-secondary-button"
+              type="submit"
+              form="current-conversion-form"
+              name="action"
+              value="retry">Retry reference rate</button>
+    </div>
+  {% endif %}
+  {% if error_summary %}
+    <div class="qa-inline-alert qa-inline-alert--error"
+         id="conversion-error-summary"
+         role="alert"
+         tabindex="-1">
+      <h3>Check these fields</h3>
+      <ul class="qa-error-summary">
+        {% for item in error_summary %}
+          <li>
+            <a href="{{ item.href }}">{{ item.label }}: {{ item.message }}</a>
+          </li>
+        {% endfor %}
+      </ul>
     </div>
   {% endif %}
   <form id="current-conversion-form"
@@ -199,6 +219,14 @@
         {% with component=result_component %}
           {% include "components/converter/primitives.html#conversion-result" %}
         {% endwith %}
+        {% if result_component.stale %}
+          <div class="qa-result-actions">
+            <button class="qa-secondary-button"
+                    type="submit"
+                    name="action"
+                    value="retry">Retry reference rate</button>
+          </div>
+        {% endif %}
         <p class="qa-visually-hidden"
            role="status"
            aria-live="polite"
