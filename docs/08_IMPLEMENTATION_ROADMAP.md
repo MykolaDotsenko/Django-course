@@ -226,7 +226,9 @@ Acceptance:
 
 ## Implementation PR 5 — HTMX current-conversion vertical slice
 
-**Execution status for PR 5:** in review. The slice connects the country/currency domain and Decimal FX gateway to a progressively enhanced server-rendered converter. Current amount policy accepts zero, caps input at 1,000,000,000, rejects ambiguous thousands-like input, and enforces source-currency minor-unit precision before any provider request. The first conversion is explicit; successful state enables progressive refresh, searchable dialog selection, swap, bookmarkable history, stale trust metadata and browser-level race protection.\n\n**Goal:** deliver the first complete user flow.
+**Execution status for PR 5:** complete. The merged slice connects the country/currency domain and Decimal FX gateway to a progressively enhanced server-rendered converter. Current amount policy accepts zero, caps input at 1,000,000,000, rejects ambiguous thousands-like input, and enforces source-currency minor-unit precision before any provider request. The first conversion is explicit; successful state enables debounced progressive refresh, searchable dialog selection, swap, bookmarkable history, stale trust metadata, accessible recovery, and browser-level race protection.
+
+**Goal:** deliver the first complete user flow.
 
 Deliverables:
 
