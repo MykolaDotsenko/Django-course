@@ -69,8 +69,11 @@ jobs:
         working-directory: frontend
         run: npm ci --no-audit --no-fund
 
-      - name: Template quality
-        run: djlint templates --check
+      - name: Template format
+        run: djlint templates --check --no-github-output
+
+      - name: Template lint
+        run: djlint templates --lint --no-github-output
 
       - name: Frontend quality and production build
         working-directory: frontend
