@@ -11,7 +11,7 @@ from apps.exchange.domain import (
     ProviderPolicyMode,
     RateQuote,
 )
-from apps.exchange.providers.frankfurter import FxProviderInvalidPayload, FxProviderUnavailable
+from apps.exchange.providers.base import FxProviderInvalidPayload, FxProviderUnavailable
 
 
 NOW = datetime(2026, 9, 20, 12, tzinfo=UTC)
