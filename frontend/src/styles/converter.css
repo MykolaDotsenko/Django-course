@@ -118,6 +118,8 @@
 .qa-selector-trigger {
   display: grid;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 4.5rem;
   grid-template-columns: auto minmax(0, 1fr) auto auto;
   align-items: center;
@@ -465,6 +467,8 @@
 
   .qa-selector-trigger {
     min-height: 4.25rem;
+    gap: 0.5rem;
+    padding-inline: 0.5rem;
   }
 
   .qa-primary-button {
@@ -479,6 +483,15 @@
   .qa-selector-trigger .qa-status-badge {
     grid-column: 2;
     justify-self: start;
+  }
+
+  .qa-selector-trigger__country,
+  .qa-selector-trigger__currency {
+    min-width: 0;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
   }
 
   .qa-selector-trigger__chevron {
