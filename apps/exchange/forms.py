@@ -41,9 +41,7 @@ def parse_amount_text(value: str, *, minor_units: int) -> Decimal:
         )
     if len(significant_fraction) > minor_units:
         unit_label = "decimal place" if minor_units == 1 else "decimal places"
-        raise forms.ValidationError(
-            f"This currency supports at most {minor_units} {unit_label}."
-        )
+        raise forms.ValidationError(f"This currency supports at most {minor_units} {unit_label}.")
 
     try:
         amount = Decimal(text.replace(",", "."))
@@ -51,9 +49,7 @@ def parse_amount_text(value: str, *, minor_units: int) -> Decimal:
         raise forms.ValidationError("Enter a valid decimal amount.") from exc
 
     if amount > MAX_CONVERSION_AMOUNT:
-        raise forms.ValidationError(
-            "Enter an amount no greater than 1,000,000,000."
-        )
+        raise forms.ValidationError("Enter an amount no greater than 1,000,000,000.")
     return amount
 
 
@@ -138,10 +134,14 @@ class CurrentConversionForm(forms.Form):
         if not country_code or not currency_code:
             return
 
-        exists = CountryCurrency.objects.current().filter(
-            country__iso2=country_code,
-            currency__code=currency_code,
-        ).exists()
+        exists = (
+            CountryCurrency.objects.current()
+            .filter(
+                country__iso2=country_code,
+                currency__code=currency_code,
+            )
+            .exists()
+        )
         if not exists:
             self.add_error(
                 f"{side}_currency",
