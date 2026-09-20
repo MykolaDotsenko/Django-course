@@ -261,7 +261,7 @@ def converter(request: HttpRequest) -> HttpResponse:
                     quote_currency=cleaned["destination_currency"],
                     quote_minor_units=quote_currency.minor_units if quote_currency else 2,
                     requested_date=cleaned["requested_date"],
-                    gateway=build_historical_quote_gateway(),
+                    gateway=build_historical_quote_gateway,
                     base_metadata=_historical_currency_metadata(base_currency),
                     quote_metadata=_historical_currency_metadata(quote_currency),
                 )
@@ -276,7 +276,11 @@ def converter(request: HttpRequest) -> HttpResponse:
         except (FxProviderError, HistoricalObservationUnavailable, HistoricalOutOfCoverage) as exc:
             if isinstance(
                 exc,
-                (FxProviderUnsupportedPair, HistoricalObservationUnavailable, HistoricalOutOfCoverage),
+                (
+                    FxProviderUnsupportedPair,
+                    HistoricalObservationUnavailable,
+                    HistoricalOutOfCoverage,
+                ),
             ):
                 response_status = 422
             elif isinstance(exc, FxProviderInvalidPayload):
