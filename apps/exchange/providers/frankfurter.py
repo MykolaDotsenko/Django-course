@@ -65,9 +65,11 @@ def parse_rate_payload(
     except ValueError as exc:
         raise FxProviderInvalidPayload("Frankfurter returned an invalid observation date.") from exc
 
-    raw_providers = payload.get("providers", ())
+    raw_providers = payload.get("providers")
     if raw_providers is None:
-        raw_providers = ()
+        if policy.include_attribution:
+            raise FxProviderInvalidPayload("Frankfurter omitted requested provider attribution.")
+        raw_providers = []
     if not isinstance(raw_providers, list):
         raise FxProviderInvalidPayload("Frankfurter provider attribution must be an array.")
     provider_keys = tuple(str(key).lower().strip() for key in raw_providers if str(key).strip())
