@@ -819,9 +819,7 @@ def test_same_currency_historical_result_does_not_offer_redundant_trend(client, 
 
 
 @pytest.mark.django_db
-def test_historical_series_amount_builds_then_now_from_series_observation(
-    client, reference_data
-):
+def test_historical_series_amount_builds_then_now_from_series_observation(client, reference_data):
     series_gateway = FakeSeriesGateway()
     latest_gateway = FakeGateway()
     with (
@@ -933,9 +931,7 @@ def test_historical_series_archived_pair_skips_latest_comparison(client, referen
 
 
 @pytest.mark.django_db
-def test_historical_series_missing_exact_selected_point_degrades_to_notice(
-    client, reference_data
-):
+def test_historical_series_missing_exact_selected_point_degrades_to_notice(client, reference_data):
     class MissingSelectedSeriesGateway(FakeSeriesGateway):
         def get(self, base, quote, start_date, end_date, grouping, policy, *, now):
             self.calls.append((base, quote, start_date, end_date, grouping, policy, now))
@@ -946,9 +942,7 @@ def test_historical_series_missing_exact_selected_point_degrades_to_notice(
                     start_date=start_date,
                     end_date=end_date,
                     grouping=grouping,
-                    points=(
-                        RateSeriesPoint(start_date, Decimal("170.25"), ("ecb",)),
-                    ),
+                    points=(RateSeriesPoint(start_date, Decimal("170.25"), ("ecb",)),),
                     fetched_at=datetime(2026, 9, 20, 8, tzinfo=UTC),
                     provider_policy=policy,
                     observation_granularity=ObservationGranularity.DAILY,
