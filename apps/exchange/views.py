@@ -33,8 +33,16 @@ from apps.exchange.providers.base import (
     FxProviderUnavailable,
     FxProviderUnsupportedPair,
 )
-from apps.exchange.series_presentation import build_rate_series_component
-from apps.exchange.services import get_rate_series, quote_conversion, quote_historical_conversion
+from apps.exchange.series_presentation import (
+    build_rate_series_component,
+    build_then_now_component,
+)
+from apps.exchange.services import (
+    compare_historical_to_latest,
+    get_rate_series,
+    quote_conversion,
+    quote_historical_conversion,
+)
 
 logger = logging.getLogger("cultural_currency.exchange")
 
@@ -419,6 +427,89 @@ def picker_options(request: HttpRequest) -> HttpResponse:
     )
 
 
+def _build_then_now_enrichment(cleaned, series_result):
+    base_currency = Currency.objects.filter(code=cleaned["base"]).first()
+    quote_currency = Currency.objects.filter(code=cleaned["quote"]).first()
+    if base_currency is None or quote_currency is None:
+        return None, "Latest comparison is unavailable because currency metadata is incomplete."
+
+    amount = cleaned.get("amount_decimal")
+    comparison_amount_error = cleaned.get("comparison_amount_error")
+
+    historical_amount = amount if amount is not None else Decimal("1")
+    requested_date = cleaned.get("requested_date") or cleaned["selected_date"]
+    historical = quote_historical_conversion(
+        amount=historical_amount,
+        base_currency=cleaned["base"],
+        quote_currency=cleaned["quote"],
+        quote_minor_units=quote_currency.minor_units,
+        requested_date=requested_date,
+        gateway=build_historical_quote_gateway,
+        base_metadata=_historical_currency_metadata(base_currency),
+        quote_metadata=_historical_currency_metadata(quote_currency),
+    )
+    if historical.quote.effective_date != cleaned["selected_date"]:
+        raise FxProviderInvalidPayload(
+            "Historical trend selected date does not match the normalized quote observation."
+        )
+
+    exact_series_point = next(
+        (
+            point
+            for point in series_result.series.points
+            if point.observation_date == cleaned["selected_date"]
+        ),
+        None,
+    )
+    if exact_series_point is not None and exact_series_point.rate != historical.quote.rate:
+        raise FxProviderInvalidPayload(
+            "Historical series and selected normalized quote disagree on the observation rate."
+        )
+
+    if comparison_amount_error:
+        return None, comparison_amount_error
+    if amount is None:
+        return None, None
+
+    inactive = [
+        currency.code
+        for currency in (base_currency, quote_currency)
+        if not currency.is_active
+    ]
+    if inactive:
+        codes = ", ".join(inactive)
+        return (
+            None,
+            f"Latest reference comparison is not shown because {codes} is archived "
+            "and has no current-market interpretation.",
+        )
+
+    try:
+        latest = quote_conversion(
+            amount=amount,
+            base_currency=cleaned["base"],
+            quote_currency=cleaned["quote"],
+            quote_minor_units=quote_currency.minor_units,
+            gateway=build_latest_quote_gateway(),
+        )
+    except FxProviderError:
+        return (
+            None,
+            "Latest reference comparison is temporarily unavailable. "
+            "The historical trend remains valid.",
+        )
+
+    comparison = compare_historical_to_latest(historical, latest)
+    return (
+        build_then_now_component(
+            comparison,
+            base_minor_units=base_currency.minor_units,
+            quote_minor_units=quote_currency.minor_units,
+        ),
+        None,
+    )
+
+
 def _series_error(exc: Exception) -> tuple[int, dict[str, str]]:
     if isinstance(exc, RateSeriesRangeError):
         return 422, {
@@ -458,11 +549,15 @@ def historical_series(request: HttpRequest) -> HttpResponse:
                 end_date=cleaned["end_date_resolved"],
                 gateway=build_historical_series_gateway,
             )
+            then_now, comparison_notice = _build_then_now_enrichment(cleaned, result)
             component = build_rate_series_component(
                 result,
                 selected_date=cleaned["selected_date"],
                 requested_date=cleaned.get("requested_date"),
                 period=cleaned["period"],
+                amount=cleaned.get("amount_decimal"),
+                then_now=then_now,
+                comparison_notice=comparison_notice,
             )
         except (RateSeriesRangeError, FxProviderError) as exc:
             response_status, error = _series_error(exc)
