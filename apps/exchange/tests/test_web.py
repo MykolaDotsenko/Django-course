@@ -125,7 +125,7 @@ def test_invalid_amount_never_builds_provider_gateway(client, reference_data):
             HTTP_HX_REQUEST="true",
         )
 
-    assert response.status_code == 200
+    assert response.status_code == 422
     assert b"zero or a positive amount" in response.content
     factory.assert_not_called()
 
@@ -146,6 +146,8 @@ def test_same_currency_uses_exact_one_without_gateway_call(client, reference_dat
     assert response.status_code == 200
     assert b"100.00" in response.content
     assert b"Exact same-currency rate" in response.content
+    assert b"equals" in response.content
+    assert b"Last synced" not in response.content
     assert gateway.calls == []
 
 
@@ -159,6 +161,7 @@ def test_stale_result_is_explicitly_labelled(client, reference_data):
 
     assert b"Cached reference" in response.content
     assert b"temporarily unavailable" in response.content
+    assert b"Retry reference rate" in response.content
 
 
 @pytest.mark.django_db
@@ -169,7 +172,7 @@ def test_provider_unavailable_preserves_form_without_numeric_result(client, refe
     ):
         response = client.post(reverse("converter"), payload(), HTTP_HX_REQUEST="true")
 
-    assert response.status_code == 200
+    assert response.status_code == 503
     assert b"temporarily unavailable" in response.content
     assert b'value="100.00"' in response.content
     assert b"current-conversion-result" not in response.content
@@ -230,4 +233,29 @@ def test_invalid_deep_link_currency_is_validation_state_not_500(client, referenc
 
     assert response.status_code == 200
     assert b"Select a valid choice" in response.content
+    factory.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_htmx_response_varies_on_history_restore_header(client, reference_data):
+    response = client.get(reverse("converter"), HTTP_HX_REQUEST="true")
+
+    vary = response.get("Vary", "")
+    assert "HX-Request" in vary
+    assert "HX-History-Restore-Request" in vary
+
+
+@pytest.mark.django_db
+def test_multiple_validation_errors_render_linked_summary(client, reference_data):
+    with patch("apps.exchange.views.build_latest_quote_gateway") as factory:
+        response = client.post(
+            reverse("converter"),
+            payload(amount="-1", destination_currency="ZZZ"),
+            HTTP_HX_REQUEST="true",
+        )
+
+    assert response.status_code == 422
+    assert b"Check these fields" in response.content
+    assert b'href="#id_amount"' in response.content
+    assert b'href="#id_destination_currency"' in response.content
     factory.assert_not_called()
