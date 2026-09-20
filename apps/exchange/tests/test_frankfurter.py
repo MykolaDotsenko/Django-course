@@ -173,7 +173,10 @@ def test_pinned_quote_missing_requested_attribution_is_rejected():
         )
 
 
-@pytest.mark.parametrize(("status", "error_type"), [(401, FxProviderAuthenticationError), (403, FxProviderAuthenticationError)])
+@pytest.mark.parametrize(
+    ("status", "error_type"),
+    [(401, FxProviderAuthenticationError), (403, FxProviderAuthenticationError)],
+)
 def test_authentication_failures_are_not_retried(status, error_type):
     error = HTTPError(
         url="https://api.frankfurter.dev/v2/rate/EUR/JPY",
