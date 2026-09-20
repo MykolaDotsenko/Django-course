@@ -97,6 +97,12 @@
           </dd>
         </div>
       {% endif %}
+      {% if component.observation_frequency %}
+        <div>
+          <dt>Observation frequency</dt>
+          <dd>{{ component.observation_frequency }}</dd>
+        </div>
+      {% endif %}
       <div>
         <dt>Provider</dt>
         <dd>
