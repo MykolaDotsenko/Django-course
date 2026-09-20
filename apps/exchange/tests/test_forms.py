@@ -13,6 +13,8 @@ from apps.exchange.forms import CurrentConversionForm, parse_amount_text
         ("12.50", 2, Decimal("12.50")),
         ("12,50", 2, Decimal("12.50")),
         ("0", 2, Decimal("0")),
+        ("100.00", 0, Decimal("100.00")),
+        ("12.500", 2, Decimal("12.500")),
         ("1.234", 3, Decimal("1.234")),
     ],
 )
@@ -87,3 +89,8 @@ def test_form_normalizes_decimal_comma_to_decimal(reference_data):
 
     assert form.is_valid(), form.errors
     assert form.cleaned_data["amount_decimal"] == Decimal("12.50")
+
+
+def test_amount_parser_rejects_value_above_product_bound():
+    with pytest.raises(ValidationError, match="1,000,000,000"):
+        parse_amount_text("1000000000.01", minor_units=2)
