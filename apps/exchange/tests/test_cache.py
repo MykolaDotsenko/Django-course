@@ -161,9 +161,7 @@ def test_cache_read_failure_falls_through_to_provider(monkeypatch):
 
     monkeypatch.setattr(cache, "get", fail_get)
 
-    result, stale = LatestQuoteGateway(provider).get(
-        "EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW
-    )
+    result, stale = LatestQuoteGateway(provider).get("EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW)
 
     assert result == provider_quote
     assert stale is False
@@ -185,3 +183,26 @@ def test_cache_write_failure_does_not_invalidate_provider_result(monkeypatch):
 
     assert result == provider_quote
     assert stale is False
+
+
+def test_invalid_provider_quote_identity_can_use_matching_stale_cache():
+    cached = make_quote(fetched_at=NOW - timedelta(days=2))
+    cache.set(latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY), serialize_quote(cached), 100)
+    wrong_pair = RateQuote(
+        base_currency="EUR",
+        quote_currency="USD",
+        rate=Decimal("1.1"),
+        requested_date=None,
+        effective_date=date(2026, 9, 18),
+        fetched_at=NOW,
+        provider_policy=DEFAULT_SOURCE_POLICY,
+        provider_keys=("ecb",),
+        historical=False,
+    )
+
+    result, stale = LatestQuoteGateway(FakeProvider(result=wrong_pair)).get(
+        "EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW
+    )
+
+    assert result == cached
+    assert stale is True
