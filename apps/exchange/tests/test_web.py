@@ -294,9 +294,7 @@ def test_failed_active_htmx_refresh_emits_preserve_placeholder(client, reference
 
 
 @pytest.mark.django_db
-def test_successful_active_htmx_refresh_never_emits_preserve_placeholder(
-    client, reference_data
-):
+def test_successful_active_htmx_refresh_never_emits_preserve_placeholder(client, reference_data):
     gateway = FakeGateway()
     with patch("apps.exchange.views.build_latest_quote_gateway", return_value=gateway):
         response = client.post(
