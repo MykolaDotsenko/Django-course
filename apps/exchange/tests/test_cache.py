@@ -4,10 +4,18 @@ from decimal import Decimal
 import pytest
 from django.core.cache import cache
 
-from apps.exchange.cache import LatestQuoteGateway, latest_cache_key, serialize_quote
+from apps.exchange.cache import (
+    HistoricalQuoteGateway,
+    LatestQuoteGateway,
+    historical_cache_key,
+    historical_resolution_cache_key,
+    latest_cache_key,
+    serialize_quote,
+)
 from apps.exchange.domain import (
     DEFAULT_SOURCE_POLICY,
     FxSourcePolicy,
+    HistoricalObservationUnavailable,
     ProviderPolicyMode,
     RateQuote,
 )
@@ -37,6 +45,12 @@ class FakeProvider:
         self.calls = 0
 
     def latest_quote(self, base, quote, policy):
+        self.calls += 1
+        if self.error:
+            raise self.error
+        return self.result
+
+    def historical_quote(self, base, quote, requested_date, policy):
         self.calls += 1
         if self.error:
             raise self.error
@@ -203,3 +217,139 @@ def test_invalid_provider_quote_identity_can_use_matching_stale_cache():
 
     assert result == cached
     assert stale is True
+
+
+def make_historical_quote(
+    *,
+    requested_date=date(2026, 9, 20),
+    effective_date=date(2026, 9, 18),
+    policy=DEFAULT_SOURCE_POLICY,
+):
+    return RateQuote(
+        base_currency="EUR",
+        quote_currency="JPY",
+        rate=Decimal("174.5"),
+        requested_date=requested_date,
+        effective_date=effective_date,
+        fetched_at=NOW,
+        provider_policy=policy,
+        provider_keys=((policy.provider_key,) if policy.provider_key else ("ecb",)),
+        historical=True,
+    )
+
+
+def test_historical_resolution_cache_hit_skips_provider():
+    historical = make_historical_quote()
+    key = historical_resolution_cache_key(
+        "EUR",
+        "JPY",
+        historical.requested_date,
+        DEFAULT_SOURCE_POLICY,
+    )
+    cache.set(key, serialize_quote(historical), 100)
+    provider = FakeProvider(error=AssertionError("historical provider must not be called"))
+
+    result = HistoricalQuoteGateway(provider).get(
+        "EUR",
+        "JPY",
+        historical.requested_date,
+        DEFAULT_SOURCE_POLICY,
+    )
+
+    assert result == historical
+    assert provider.calls == 0
+
+
+def test_historical_provider_result_populates_resolution_and_observation_cache():
+    historical = make_historical_quote()
+    provider = FakeProvider(result=historical)
+
+    result = HistoricalQuoteGateway(provider).get(
+        "EUR",
+        "JPY",
+        historical.requested_date,
+        DEFAULT_SOURCE_POLICY,
+    )
+
+    assert result == historical
+    assert provider.calls == 1
+    resolution = cache.get(
+        historical_resolution_cache_key(
+            "EUR",
+            "JPY",
+            historical.requested_date,
+            DEFAULT_SOURCE_POLICY,
+        )
+    )
+    observation = cache.get(
+        historical_cache_key(
+            "EUR",
+            "JPY",
+            historical.effective_date,
+            DEFAULT_SOURCE_POLICY,
+        )
+    )
+    assert resolution is not None
+    assert observation is not None
+
+
+def test_historical_previous_observation_within_seven_days_is_allowed():
+    historical = make_historical_quote(
+        requested_date=date(2026, 9, 20),
+        effective_date=date(2026, 9, 14),
+    )
+
+    result = HistoricalQuoteGateway(FakeProvider(result=historical)).get(
+        "EUR",
+        "JPY",
+        historical.requested_date,
+        DEFAULT_SOURCE_POLICY,
+    )
+
+    assert result.used_previous_observation is True
+
+
+def test_historical_previous_observation_beyond_policy_is_rejected():
+    historical = make_historical_quote(
+        requested_date=date(2026, 9, 20),
+        effective_date=date(2026, 9, 12),
+    )
+
+    with pytest.raises(HistoricalObservationUnavailable):
+        HistoricalQuoteGateway(FakeProvider(result=historical)).get(
+            "EUR",
+            "JPY",
+            historical.requested_date,
+            DEFAULT_SOURCE_POLICY,
+        )
+
+
+def test_historical_quote_must_preserve_requested_date():
+    historical = make_historical_quote(requested_date=date(2026, 9, 19))
+
+    with pytest.raises(FxProviderInvalidPayload, match="requested-date"):
+        HistoricalQuoteGateway(FakeProvider(result=historical)).get(
+            "EUR",
+            "JPY",
+            date(2026, 9, 20),
+            DEFAULT_SOURCE_POLICY,
+        )
+
+
+def test_historical_cache_write_failure_does_not_invalidate_provider_result(monkeypatch):
+    historical = make_historical_quote()
+    provider = FakeProvider(result=historical)
+
+    def fail_set(*args, **kwargs):
+        raise RuntimeError("cache unavailable")
+
+    monkeypatch.setattr(cache, "set", fail_set)
+
+    result = HistoricalQuoteGateway(provider).get(
+        "EUR",
+        "JPY",
+        historical.requested_date,
+        DEFAULT_SOURCE_POLICY,
+    )
+
+    assert result == historical
