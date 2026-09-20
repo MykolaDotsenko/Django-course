@@ -176,7 +176,9 @@ class LatestQuoteGateway:
         if quote_value.base_currency != base.upper() or quote_value.quote_currency != quote.upper():
             raise FxProviderInvalidPayload("Provider returned a quote for a different pair.")
         if quote_value.provider_policy != policy:
-            raise FxProviderInvalidPayload("Provider returned a quote under a different source policy.")
+            raise FxProviderInvalidPayload(
+                "Provider returned a quote under a different source policy."
+            )
         if quote_value.historical or quote_value.requested_date is not None:
             raise FxProviderInvalidPayload("Latest quote gateway received historical semantics.")
 
