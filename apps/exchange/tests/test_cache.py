@@ -115,3 +115,40 @@ def test_attribution_mode_changes_cache_identity():
     assert latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY) != latest_cache_key(
         "EUR", "JPY", without_attribution
     )
+
+
+def test_corrupted_cached_provider_keys_are_ignored():
+    key = latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY)
+    payload = serialize_quote(make_quote())
+    payload["provider_keys"] = "ecb"
+    cache.set(key, payload, 100)
+    provider_quote = make_quote(fetched_at=NOW)
+    provider = FakeProvider(result=provider_quote)
+
+    result, stale = LatestQuoteGateway(provider).get(
+        "EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW
+    )
+
+    assert result == provider_quote
+    assert stale is False
+    assert provider.calls == 1
+
+
+def test_provider_quote_identity_is_rechecked_before_caching():
+    wrong_pair = RateQuote(
+        base_currency="EUR",
+        quote_currency="USD",
+        rate=Decimal("1.1"),
+        requested_date=None,
+        effective_date=date(2026, 9, 18),
+        fetched_at=NOW,
+        provider_policy=DEFAULT_SOURCE_POLICY,
+        provider_keys=("ecb",),
+        historical=False,
+    )
+    gateway = LatestQuoteGateway(FakeProvider(result=wrong_pair))
+
+    with pytest.raises(FxProviderInvalidPayload, match="different pair"):
+        gateway.get("EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW)
+
+    assert cache.get(latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY)) is None
