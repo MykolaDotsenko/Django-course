@@ -109,6 +109,6 @@ See [docs/08_IMPLEMENTATION_ROADMAP.md](docs/08_IMPLEMENTATION_ROADMAP.md).
 
 ## Current status
 
-**Phase:** PR2F browser quality complete → PR3 country/currency domain in review → PR4 FX domain and Frankfurter adapter next.
+**Phase:** PR3 country/currency domain complete → PR4 FX domain and Frankfurter adapter in review → PR5 HTMX current-conversion vertical slice next.
 
 The Django product shell, runtime configuration, PostgreSQL path, observability baseline, frontend build, Vite bridge and Quiet Atlas shell are executable and CI-backed. DEBUG-only design surfaces exercise the semantic shell, converter primitives and responsive bilateral composition without claiming FX business behavior.
