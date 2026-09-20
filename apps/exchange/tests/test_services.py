@@ -6,7 +6,10 @@ import pytest
 from apps.exchange.domain import (
     DEFAULT_SOURCE_POLICY,
     FxDomainError,
+    HistoricalCoverageReason,
+    HistoricalCurrencyMetadata,
     HistoricalDateError,
+    HistoricalOutOfCoverage,
     RateQuote,
 )
 from apps.exchange.services import quote_conversion, quote_historical_conversion
@@ -121,3 +124,82 @@ def test_historical_conversion_uses_gateway_quote():
 
     assert result.output_amount == Decimal("1745")
     assert gateway.calls == [("EUR", "JPY", requested, DEFAULT_SOURCE_POLICY)]
+
+
+
+@pytest.mark.parametrize(
+    ("metadata", "requested", "reason"),
+    [
+        (
+            HistoricalCurrencyMetadata(code="FIM", active_from=date(1963, 1, 1)),
+            date(1962, 12, 31),
+            HistoricalCoverageReason.CURRENCY_NOT_YET_ACTIVE,
+        ),
+        (
+            HistoricalCurrencyMetadata(code="FIM", active_to=date(2001, 12, 31)),
+            date(2002, 1, 1),
+            HistoricalCoverageReason.CURRENCY_RETIRED,
+        ),
+        (
+            HistoricalCurrencyMetadata(code="FIM", coverage_from=date(1972, 1, 1)),
+            date(1971, 12, 31),
+            HistoricalCoverageReason.PROVIDER_COVERAGE_NOT_STARTED,
+        ),
+        (
+            HistoricalCurrencyMetadata(
+                code="FIM",
+                coverage_to=date(2001, 12, 31),
+                coverage_to_is_terminal=True,
+            ),
+            date(2002, 1, 1),
+            HistoricalCoverageReason.PROVIDER_COVERAGE_ENDED,
+        ),
+    ],
+)
+def test_historical_known_bounds_fail_before_gateway(metadata, requested, reason):
+    with pytest.raises(HistoricalOutOfCoverage) as captured:
+        quote_historical_conversion(
+            amount=Decimal("10"),
+            base_currency="FIM",
+            quote_currency="JPY",
+            quote_minor_units=0,
+            requested_date=requested,
+            gateway=HistoricalExplodingGateway(),
+            base_metadata=metadata,
+            now=datetime(2026, 9, 20, tzinfo=UTC),
+        )
+
+    assert captured.value.reason is reason
+
+
+def test_latest_observation_date_is_not_treated_as_terminal_coverage():
+    requested = date(2026, 9, 20)
+    quote = RateQuote(
+        base_currency="EUR",
+        quote_currency="JPY",
+        rate=Decimal("174.5"),
+        requested_date=requested,
+        effective_date=date(2026, 9, 18),
+        fetched_at=datetime(2026, 9, 20, tzinfo=UTC),
+        provider_policy=DEFAULT_SOURCE_POLICY,
+        provider_keys=("ecb",),
+        historical=True,
+    )
+    gateway = HistoricalGateway(quote)
+
+    result = quote_historical_conversion(
+        amount=Decimal("10"),
+        base_currency="EUR",
+        quote_currency="JPY",
+        quote_minor_units=0,
+        requested_date=requested,
+        gateway=gateway,
+        base_metadata=HistoricalCurrencyMetadata(
+            code="EUR",
+            coverage_to=date(2026, 9, 18),
+            coverage_to_is_terminal=False,
+        ),
+        now=datetime(2026, 9, 20, tzinfo=UTC),
+    )
+
+    assert result.quote.effective_date == date(2026, 9, 18)
