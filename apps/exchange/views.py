@@ -16,11 +16,14 @@ from apps.countries.services import historical_currency_suggestion
 from apps.exchange.cache import HistoricalQuoteGateway, HistoricalSeriesGateway, LatestQuoteGateway
 from apps.exchange.config import load_fx_runtime_config
 from apps.exchange.domain import (
+    ConversionResult,
     HistoricalCoverageReason,
     HistoricalCurrencyMetadata,
     HistoricalObservationUnavailable,
     HistoricalOutOfCoverage,
+    RateQuote,
     RateSeriesRangeError,
+    convert_amount,
 )
 from apps.exchange.forms import (
     RATE_MODE_HISTORICAL,
@@ -447,21 +450,6 @@ def _build_then_now_enrichment(cleaned, series_result):
 
     historical_amount = amount if amount is not None else Decimal("1")
     requested_date = cleaned.get("requested_date") or cleaned["selected_date"]
-    historical = quote_historical_conversion(
-        amount=historical_amount,
-        base_currency=cleaned["base"],
-        quote_currency=cleaned["quote"],
-        quote_minor_units=quote_currency.minor_units,
-        requested_date=requested_date,
-        gateway=build_historical_quote_gateway,
-        base_metadata=_historical_currency_metadata(base_currency),
-        quote_metadata=_historical_currency_metadata(quote_currency),
-    )
-    if historical.quote.effective_date != cleaned["selected_date"]:
-        raise FxProviderInvalidPayload(
-            "Historical trend selected date does not match the normalized quote observation."
-        )
-
     exact_series_point = next(
         (
             point
@@ -470,10 +458,35 @@ def _build_then_now_enrichment(cleaned, series_result):
         ),
         None,
     )
-    if exact_series_point is not None and exact_series_point.rate != historical.quote.rate:
-        raise FxProviderInvalidPayload(
-            "Historical series and selected normalized quote disagree on the observation rate."
+    if exact_series_point is None:
+        return (
+            None,
+            "Then & Now comparison is unavailable because the selected observation "
+            "is not present in the loaded series.",
         )
+
+    historical_quote = RateQuote(
+        base_currency=series_result.series.base_currency,
+        quote_currency=series_result.series.quote_currency,
+        rate=exact_series_point.rate,
+        requested_date=requested_date,
+        effective_date=exact_series_point.observation_date,
+        fetched_at=series_result.series.fetched_at,
+        provider_policy=series_result.series.provider_policy,
+        provider_keys=exact_series_point.provider_keys,
+        historical=True,
+        observation_granularity=series_result.series.observation_granularity,
+    )
+    historical = ConversionResult(
+        input_amount=historical_amount,
+        output_amount=convert_amount(
+            historical_amount,
+            historical_quote,
+            minor_units=quote_currency.minor_units,
+        ),
+        quote=historical_quote,
+        stale=series_result.stale,
+    )
 
     if comparison_amount_error:
         return None, comparison_amount_error
