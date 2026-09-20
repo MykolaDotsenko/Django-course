@@ -76,7 +76,7 @@ def _assert_preview_integrity(page: Page, *, viewport_width: int) -> None:
         label="Amount control",
     )
     _assert_minimum_size(
-        page.locator("#preview-source"),
+        page.locator("#workspace-source"),
         min_height=selector_height,
         label="Source trigger",
     )
@@ -103,7 +103,7 @@ def _assert_preview_integrity(page: Page, *, viewport_width: int) -> None:
 
     page.keyboard.press("Tab")
     active_id = page.evaluate("document.activeElement?.id ?? ''")
-    if active_id != "preview-amount":
+    if active_id != "workspace-amount":
         raise RuntimeError(f"Amount input is not second keyboard target: {active_id!r}")
 
     focus_shadow = page.locator(".qa-amount-control").first.evaluate(
@@ -118,6 +118,16 @@ def _assert_preview_integrity(page: Page, *, viewport_width: int) -> None:
         raise RuntimeError("Cached status text is missing")
     if page.get_by_text("Historical", exact=True).count() < 1:
         raise RuntimeError("Historical status text is missing")
+
+
+    source_box = _box(page.locator(".qa-workspace__context--source"))
+    destination_box = _box(page.locator(".qa-workspace__context--destination"))
+    if viewport_width >= 1024:
+        if abs(source_box["y"] - destination_box["y"]) > 2:
+            raise RuntimeError("Wide bilateral contexts must remain simultaneous")
+    else:
+        if destination_box["y"] <= source_box["y"]:
+            raise RuntimeError("Compact bilateral contexts must preserve source-before-destination order")
 
 
 def main() -> None:
