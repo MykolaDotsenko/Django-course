@@ -6,7 +6,7 @@ import pytest
 from django.urls import reverse
 
 from apps.countries.models import Country, CountryCurrency, Currency
-from apps.exchange.domain import DEFAULT_SOURCE_POLICY, RateQuote
+from apps.exchange.domain import DEFAULT_SOURCE_POLICY, ObservationGranularity, RateQuote
 from apps.exchange.providers.base import FxProviderUnavailable
 
 
@@ -39,8 +39,9 @@ class UnavailableGateway:
 
 
 class FakeHistoricalGateway:
-    def __init__(self, *, effective_date=None):
+    def __init__(self, *, effective_date=None, granularity=ObservationGranularity.DAILY):
         self.effective_date = effective_date
+        self.granularity = granularity
         self.calls = []
 
     def get(self, base, quote, requested_date, policy):
@@ -56,6 +57,7 @@ class FakeHistoricalGateway:
             provider_policy=DEFAULT_SOURCE_POLICY,
             provider_keys=("ecb",),
             historical=True,
+            observation_granularity=self.granularity,
         )
 
 
@@ -76,6 +78,11 @@ def reference_data(db):
         symbol="mk",
         minor_units=2,
         is_active=False,
+        active_to=date(2001, 12, 31),
+        coverage_from=date(1972, 1, 1),
+        coverage_to=date(2001, 12, 31),
+        coverage_to_is_terminal=True,
+        coverage_source="test-frankfurter",
     )
     CountryCurrency.objects.create(
         country=fi,
@@ -364,6 +371,9 @@ def test_historical_htmx_conversion_preserves_requested_and_observation_dates(
     assert "rate_mode=historical" in response["HX-Push-Url"]
     assert "requested_date=1998-06-15" in response["HX-Push-Url"]
     assert gateway.calls[0][2] == date(1998, 6, 15)
+    assert b"Finland used Finnish markka" in response.content
+    assert b"Use FIM" in response.content
+    assert b"explicit EUR selection has not been changed" in response.content
 
 
 @pytest.mark.django_db
@@ -422,3 +432,84 @@ def test_current_picker_keeps_archived_currency_hidden(client, reference_data):
 
     assert response.status_code == 200
     assert b"Finnish markka" not in response.content
+
+
+@pytest.mark.django_db
+def test_historical_currency_suggestion_action_replays_conversion_with_suggested_code(
+    client, reference_data
+):
+    gateway = FakeHistoricalGateway()
+    with patch("apps.exchange.views.build_historical_quote_gateway", return_value=gateway):
+        response = client.post(
+            reverse("converter"),
+            payload(
+                rate_mode="historical",
+                requested_date="1998-06-15",
+                historical_currency_action="source:FIM",
+            ),
+            HTTP_HX_REQUEST="true",
+        )
+
+    assert response.status_code == 200
+    assert gateway.calls[0][0:2] == ("FIM", "JPY")
+    assert b"Finnish markka" in response.content
+    assert b"Use FIM" not in response.content
+
+
+@pytest.mark.django_db
+def test_retired_currency_is_out_of_coverage_before_provider_call(client, reference_data):
+    with patch("apps.exchange.views.build_historical_quote_gateway") as factory:
+        response = client.post(
+            reverse("converter"),
+            payload(
+                rate_mode="historical",
+                requested_date="2002-01-01",
+                source_currency="FIM",
+            ),
+            HTTP_HX_REQUEST="true",
+        )
+
+    assert response.status_code == 422
+    assert b"outside known historical coverage" in response.content
+    assert b"FIM was already retired" in response.content
+    assert b"Use EUR" in response.content
+    factory.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_provider_coverage_start_blocks_request_before_provider_call(client, reference_data):
+    eur = Currency.objects.get(code="EUR")
+    eur.coverage_from = date(2000, 1, 1)
+    eur.coverage_source = "test-frankfurter"
+    eur.save(update_fields=["coverage_from", "coverage_source"])
+
+    with patch("apps.exchange.views.build_historical_quote_gateway") as factory:
+        response = client.post(
+            reverse("converter"),
+            payload(rate_mode="historical", requested_date="1998-06-15"),
+            HTTP_HX_REQUEST="true",
+        )
+
+    assert response.status_code == 422
+    assert b"Known provider coverage starts 01 Jan 2000" in response.content
+    factory.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_monthly_historical_observation_never_claims_daily_precision(client, reference_data):
+    gateway = FakeHistoricalGateway(
+        effective_date=date(2026, 9, 1),
+        granularity=ObservationGranularity.MONTHLY,
+    )
+    with patch("apps.exchange.views.build_historical_quote_gateway", return_value=gateway):
+        response = client.post(
+            reverse("converter"),
+            payload(rate_mode="historical", requested_date="2026-09-20"),
+            HTTP_HX_REQUEST="true",
+        )
+
+    assert response.status_code == 200
+    assert b"Monthly historical observation" in response.content
+    assert b"Observation frequency" in response.content
+    assert b"Monthly" in response.content
+    assert b"Previous available observation" not in response.content

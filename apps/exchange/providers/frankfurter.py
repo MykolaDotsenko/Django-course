@@ -30,6 +30,19 @@ from apps.exchange.providers.base import (
 DEFAULT_BASE_URL = "https://api.frankfurter.dev/v2"
 MAX_RESPONSE_BYTES = 64 * 1024
 RETRYABLE_HTTP_STATUSES = frozenset({408, 500, 502, 503, 504})
+_NON_DAILY_PROVIDER_GRANULARITY = {
+    "hmrc": ObservationGranularity.MONTHLY,
+    "ust": ObservationGranularity.QUARTERLY,
+}
+
+
+def _observation_granularity(policy: FxSourcePolicy) -> ObservationGranularity:
+    if policy.mode is ProviderPolicyMode.BLEND:
+        return ObservationGranularity.DAILY
+    return _NON_DAILY_PROVIDER_GRANULARITY.get(
+        policy.provider_key or "",
+        ObservationGranularity.DAILY,
+    )
 
 
 def _currency_code(value: Any) -> str:
@@ -93,7 +106,7 @@ def parse_rate_payload(
             provider_policy=policy,
             provider_keys=provider_keys,
             historical=requested_date is not None,
-            observation_granularity=ObservationGranularity.UNKNOWN,
+            observation_granularity=_observation_granularity(policy),
         )
     except FxDomainError as exc:
         raise FxProviderInvalidPayload(str(exc)) from exc

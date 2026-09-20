@@ -19,10 +19,10 @@ class Command(BaseCommand):
             "US": ("USA", "United States"),
         }
         currencies = {
-            "EUR": ("Euro", "€", True),
-            "JPY": ("Japanese yen", "¥", True),
-            "USD": ("US dollar", "$", True),
-            "FIM": ("Finnish markka", "mk", False),
+            "EUR": ("Euro", "€", True, None, None),
+            "JPY": ("Japanese yen", "¥", True, None, None),
+            "USD": ("US dollar", "$", True, None, None),
+            "FIM": ("Finnish markka", "mk", False, None, date(2001, 12, 31)),
         }
 
         country_rows = {}
@@ -33,10 +33,16 @@ class Command(BaseCommand):
             )
 
         currency_rows = {}
-        for code, (name, symbol, active) in currencies.items():
+        for code, (name, symbol, active, active_from, active_to) in currencies.items():
             currency_rows[code], _ = Currency.objects.update_or_create(
                 code=code,
-                defaults={"name": name, "symbol": symbol, "is_active": active},
+                defaults={
+                    "name": name,
+                    "symbol": symbol,
+                    "is_active": active,
+                    "active_from": active_from,
+                    "active_to": active_to,
+                },
             )
 
         relationships = [

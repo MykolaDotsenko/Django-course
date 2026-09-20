@@ -95,3 +95,31 @@ def test_current_relationship_excludes_future_valid_from(finland, eur):
 
     assert not CountryCurrency.objects.current(as_of=date(2026, 9, 20)).exists()
     assert CountryCurrency.objects.current(as_of=date(2099, 1, 1)).exists()
+
+
+@pytest.mark.django_db
+def test_currency_covered_on_treats_latest_observation_as_non_terminal():
+    eur = Currency.objects.create(
+        code="EUR",
+        name="Euro",
+        coverage_from=date(1999, 1, 4),
+        coverage_to=date(2026, 9, 18),
+        coverage_to_is_terminal=False,
+    )
+
+    assert Currency.objects.covered_on(date(2026, 9, 20)).get() == eur
+
+
+@pytest.mark.django_db
+def test_currency_covered_on_respects_terminal_archived_coverage():
+    fim = Currency.objects.create(
+        code="FIM",
+        name="Finnish markka",
+        is_active=False,
+        coverage_from=date(1972, 1, 3),
+        coverage_to=date(2001, 12, 28),
+        coverage_to_is_terminal=True,
+    )
+
+    assert Currency.objects.covered_on(date(1998, 6, 15)).get() == fim
+    assert not Currency.objects.covered_on(date(2002, 1, 1)).filter(pk=fim.pk).exists()

@@ -11,9 +11,15 @@ from django.utils.cache import patch_vary_headers
 from django.views.decorators.http import require_GET, require_http_methods
 
 from apps.countries.models import CountryCurrency, Currency
+from apps.countries.services import historical_currency_suggestion
 from apps.exchange.cache import HistoricalQuoteGateway, LatestQuoteGateway
 from apps.exchange.config import load_fx_runtime_config
-from apps.exchange.domain import HistoricalObservationUnavailable
+from apps.exchange.domain import (
+    HistoricalCoverageReason,
+    HistoricalCurrencyMetadata,
+    HistoricalObservationUnavailable,
+    HistoricalOutOfCoverage,
+)
 from apps.exchange.forms import RATE_MODE_HISTORICAL, CurrentConversionForm
 from apps.exchange.presentation import build_converter_context
 from apps.exchange.providers.base import (
@@ -94,6 +100,33 @@ def _canonical_conversion_url(form: CurrentConversionForm) -> str:
     return f"{reverse('converter')}?{urlencode(params)}"
 
 
+def _historical_currency_metadata(currency: Currency | None) -> HistoricalCurrencyMetadata | None:
+    if currency is None:
+        return None
+    return HistoricalCurrencyMetadata(
+        code=currency.code,
+        active_from=currency.active_from,
+        active_to=currency.active_to,
+        coverage_from=currency.coverage_from,
+        coverage_to=currency.coverage_to,
+        coverage_to_is_terminal=currency.coverage_to_is_terminal,
+    )
+
+
+def _historical_currency_payload(request: HttpRequest):
+    value = request.POST.get("historical_currency_action", "")
+    try:
+        side, currency_code = value.split(":", 1)
+    except ValueError:
+        return request.POST
+    if side not in {"source", "destination"}:
+        return request.POST
+
+    payload = request.POST.copy()
+    payload[f"{side}_currency"] = currency_code.upper()
+    return payload
+
+
 def _swap_payload(request: HttpRequest):
     payload = request.POST.copy()
     payload["source_country"], payload["destination_country"] = (
@@ -108,16 +141,42 @@ def _swap_payload(request: HttpRequest):
 
 
 def _conversion_error(
-    exc: FxProviderError | HistoricalObservationUnavailable,
+    exc: FxProviderError | HistoricalObservationUnavailable | HistoricalOutOfCoverage,
     *,
     historical: bool = False,
 ) -> dict[str, str]:
+    if isinstance(exc, HistoricalOutOfCoverage):
+        boundary = exc.boundary.strftime("%d %b %Y")
+        if exc.reason is HistoricalCoverageReason.CURRENCY_NOT_YET_ACTIVE:
+            detail = (
+                f"{exc.currency_code} was not yet active on the selected date. "
+                f"Known lifecycle starts {boundary}."
+            )
+        elif exc.reason is HistoricalCoverageReason.CURRENCY_RETIRED:
+            detail = (
+                f"{exc.currency_code} was already retired on the selected date. "
+                f"Known lifecycle ends {boundary}."
+            )
+        elif exc.reason is HistoricalCoverageReason.PROVIDER_COVERAGE_NOT_STARTED:
+            detail = (
+                f"The rate source has no {exc.currency_code} observations that far back. "
+                f"Known provider coverage starts {boundary}."
+            )
+        else:
+            detail = (
+                f"The rate source has no {exc.currency_code} observations that late. "
+                f"Known provider coverage ends {boundary}."
+            )
+        return {
+            "title": "The selected date is outside known historical coverage.",
+            "detail": detail,
+        }
     if isinstance(exc, HistoricalObservationUnavailable):
         return {
             "title": "No nearby historical observation is available.",
             "detail": (
-                "The nearest published observation is outside the allowed seven-day "
-                "previous-observation window. Choose another date."
+                "No published observation falls within the allowed window for this dataset's "
+                "observation frequency. Choose another date."
             ),
         }
     if isinstance(exc, FxProviderUnsupportedPair):
@@ -157,10 +216,16 @@ def converter(request: HttpRequest) -> HttpResponse:
 
     if request.method == "POST":
         swapping = request.POST.get("action") == "swap"
+        using_historical_currency = bool(request.POST.get("historical_currency_action"))
         conversion_active = request.POST.get("conversion_active") == "1"
-        data = _swap_payload(request) if swapping else request.POST
+        if using_historical_currency:
+            data = _historical_currency_payload(request)
+        elif swapping:
+            data = _swap_payload(request)
+        else:
+            data = request.POST
         form = CurrentConversionForm(data)
-        convert_requested = not swapping or conversion_active
+        convert_requested = using_historical_currency or not swapping or conversion_active
     else:
         convert_requested = request.GET.get("convert") == "1"
         form = (
@@ -171,12 +236,23 @@ def converter(request: HttpRequest) -> HttpResponse:
 
     result = None
     error = None
+    historical_suggestions = []
     response_status = 200
     form_valid = form.is_valid() if convert_requested else False
     if form_valid:
         cleaned = form.cleaned_data
+        base_currency = form.currency_for_code(cleaned["source_currency"])
         quote_currency = form.currency_for_code(cleaned["destination_currency"])
         historical = cleaned.get("rate_mode") == RATE_MODE_HISTORICAL
+        if historical:
+            for side in ("source", "destination"):
+                suggestion = historical_currency_suggestion(
+                    country_code=cleaned.get(f"{side}_country", ""),
+                    selected_currency_code=cleaned[f"{side}_currency"],
+                    selected_date=cleaned["requested_date"],
+                )
+                if suggestion is not None:
+                    historical_suggestions.append((side, suggestion))
         try:
             if historical:
                 result = quote_historical_conversion(
@@ -185,7 +261,9 @@ def converter(request: HttpRequest) -> HttpResponse:
                     quote_currency=cleaned["destination_currency"],
                     quote_minor_units=quote_currency.minor_units if quote_currency else 2,
                     requested_date=cleaned["requested_date"],
-                    gateway=build_historical_quote_gateway(),
+                    gateway=build_historical_quote_gateway,
+                    base_metadata=_historical_currency_metadata(base_currency),
+                    quote_metadata=_historical_currency_metadata(quote_currency),
                 )
             else:
                 result = quote_conversion(
@@ -195,8 +273,15 @@ def converter(request: HttpRequest) -> HttpResponse:
                     quote_minor_units=quote_currency.minor_units if quote_currency else 2,
                     gateway=build_latest_quote_gateway(),
                 )
-        except (FxProviderError, HistoricalObservationUnavailable) as exc:
-            if isinstance(exc, (FxProviderUnsupportedPair, HistoricalObservationUnavailable)):
+        except (FxProviderError, HistoricalObservationUnavailable, HistoricalOutOfCoverage) as exc:
+            if isinstance(
+                exc,
+                (
+                    FxProviderUnsupportedPair,
+                    HistoricalObservationUnavailable,
+                    HistoricalOutOfCoverage,
+                ),
+            ):
                 response_status = 422
             elif isinstance(exc, FxProviderInvalidPayload):
                 response_status = 502
@@ -231,6 +316,7 @@ def converter(request: HttpRequest) -> HttpResponse:
         validation_attempted=convert_requested,
         conversion_active=conversion_active,
         preserve_previous_result=preserve_previous_result,
+        historical_currency_suggestions=historical_suggestions,
     )
     fragment = _is_htmx(request) and not _is_history_restore(request)
     template = "components/converter/current_panel.html" if fragment else "pages/converter.html"

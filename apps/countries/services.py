@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 
 from django.db import transaction
 
@@ -10,6 +11,48 @@ from apps.countries.providers import CountryMetadataSnapshot
 
 class CountrySnapshotValidationError(ValueError):
     pass
+
+
+@dataclass(frozen=True)
+class HistoricalCurrencySuggestion:
+    country_code: str
+    country_name: str
+    selected_currency_code: str
+    suggested_currency_code: str
+    suggested_currency_name: str
+    selected_date: date
+    source: str
+
+
+def historical_currency_suggestion(
+    *,
+    country_code: str,
+    selected_currency_code: str,
+    selected_date: date,
+) -> HistoricalCurrencySuggestion | None:
+    if not country_code or not selected_currency_code:
+        return None
+
+    link = (
+        CountryCurrency.objects.filter(country__iso2=country_code.upper())
+        .on_date(selected_date)
+        .primary()
+        .select_related("country", "currency")
+        .order_by("-valid_from")
+        .first()
+    )
+    if link is None or link.currency.code == selected_currency_code.upper():
+        return None
+
+    return HistoricalCurrencySuggestion(
+        country_code=link.country.iso2,
+        country_name=link.country.name,
+        selected_currency_code=selected_currency_code.upper(),
+        suggested_currency_code=link.currency.code,
+        suggested_currency_name=link.currency.name,
+        selected_date=selected_date,
+        source=link.source,
+    )
 
 
 @dataclass(frozen=True)

@@ -22,6 +22,32 @@ class HistoricalObservationUnavailable(HistoricalConversionError):
     pass
 
 
+class HistoricalCoverageReason(StrEnum):
+    CURRENCY_NOT_YET_ACTIVE = "currency_not_yet_active"
+    CURRENCY_RETIRED = "currency_retired"
+    PROVIDER_COVERAGE_NOT_STARTED = "provider_coverage_not_started"
+    PROVIDER_COVERAGE_ENDED = "provider_coverage_ended"
+
+
+class HistoricalOutOfCoverage(HistoricalConversionError):
+    def __init__(
+        self,
+        *,
+        currency_code: str,
+        requested_date: date,
+        reason: HistoricalCoverageReason,
+        boundary: date,
+    ) -> None:
+        self.currency_code = normalize_currency_code(currency_code)
+        self.requested_date = requested_date
+        self.reason = reason
+        self.boundary = boundary
+        super().__init__(
+            f"{self.currency_code} is outside {reason.value} bounds for "
+            f"{requested_date.isoformat()}."
+        )
+
+
 class ProviderPolicyMode(StrEnum):
     BLEND = "blend"
     PINNED = "pinned"
@@ -56,6 +82,61 @@ class FxSourcePolicy:
 
 
 DEFAULT_SOURCE_POLICY = FxSourcePolicy()
+
+
+@dataclass(frozen=True)
+class HistoricalCurrencyMetadata:
+    code: str
+    active_from: date | None = None
+    active_to: date | None = None
+    coverage_from: date | None = None
+    coverage_to: date | None = None
+    coverage_to_is_terminal: bool = False
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "code", normalize_currency_code(self.code))
+        if self.active_from and self.active_to and self.active_to < self.active_from:
+            raise FxDomainError("Currency active range is invalid.")
+        if self.coverage_from and self.coverage_to and self.coverage_to < self.coverage_from:
+            raise FxDomainError("Currency provider coverage range is invalid.")
+
+
+def validate_historical_currency_metadata(
+    metadata: HistoricalCurrencyMetadata,
+    requested_date: date,
+) -> None:
+    if metadata.active_from and requested_date < metadata.active_from:
+        raise HistoricalOutOfCoverage(
+            currency_code=metadata.code,
+            requested_date=requested_date,
+            reason=HistoricalCoverageReason.CURRENCY_NOT_YET_ACTIVE,
+            boundary=metadata.active_from,
+        )
+    if metadata.active_to and requested_date > metadata.active_to:
+        raise HistoricalOutOfCoverage(
+            currency_code=metadata.code,
+            requested_date=requested_date,
+            reason=HistoricalCoverageReason.CURRENCY_RETIRED,
+            boundary=metadata.active_to,
+        )
+    if metadata.coverage_from and requested_date < metadata.coverage_from:
+        raise HistoricalOutOfCoverage(
+            currency_code=metadata.code,
+            requested_date=requested_date,
+            reason=HistoricalCoverageReason.PROVIDER_COVERAGE_NOT_STARTED,
+            boundary=metadata.coverage_from,
+        )
+    if (
+        metadata.coverage_to
+        and metadata.coverage_to_is_terminal
+        and requested_date > metadata.coverage_to
+    ):
+        raise HistoricalOutOfCoverage(
+            currency_code=metadata.code,
+            requested_date=requested_date,
+            reason=HistoricalCoverageReason.PROVIDER_COVERAGE_ENDED,
+            boundary=metadata.coverage_to,
+        )
 
 
 def normalize_currency_code(value: str) -> str:

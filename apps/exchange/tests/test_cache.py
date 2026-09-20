@@ -16,6 +16,7 @@ from apps.exchange.domain import (
     DEFAULT_SOURCE_POLICY,
     FxSourcePolicy,
     HistoricalObservationUnavailable,
+    ObservationGranularity,
     ProviderPolicyMode,
     RateQuote,
 )
@@ -224,6 +225,7 @@ def make_historical_quote(
     requested_date=date(2026, 9, 20),
     effective_date=date(2026, 9, 18),
     policy=DEFAULT_SOURCE_POLICY,
+    granularity=ObservationGranularity.DAILY,
 ):
     return RateQuote(
         base_currency="EUR",
@@ -235,6 +237,7 @@ def make_historical_quote(
         provider_policy=policy,
         provider_keys=((policy.provider_key,) if policy.provider_key else ("ecb",)),
         historical=True,
+        observation_granularity=granularity,
     )
 
 
@@ -353,3 +356,37 @@ def test_historical_cache_write_failure_does_not_invalidate_provider_result(monk
     )
 
     assert result == historical
+
+
+def test_monthly_observation_can_precede_requested_date_by_more_than_daily_window():
+    historical = make_historical_quote(
+        requested_date=date(2026, 9, 30),
+        effective_date=date(2026, 9, 1),
+        granularity=ObservationGranularity.MONTHLY,
+    )
+
+    result = HistoricalQuoteGateway(FakeProvider(result=historical)).get(
+        "EUR",
+        "JPY",
+        historical.requested_date,
+        DEFAULT_SOURCE_POLICY,
+    )
+
+    assert result.observation_granularity is ObservationGranularity.MONTHLY
+
+
+def test_quarterly_observation_can_span_quarter_without_daily_fallback_failure():
+    historical = make_historical_quote(
+        requested_date=date(2026, 9, 30),
+        effective_date=date(2026, 7, 1),
+        granularity=ObservationGranularity.QUARTERLY,
+    )
+
+    result = HistoricalQuoteGateway(FakeProvider(result=historical)).get(
+        "EUR",
+        "JPY",
+        historical.requested_date,
+        DEFAULT_SOURCE_POLICY,
+    )
+
+    assert result.observation_granularity is ObservationGranularity.QUARTERLY

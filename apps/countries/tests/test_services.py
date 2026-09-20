@@ -1,11 +1,12 @@
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import pytest
 
-from apps.countries.models import Country
+from apps.countries.models import Country, CountryCurrency, Currency
 from apps.countries.providers import CountryMetadataSnapshot, CurrencySnapshot
 from apps.countries.services import (
     CountrySnapshotValidationError,
+    historical_currency_suggestion,
     sync_country_metadata,
     validate_full_snapshot,
 )
@@ -52,3 +53,57 @@ def test_dry_run_reports_changes_without_persisting_them():
     assert summary.dry_run is True
     assert summary.countries_created == 1
     assert not Country.objects.filter(iso2="FI").exists()
+
+
+@pytest.mark.django_db
+def test_historical_currency_suggestion_preserves_explicit_user_choice():
+    finland = Country.objects.create(iso2="FI", iso3="FIN", name="Finland")
+    eur = Currency.objects.create(code="EUR", name="Euro")
+    fim = Currency.objects.create(code="FIM", name="Finnish markka", is_active=False)
+    CountryCurrency.objects.create(
+        country=finland,
+        currency=fim,
+        is_primary=True,
+        valid_to=date(2001, 12, 31),
+        source="curated-history-v1",
+    )
+    CountryCurrency.objects.create(
+        country=finland,
+        currency=eur,
+        is_primary=True,
+        valid_from=date(2002, 1, 1),
+        source="curated-history-v1",
+    )
+
+    suggestion = historical_currency_suggestion(
+        country_code="FI",
+        selected_currency_code="EUR",
+        selected_date=date(1998, 6, 15),
+    )
+
+    assert suggestion is not None
+    assert suggestion.selected_currency_code == "EUR"
+    assert suggestion.suggested_currency_code == "FIM"
+    assert suggestion.source == "curated-history-v1"
+
+
+@pytest.mark.django_db
+def test_historical_currency_suggestion_is_none_when_selection_matches_era():
+    finland = Country.objects.create(iso2="FI", iso3="FIN", name="Finland")
+    fim = Currency.objects.create(code="FIM", name="Finnish markka", is_active=False)
+    CountryCurrency.objects.create(
+        country=finland,
+        currency=fim,
+        is_primary=True,
+        valid_to=date(2001, 12, 31),
+        source="curated-history-v1",
+    )
+
+    assert (
+        historical_currency_suggestion(
+            country_code="FI",
+            selected_currency_code="FIM",
+            selected_date=date(1998, 6, 15),
+        )
+        is None
+    )

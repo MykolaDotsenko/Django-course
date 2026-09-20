@@ -270,9 +270,16 @@ class HistoricalQuoteGateway:
         if quote.requested_date is None:
             raise FxProviderInvalidPayload("Historical quote omitted its requested date.")
         gap = quote.requested_date - quote.effective_date
-        if gap > self.max_previous_gap:
+        allowed_gap = {
+            ObservationGranularity.DAILY: self.max_previous_gap,
+            ObservationGranularity.MONTHLY: timedelta(days=31),
+            ObservationGranularity.QUARTERLY: timedelta(days=92),
+            ObservationGranularity.UNKNOWN: self.max_previous_gap,
+        }[quote.observation_granularity]
+        if gap > allowed_gap:
             raise HistoricalObservationUnavailable(
-                "No historical observation is available within the allowed previous-date window."
+                "No historical observation is available within the allowed "
+                f"{quote.observation_granularity.value} observation window."
             )
 
     @staticmethod
