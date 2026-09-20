@@ -481,9 +481,7 @@ def _build_then_now_enrichment(cleaned, series_result):
         return None, None
 
     inactive = [
-        currency.code
-        for currency in (base_currency, quote_currency)
-        if not currency.is_active
+        currency.code for currency in (base_currency, quote_currency) if not currency.is_active
     ]
     if inactive:
         codes = ", ".join(inactive)
