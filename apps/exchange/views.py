@@ -138,6 +138,7 @@ def converter(request: HttpRequest) -> HttpResponse:
 
     result = None
     error = None
+    response_status = 200
     form_valid = form.is_valid() if convert_requested else False
     if form_valid:
         cleaned = form.cleaned_data
@@ -151,6 +152,13 @@ def converter(request: HttpRequest) -> HttpResponse:
                 gateway=build_latest_quote_gateway(),
             )
         except FxProviderError as exc:
+            if isinstance(exc, FxProviderUnsupportedPair):
+                response_status = 422
+            elif isinstance(exc, FxProviderInvalidPayload):
+                response_status = 502
+            else:
+                response_status = 503
+
             logger.warning(
                 "FX conversion provider failure",
                 extra={
@@ -160,14 +168,22 @@ def converter(request: HttpRequest) -> HttpResponse:
             )
             error = _conversion_error(exc)
 
+    if convert_requested and not form_valid and request.method == "POST":
+        response_status = 422
+
     if request.method == "POST" and not _is_htmx(request) and result is not None:
         return redirect(_canonical_conversion_url(form))
 
-    context = build_converter_context(form, result=result, conversion_error=error)
+    context = build_converter_context(
+        form,
+        result=result,
+        conversion_error=error,
+        validation_attempted=convert_requested,
+    )
     fragment = _is_htmx(request) and not _is_history_restore(request)
     template = "components/converter/current_panel.html" if fragment else "pages/converter.html"
-    response = render(request, template, context)
-    patch_vary_headers(response, ["HX-Request"])
+    response = render(request, template, context, status=response_status)
+    patch_vary_headers(response, ["HX-Request", "HX-History-Restore-Request"])
 
     if fragment and result is not None:
         response["HX-Push-Url"] = _canonical_conversion_url(form)
