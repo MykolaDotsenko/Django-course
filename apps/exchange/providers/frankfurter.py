@@ -51,7 +51,7 @@ def _observation_granularity(policy: FxSourcePolicy) -> ObservationGranularity:
 
 def _currency_code(value: Any) -> str:
     code = str(value or "").upper().strip()
-    if len(code) != 3 or not code.isalpha():
+    if len(code) != 3 or not code.isascii() or not code.isalpha():
         raise FxProviderInvalidPayload("Frankfurter returned an invalid currency code.")
     return code
 
@@ -125,8 +125,6 @@ def parse_rate_payload(
         )
     except FxDomainError as exc:
         raise FxProviderInvalidPayload(str(exc)) from exc
-
-
 
 
 def parse_series_payload(
