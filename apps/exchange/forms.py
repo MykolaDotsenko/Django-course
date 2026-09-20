@@ -78,6 +78,14 @@ class CurrentConversionForm(forms.Form):
         self.fields["source_country"].choices = country_choices
         self.fields["destination_country"].choices = country_choices
 
+        for field_name in (
+            "source_country",
+            "source_currency",
+            "destination_country",
+            "destination_currency",
+        ):
+            self.fields[field_name].widget.attrs["class"] = "qa-native-select"
+
     @property
     def reference_data_ready(self) -> bool:
         return bool(self._currency_by_code)
