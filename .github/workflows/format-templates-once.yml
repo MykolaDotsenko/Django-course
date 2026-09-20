@@ -1,0 +1,46 @@
+name: Format templates once
+
+on:
+  push:
+    branches:
+      - chore/pr2f-browser-quality
+    paths:
+      - ".github/workflows/format-templates-once.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: chore/pr2f-browser-quality
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install formatter
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Apply canonical djLint formatting
+        run: djlint templates --reformat --no-github-output
+
+      - name: Commit formatted templates
+        run: |
+          if git diff --quiet -- templates; then
+            echo "Templates already formatted"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add templates
+          git commit -m "style: apply canonical djLint template formatting"
+          git push origin HEAD:chore/pr2f-browser-quality
