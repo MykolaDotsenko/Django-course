@@ -259,9 +259,7 @@ def picker_options(request: HttpRequest) -> HttpResponse:
             selected_date = None
 
     currency_filter = (
-        Currency.objects.all()
-        if historical_mode
-        else Currency.objects.filter(is_active=True)
+        Currency.objects.all() if historical_mode else Currency.objects.filter(is_active=True)
     )
     if historical_mode and selected_date is not None:
         links = CountryCurrency.objects.on_date(selected_date).select_related("country", "currency")
