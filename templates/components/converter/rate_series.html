@@ -1,0 +1,192 @@
+{% if series_error %}
+  <section id="historical-trend"
+           class="qa-rate-series qa-rate-series--error"
+           aria-labelledby="historical-trend-title">
+    <div class="qa-rate-series__header">
+      <div>
+        <p class="qa-foundation-kicker">Historical trend</p>
+        <h2 id="historical-trend-title">{{ series_error.title }}</h2>
+      </div>
+    </div>
+    <div class="qa-inline-alert qa-inline-alert--error" role="alert">
+      <p>{{ series_error.detail }}</p>
+    </div>
+  </section>
+{% elif series_component %}
+  <section id="{{ series_component.id }}"
+           class="qa-rate-series"
+           aria-labelledby="historical-trend-title">
+    <div class="qa-rate-series__header">
+      <div>
+        <p class="qa-foundation-kicker">Historical trend</p>
+        <h2 id="historical-trend-title">{{ series_component.pair }}</h2>
+        <p>
+          Trend ending at the selected observation on
+          <strong>{{ series_component.selected_date_label }}</strong>.
+        </p>
+      </div>
+      {% if series_component.stale %}
+        <span class="qa-status-badge qa-status-badge--cached">Cached series</span>
+      {% endif %}
+    </div>
+    <nav class="qa-chart-period-control" aria-label="Historical trend period">
+      {% for period in series_component.period_links %}
+        <a class="qa-chart-period-control__item{% if period.active %} is-active{% endif %}"
+           href="{{ period.url }}"
+           {% if period.active %}aria-current="page"{% endif %}
+           hx-get="{{ period.url }}"
+           hx-target="#historical-trend"
+           hx-swap="outerHTML">{{ period.label }}</a>
+      {% endfor %}
+    </nav>
+    <details id="historical-custom-range"
+             class="qa-rate-series__custom"
+             {% if series_component.period == 'custom' %}open{% endif %}>
+      <summary class="qa-chart-period-control__item{% if series_component.period == 'custom' %} is-active{% endif %}">
+        Custom
+      </summary>
+      <form method="get"
+            action="{% url 'historical_series' %}"
+            hx-get="{% url 'historical_series' %}"
+            hx-target="#historical-trend"
+            hx-swap="outerHTML">
+        <input type="hidden"
+               name="base"
+               value="{{ series_component.base_currency }}">
+        <input type="hidden"
+               name="quote"
+               value="{{ series_component.quote_currency }}">
+        <input type="hidden"
+               name="selected_date"
+               value="{{ series_component.selected_date|date:'Y-m-d' }}">
+        {% if series_component.requested_date %}
+          <input type="hidden"
+                 name="requested_date"
+                 value="{{ series_component.requested_date|date:'Y-m-d' }}">
+        {% endif %}
+        <input type="hidden" name="period" value="custom">
+        <div class="qa-rate-series__custom-grid">
+          <label class="qa-field">
+            <span class="qa-field__label">Start date</span>
+            <input class="qa-date-input"
+                   type="date"
+                   name="start_date"
+                   value="{{ series_component.start_date_iso }}">
+          </label>
+          <label class="qa-field">
+            <span class="qa-field__label">End date</span>
+            <input class="qa-date-input"
+                   type="date"
+                   name="end_date"
+                   value="{{ series_component.end_date_iso }}"
+                   max="{{ series_component.selected_date|date:'Y-m-d' }}">
+          </label>
+        </div>
+        <button class="qa-secondary-button" type="submit">Apply custom range</button>
+      </form>
+    </details>
+    <p class="qa-rate-series__summary">{{ series_component.summary }}</p>
+    <dl class="qa-rate-series__facts">
+      {% if series_component.selected_point %}
+        <div>
+          <dt>Selected observation</dt>
+          <dd>
+            {{ series_component.selected_point.date_label }} ·
+            {{ series_component.selected_point.rate }}
+            {{ series_component.quote_currency }} per {{ series_component.base_currency }}
+          </dd>
+        </div>
+      {% else %}
+        <div>
+          <dt>Selected observation</dt>
+          <dd>
+            {{ series_component.selected_date_label }}.
+            This aggregated series does not expose an exact point for that date.
+          </dd>
+        </div>
+      {% endif %}
+      {% if series_component.last_point %}
+        <div>
+          <dt>Last observation in range</dt>
+          <dd>
+            {{ series_component.last_point.date_label }} ·
+            {{ series_component.last_point.rate }}
+            {{ series_component.quote_currency }} per {{ series_component.base_currency }}
+          </dd>
+        </div>
+      {% endif %}
+      {% if series_component.minimum %}
+        <div>
+          <dt>Low</dt>
+          <dd>
+            {{ series_component.minimum.rate }} on {{ series_component.minimum.date_label }}
+          </dd>
+        </div>
+      {% endif %}
+      {% if series_component.maximum %}
+        <div>
+          <dt>High</dt>
+          <dd>
+            {{ series_component.maximum.rate }} on {{ series_component.maximum.date_label }}
+          </dd>
+        </div>
+      {% endif %}
+      <div>
+        <dt>Series grouping</dt>
+        <dd>
+          {{ series_component.grouping }}
+        </dd>
+      </div>
+      <div>
+        <dt>Observation granularity</dt>
+        <dd>
+          {{ series_component.observation_granularity }}
+        </dd>
+      </div>
+      <div>
+        <dt>Providers</dt>
+        <dd>
+          {{ series_component.providers }}
+        </dd>
+      </div>
+    </dl>
+    {% if series_component.points %}
+      <details class="qa-rate-series__table">
+        <summary>View data table</summary>
+        <div class="qa-table-scroll"
+             tabindex="0"
+             aria-label="Historical rate observations">
+          <table>
+            <caption>
+              {{ series_component.pair }} reference-rate observations
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Observation date</th>
+                <th scope="col">Rate</th>
+                <th scope="col">Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for point in series_component.points %}
+                <tr{% if point.selected %} class="is-selected"{% endif %}>
+                  <td>
+                    {{ point.date_label }}
+                    {% if point.selected %}
+                      <span class="qa-status-badge qa-status-badge--historical">Selected</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ point.rate }} {{ series_component.quote_currency }} per {{ series_component.base_currency }}</td>
+                  <td>{{ point.provider_keys|default:"—" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    {% endif %}
+    <p class="qa-rate-series__disclaimer">
+      This is reference exchange-rate history, not an investment return or historical purchasing-power calculation.
+    </p>
+  </section>
+{% endif %}

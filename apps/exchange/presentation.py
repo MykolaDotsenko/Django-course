@@ -125,6 +125,20 @@ def build_result_component(
         "output_currency": result.quote.quote_currency,
         "exact": same_currency,
         "stale": result.stale,
+        "historical_trend": (
+            {
+                "base_currency": result.quote.base_currency,
+                "quote_currency": result.quote.quote_currency,
+                "selected_date_iso": result.quote.effective_date.isoformat(),
+                "requested_date_iso": (
+                    result.quote.requested_date.isoformat()
+                    if result.quote.requested_date is not None
+                    else result.quote.effective_date.isoformat()
+                ),
+            }
+            if historical and not same_currency
+            else None
+        ),
         "status": (
             {"kind": "historical", "label": "Historical exact 1:1"}
             if historical and same_currency

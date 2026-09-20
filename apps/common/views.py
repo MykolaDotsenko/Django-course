@@ -4,6 +4,7 @@ from django.shortcuts import render
 
 from .presentation.converter_preview import build_converter_preview_context
 from .presentation.media_preview import build_media_preview_context
+from .presentation.rate_series_preview import build_rate_series_preview_context
 
 
 def media_preview(request):
@@ -38,4 +39,17 @@ def converter_preview(request):
         request,
         "design/converter_preview.html",
         build_converter_preview_context(),
+    )
+
+
+def rate_series_preview(request):
+    """Render the historical trend QA surface only when DEBUG is enabled."""
+
+    if not settings.DEBUG:
+        raise Http404
+
+    return render(
+        request,
+        "design/rate_series_preview.html",
+        build_rate_series_preview_context(),
     )
