@@ -7,6 +7,7 @@ from django import forms
 from django.utils import timezone
 
 from apps.countries.models import Country, CountryCurrency, Currency
+from apps.exchange.domain import RateSeriesRangeError, normalize_currency_code
 
 MAX_CONVERSION_AMOUNT = Decimal("1000000000")
 RATE_MODE_LATEST = "latest"
@@ -239,3 +240,89 @@ class CurrentConversionForm(forms.Form):
                 "Choose a currency currently associated with this country, "
                 "or remove the country context.",
             )
+
+
+
+SERIES_PERIOD_CHOICES = (
+    ("1y", "1Y"),
+    ("5y", "5Y"),
+    ("10y", "10Y"),
+    ("custom", "Custom"),
+)
+
+
+def _subtract_years(value, years: int):
+    try:
+        return value.replace(year=value.year - years)
+    except ValueError:
+        return value.replace(year=value.year - years, month=2, day=28)
+
+
+class HistoricalSeriesForm(forms.Form):
+    base = forms.CharField(max_length=3)
+    quote = forms.CharField(max_length=3)
+    selected_date = forms.DateField()
+    requested_date = forms.DateField(required=False)
+    period = forms.ChoiceField(choices=SERIES_PERIOD_CHOICES, initial="1y")
+    start_date = forms.DateField(required=False, widget=forms.DateInput(attrs={"type": "date"}))
+    end_date = forms.DateField(required=False, widget=forms.DateInput(attrs={"type": "date"}))
+
+    def clean(self):
+        cleaned = super().clean()
+
+        for field_name in ("base", "quote"):
+            raw_value = cleaned.get(field_name)
+            if not raw_value:
+                continue
+            try:
+                cleaned[field_name] = normalize_currency_code(raw_value)
+            except ValueError as exc:
+                self.add_error(field_name, str(exc))
+
+        base = cleaned.get("base")
+        quote = cleaned.get("quote")
+        if base and quote and base == quote:
+            raise forms.ValidationError(
+                "Historical trend is not shown for identical currencies because the rate is exactly 1:1."
+            )
+
+        selected_date = cleaned.get("selected_date")
+        if selected_date and selected_date > timezone.localdate():
+            self.add_error("selected_date", "Selected observation date cannot be in the future.")
+
+        period = cleaned.get("period")
+        if selected_date and period in {"1y", "5y", "10y"}:
+            years = {"1y": 1, "5y": 5, "10y": 10}[period]
+            cleaned["start_date_resolved"] = _subtract_years(selected_date, years)
+            cleaned["end_date_resolved"] = selected_date
+        elif period == "custom":
+            start_date = cleaned.get("start_date")
+            end_date = cleaned.get("end_date")
+            if start_date is None:
+                self.add_error("start_date", "Choose a custom start date.")
+            if end_date is None:
+                self.add_error("end_date", "Choose a custom end date.")
+            if start_date and end_date:
+                if end_date < start_date:
+                    self.add_error("end_date", "Custom end date cannot precede the start date.")
+                if end_date > timezone.localdate():
+                    self.add_error("end_date", "Custom end date cannot be in the future.")
+                if selected_date and not start_date <= selected_date <= end_date:
+                    self.add_error(
+                        "selected_date",
+                        "Custom range must include the selected observation date.",
+                    )
+                if not self.errors:
+                    cleaned["start_date_resolved"] = start_date
+                    cleaned["end_date_resolved"] = end_date
+
+        if (
+            cleaned.get("start_date_resolved")
+            and cleaned.get("end_date_resolved")
+            and (cleaned["end_date_resolved"] - cleaned["start_date_resolved"]).days > 10 * 366
+        ):
+            raise forms.ValidationError(
+                str(RateSeriesRangeError("Historical trend range cannot exceed 10 years."))
+            )
+
+        return cleaned
