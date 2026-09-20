@@ -6,7 +6,14 @@ import pytest
 from django.urls import reverse
 
 from apps.countries.models import Country, CountryCurrency, Currency
-from apps.exchange.domain import DEFAULT_SOURCE_POLICY, ObservationGranularity, RateQuote
+from apps.exchange.domain import (
+    DEFAULT_SOURCE_POLICY,
+    ObservationGranularity,
+    RateQuote,
+    RateSeries,
+    RateSeriesGrouping,
+    RateSeriesPoint,
+)
 from apps.exchange.providers.base import FxProviderUnavailable
 
 
@@ -36,6 +43,35 @@ class FakeGateway:
 class UnavailableGateway:
     def get(self, *args, **kwargs):
         raise FxProviderUnavailable("down")
+
+
+class FakeSeriesGateway:
+    def __init__(self, *, stale=False):
+        self.stale = stale
+        self.calls = []
+
+    def get(self, base, quote, start_date, end_date, grouping, policy, *, now):
+        self.calls.append((base, quote, start_date, end_date, grouping, policy, now))
+        midpoint = start_date + (end_date - start_date) // 2
+        points = (
+            RateSeriesPoint(start_date, Decimal("170.25"), ("ecb",)),
+            RateSeriesPoint(midpoint, Decimal("178.40"), ("ecb",)),
+            RateSeriesPoint(end_date, Decimal("174.50"), ("ecb",)),
+        )
+        return (
+            RateSeries(
+                base_currency=base,
+                quote_currency=quote,
+                start_date=start_date,
+                end_date=end_date,
+                grouping=grouping,
+                points=points,
+                fetched_at=datetime(2026, 9, 20, 8, tzinfo=UTC),
+                provider_policy=policy,
+                observation_granularity=ObservationGranularity.DAILY,
+            ),
+            self.stale,
+        )
 
 
 class FakeHistoricalGateway:
@@ -625,3 +661,154 @@ def test_historical_htmx_and_full_get_render_equivalent_numeric_semantics(client
         assert b"15 Jun 1998" in response.content
         assert b"12 Jun 1998" in response.content
         assert b"Previous available observation" in response.content
+
+
+
+@pytest.mark.django_db
+def test_historical_series_page_uses_bounded_one_year_range(client, reference_data):
+    gateway = FakeSeriesGateway()
+    with patch("apps.exchange.views.build_historical_series_gateway", return_value=gateway):
+        response = client.get(
+            reverse("historical_series"),
+            {
+                "base": "EUR",
+                "quote": "JPY",
+                "selected_date": "2026-09-18",
+                "requested_date": "2026-09-20",
+                "period": "1y",
+            },
+        )
+
+    assert response.status_code == 200
+    assert b"Historical rate trend" in response.content
+    assert b"EUR" in response.content
+    assert b"JPY" in response.content
+    assert b"View data table" in response.content
+    assert b"178.4" in response.content
+    assert b"170.25" in response.content
+    assert len(gateway.calls) == 1
+    assert gateway.calls[0][2] == date(2025, 9, 18)
+    assert gateway.calls[0][3] == date(2026, 9, 18)
+    assert gateway.calls[0][4] is RateSeriesGrouping.DAILY
+
+
+@pytest.mark.django_db
+def test_historical_series_htmx_returns_fragment(client, reference_data):
+    gateway = FakeSeriesGateway()
+    with patch("apps.exchange.views.build_historical_series_gateway", return_value=gateway):
+        response = client.get(
+            reverse("historical_series"),
+            {
+                "base": "EUR",
+                "quote": "JPY",
+                "selected_date": "2026-09-18",
+                "period": "1y",
+            },
+            HTTP_HX_REQUEST="true",
+        )
+
+    assert response.status_code == 200
+    assert b"<html" not in response.content
+    assert b'id="historical-trend"' in response.content
+    assert b"View data table" in response.content
+
+
+@pytest.mark.django_db
+def test_custom_historical_series_range_preserves_selected_observation(client, reference_data):
+    gateway = FakeSeriesGateway()
+    with patch("apps.exchange.views.build_historical_series_gateway", return_value=gateway):
+        response = client.get(
+            reverse("historical_series"),
+            {
+                "base": "EUR",
+                "quote": "JPY",
+                "selected_date": "2026-09-18",
+                "period": "custom",
+                "start_date": "2024-01-01",
+                "end_date": "2026-09-18",
+            },
+        )
+
+    assert response.status_code == 200
+    assert gateway.calls[0][2] == date(2024, 1, 1)
+    assert gateway.calls[0][3] == date(2026, 9, 18)
+    assert gateway.calls[0][4] is RateSeriesGrouping.WEEK
+
+
+@pytest.mark.django_db
+def test_invalid_historical_series_range_never_builds_provider(client, reference_data):
+    with patch("apps.exchange.views.build_historical_series_gateway") as factory:
+        response = client.get(
+            reverse("historical_series"),
+            {
+                "base": "EUR",
+                "quote": "JPY",
+                "selected_date": "2026-09-18",
+                "period": "custom",
+                "start_date": "2010-01-01",
+                "end_date": "2026-09-18",
+            },
+        )
+
+    assert response.status_code == 422
+    assert b"valid historical trend range" in response.content
+    factory.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_historical_series_provider_failure_keeps_single_date_conversion_independent(
+    client, reference_data
+):
+    with patch(
+        "apps.exchange.views.build_historical_series_gateway",
+        return_value=UnavailableGateway(),
+    ):
+        response = client.get(
+            reverse("historical_series"),
+            {
+                "base": "EUR",
+                "quote": "JPY",
+                "selected_date": "2026-09-18",
+                "period": "1y",
+            },
+        )
+
+    assert response.status_code == 503
+    assert b"Historical series is unavailable" in response.content
+    assert b"Single-date conversion remains intact" in response.content
+
+
+@pytest.mark.django_db
+def test_historical_conversion_exposes_trend_entry_for_actual_observation(client, reference_data):
+    gateway = FakeHistoricalGateway(effective_date=date(1998, 6, 12))
+    with patch("apps.exchange.views.build_historical_quote_gateway", return_value=gateway):
+        response = client.post(
+            reverse("converter"),
+            payload(rate_mode="historical", requested_date="1998-06-14"),
+            HTTP_HX_REQUEST="true",
+        )
+
+    assert response.status_code == 200
+    assert b"View historical trend" in response.content
+    assert b"selected_date=1998-06-12" in response.content
+    assert b"requested_date=1998-06-14" in response.content
+
+
+@pytest.mark.django_db
+def test_same_currency_historical_result_does_not_offer_redundant_trend(client, reference_data):
+    with patch("apps.exchange.views.build_historical_quote_gateway") as factory:
+        response = client.post(
+            reverse("converter"),
+            payload(
+                rate_mode="historical",
+                requested_date="1998-06-14",
+                destination_country="FI",
+                destination_currency="EUR",
+            ),
+            HTTP_HX_REQUEST="true",
+        )
+
+    assert response.status_code == 200
+    assert b"Historical exact 1:1" in response.content
+    assert b"View historical trend" not in response.content
+    factory.assert_not_called()
