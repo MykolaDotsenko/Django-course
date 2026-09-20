@@ -114,20 +114,26 @@ def build_result_component(
         "exact": same_currency,
         "stale": result.stale,
         "status": (
-            {
-                "kind": "historical-previous" if used_previous else "historical",
-                "label": (
-                    "Previous available observation" if used_previous else "Historical reference"
-                ),
-            }
-            if historical
+            {"kind": "historical", "label": "Historical exact 1:1"}
+            if historical and same_currency
             else (
-                {"kind": "exact", "label": "Exact 1:1"}
-                if same_currency
-                else {
-                    "kind": "cached" if result.stale else "reference",
-                    "label": "Cached reference" if result.stale else "Reference rate",
+                {
+                    "kind": "historical-previous" if used_previous else "historical",
+                    "label": (
+                        "Previous available observation"
+                        if used_previous
+                        else "Historical reference"
+                    ),
                 }
+                if historical
+                else (
+                    {"kind": "exact", "label": "Exact 1:1"}
+                    if same_currency
+                    else {
+                        "kind": "cached" if result.stale else "reference",
+                        "label": "Cached reference" if result.stale else "Reference rate",
+                    }
+                )
             )
         ),
         "rate_meta": {
