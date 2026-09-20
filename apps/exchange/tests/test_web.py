@@ -345,7 +345,9 @@ def test_successful_active_htmx_refresh_never_emits_preserve_placeholder(client,
 
 
 @pytest.mark.django_db
-def test_historical_htmx_conversion_preserves_requested_and_observation_dates(client, reference_data):
+def test_historical_htmx_conversion_preserves_requested_and_observation_dates(
+    client, reference_data
+):
     gateway = FakeHistoricalGateway()
     with patch("apps.exchange.views.build_historical_quote_gateway", return_value=gateway):
         response = client.post(
