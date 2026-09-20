@@ -27,9 +27,11 @@ def snapshot(iso2="FI", iso3="FIN", name="Finland"):
         fetched_at=datetime(2026, 9, 20, tzinfo=UTC),
     )
 
+
 def test_full_snapshot_rejects_suspiciously_small_response():
     with pytest.raises(CountrySnapshotValidationError):
         validate_full_snapshot((snapshot(),), minimum_countries=200)
+
 
 @pytest.mark.django_db
 def test_sync_is_idempotent_and_does_not_delete_unmentioned_rows():
@@ -43,6 +45,7 @@ def test_sync_is_idempotent_and_does_not_delete_unmentioned_rows():
     assert second.countries_created == 0
     assert Country.objects.filter(pk=existing.pk).exists()
 
+
 @pytest.mark.django_db
 def test_dry_run_reports_changes_without_persisting_them():
     summary = sync_country_metadata((snapshot(),), dry_run=True, minimum_countries=1)
@@ -50,6 +53,7 @@ def test_dry_run_reports_changes_without_persisting_them():
     assert summary.dry_run is True
     assert summary.countries_created == 1
     assert not Country.objects.filter(iso2="FI").exists()
+
 
 
 @pytest.mark.django_db
@@ -82,6 +86,7 @@ def test_historical_currency_suggestion_preserves_explicit_user_choice():
     assert suggestion.selected_currency_code == "EUR"
     assert suggestion.suggested_currency_code == "FIM"
     assert suggestion.source == "curated-history-v1"
+
 
 @pytest.mark.django_db
 def test_historical_currency_suggestion_is_none_when_selection_matches_era():
