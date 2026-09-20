@@ -15,7 +15,6 @@ document.body.addEventListener("htmx:afterSwap", (event) => {
   void enhanceRateCharts(detail?.target ?? document);
 });
 
-
 document.body.addEventListener("htmx:beforeCleanupElement", (event) => {
   if (!chartModulePromise) return;
 
