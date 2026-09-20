@@ -25,6 +25,7 @@ class Migration(migrations.Migration):
                 ("flag_url", models.URLField(blank=True)),
                 ("is_active", models.BooleanField(default=True)),
                 ("metadata_source", models.CharField(blank=True, max_length=80)),
+                ("metadata_fetched_at", models.DateTimeField(blank=True, null=True)),
                 ("metadata_verified_at", models.DateTimeField(blank=True, null=True)),
             ],
             options={"ordering": ("name", "iso2")},
