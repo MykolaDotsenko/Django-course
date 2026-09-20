@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Historical trend · Quiet Atlas{% endblock %}
+{% block head_meta %}
+  <meta name="description"
+        content="Quiet Atlas historical trend component QA preview.">
+{% endblock %}
+{% block content %}
+  <section class="qa-foundation-intro" aria-labelledby="rate-series-preview-title">
+    <p class="qa-foundation-kicker">Component QA · DEBUG only</p>
+    <h1 id="rate-series-preview-title">Historical trend surface</h1>
+    <p class="qa-foundation-lede">
+      Deterministic reference-series fixtures for responsive, accessibility and provenance QA.
+    </p>
+    <p class="qa-preview-disclaimer">Illustrative component data · not a current rate quote.</p>
+  </section>
+  {% include "components/converter/rate_series.html" %}
+{% endblock %}
