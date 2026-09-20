@@ -10,13 +10,13 @@ def test_rest_countries_v5_object_normalizes_owned_fields_only():
         {
             "names": {"common": "Finland", "official": "Republic of Finland"},
             "codes": {"alpha_2": "FI", "alpha_3": "FIN"},
-            "capital": ["Helsinki"],
+            "capitals": [{"name": "Helsinki", "primary": True}],
             "region": "Europe",
             "subregion": "Northern Europe",
             "currencies": [
                 {"code": "EUR", "name": "Euro", "symbol": "€", "minor_units": 2}
             ],
-            "flag": {"svg": "https://example.test/fi.svg"},
+            "flag": {"url_svg": "https://example.test/fi.svg"},
             "population": 999999999,
         },
         fetched_at=datetime(2026, 9, 20, tzinfo=UTC),
