@@ -51,8 +51,8 @@ class CountryMetadataSnapshot:
 def _first_text(value: Any) -> str:
     if isinstance(value, str):
         return value
-    if isinstance(value, list) and value and isinstance(value[0], str):
-        return value[0]
+    if isinstance(value, list) and value:
+        return _first_text(value[0])
     if isinstance(value, dict):
         for key in ("name", "common", "value"):
             candidate = value.get(key)
