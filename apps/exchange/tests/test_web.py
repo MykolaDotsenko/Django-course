@@ -600,9 +600,7 @@ def test_historical_full_post_redirect_deep_link_preserves_date_and_archived_cur
 
 
 @pytest.mark.django_db
-def test_historical_htmx_and_full_get_render_equivalent_numeric_semantics(
-    client, reference_data
-):
+def test_historical_htmx_and_full_get_render_equivalent_numeric_semantics(client, reference_data):
     htmx_gateway = FakeHistoricalGateway(effective_date=date(1998, 6, 12))
     with patch("apps.exchange.views.build_historical_quote_gateway", return_value=htmx_gateway):
         fragment = client.post(
