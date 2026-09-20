@@ -14,3 +14,16 @@ document.body.addEventListener("htmx:afterSwap", (event) => {
   const detail = (event as CustomEvent<{ target?: Element }>).detail;
   void enhanceRateCharts(detail?.target ?? document);
 });
+
+
+document.body.addEventListener("htmx:beforeCleanupElement", (event) => {
+  if (!chartModulePromise) return;
+
+  const detail = (event as CustomEvent<{ elt?: Element }>).detail;
+  const target = detail?.elt ?? (event.target instanceof Element ? event.target : null);
+  if (!target) return;
+
+  void chartModulePromise.then((module) => {
+    module.destroyRateCharts(target);
+  });
+});
