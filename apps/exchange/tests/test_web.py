@@ -815,3 +815,165 @@ def test_same_currency_historical_result_does_not_offer_redundant_trend(client, 
     assert b"Historical exact 1:1" in response.content
     assert b"View historical trend" not in response.content
     factory.assert_not_called()
+
+
+
+@pytest.mark.django_db
+def test_historical_series_amount_builds_then_now_from_series_observation(
+    client, reference_data
+):
+    series_gateway = FakeSeriesGateway()
+    latest_gateway = FakeGateway()
+    with (
+        patch(
+            "apps.exchange.views.build_historical_series_gateway",
+            return_value=series_gateway,
+        ),
+        patch(
+            "apps.exchange.views.build_latest_quote_gateway",
+            return_value=latest_gateway,
+        ),
+        patch("apps.exchange.views.build_historical_quote_gateway") as historical_factory,
+    ):
+        response = client.get(
+            reverse("historical_series"),
+            {
+                "base": "EUR",
+                "quote": "JPY",
+                "selected_date": "2026-09-18",
+                "period": "1y",
+                "amount": "100.00",
+            },
+        )
+
+    assert response.status_code == 200
+    assert b"Same amount, two reference observations" in response.content
+    assert b"Latest reference" in response.content
+    assert len(latest_gateway.calls) == 1
+    historical_factory.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_historical_series_latest_comparison_failure_is_non_fatal(client, reference_data):
+    with (
+        patch(
+            "apps.exchange.views.build_historical_series_gateway",
+            return_value=FakeSeriesGateway(),
+        ),
+        patch(
+            "apps.exchange.views.build_latest_quote_gateway",
+            return_value=UnavailableGateway(),
+        ),
+    ):
+        response = client.get(
+            reverse("historical_series"),
+            {
+                "base": "EUR",
+                "quote": "JPY",
+                "selected_date": "2026-09-18",
+                "period": "1y",
+                "amount": "100.00",
+            },
+        )
+
+    assert response.status_code == 200
+    assert b"Latest reference comparison is temporarily unavailable" in response.content
+    assert b"Historical rate trend" in response.content
+
+
+@pytest.mark.django_db
+def test_historical_series_invalid_comparison_amount_keeps_trend_valid(client, reference_data):
+    with (
+        patch(
+            "apps.exchange.views.build_historical_series_gateway",
+            return_value=FakeSeriesGateway(),
+        ),
+        patch("apps.exchange.views.build_latest_quote_gateway") as latest_factory,
+    ):
+        response = client.get(
+            reverse("historical_series"),
+            {
+                "base": "EUR",
+                "quote": "JPY",
+                "selected_date": "2026-09-18",
+                "period": "1y",
+                "amount": "12.345",
+            },
+        )
+
+    assert response.status_code == 200
+    assert b"amount is invalid" in response.content
+    latest_factory.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_historical_series_archived_pair_skips_latest_comparison(client, reference_data):
+    with (
+        patch(
+            "apps.exchange.views.build_historical_series_gateway",
+            return_value=FakeSeriesGateway(),
+        ),
+        patch("apps.exchange.views.build_latest_quote_gateway") as latest_factory,
+    ):
+        response = client.get(
+            reverse("historical_series"),
+            {
+                "base": "FIM",
+                "quote": "JPY",
+                "selected_date": "1998-06-15",
+                "period": "1y",
+                "amount": "100.00",
+            },
+        )
+
+    assert response.status_code == 200
+    assert b"FIM is archived" in response.content
+    assert b"no current-market interpretation" in response.content
+    latest_factory.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_historical_series_missing_exact_selected_point_degrades_to_notice(
+    client, reference_data
+):
+    class MissingSelectedSeriesGateway(FakeSeriesGateway):
+        def get(self, base, quote, start_date, end_date, grouping, policy, *, now):
+            self.calls.append((base, quote, start_date, end_date, grouping, policy, now))
+            return (
+                RateSeries(
+                    base_currency=base,
+                    quote_currency=quote,
+                    start_date=start_date,
+                    end_date=end_date,
+                    grouping=grouping,
+                    points=(
+                        RateSeriesPoint(start_date, Decimal("170.25"), ("ecb",)),
+                    ),
+                    fetched_at=datetime(2026, 9, 20, 8, tzinfo=UTC),
+                    provider_policy=policy,
+                    observation_granularity=ObservationGranularity.DAILY,
+                ),
+                False,
+            )
+
+    with (
+        patch(
+            "apps.exchange.views.build_historical_series_gateway",
+            return_value=MissingSelectedSeriesGateway(),
+        ),
+        patch("apps.exchange.views.build_latest_quote_gateway") as latest_factory,
+    ):
+        response = client.get(
+            reverse("historical_series"),
+            {
+                "base": "EUR",
+                "quote": "JPY",
+                "selected_date": "2026-09-18",
+                "period": "1y",
+                "amount": "100.00",
+            },
+        )
+
+    assert response.status_code == 200
+    assert b"selected observation is not present in the loaded series" in response.content
+    latest_factory.assert_not_called()
