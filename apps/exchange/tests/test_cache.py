@@ -125,9 +125,7 @@ def test_corrupted_cached_provider_keys_are_ignored():
     provider_quote = make_quote(fetched_at=NOW)
     provider = FakeProvider(result=provider_quote)
 
-    result, stale = LatestQuoteGateway(provider).get(
-        "EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW
-    )
+    result, stale = LatestQuoteGateway(provider).get("EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW)
 
     assert result == provider_quote
     assert stale is False
