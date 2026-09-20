@@ -277,9 +277,7 @@ class HistoricalQuoteGateway:
         cached = self._cache_get(resolution_key)
         keys = [resolution_key]
         if cached is not None:
-            keys.append(
-                historical_cache_key(base, quote, cached.effective_date, policy)
-            )
+            keys.append(historical_cache_key(base, quote, cached.effective_date, policy))
         for key in keys:
             try:
                 cache.delete(key)
