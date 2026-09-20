@@ -31,6 +31,11 @@ class Migration(migrations.Migration):
             name="coverage_fetched_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
+        migrations.AddField(
+            model_name="currency",
+            name="coverage_to_is_terminal",
+            field=models.BooleanField(default=False),
+        ),
         migrations.AddConstraint(
             model_name="currency",
             constraint=models.CheckConstraint(
