@@ -30,7 +30,7 @@ jobs:
           djlint templates/components/converter/current_panel.html \
                  templates/components/converter/picker_dialog.html \
                  templates/pages/converter.html \
-                 --reformat
+                 --reformat || true
       - name: Commit canonical template formatting
         run: |
           if git diff --quiet -- templates; then exit 0; fi
