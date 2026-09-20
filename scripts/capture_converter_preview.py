@@ -80,16 +80,17 @@ def _assert_preview_integrity(page: Page, *, viewport_width: int) -> None:
         min_height=selector_height,
         label="Source trigger",
     )
+    workspace = page.locator(".qa-workspace")
     _assert_minimum_size(
-        page.get_by_role("button", name="Swap source and destination"),
+        workspace.get_by_role("button", name="Swap source and destination"),
         min_width=48,
         min_height=48,
-        label="Swap button",
+        label="Workspace swap",
     )
     _assert_minimum_size(
-        page.get_by_role("button", name="Convert"),
+        workspace.get_by_role("button", name="Convert"),
         min_height=convert_height,
-        label="Convert button",
+        label="Workspace convert",
     )
 
     error_input = page.locator("#preview-amount-error")
@@ -118,7 +119,6 @@ def _assert_preview_integrity(page: Page, *, viewport_width: int) -> None:
         raise RuntimeError("Cached status text is missing")
     if page.get_by_text("Historical", exact=True).count() < 1:
         raise RuntimeError("Historical status text is missing")
-
 
     source_box = _box(page.locator(".qa-workspace__context--source"))
     destination_box = _box(page.locator(".qa-workspace__context--destination"))
