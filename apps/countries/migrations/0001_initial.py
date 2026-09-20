@@ -14,7 +14,12 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="Country",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("iso2", models.CharField(max_length=2, unique=True)),
                 ("iso3", models.CharField(max_length=3, unique=True)),
                 ("name", models.CharField(max_length=120)),
@@ -33,7 +38,12 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="Currency",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("code", models.CharField(max_length=3, unique=True)),
                 ("name", models.CharField(max_length=120)),
                 ("symbol", models.CharField(blank=True, max_length=16)),
@@ -47,21 +57,45 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="CountryCurrency",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("is_primary", models.BooleanField(default=False)),
                 ("valid_from", models.DateField(blank=True, null=True)),
                 ("valid_to", models.DateField(blank=True, null=True)),
                 ("usage_role", models.CharField(blank=True, max_length=80)),
                 ("source", models.CharField(max_length=160)),
-                ("country", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name="currency_links", to="countries.country")),
-                ("currency", models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name="country_links", to="countries.currency")),
+                (
+                    "country",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="currency_links",
+                        to="countries.country",
+                    ),
+                ),
+                (
+                    "currency",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="country_links",
+                        to="countries.currency",
+                    ),
+                ),
             ],
             options={"ordering": ("country__name", "-is_primary", "currency__code")},
         ),
         migrations.AddConstraint(
             model_name="countrycurrency",
             constraint=models.CheckConstraint(
-                condition=Q(("valid_from__isnull", True), ("valid_to__isnull", True), ("valid_to__gte", models.F("valid_from")), _connector="OR"),
+                condition=Q(
+                    ("valid_from__isnull", True),
+                    ("valid_to__isnull", True),
+                    ("valid_to__gte", models.F("valid_from")),
+                    _connector="OR",
+                ),
                 name="country_currency_valid_date_range",
             ),
         ),

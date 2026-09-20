@@ -13,9 +13,7 @@ def test_rest_countries_v5_object_normalizes_owned_fields_only():
             "capitals": [{"name": "Helsinki", "primary": True}],
             "region": "Europe",
             "subregion": "Northern Europe",
-            "currencies": [
-                {"code": "EUR", "name": "Euro", "symbol": "€", "minor_units": 2}
-            ],
+            "currencies": [{"code": "EUR", "name": "Euro", "symbol": "€", "minor_units": 2}],
             "flag": {"url_svg": "https://example.test/fi.svg"},
             "population": 999999999,
         },

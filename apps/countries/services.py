@@ -84,9 +84,7 @@ def sync_country_metadata(
                         "is_active": True,
                     },
                 )
-                counts[
-                    "currencies_created" if currency_created else "currencies_updated"
-                ] += 1
+                counts["currencies_created" if currency_created else "currencies_updated"] += 1
                 relationship, relationship_created = CountryCurrency.objects.update_or_create(
                     country=country,
                     currency=currency,
@@ -97,9 +95,7 @@ def sync_country_metadata(
                     },
                 )
                 counts[
-                    "relationships_created"
-                    if relationship_created
-                    else "relationships_updated"
+                    "relationships_created" if relationship_created else "relationships_updated"
                 ] += 1
 
         if dry_run:

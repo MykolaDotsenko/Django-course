@@ -66,11 +66,7 @@ def _parse_currencies(value: Any) -> tuple[CurrencySnapshot, ...]:
     if isinstance(value, dict):
         items = list(value.items())
     elif isinstance(value, list):
-        items = [
-            (str(item.get("code", "")), item)
-            for item in value
-            if isinstance(item, dict)
-        ]
+        items = [(str(item.get("code", "")), item) for item in value if isinstance(item, dict)]
     else:
         items = []
 
@@ -158,9 +154,7 @@ class RestCountriesV5Client:
             try:
                 with urlopen(request, timeout=self.timeout_seconds) as response:
                     if response.status != 200:
-                        raise CountrySourceError(
-                            f"REST Countries returned HTTP {response.status}"
-                        )
+                        raise CountrySourceError(f"REST Countries returned HTTP {response.status}")
                     payload = json.load(response)
             except CountrySourceError:
                 raise
