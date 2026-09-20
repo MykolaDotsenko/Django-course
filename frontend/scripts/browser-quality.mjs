@@ -14,6 +14,7 @@ const SURFACES = [
   { name: "shell", path: "/_design/shell/" },
   { name: "converter", path: "/_design/converter/" },
   { name: "current-converter", path: "/" },
+  { name: "rate-series", path: "/_design/rate-series/" },
 ];
 
 const VIEWPORTS = [
