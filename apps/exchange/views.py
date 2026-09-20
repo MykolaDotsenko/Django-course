@@ -27,13 +27,13 @@ from apps.exchange.forms import (
     HistoricalSeriesForm,
 )
 from apps.exchange.presentation import build_converter_context
-from apps.exchange.series_presentation import build_rate_series_component
 from apps.exchange.providers.base import (
     FxProviderError,
     FxProviderInvalidPayload,
     FxProviderUnavailable,
     FxProviderUnsupportedPair,
 )
+from apps.exchange.series_presentation import build_rate_series_component
 from apps.exchange.services import get_rate_series, quote_conversion, quote_historical_conversion
 
 logger = logging.getLogger("cultural_currency.exchange")
