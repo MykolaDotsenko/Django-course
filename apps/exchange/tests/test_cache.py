@@ -684,9 +684,7 @@ def test_rate_series_semantically_wrong_fresh_cache_is_ignored():
         start_date=requested.start_date,
         end_date=requested.end_date,
         grouping=requested.grouping,
-        points=(
-            RateSeriesPoint(date(2026, 1, 2), Decimal("1.1"), ("ecb",)),
-        ),
+        points=(RateSeriesPoint(date(2026, 1, 2), Decimal("1.1"), ("ecb",)),),
         fetched_at=NOW - timedelta(hours=1),
         provider_policy=DEFAULT_SOURCE_POLICY,
     )
