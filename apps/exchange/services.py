@@ -153,7 +153,6 @@ def get_rate_series(
     return RateSeriesResult(series=series, stale=stale)
 
 
-
 def compare_historical_to_latest(
     historical: ConversionResult,
     latest: ConversionResult,
@@ -161,9 +160,7 @@ def compare_historical_to_latest(
     if historical.quote.rate <= 0:
         raise FxDomainError("Historical comparison rate must be positive.")
     percent = (
-        (latest.quote.rate - historical.quote.rate)
-        / historical.quote.rate
-        * Decimal("100")
+        (latest.quote.rate - historical.quote.rate) / historical.quote.rate * Decimal("100")
     ).quantize(Decimal("0.1"), rounding=ROUND_HALF_EVEN)
     return ThenNowComparison(
         historical=historical,
