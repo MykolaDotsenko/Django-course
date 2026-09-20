@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Protocol
 
-from apps.exchange.domain import FxSourcePolicy, RateQuote
+from apps.exchange.domain import FxSourcePolicy, RateQuote, RateSeries, RateSeriesGrouping
 
 
 class FxProviderError(RuntimeError):
@@ -44,3 +44,13 @@ class FxProvider(Protocol):
         requested_date: date,
         policy: FxSourcePolicy,
     ) -> RateQuote: ...
+
+    def rate_series(
+        self,
+        base: str,
+        quote: str,
+        start_date: date,
+        end_date: date,
+        grouping: RateSeriesGrouping,
+        policy: FxSourcePolicy,
+    ) -> RateSeries: ...
