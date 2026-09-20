@@ -392,7 +392,6 @@ def test_quarterly_observation_can_span_quarter_without_daily_fallback_failure()
     assert result.observation_granularity is ObservationGranularity.QUARTERLY
 
 
-
 def test_historical_invalidation_refetches_corrected_observation():
     original = make_historical_quote(
         requested_date=date(1998, 6, 15),
