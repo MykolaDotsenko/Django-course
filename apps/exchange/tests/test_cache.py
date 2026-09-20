@@ -57,13 +57,11 @@ class FakeProvider:
             raise self.error
         return self.result
 
-
 @pytest.fixture(autouse=True)
 def clear_cache():
     cache.clear()
     yield
     cache.clear()
-
 
 def test_fresh_cache_hit_skips_provider():
     cached = make_quote(fetched_at=NOW - timedelta(hours=1))
@@ -76,7 +74,6 @@ def test_fresh_cache_hit_skips_provider():
     assert stale is False
     assert provider.calls == 0
 
-
 def test_provider_failure_uses_only_bounded_semantically_matching_stale_quote():
     cached = make_quote(fetched_at=NOW - timedelta(days=2))
     cache.set(latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY), serialize_quote(cached), 100)
@@ -87,7 +84,6 @@ def test_provider_failure_uses_only_bounded_semantically_matching_stale_quote():
     assert result == cached
     assert stale is True
 
-
 def test_too_old_stale_quote_is_rejected():
     cached = make_quote(fetched_at=NOW - timedelta(days=8))
     cache.set(latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY), serialize_quote(cached), 100)
@@ -96,13 +92,11 @@ def test_too_old_stale_quote_is_rejected():
     with pytest.raises(FxProviderUnavailable):
         gateway.get("EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW)
 
-
 def test_provider_policy_changes_cache_identity():
     pinned = FxSourcePolicy(mode=ProviderPolicyMode.PINNED, provider_key="ecb")
     assert latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY) != latest_cache_key(
         "EUR", "JPY", pinned
     )
-
 
 def test_malformed_provider_response_can_fall_back_to_matching_stale_quote():
     cached = make_quote(fetched_at=NOW - timedelta(days=2))
@@ -114,7 +108,6 @@ def test_malformed_provider_response_can_fall_back_to_matching_stale_quote():
     assert result == cached
     assert stale is True
 
-
 def test_wrong_pair_cache_key_is_never_reused_on_failure():
     cached = make_quote(fetched_at=NOW - timedelta(days=2))
     cache.set(latest_cache_key("EUR", "USD", DEFAULT_SOURCE_POLICY), serialize_quote(cached), 100)
@@ -123,13 +116,11 @@ def test_wrong_pair_cache_key_is_never_reused_on_failure():
     with pytest.raises(FxProviderUnavailable):
         gateway.get("EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW)
 
-
 def test_attribution_mode_changes_cache_identity():
     without_attribution = FxSourcePolicy(include_attribution=False)
     assert latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY) != latest_cache_key(
         "EUR", "JPY", without_attribution
     )
-
 
 def test_corrupted_cached_provider_keys_are_ignored():
     key = latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY)
@@ -144,7 +135,6 @@ def test_corrupted_cached_provider_keys_are_ignored():
     assert result == provider_quote
     assert stale is False
     assert provider.calls == 1
-
 
 def test_provider_quote_identity_is_rechecked_before_caching():
     wrong_pair = RateQuote(
@@ -165,7 +155,6 @@ def test_provider_quote_identity_is_rechecked_before_caching():
 
     assert cache.get(latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY)) is None
 
-
 def test_cache_read_failure_falls_through_to_provider(monkeypatch):
     provider_quote = make_quote()
     provider = FakeProvider(result=provider_quote)
@@ -181,7 +170,6 @@ def test_cache_read_failure_falls_through_to_provider(monkeypatch):
     assert stale is False
     assert provider.calls == 1
 
-
 def test_cache_write_failure_does_not_invalidate_provider_result(monkeypatch):
     provider_quote = make_quote()
     provider = FakeProvider(result=provider_quote)
@@ -195,7 +183,6 @@ def test_cache_write_failure_does_not_invalidate_provider_result(monkeypatch):
 
     assert result == provider_quote
     assert stale is False
-
 
 def test_invalid_provider_quote_identity_can_use_matching_stale_cache():
     cached = make_quote(fetched_at=NOW - timedelta(days=2))
@@ -240,7 +227,6 @@ def make_historical_quote(
         observation_granularity=granularity,
     )
 
-
 def test_historical_resolution_cache_hit_skips_provider():
     historical = make_historical_quote()
     key = historical_resolution_cache_key(
@@ -261,7 +247,6 @@ def test_historical_resolution_cache_hit_skips_provider():
 
     assert result == historical
     assert provider.calls == 0
-
 
 def test_historical_provider_result_populates_resolution_and_observation_cache():
     historical = make_historical_quote()
@@ -295,7 +280,6 @@ def test_historical_provider_result_populates_resolution_and_observation_cache()
     assert resolution is not None
     assert observation is not None
 
-
 def test_historical_previous_observation_within_seven_days_is_allowed():
     historical = make_historical_quote(
         requested_date=date(2026, 9, 20),
@@ -311,7 +295,6 @@ def test_historical_previous_observation_within_seven_days_is_allowed():
 
     assert result.used_previous_observation is True
 
-
 def test_historical_previous_observation_beyond_policy_is_rejected():
     historical = make_historical_quote(
         requested_date=date(2026, 9, 20),
@@ -326,7 +309,6 @@ def test_historical_previous_observation_beyond_policy_is_rejected():
             DEFAULT_SOURCE_POLICY,
         )
 
-
 def test_historical_quote_must_preserve_requested_date():
     historical = make_historical_quote(requested_date=date(2026, 9, 19))
 
@@ -337,7 +319,6 @@ def test_historical_quote_must_preserve_requested_date():
             date(2026, 9, 20),
             DEFAULT_SOURCE_POLICY,
         )
-
 
 def test_historical_cache_write_failure_does_not_invalidate_provider_result(monkeypatch):
     historical = make_historical_quote()
@@ -358,7 +339,6 @@ def test_historical_cache_write_failure_does_not_invalidate_provider_result(monk
     assert result == historical
 
 
-
 def test_monthly_observation_can_precede_requested_date_by_more_than_daily_window():
     historical = make_historical_quote(
         requested_date=date(2026, 9, 30),
@@ -374,7 +354,6 @@ def test_monthly_observation_can_precede_requested_date_by_more_than_daily_windo
     )
 
     assert result.observation_granularity is ObservationGranularity.MONTHLY
-
 
 def test_quarterly_observation_can_span_quarter_without_daily_fallback_failure():
     historical = make_historical_quote(
