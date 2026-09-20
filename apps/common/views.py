@@ -42,7 +42,6 @@ def converter_preview(request):
     )
 
 
-
 def rate_series_preview(request):
     """Render the historical trend QA surface only when DEBUG is enabled."""
 
