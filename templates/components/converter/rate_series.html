@@ -72,9 +72,7 @@
                  value="{{ series_component.requested_date|date:'Y-m-d' }}">
         {% endif %}
         {% if series_component.amount %}
-          <input type="hidden"
-                 name="amount"
-                 value="{{ series_component.amount }}">
+          <input type="hidden" name="amount" value="{{ series_component.amount }}">
         {% endif %}
         <input type="hidden" name="period" value="custom">
         <div class="qa-rate-series__custom-grid">
@@ -98,8 +96,7 @@
       </form>
     </details>
     {% if series_component.points %}
-      <section class="qa-rate-chart"
-               aria-labelledby="historical-rate-chart-title">
+      <section class="qa-rate-chart" aria-labelledby="historical-rate-chart-title">
         <div class="qa-rate-chart__heading">
           <div>
             <p class="qa-foundation-kicker">Visual trend</p>
@@ -197,8 +194,7 @@
     </dl>
     {% if series_component.then_now %}
       {% with comparison=series_component.then_now %}
-        <section class="qa-then-now"
-                 aria-labelledby="then-now-title">
+        <section class="qa-then-now" aria-labelledby="then-now-title">
           <div class="qa-then-now__heading">
             <div>
               <p class="qa-foundation-kicker">Then &amp; now</p>
