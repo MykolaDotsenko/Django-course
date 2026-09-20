@@ -233,7 +233,6 @@ def test_oversized_single_rate_response_is_rejected_before_json_parsing():
             provider.latest_quote("EUR", "JPY", DEFAULT_SOURCE_POLICY)
 
 
-
 @pytest.mark.parametrize(
     ("provider_key", "expected"),
     [
