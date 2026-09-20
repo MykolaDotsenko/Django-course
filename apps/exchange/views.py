@@ -12,23 +12,29 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from apps.countries.models import CountryCurrency, Currency
 from apps.countries.services import historical_currency_suggestion
-from apps.exchange.cache import HistoricalQuoteGateway, LatestQuoteGateway
+from apps.exchange.cache import HistoricalQuoteGateway, HistoricalSeriesGateway, LatestQuoteGateway
 from apps.exchange.config import load_fx_runtime_config
 from apps.exchange.domain import (
     HistoricalCoverageReason,
     HistoricalCurrencyMetadata,
     HistoricalObservationUnavailable,
     HistoricalOutOfCoverage,
+    RateSeriesRangeError,
 )
-from apps.exchange.forms import RATE_MODE_HISTORICAL, CurrentConversionForm
+from apps.exchange.forms import (
+    RATE_MODE_HISTORICAL,
+    CurrentConversionForm,
+    HistoricalSeriesForm,
+)
 from apps.exchange.presentation import build_converter_context
+from apps.exchange.series_presentation import build_rate_series_component
 from apps.exchange.providers.base import (
     FxProviderError,
     FxProviderInvalidPayload,
     FxProviderUnavailable,
     FxProviderUnsupportedPair,
 )
-from apps.exchange.services import quote_conversion, quote_historical_conversion
+from apps.exchange.services import get_rate_series, quote_conversion, quote_historical_conversion
 
 logger = logging.getLogger("cultural_currency.exchange")
 
@@ -41,6 +47,11 @@ def build_latest_quote_gateway() -> LatestQuoteGateway:
 def build_historical_quote_gateway() -> HistoricalQuoteGateway:
     config = load_fx_runtime_config()
     return HistoricalQuoteGateway(config.build_provider())
+
+
+def build_historical_series_gateway() -> HistoricalSeriesGateway:
+    config = load_fx_runtime_config()
+    return HistoricalSeriesGateway(config.build_provider())
 
 
 def _is_htmx(request: HttpRequest) -> bool:
@@ -405,4 +416,79 @@ def picker_options(request: HttpRequest) -> HttpResponse:
         request,
         "components/converter/picker_results.html",
         {"side": side, "options": options, "query": query},
+    )
+
+
+
+def _series_error(exc: Exception) -> tuple[int, dict[str, str]]:
+    if isinstance(exc, RateSeriesRangeError):
+        return 422, {
+            "title": "Choose a supported historical range.",
+            "detail": str(exc),
+        }
+    if isinstance(exc, FxProviderUnsupportedPair):
+        return 422, {
+            "title": "Historical series is unavailable for this pair.",
+            "detail": "Single-date conversion remains available when the selected observation is supported.",
+        }
+    if isinstance(exc, FxProviderInvalidPayload):
+        return 502, {
+            "title": "The rate source returned unusable historical series data.",
+            "detail": "Single-date conversion remains intact. Try the trend again later.",
+        }
+    return 503, {
+        "title": "Historical series is unavailable.",
+        "detail": "Single-date conversion remains intact. Try the trend again later.",
+    }
+
+
+@require_GET
+def historical_series(request: HttpRequest) -> HttpResponse:
+    form = HistoricalSeriesForm(request.GET)
+    component = None
+    error = None
+    response_status = 200
+
+    if form.is_valid():
+        cleaned = form.cleaned_data
+        try:
+            result = get_rate_series(
+                base_currency=cleaned["base"],
+                quote_currency=cleaned["quote"],
+                start_date=cleaned["start_date_resolved"],
+                end_date=cleaned["end_date_resolved"],
+                gateway=build_historical_series_gateway,
+            )
+            component = build_rate_series_component(
+                result,
+                selected_date=cleaned["selected_date"],
+                requested_date=cleaned.get("requested_date"),
+                period=cleaned["period"],
+            )
+        except (RateSeriesRangeError, FxProviderError) as exc:
+            response_status, error = _series_error(exc)
+    else:
+        response_status = 422
+        error = {
+            "title": "Choose a valid historical trend range.",
+            "detail": "Check the pair, selected observation date and range controls.",
+        }
+
+    context = {
+        "series_form": form,
+        "series_component": component,
+        "series_error": error,
+    }
+    if _is_htmx(request):
+        return render(
+            request,
+            "components/converter/rate_series.html",
+            context,
+            status=response_status,
+        )
+    return render(
+        request,
+        "pages/historical_series.html",
+        context,
+        status=response_status,
     )
