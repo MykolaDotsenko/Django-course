@@ -122,8 +122,7 @@ async function assertForcedColors(page, surface) {
   });
   const hasVisibleFocus = focusStyles.some(
     (style) =>
-      (style.outlineStyle !== "none" && style.outlineWidth !== "0px") ||
-      style.boxShadow !== "none",
+      (style.outlineStyle !== "none" && style.outlineWidth !== "0px") || style.boxShadow !== "none",
   );
   assert(hasVisibleFocus, `${surface}: focus indicator disappears in forced-colors mode`);
   await assertNoHorizontalOverflow(page, `${surface}/forced-colors`);
