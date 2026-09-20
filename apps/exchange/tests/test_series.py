@@ -182,3 +182,28 @@ def test_invalid_series_ranges_fail_before_gateway_construction(start_date, end_
             gateway=exploding_gateway,
             now=NOW,
         )
+
+
+
+@pytest.mark.parametrize(
+    ("field_name", "value"),
+    [
+        ("grouping", "month"),
+        ("observation_granularity", "monthly"),
+    ],
+)
+def test_rate_series_rejects_raw_string_enums(field_name, value):
+    kwargs = {
+        "base_currency": "EUR",
+        "quote_currency": "JPY",
+        "start_date": date(2026, 1, 1),
+        "end_date": date(2026, 1, 31),
+        "grouping": RateSeriesGrouping.DAILY,
+        "points": (),
+        "fetched_at": NOW,
+        "provider_policy": DEFAULT_SOURCE_POLICY,
+    }
+    kwargs[field_name] = value
+
+    with pytest.raises(FxDomainError):
+        RateSeries(**kwargs)
