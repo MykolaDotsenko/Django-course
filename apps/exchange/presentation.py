@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from django.utils.formats import date_format
 
-from apps.exchange.domain import ConversionResult
+from apps.exchange.domain import ConversionResult, ObservationGranularity
 from apps.exchange.forms import CurrentConversionForm
 
 _THEME_BY_COUNTRY = {
@@ -57,6 +57,10 @@ def build_result_component(
     same_currency = result.quote.base_currency == result.quote.quote_currency
     historical = result.quote.historical
     used_previous = result.quote.used_previous_observation
+    periodic_historical = historical and result.quote.observation_granularity in {
+        ObservationGranularity.MONTHLY,
+        ObservationGranularity.QUARTERLY,
+    }
     provider_keys = ", ".join(key.upper() for key in result.quote.provider_keys)
     if same_currency:
         provider = "Exact same-currency rate"
@@ -71,15 +75,23 @@ def build_result_component(
         if provider_keys:
             provider = f"{provider} · {provider_keys}"
         if historical:
-            data_class = (
-                "Previous available observation" if used_previous else "Historical reference"
-            )
-            explanation = (
-                "The selected date had no accepted exact observation, so the nearest published "
-                "observation on or before it was used within the seven-day policy."
-                if used_previous
-                else "Historical reference exchange-rate data for the selected date."
-            )
+            if periodic_historical:
+                period_label = result.quote.observation_granularity.value.capitalize()
+                data_class = f"{period_label} historical observation"
+                explanation = (
+                    f"The selected provider publishes {period_label.lower()} observations. "
+                    "This rate stands for its published period and is not presented as daily precision."
+                )
+            else:
+                data_class = (
+                    "Previous available observation" if used_previous else "Historical reference"
+                )
+                explanation = (
+                    "The selected date had no accepted exact observation, so the nearest published "
+                    "observation on or before it was used within the seven-day policy."
+                    if used_previous
+                    else "Historical reference exchange-rate data for the selected date."
+                )
         else:
             data_class = "Cached reference" if result.stale else "Reference rate"
             explanation = (
@@ -118,21 +130,31 @@ def build_result_component(
             if historical and same_currency
             else (
                 {
-                    "kind": "historical-previous" if used_previous else "historical",
+                    "kind": "historical-period",
                     "label": (
-                        "Previous available observation"
-                        if used_previous
-                        else "Historical reference"
+                        f"{result.quote.observation_granularity.value.capitalize()} "
+                        "historical observation"
                     ),
                 }
-                if historical
+                if periodic_historical
                 else (
-                    {"kind": "exact", "label": "Exact 1:1"}
-                    if same_currency
-                    else {
-                        "kind": "cached" if result.stale else "reference",
-                        "label": "Cached reference" if result.stale else "Reference rate",
+                    {
+                        "kind": "historical-previous" if used_previous else "historical",
+                        "label": (
+                            "Previous available observation"
+                            if used_previous
+                            else "Historical reference"
+                        ),
                     }
+                    if historical
+                    else (
+                        {"kind": "exact", "label": "Exact 1:1"}
+                        if same_currency
+                        else {
+                            "kind": "cached" if result.stale else "reference",
+                            "label": "Cached reference" if result.stale else "Reference rate",
+                        }
+                    )
                 )
             )
         ),
@@ -144,6 +166,11 @@ def build_result_component(
             "requested_date": requested_date,
             "effective_date": effective_date,
             "effective_date_label": "Observation date" if historical else "Effective date",
+            "observation_frequency": (
+                result.quote.observation_granularity.value.capitalize()
+                if periodic_historical
+                else None
+            ),
             "provider": provider,
             "fetched_at": fetched_at,
             "explanation": explanation,
@@ -164,14 +191,21 @@ def build_result_component(
                 f"{output_text} {result.quote.quote_currency}. "
                 + (
                     (
-                        f"Requested {requested_date}; previous available observation "
-                        f"{effective_date}."
+                        f"{result.quote.observation_granularity.value.capitalize()} historical "
+                        f"observation effective {effective_date}."
                     )
-                    if used_previous
+                    if periodic_historical
                     else (
-                        f"Historical observation {effective_date}."
-                        if historical
-                        else f"Reference rate effective {effective_date}."
+                        (
+                            f"Requested {requested_date}; previous available observation "
+                            f"{effective_date}."
+                        )
+                        if used_previous
+                        else (
+                            f"Historical observation {effective_date}."
+                            if historical
+                            else f"Reference rate effective {effective_date}."
+                        )
                     )
                 )
             )
@@ -216,6 +250,7 @@ def build_converter_context(
     validation_attempted: bool = False,
     conversion_active: bool = False,
     preserve_previous_result: bool = False,
+    historical_currency_suggestions: list[tuple[str, object]] | None = None,
 ) -> dict[str, object]:
     return {
         "form": form,
@@ -227,5 +262,6 @@ def build_converter_context(
         "has_result": result is not None,
         "conversion_active": conversion_active or result is not None,
         "preserve_previous_result": preserve_previous_result,
+        "historical_currency_suggestions": historical_currency_suggestions or [],
         "reference_data_ready": form.reference_data_ready,
     }
