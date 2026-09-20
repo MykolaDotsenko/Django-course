@@ -83,18 +83,24 @@ def build_converter_preview_context() -> dict[str, object]:
         },
         "workspace_result": {
             "id": "workspace-reference-result",
-            "title": "Reference conversion",
-            "amount": "100.00",
-            "source_code": "EUR",
-            "destination_amount": "17,250",
-            "destination_code": "JPY",
-            "rate_line": "1 EUR = 172.50 JPY",
-            "as_of": "Reference fixture",
-            "source_name": "Preview data",
-            "source_url": "",
-            "freshness": "Reference only",
-            "freshness_tone": "neutral",
-            "note": "Illustrative result for layout QA only; no FX calculation is performed.",
+            "input_amount": "100",
+            "input_currency": "EUR",
+            "output_amount": "17,450",
+            "output_currency": "JPY",
+            "status": {
+                "kind": "reference",
+                "label": "Reference rate",
+            },
+            "rate_meta": {
+                "rate_line": "1 EUR = 174.50 JPY",
+                "data_class": "Reference rate",
+                "effective_date": "18 Sep 2026",
+                "provider": "Frankfurter",
+                "fetched_at": "",
+                "explanation": (
+                    "Illustrative result for layout QA only; no FX calculation is performed."
+                ),
+            },
         },
         "reference_result": {
             "id": "preview-reference-result",
