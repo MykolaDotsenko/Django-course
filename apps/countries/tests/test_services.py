@@ -55,7 +55,6 @@ def test_dry_run_reports_changes_without_persisting_them():
     assert not Country.objects.filter(iso2="FI").exists()
 
 
-
 @pytest.mark.django_db
 def test_historical_currency_suggestion_preserves_explicit_user_choice():
     finland = Country.objects.create(iso2="FI", iso3="FIN", name="Finland")
