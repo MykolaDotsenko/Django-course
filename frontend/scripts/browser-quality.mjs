@@ -111,7 +111,8 @@ async function assertForcedColors(page, surface) {
     };
   });
   assert(
-    focusStyle.outlineStyle !== "none" || focusStyle.boxShadow !== "none",
+    (focusStyle.outlineStyle !== "none" && focusStyle.outlineWidth !== "0px") ||
+      focusStyle.boxShadow !== "none",
     `${surface}: focus indicator disappears in forced-colors mode`,
   );
   await assertNoHorizontalOverflow(page, `${surface}/forced-colors`);
