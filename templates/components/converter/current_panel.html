@@ -77,14 +77,17 @@
           <p>{{ source.currency_name }}{% if source.currency_code %} · {{ source.currency_code }}{% endif %}</p>
         </div>
 
-        <div class="qa-selection-fallback" data-native-selection="source">
+        <div class="qa-selection-fallback"
+             data-native-selection="source"
+             data-has-errors="{% if form.source_country.errors or form.source_currency.errors %}true{% else %}false{% endif %}">
           <div class="qa-field">
             <label class="qa-field__label" for="{{ form.source_country.id_for_label }}">
               Source country
             </label>
             {{ form.source_country }}
             {% if form.source_country.errors %}
-              <p class="qa-field__message qa-field__message--error">{{ form.source_country.errors.0 }}</p>
+              <p class="qa-field__message qa-field__message--error"
+                 id="source_country-error">{{ form.source_country.errors.0 }}</p>
             {% endif %}
           </div>
           <div class="qa-field">
@@ -93,7 +96,8 @@
             </label>
             {{ form.source_currency }}
             {% if form.source_currency.errors %}
-              <p class="qa-field__message qa-field__message--error">{{ form.source_currency.errors.0 }}</p>
+              <p class="qa-field__message qa-field__message--error"
+                 id="source_currency-error">{{ form.source_currency.errors.0 }}</p>
             {% endif %}
           </div>
         </div>
@@ -141,14 +145,17 @@
           </p>
         </div>
 
-        <div class="qa-selection-fallback" data-native-selection="destination">
+        <div class="qa-selection-fallback"
+             data-native-selection="destination"
+             data-has-errors="{% if form.destination_country.errors or form.destination_currency.errors %}true{% else %}false{% endif %}">
           <div class="qa-field">
             <label class="qa-field__label" for="{{ form.destination_country.id_for_label }}">
               Destination country
             </label>
             {{ form.destination_country }}
             {% if form.destination_country.errors %}
-              <p class="qa-field__message qa-field__message--error">
+              <p class="qa-field__message qa-field__message--error"
+                 id="destination_country-error">
                 {{ form.destination_country.errors.0 }}
               </p>
             {% endif %}
@@ -159,7 +166,8 @@
             </label>
             {{ form.destination_currency }}
             {% if form.destination_currency.errors %}
-              <p class="qa-field__message qa-field__message--error">
+              <p class="qa-field__message qa-field__message--error"
+                 id="destination_currency-error">
                 {{ form.destination_currency.errors.0 }}
               </p>
             {% endif %}
