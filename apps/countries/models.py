@@ -43,8 +43,11 @@ class CurrencyQuerySet(models.QuerySet):
 
     def covered_on(self, selected_date: date):
         return self.filter(
-            Q(coverage_from__isnull=True) | Q(coverage_from__lte=selected_date),
-            Q(coverage_to__isnull=True) | Q(coverage_to__gte=selected_date),
+            Q(coverage_from__isnull=True) | Q(coverage_from__lte=selected_date)
+        ).filter(
+            Q(coverage_to_is_terminal=False)
+            | Q(coverage_to__isnull=True)
+            | Q(coverage_to__gte=selected_date)
         )
 
 
