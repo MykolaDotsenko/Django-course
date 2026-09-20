@@ -91,6 +91,7 @@ class HistoricalCurrencyMetadata:
     active_to: date | None = None
     coverage_from: date | None = None
     coverage_to: date | None = None
+    coverage_to_is_terminal: bool = False
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "code", normalize_currency_code(self.code))
@@ -125,7 +126,11 @@ def validate_historical_currency_metadata(
             reason=HistoricalCoverageReason.PROVIDER_COVERAGE_NOT_STARTED,
             boundary=metadata.coverage_from,
         )
-    if metadata.coverage_to and requested_date > metadata.coverage_to:
+    if (
+        metadata.coverage_to
+        and metadata.coverage_to_is_terminal
+        and requested_date > metadata.coverage_to
+    ):
         raise HistoricalOutOfCoverage(
             currency_code=metadata.code,
             requested_date=requested_date,
