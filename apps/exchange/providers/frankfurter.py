@@ -85,7 +85,7 @@ def parse_rate_payload(
             provider_policy=policy,
             provider_keys=provider_keys,
             historical=requested_date is not None,
-            observation_granularity=ObservationGranularity.DAILY,
+            observation_granularity=ObservationGranularity.UNKNOWN,
         )
     except FxDomainError as exc:
         raise FxProviderInvalidPayload(str(exc)) from exc
