@@ -129,6 +129,7 @@ def build_result_component(
             {
                 "base_currency": result.quote.base_currency,
                 "quote_currency": result.quote.quote_currency,
+                "amount": format(result.input_amount, "f"),
                 "selected_date_iso": result.quote.effective_date.isoformat(),
                 "requested_date_iso": (
                     result.quote.requested_date.isoformat()
