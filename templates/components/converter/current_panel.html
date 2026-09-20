@@ -61,7 +61,8 @@
           </label>
         {% endfor %}
       </div>
-      <div class="qa-field{% if form.requested_date.errors %} qa-field--error{% endif %}">
+      <div class="qa-field{% if form.requested_date.errors %} qa-field--error{% endif %}"
+           data-historical-date-field>
         <label class="qa-field__label"
                for="{{ form.requested_date.id_for_label }}">Historical date</label>
         {{ form.requested_date }}
