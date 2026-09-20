@@ -262,7 +262,6 @@ def test_pinned_provider_frequency_is_normalized(provider_key, expected):
     assert result.observation_granularity is expected
 
 
-
 def test_series_payload_sorts_observations_and_preserves_missing_dates():
     result = parse_series_payload(
         [
@@ -355,13 +354,12 @@ def test_series_payload_rejects_wrong_identity_range_or_value(payload):
 
 
 def test_rate_series_builds_bounded_monthly_query():
-    payload = (
-        b'[{"date":"2025-01-31","base":"EUR","quote":"JPY",'
-        b'"rate":161.2,"providers":["ECB"]}]'
-    )
+    payload = b'[{"date":"2025-01-31","base":"EUR","quote":"JPY","rate":161.2,"providers":["ECB"]}]'
     provider = FrankfurterProvider(base_url="https://example.test/v2", max_attempts=1)
 
-    with patch("apps.exchange.providers.frankfurter.urlopen", return_value=FakeResponse(payload)) as mocked:
+    with patch(
+        "apps.exchange.providers.frankfurter.urlopen", return_value=FakeResponse(payload)
+    ) as mocked:
         result = provider.rate_series(
             "EUR",
             "JPY",
@@ -383,13 +381,12 @@ def test_rate_series_builds_bounded_monthly_query():
 
 
 def test_daily_rate_series_omits_group_query_parameter():
-    payload = (
-        b'[{"date":"2026-01-02","base":"EUR","quote":"JPY",'
-        b'"rate":179.8,"providers":["ECB"]}]'
-    )
+    payload = b'[{"date":"2026-01-02","base":"EUR","quote":"JPY","rate":179.8,"providers":["ECB"]}]'
     provider = FrankfurterProvider(base_url="https://example.test/v2", max_attempts=1)
 
-    with patch("apps.exchange.providers.frankfurter.urlopen", return_value=FakeResponse(payload)) as mocked:
+    with patch(
+        "apps.exchange.providers.frankfurter.urlopen", return_value=FakeResponse(payload)
+    ) as mocked:
         provider.rate_series(
             "EUR",
             "JPY",
@@ -417,7 +414,6 @@ def test_oversized_series_response_is_rejected_before_json_parsing():
                 RateSeriesGrouping.DAILY,
                 DEFAULT_SOURCE_POLICY,
             )
-
 
 
 def test_series_keeps_requested_grouping_separate_from_provider_cadence():
