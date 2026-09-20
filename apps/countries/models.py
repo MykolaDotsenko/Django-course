@@ -34,6 +34,20 @@ class Country(models.Model):
         return f"{self.name} ({self.iso2})"
 
 
+class CurrencyQuerySet(models.QuerySet):
+    def active_on(self, selected_date: date):
+        return self.filter(
+            Q(active_from__isnull=True) | Q(active_from__lte=selected_date),
+            Q(active_to__isnull=True) | Q(active_to__gte=selected_date),
+        )
+
+    def covered_on(self, selected_date: date):
+        return self.filter(
+            Q(coverage_from__isnull=True) | Q(coverage_from__lte=selected_date),
+            Q(coverage_to__isnull=True) | Q(coverage_to__gte=selected_date),
+        )
+
+
 class Currency(models.Model):
     code = models.CharField(max_length=3, unique=True)
     name = models.CharField(max_length=120)
@@ -42,13 +56,35 @@ class Currency(models.Model):
     is_active = models.BooleanField(default=True)
     active_from = models.DateField(null=True, blank=True)
     active_to = models.DateField(null=True, blank=True)
+    coverage_from = models.DateField(null=True, blank=True)
+    coverage_to = models.DateField(null=True, blank=True)
+
+    objects = CurrencyQuerySet.as_manager()
 
     class Meta:
         ordering = ("code",)
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(active_from__isnull=True)
+                | Q(active_to__isnull=True)
+                | Q(active_to__gte=models.F("active_from")),
+                name="currency_active_date_range",
+            ),
+            models.CheckConstraint(
+                condition=Q(coverage_from__isnull=True)
+                | Q(coverage_to__isnull=True)
+                | Q(coverage_to__gte=models.F("coverage_from")),
+                name="currency_coverage_date_range",
+            ),
+        ]
 
     def clean(self):
         if self.active_from and self.active_to and self.active_to < self.active_from:
             raise ValidationError({"active_to": "Currency active_to cannot precede active_from."})
+        if self.coverage_from and self.coverage_to and self.coverage_to < self.coverage_from:
+            raise ValidationError(
+                {"coverage_to": "Currency coverage_to cannot precede coverage_from."}
+            )
 
     def save(self, *args, **kwargs):
         self.code = self.code.upper()
