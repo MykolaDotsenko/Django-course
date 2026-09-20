@@ -13,6 +13,7 @@ from apps.exchange.domain import (
     ObservationGranularity,
     ProviderPolicyMode,
     RateQuote,
+    normalize_currency_code,
 )
 from apps.exchange.providers.base import FxProvider, FxProviderInvalidPayload, FxProviderUnavailable
 
@@ -27,9 +28,11 @@ class QuoteFreshness(StrEnum):
 
 
 def latest_cache_key(base: str, quote: str, policy: FxSourcePolicy) -> str:
+    base_code = normalize_currency_code(base)
+    quote_code = normalize_currency_code(quote)
     return (
         f"fx:{CACHE_VERSION}:latest:{policy.mode.value}:{policy.cache_identity}:"
-        f"{base.upper()}:{quote.upper()}"
+        f"{base_code}:{quote_code}"
     )
 
 
@@ -39,9 +42,11 @@ def historical_cache_key(
     effective_date: date,
     policy: FxSourcePolicy,
 ) -> str:
+    base_code = normalize_currency_code(base)
+    quote_code = normalize_currency_code(quote)
     return (
         f"fx:{CACHE_VERSION}:historical:{policy.mode.value}:{policy.cache_identity}:"
-        f"{base.upper()}:{quote.upper()}:{effective_date.isoformat()}"
+        f"{base_code}:{quote_code}:{effective_date.isoformat()}"
     )
 
 
