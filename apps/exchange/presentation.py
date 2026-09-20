@@ -74,11 +74,7 @@ def build_result_component(
         )
 
     effective_date = None if same_currency else date_format(result.quote.effective_date, "j M Y")
-    fetched_at = (
-        None
-        if same_currency
-        else result.quote.fetched_at.strftime("%d %b %Y · %H:%M UTC")
-    )
+    fetched_at = None if same_currency else result.quote.fetched_at.strftime("%d %b %Y · %H:%M UTC")
     input_text = _money_text(result.input_amount, minor_units=base_minor_units)
     output_text = _money_text(result.output_amount, minor_units=quote_minor_units)
     rate_text = _decimal_text(result.quote.rate)
