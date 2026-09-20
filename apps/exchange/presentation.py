@@ -84,10 +84,14 @@ def build_result_component(
         "input_currency": result.quote.base_currency,
         "output_amount": output_text,
         "output_currency": result.quote.quote_currency,
-        "status": {
-            "kind": "cached" if result.stale else "reference",
-            "label": "Cached reference" if result.stale else "Reference rate",
-        },
+        "status": (
+            {"kind": "exact", "label": "Exact 1:1"}
+            if same_currency
+            else {
+                "kind": "cached" if result.stale else "reference",
+                "label": "Cached reference" if result.stale else "Reference rate",
+            }
+        ),
         "rate_meta": {
             "rate_line": (
                 f"1 {result.quote.base_currency} = {rate_text} {result.quote.quote_currency}"
@@ -99,9 +103,17 @@ def build_result_component(
             "explanation": explanation,
         },
         "announcement": (
-            f"{input_text} {result.quote.base_currency} is approximately "
-            f"{output_text} {result.quote.quote_currency}. "
-            f"Reference rate effective {effective_date}."
+            (
+                f"{input_text} {result.quote.base_currency} remains "
+                f"{output_text} {result.quote.quote_currency}. "
+                "No exchange-rate lookup was required."
+            )
+            if same_currency
+            else (
+                f"{input_text} {result.quote.base_currency} is approximately "
+                f"{output_text} {result.quote.quote_currency}. "
+                f"Reference rate effective {effective_date}."
+            )
         ),
     }
 
