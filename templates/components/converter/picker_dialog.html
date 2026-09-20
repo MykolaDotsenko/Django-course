@@ -10,11 +10,8 @@
       <button class="qa-picker-dialog__close"
               type="button"
               data-picker-close="{{ side }}"
-              aria-label="Close {{ role_label }} picker">
-        Close
-      </button>
+              aria-label="Close {{ role_label }} picker">Close</button>
     </div>
-
     <div class="qa-field">
       <label class="qa-field__label" for="{{ side }}-picker-search">
         Search by country, currency name or code
@@ -33,9 +30,11 @@
              hx-target="#{{ side }}-picker-results"
              hx-include="#{{ side }}-picker-side"
              hx-sync="this:replace">
-      <input id="{{ side }}-picker-side" type="hidden" name="side" value="{{ side }}">
+      <input id="{{ side }}-picker-side"
+             type="hidden"
+             name="side"
+             value="{{ side }}">
     </div>
-
     <div id="{{ side }}-picker-results"
          class="qa-picker-results"
          data-picker-results="{{ side }}">

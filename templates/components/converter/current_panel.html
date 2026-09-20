@@ -7,21 +7,18 @@
     <h2 id="current-converter-title">One amount, two local contexts.</h2>
     <p>Choose currencies directly, or add country context when it is useful.</p>
   </div>
-
   {% if not reference_data_ready %}
     <div class="qa-inline-alert qa-inline-alert--error" role="alert">
       <h3>Reference data is not ready.</h3>
       <p>Load the country and currency reference data before using the converter.</p>
     </div>
   {% endif %}
-
   {% if conversion_error %}
     <div class="qa-inline-alert qa-inline-alert--error" role="alert">
       <h3>{{ conversion_error.title }}</h3>
       <p>{{ conversion_error.detail }}</p>
     </div>
   {% endif %}
-
   <form id="current-conversion-form"
         class="qa-workspace__stage"
         method="post"
@@ -37,7 +34,6 @@
     <input type="hidden"
            name="conversion_active"
            value="{% if has_result %}1{% else %}0{% endif %}">
-
     <div class="qa-workspace__amount">
       <div class="qa-field{% if form.amount.errors %} qa-field--error{% endif %}">
         <label class="qa-field__label" for="{{ form.amount.id_for_label }}">Amount</label>
@@ -69,7 +65,6 @@
         {% endif %}
       </div>
     </div>
-
     <div class="qa-workspace__pair">
       <section class="qa-workspace__context qa-workspace__context--source"
                {% if source.theme %}data-country-theme="{{ source.theme }}"{% endif %}
@@ -79,14 +74,11 @@
           <h3 id="current-source-title">{{ source.country_name }}</h3>
           <p>{{ source.currency_name }}{% if source.currency_code %} · {{ source.currency_code }}{% endif %}</p>
         </div>
-
         <div class="qa-selection-fallback"
              data-native-selection="source"
              data-has-errors="{% if form.source_country.errors or form.source_currency.errors %}true{% else %}false{% endif %}">
           <div class="qa-field">
-            <label class="qa-field__label" for="{{ form.source_country.id_for_label }}">
-              Source country
-            </label>
+            <label class="qa-field__label" for="{{ form.source_country.id_for_label }}">Source country</label>
             {{ form.source_country }}
             {% if form.source_country.errors %}
               <p class="qa-field__message qa-field__message--error"
@@ -104,7 +96,6 @@
             {% endif %}
           </div>
         </div>
-
         <button class="qa-selector-trigger"
                 id="source-picker-trigger"
                 type="button"
@@ -125,7 +116,6 @@
           </span>
         </button>
       </section>
-
       <div class="qa-workspace__swap">
         <button class="qa-swap-button"
                 id="swap-contexts"
@@ -136,7 +126,6 @@
           {% include "components/icons/swap.html" %}
         </button>
       </div>
-
       <section class="qa-workspace__context qa-workspace__context--destination"
                {% if destination.theme %}data-country-theme="{{ destination.theme }}"{% endif %}
                aria-labelledby="current-destination-title">
@@ -147,36 +136,28 @@
             {{ destination.currency_name }}{% if destination.currency_code %} · {{ destination.currency_code }}{% endif %}
           </p>
         </div>
-
         <div class="qa-selection-fallback"
              data-native-selection="destination"
              data-has-errors="{% if form.destination_country.errors or form.destination_currency.errors %}true{% else %}false{% endif %}">
           <div class="qa-field">
-            <label class="qa-field__label" for="{{ form.destination_country.id_for_label }}">
-              Destination country
-            </label>
+            <label class="qa-field__label"
+                   for="{{ form.destination_country.id_for_label }}">Destination country</label>
             {{ form.destination_country }}
             {% if form.destination_country.errors %}
               <p class="qa-field__message qa-field__message--error"
-                 id="destination_country-error">
-                {{ form.destination_country.errors.0 }}
-              </p>
+                 id="destination_country-error">{{ form.destination_country.errors.0 }}</p>
             {% endif %}
           </div>
           <div class="qa-field">
-            <label class="qa-field__label" for="{{ form.destination_currency.id_for_label }}">
-              Destination currency
-            </label>
+            <label class="qa-field__label"
+                   for="{{ form.destination_currency.id_for_label }}">Destination currency</label>
             {{ form.destination_currency }}
             {% if form.destination_currency.errors %}
               <p class="qa-field__message qa-field__message--error"
-                 id="destination_currency-error">
-                {{ form.destination_currency.errors.0 }}
-              </p>
+                 id="destination_currency-error">{{ form.destination_currency.errors.0 }}</p>
             {% endif %}
           </div>
         </div>
-
         <button class="qa-selector-trigger"
                 id="destination-picker-trigger"
                 type="button"
@@ -198,32 +179,30 @@
         </button>
       </section>
     </div>
-
     {% if form.non_field_errors %}
       <div class="qa-inline-alert qa-inline-alert--error" role="alert">
         <p>{{ form.non_field_errors.0 }}</p>
       </div>
     {% endif %}
-
     <div class="qa-workspace__action">
-      <span id="conversion-loading" class="qa-loading-indicator htmx-indicator" aria-live="polite">
-        Updating reference rate…
-      </span>
+      <span id="conversion-loading"
+            class="qa-loading-indicator htmx-indicator"
+            aria-live="polite">Updating reference rate…</span>
       <button class="qa-primary-button"
               type="submit"
               {% if not reference_data_ready %}disabled{% endif %}>
         <span>Convert</span>
       </button>
     </div>
-
     <div class="qa-workspace__result">
       {% if result_component %}
         {% with component=result_component %}
           {% include "components/converter/primitives.html#conversion-result" %}
         {% endwith %}
-        <p class="qa-visually-hidden" role="status" aria-live="polite" aria-atomic="true">
-          {{ result_component.announcement }}
-        </p>
+        <p class="qa-visually-hidden"
+           role="status"
+           aria-live="polite"
+           aria-atomic="true">{{ result_component.announcement }}</p>
       {% else %}
         <div class="qa-result qa-result--empty">
           <h2 class="qa-result__title">Ready when you are.</h2>
@@ -232,7 +211,6 @@
       {% endif %}
     </div>
   </form>
-
   {% include "components/converter/picker_dialog.html" with side="source" role_label="source" %}
   {% include "components/converter/picker_dialog.html" with side="destination" role_label="destination" %}
 </section>
