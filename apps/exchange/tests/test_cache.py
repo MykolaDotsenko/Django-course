@@ -1,8 +1,8 @@
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
-from django.core.cache import cache
 import pytest
+from django.core.cache import cache
 
 from apps.exchange.cache import LatestQuoteGateway, latest_cache_key, serialize_quote
 from apps.exchange.domain import (
@@ -12,7 +12,6 @@ from apps.exchange.domain import (
     RateQuote,
 )
 from apps.exchange.providers.base import FxProviderInvalidPayload, FxProviderUnavailable
-
 
 NOW = datetime(2026, 9, 20, 12, tzinfo=UTC)
 
