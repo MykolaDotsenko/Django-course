@@ -41,9 +41,9 @@ def _is_history_restore(request: HttpRequest) -> bool:
 def _country_for_currency(currency_code: str, *, preferred: str = "") -> str:
     links = CountryCurrency.objects.current().filter(currency__code=currency_code).primary()
     if preferred:
-        preferred_match = links.filter(country__iso2=preferred).values_list(
-            "country__iso2", flat=True
-        ).first()
+        preferred_match = (
+            links.filter(country__iso2=preferred).values_list("country__iso2", flat=True).first()
+        )
         if preferred_match:
             return preferred_match
     return links.values_list("country__iso2", flat=True).first() or ""
@@ -160,20 +160,12 @@ def converter(request: HttpRequest) -> HttpResponse:
             )
             error = _conversion_error(exc)
 
-    if (
-        request.method == "POST"
-        and not _is_htmx(request)
-        and result is not None
-    ):
+    if request.method == "POST" and not _is_htmx(request) and result is not None:
         return redirect(_canonical_conversion_url(form))
 
     context = build_converter_context(form, result=result, conversion_error=error)
     fragment = _is_htmx(request) and not _is_history_restore(request)
-    template = (
-        "components/converter/current_panel.html"
-        if fragment
-        else "pages/converter.html"
-    )
+    template = "components/converter/current_panel.html" if fragment else "pages/converter.html"
     response = render(request, template, context)
     patch_vary_headers(response, ["HX-Request"])
 
@@ -227,10 +219,7 @@ def picker_options(request: HttpRequest) -> HttpResponse:
         seen.add(identity)
         options.append(
             {
-                "id": (
-                    f"{side}-country-{link.country.iso2.lower()}-"
-                    f"{link.currency.code.lower()}"
-                ),
+                "id": (f"{side}-country-{link.country.iso2.lower()}-{link.currency.code.lower()}"),
                 "country_code": link.country.iso2,
                 "country_name": link.country.name,
                 "currency_code": link.currency.code,
