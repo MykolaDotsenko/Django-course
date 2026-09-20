@@ -102,7 +102,7 @@ async function assertKeyboardFocus(page, surface) {
   if (surface === "converter" || surface === "current-converter") {
     await page.keyboard.press("Tab");
     const activeId = await page.evaluate(() => document.activeElement?.id ?? "");
-    const expected = surface === "converter" ? "workspace-amount" : "id_amount";
+    const expected = surface === "converter" ? "workspace-amount" : "id_rate_mode_0";
     assert(activeId === expected, `${surface}: unexpected second focus target ${activeId}`);
   }
 }
@@ -145,6 +145,39 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   );
 
   await assertAxe(page, "current-converter/result");
+
+  await page.locator("#id_requested_date").fill("1998-06-15");
+  const historicalPost = waitForPost();
+  await page.locator("#id_rate_mode_1").check();
+  await historicalPost;
+  await page.locator("#current-conversion-result").waitFor();
+
+  const historicalText = await page.locator("#current-conversion-result").innerText();
+  assert(
+    historicalText.includes("Historical reference"),
+    "current-converter: historical status is missing",
+  );
+  assert(
+    historicalText.includes("Requested date") && historicalText.includes("15 Jun 1998"),
+    "current-converter: requested historical date is missing",
+  );
+  assert(
+    historicalText.includes("Observation date"),
+    "current-converter: historical observation date is missing",
+  );
+  const historicalUrl = new URL(page.url());
+  assert(
+    historicalUrl.searchParams.get("rate_mode") === "historical" &&
+      historicalUrl.searchParams.get("requested_date") === "1998-06-15",
+    "current-converter: historical conversion did not push a stable deep link",
+  );
+
+  await assertAxe(page, "current-converter/historical-result");
+
+  const latestPost = waitForPost();
+  await page.locator("#id_rate_mode_0").check();
+  await latestPost;
+  await page.locator("#current-conversion-result").waitFor();
 
   const previousAmount = await page
     .locator("#current-conversion-result .qa-result__input")
