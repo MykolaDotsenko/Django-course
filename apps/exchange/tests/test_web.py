@@ -666,7 +666,10 @@ def test_historical_htmx_and_full_get_render_equivalent_numeric_semantics(client
 @pytest.mark.django_db
 def test_historical_series_page_uses_bounded_one_year_range(client, reference_data):
     gateway = FakeSeriesGateway()
-    with patch("apps.exchange.views.build_historical_series_gateway", return_value=gateway):
+    with (
+        patch("apps.exchange.views.build_historical_series_gateway", return_value=gateway),
+        patch("apps.exchange.views.build_historical_quote_gateway") as quote_factory,
+    ):
         response = client.get(
             reverse("historical_series"),
             {
@@ -689,6 +692,7 @@ def test_historical_series_page_uses_bounded_one_year_range(client, reference_da
     assert gateway.calls[0][2] == date(2025, 9, 18)
     assert gateway.calls[0][3] == date(2026, 9, 18)
     assert gateway.calls[0][4] is RateSeriesGrouping.DAILY
+    quote_factory.assert_not_called()
 
 
 @pytest.mark.django_db
