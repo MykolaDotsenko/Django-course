@@ -36,9 +36,14 @@
            {% if period.active %}aria-current="page"{% endif %}
            hx-get="{{ period.url }}"
            hx-target="#historical-trend"
-           hx-swap="outerHTML">{{ period.label }}</a>
+           hx-swap="outerHTML"
+           hx-sync="#historical-trend:replace"
+           hx-indicator="#historical-trend-loading">{{ period.label }}</a>
       {% endfor %}
     </nav>
+    <span id="historical-trend-loading"
+          class="qa-loading-indicator htmx-indicator"
+          aria-live="polite">Updating historical trend…</span>
     <details id="historical-custom-range"
              class="qa-rate-series__custom"
              {% if series_component.period == 'custom' %}open{% endif %}>
@@ -49,7 +54,9 @@
             action="{% url 'historical_series' %}"
             hx-get="{% url 'historical_series' %}"
             hx-target="#historical-trend"
-            hx-swap="outerHTML">
+            hx-swap="outerHTML"
+            hx-sync="#historical-trend:replace"
+            hx-indicator="#historical-trend-loading">
         <input type="hidden"
                name="base"
                value="{{ series_component.base_currency }}">
