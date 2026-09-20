@@ -117,9 +117,7 @@ def build_result_component(
             {
                 "kind": "historical-previous" if used_previous else "historical",
                 "label": (
-                    "Previous available observation"
-                    if used_previous
-                    else "Historical reference"
+                    "Previous available observation" if used_previous else "Historical reference"
                 ),
             }
             if historical
