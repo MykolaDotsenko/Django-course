@@ -45,7 +45,7 @@ def test_frankfurter_v2_rate_normalizes_decimal_and_attribution():
     assert result.rate == Decimal("174.50")
     assert result.provider_keys == ("boj", "ecb")
     assert result.effective_date == date(2026, 9, 18)
-    assert result.observation_granularity is ObservationGranularity.UNKNOWN
+    assert result.observation_granularity is ObservationGranularity.DAILY
 
 
 @pytest.mark.parametrize(
@@ -231,3 +231,30 @@ def test_oversized_single_rate_response_is_rejected_before_json_parsing():
     with patch("apps.exchange.providers.frankfurter.urlopen", return_value=response):
         with pytest.raises(FxProviderInvalidPayload, match="size limit"):
             provider.latest_quote("EUR", "JPY", DEFAULT_SOURCE_POLICY)
+
+
+
+@pytest.mark.parametrize(
+    ("provider_key", "expected"),
+    [
+        ("hmrc", ObservationGranularity.MONTHLY),
+        ("ust", ObservationGranularity.QUARTERLY),
+        ("ecb", ObservationGranularity.DAILY),
+    ],
+)
+def test_pinned_provider_frequency_is_normalized(provider_key, expected):
+    policy = FxSourcePolicy(
+        mode=ProviderPolicyMode.PINNED,
+        provider_key=provider_key,
+        include_attribution=False,
+    )
+    result = parse_rate_payload(
+        {"date": "2026-09-18", "base": "EUR", "quote": "JPY", "rate": Decimal("174.5")},
+        expected_base="EUR",
+        expected_quote="JPY",
+        requested_date=date(2026, 9, 20),
+        policy=policy,
+        fetched_at=datetime(2026, 9, 20, tzinfo=UTC),
+    )
+
+    assert result.observation_granularity is expected
