@@ -358,7 +358,6 @@ def test_historical_cache_write_failure_does_not_invalidate_provider_result(monk
     assert result == historical
 
 
-
 def test_monthly_observation_can_precede_requested_date_by_more_than_daily_window():
     historical = make_historical_quote(
         requested_date=date(2026, 9, 30),
