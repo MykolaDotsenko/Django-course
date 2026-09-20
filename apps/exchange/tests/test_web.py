@@ -60,11 +60,9 @@ class FakeHistoricalGateway:
             observation_granularity=self.granularity,
         )
 
-
 @pytest.fixture(autouse=True)
 def use_vite_dev_mode(settings):
     settings.VITE_DEV_SERVER_ENABLED = True
-
 
 @pytest.fixture
 def reference_data(db):
@@ -118,7 +116,6 @@ def payload(**overrides):
     values.update(overrides)
     return values
 
-
 @pytest.mark.django_db
 def test_initial_page_does_not_request_rate(client, reference_data):
     with patch("apps.exchange.views.build_latest_quote_gateway") as factory:
@@ -127,7 +124,6 @@ def test_initial_page_does_not_request_rate(client, reference_data):
     assert response.status_code == 200
     assert b"Ready when you are" in response.content
     factory.assert_not_called()
-
 
 @pytest.mark.django_db
 def test_htmx_conversion_returns_fragment_and_pushes_bookmarkable_url(client, reference_data):
@@ -149,7 +145,6 @@ def test_htmx_conversion_returns_fragment_and_pushes_bookmarkable_url(client, re
     assert "HX-Request" in response.get("Vary", "")
     assert len(gateway.calls) == 1
 
-
 @pytest.mark.django_db
 def test_full_post_redirects_to_bookmarkable_get(client, reference_data):
     gateway = FakeGateway()
@@ -158,7 +153,6 @@ def test_full_post_redirects_to_bookmarkable_get(client, reference_data):
 
     assert response.status_code == 302
     assert response["Location"].startswith("/?convert=1&")
-
 
 @pytest.mark.django_db
 def test_invalid_amount_never_builds_provider_gateway(client, reference_data):
@@ -172,7 +166,6 @@ def test_invalid_amount_never_builds_provider_gateway(client, reference_data):
     assert response.status_code == 422
     assert b"zero or a positive amount" in response.content
     factory.assert_not_called()
-
 
 @pytest.mark.django_db
 def test_same_currency_uses_exact_one_without_gateway_call(client, reference_data):
@@ -194,7 +187,6 @@ def test_same_currency_uses_exact_one_without_gateway_call(client, reference_dat
     assert b"Last synced" not in response.content
     assert gateway.calls == []
 
-
 @pytest.mark.django_db
 def test_stale_result_is_explicitly_labelled(client, reference_data):
     with patch(
@@ -206,7 +198,6 @@ def test_stale_result_is_explicitly_labelled(client, reference_data):
     assert b"Cached reference" in response.content
     assert b"temporarily unavailable" in response.content
     assert b"Retry reference rate" in response.content
-
 
 @pytest.mark.django_db
 def test_provider_unavailable_preserves_form_without_numeric_result(client, reference_data):
@@ -220,7 +211,6 @@ def test_provider_unavailable_preserves_form_without_numeric_result(client, refe
     assert b"temporarily unavailable" in response.content
     assert b'value="100.00"' in response.content
     assert b"current-conversion-result" not in response.content
-
 
 @pytest.mark.django_db
 def test_swap_before_first_conversion_does_not_request_rate(client, reference_data):
@@ -239,7 +229,6 @@ def test_swap_before_first_conversion_does_not_request_rate(client, reference_da
     assert b"current-conversion-result" not in response.content
     assert gateway.calls == []
 
-
 @pytest.mark.django_db
 def test_swap_after_success_refreshes_the_swapped_pair(client, reference_data):
     gateway = FakeGateway()
@@ -254,7 +243,6 @@ def test_swap_after_success_refreshes_the_swapped_pair(client, reference_data):
     assert b"current-conversion-result" in response.content
     assert gateway.calls[0][0:2] == ("JPY", "EUR")
 
-
 @pytest.mark.django_db
 def test_picker_search_matches_country_currency_name_and_code(client, reference_data):
     response = client.get(reverse("picker_options"), {"side": "destination", "q": "yen"})
@@ -262,7 +250,6 @@ def test_picker_search_matches_country_currency_name_and_code(client, reference_
     assert response.status_code == 200
     assert b"Japanese yen" in response.content
     assert b'data-currency-code="JPY"' in response.content
-
 
 @pytest.mark.django_db
 def test_invalid_deep_link_currency_is_validation_state_not_500(client, reference_data):
@@ -279,7 +266,6 @@ def test_invalid_deep_link_currency_is_validation_state_not_500(client, referenc
     assert b"Select a valid choice" in response.content
     factory.assert_not_called()
 
-
 @pytest.mark.django_db
 def test_htmx_response_varies_on_history_restore_header(client, reference_data):
     response = client.get(reverse("converter"), HTTP_HX_REQUEST="true")
@@ -287,7 +273,6 @@ def test_htmx_response_varies_on_history_restore_header(client, reference_data):
     vary = response.get("Vary", "")
     assert "HX-Request" in vary
     assert "HX-History-Restore-Request" in vary
-
 
 @pytest.mark.django_db
 def test_multiple_validation_errors_render_linked_summary(client, reference_data):
@@ -304,7 +289,6 @@ def test_multiple_validation_errors_render_linked_summary(client, reference_data
     assert b'href="#id_destination_currency"' in response.content
     factory.assert_not_called()
 
-
 @pytest.mark.django_db
 def test_failed_active_refresh_keeps_enhanced_mode_enabled(client, reference_data):
     with patch("apps.exchange.views.build_latest_quote_gateway") as factory:
@@ -320,7 +304,6 @@ def test_failed_active_refresh_keeps_enhanced_mode_enabled(client, reference_dat
     assert b'value="1"' in response.content
     factory.assert_not_called()
 
-
 @pytest.mark.django_db
 def test_failed_active_htmx_refresh_emits_preserve_placeholder(client, reference_data):
     with patch("apps.exchange.views.build_latest_quote_gateway") as factory:
@@ -335,7 +318,6 @@ def test_failed_active_htmx_refresh_emits_preserve_placeholder(client, reference
     assert b'hx-preserve="true"' in response.content
     factory.assert_not_called()
 
-
 @pytest.mark.django_db
 def test_successful_active_htmx_refresh_never_emits_preserve_placeholder(client, reference_data):
     gateway = FakeGateway()
@@ -349,7 +331,6 @@ def test_successful_active_htmx_refresh_never_emits_preserve_placeholder(client,
     assert response.status_code == 200
     assert b'id="current-conversion-result"' in response.content
     assert b'hx-preserve="true"' not in response.content
-
 
 @pytest.mark.django_db
 def test_historical_htmx_conversion_preserves_requested_and_observation_dates(
@@ -375,7 +356,6 @@ def test_historical_htmx_conversion_preserves_requested_and_observation_dates(
     assert b"Use FIM" in response.content
     assert b"explicit EUR selection has not been changed" in response.content
 
-
 @pytest.mark.django_db
 def test_historical_previous_observation_is_explicit(client, reference_data):
     gateway = FakeHistoricalGateway(effective_date=date(1998, 6, 12))
@@ -391,7 +371,6 @@ def test_historical_previous_observation_is_explicit(client, reference_data):
     assert b"14 Jun 1998" in response.content
     assert b"12 Jun 1998" in response.content
 
-
 @pytest.mark.django_db
 def test_future_historical_date_never_builds_provider_gateway(client, reference_data):
     with patch("apps.exchange.views.build_historical_quote_gateway") as factory:
@@ -404,7 +383,6 @@ def test_future_historical_date_never_builds_provider_gateway(client, reference_
     assert response.status_code == 422
     assert b"Historical date cannot be in the future" in response.content
     factory.assert_not_called()
-
 
 @pytest.mark.django_db
 def test_historical_picker_exposes_archived_currency_for_selected_date(client, reference_data):
@@ -422,7 +400,6 @@ def test_historical_picker_exposes_archived_currency_for_selected_date(client, r
     assert b"Finnish markka" in response.content
     assert b"FIM" in response.content
 
-
 @pytest.mark.django_db
 def test_current_picker_keeps_archived_currency_hidden(client, reference_data):
     response = client.get(
@@ -432,7 +409,6 @@ def test_current_picker_keeps_archived_currency_hidden(client, reference_data):
 
     assert response.status_code == 200
     assert b"Finnish markka" not in response.content
-
 
 
 @pytest.mark.django_db
@@ -456,7 +432,6 @@ def test_historical_currency_suggestion_action_replays_conversion_with_suggested
     assert b"Finnish markka" in response.content
     assert b"Use FIM" not in response.content
 
-
 @pytest.mark.django_db
 def test_retired_currency_is_out_of_coverage_before_provider_call(client, reference_data):
     with patch("apps.exchange.views.build_historical_quote_gateway") as factory:
@@ -476,7 +451,6 @@ def test_retired_currency_is_out_of_coverage_before_provider_call(client, refere
     assert b"Use EUR" in response.content
     factory.assert_not_called()
 
-
 @pytest.mark.django_db
 def test_provider_coverage_start_blocks_request_before_provider_call(client, reference_data):
     eur = Currency.objects.get(code="EUR")
@@ -494,7 +468,6 @@ def test_provider_coverage_start_blocks_request_before_provider_call(client, ref
     assert response.status_code == 422
     assert b"Known provider coverage starts 01 Jan 2000" in response.content
     factory.assert_not_called()
-
 
 @pytest.mark.django_db
 def test_monthly_historical_observation_never_claims_daily_precision(client, reference_data):
