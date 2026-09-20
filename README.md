@@ -109,6 +109,6 @@ See [docs/08_IMPLEMENTATION_ROADMAP.md](docs/08_IMPLEMENTATION_ROADMAP.md).
 
 ## Current status
 
-**Phase:** PR4 FX domain complete and contract-hardened → PR5 HTMX current-conversion vertical slice in review → PR6 historical conversion next.
+**Phase:** PR5 HTMX current-conversion vertical slice complete → PR6 historical conversion next.
 
 The Django product shell, runtime configuration, PostgreSQL path, observability baseline, frontend build, Vite bridge and Quiet Atlas shell are executable and CI-backed. DEBUG-only design surfaces exercise the semantic shell, converter primitives and responsive bilateral composition without claiming FX business behavior.
