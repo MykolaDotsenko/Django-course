@@ -41,18 +41,14 @@
           {{ period.label }}
         </a>
       {% endfor %}
-      <button class="qa-chart-period-control__item{% if series_component.period == 'custom' %} is-active{% endif %}"
-              type="button"
-              aria-expanded="{% if series_component.period == 'custom' %}true{% else %}false{% endif %}"
-              aria-controls="historical-custom-range"
-              data-custom-range-toggle>
-        Custom
-      </button>
     </nav>
 
-    <div id="historical-custom-range"
-         class="qa-rate-series__custom"
-         {% if series_component.period != 'custom' %}hidden{% endif %}>
+    <details id="historical-custom-range"
+             class="qa-rate-series__custom"
+             {% if series_component.period == 'custom' %}open{% endif %}>
+      <summary class="qa-chart-period-control__item{% if series_component.period == 'custom' %} is-active{% endif %}">
+        Custom
+      </summary>
       <form method="get"
             action="{% url 'historical_series' %}"
             hx-get="{% url 'historical_series' %}"
@@ -72,7 +68,7 @@
                    type="date"
                    name="start_date"
                    value="{{ series_component.start_date_iso }}"
-                   max="{{ series_component.selected_date|date:'Y-m-d' }}">
+                   >
           </label>
           <label class="qa-field">
             <span class="qa-field__label">End date</span>
@@ -85,7 +81,7 @@
         </div>
         <button class="qa-secondary-button" type="submit">Apply custom range</button>
       </form>
-    </div>
+    </details>
 
     <p class="qa-rate-series__summary">{{ series_component.summary }}</p>
 
