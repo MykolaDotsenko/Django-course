@@ -31,13 +31,42 @@ function assert(condition, message) {
 }
 
 async function assertNoHorizontalOverflow(page, label) {
-  const dimensions = await page.evaluate(() => ({
-    scrollWidth: document.documentElement.scrollWidth,
-    clientWidth: document.documentElement.clientWidth,
-  }));
+  const dimensions = await page.evaluate(() => {
+    const clientWidth = document.documentElement.clientWidth;
+    const offenders = [...document.querySelectorAll("body *")]
+      .map((element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          tag: element.tagName.toLowerCase(),
+          id: element.id,
+          className:
+            typeof element.className === "string" ? element.className.trim() : "",
+          left: Math.round(rect.left),
+          right: Math.round(rect.right),
+          width: Math.round(rect.width),
+          scrollWidth: element.scrollWidth,
+          clientWidth: element.clientWidth,
+        };
+      })
+      .filter(
+        (element) =>
+          element.right > clientWidth + 1 ||
+          element.left < -1 ||
+          element.scrollWidth > element.clientWidth + 1,
+      )
+      .sort((a, b) => Math.max(b.right - clientWidth, b.scrollWidth - b.clientWidth) -
+        Math.max(a.right - clientWidth, a.scrollWidth - a.clientWidth))
+      .slice(0, 5);
+
+    return {
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth,
+      offenders,
+    };
+  });
   assert(
     dimensions.scrollWidth <= dimensions.clientWidth + 1,
-    `${label}: horizontal overflow ${dimensions.scrollWidth} > ${dimensions.clientWidth}`,
+    `${label}: horizontal overflow ${dimensions.scrollWidth} > ${dimensions.clientWidth}; offenders: ${JSON.stringify(dimensions.offenders)}`,
   );
 }
 
