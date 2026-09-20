@@ -104,18 +104,18 @@ class CurrentConversionForm(forms.Form):
 
         self._archived_bound_codes: set[str] = set()
         if self.is_bound and not historical_mode:
-            for field_name in ("source_currency", "destination_currency"):
-                raw_code = str(self.data.get(field_name) or "").upper().strip()
-                if not raw_code:
-                    continue
-                archived = (
-                    Currency.objects.filter(code=raw_code, is_active=False)
-                    .only("code", "name")
-                    .first()
-                )
-                if archived is not None:
-                    self._archived_bound_codes.add(archived.code)
-                    currencies.append(archived)
+            raw_codes = {
+                str(self.data.get(field_name) or "").upper().strip()
+                for field_name in ("source_currency", "destination_currency")
+            }
+            raw_codes.discard("")
+            archived_bound = list(
+                Currency.objects.filter(code__in=raw_codes, is_active=False)
+                .only("code", "name")
+                .order_by("code")
+            )
+            self._archived_bound_codes = {currency.code for currency in archived_bound}
+            currencies.extend(archived_bound)
         countries = list(Country.objects.filter(is_active=True).order_by("name"))
 
         self._currency_by_code = {currency.code: currency for currency in currencies}
