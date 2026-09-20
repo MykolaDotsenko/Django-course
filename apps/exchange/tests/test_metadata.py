@@ -35,7 +35,6 @@ def snapshot(
         fetched_at=FETCHED_AT,
     )
 
-
 def test_currency_metadata_distinguishes_active_latest_observation_from_terminal_legacy_end():
     active = [
         {
@@ -65,7 +64,6 @@ def test_currency_metadata_distinguishes_active_latest_observation_from_terminal
     assert by_code["FIM"].coverage_to == date(2001, 12, 28)
     assert by_code["FIM"].coverage_to_is_terminal is True
 
-
 def test_currency_metadata_rejects_active_set_missing_from_scope_all():
     with pytest.raises(FrankfurterMetadataError, match="subset"):
         build_currency_coverage_snapshots(
@@ -73,7 +71,6 @@ def test_currency_metadata_rejects_active_set_missing_from_scope_all():
             [{"iso_code": "USD", "name": "United States Dollar"}],
             fetched_at=FETCHED_AT,
         )
-
 
 def test_currency_metadata_rejects_reversed_coverage():
     with pytest.raises(FrankfurterMetadataError, match="reversed"):
@@ -90,11 +87,9 @@ def test_currency_metadata_rejects_reversed_coverage():
             fetched_at=FETCHED_AT,
         )
 
-
 def test_coverage_snapshot_validation_rejects_suspiciously_small_import():
     with pytest.raises(CurrencyCoverageSnapshotValidationError):
         validate_currency_coverage_snapshot((snapshot("EUR"),), minimum_currencies=150)
-
 
 @pytest.mark.django_db
 def test_coverage_sync_preserves_currency_lifecycle_and_current_status():
@@ -119,7 +114,6 @@ def test_coverage_sync_preserves_currency_lifecycle_and_current_status():
     assert currency.coverage_source == "frankfurter-v2-currencies"
     assert currency.coverage_fetched_at == FETCHED_AT
 
-
 @pytest.mark.django_db
 def test_coverage_sync_creates_provider_only_currency_as_historical_only():
     summary = sync_currency_coverage(
@@ -141,7 +135,6 @@ def test_coverage_sync_creates_provider_only_currency_as_historical_only():
     assert fim.active_to is None
     assert fim.coverage_to_is_terminal is True
 
-
 @pytest.mark.django_db
 def test_coverage_sync_dry_run_reports_without_persisting():
     summary = sync_currency_coverage(
@@ -153,7 +146,6 @@ def test_coverage_sync_dry_run_reports_without_persisting():
     assert summary.dry_run is True
     assert summary.currencies_created == 1
     assert not Currency.objects.filter(code="FIM").exists()
-
 
 
 @pytest.mark.django_db
