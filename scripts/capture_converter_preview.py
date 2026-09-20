@@ -59,7 +59,7 @@ def _assert_preview_integrity(page: Page, *, viewport_width: int) -> None:
         """() => ({
             scrollWidth: document.documentElement.scrollWidth,
             clientWidth: document.documentElement.clientWidth,
-        })"""
+        })""",
     )
     if overflow["scrollWidth"] > overflow["clientWidth"] + 1:
         raise RuntimeError(
@@ -108,7 +108,7 @@ def _assert_preview_integrity(page: Page, *, viewport_width: int) -> None:
         raise RuntimeError(f"Amount input is not second keyboard target: {active_id!r}")
 
     focus_shadow = page.locator(".qa-amount-control").first.evaluate(
-        "element => getComputedStyle(element).boxShadow"
+        "element => getComputedStyle(element).boxShadow",
     )
     if focus_shadow == "none":
         raise RuntimeError("Amount focus treatment is not visibly rendered")
