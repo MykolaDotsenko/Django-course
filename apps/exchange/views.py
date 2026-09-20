@@ -177,12 +177,19 @@ def converter(request: HttpRequest) -> HttpResponse:
     if request.method == "POST" and not _is_htmx(request) and result is not None:
         return redirect(_canonical_conversion_url(form))
 
+    preserve_previous_result = (
+        _is_htmx(request)
+        and conversion_active
+        and result is None
+        and response_status in {422, 502, 503}
+    )
     context = build_converter_context(
         form,
         result=result,
         conversion_error=error,
         validation_attempted=convert_requested,
         conversion_active=conversion_active,
+        preserve_previous_result=preserve_previous_result,
     )
     fragment = _is_htmx(request) and not _is_history_restore(request)
     template = "components/converter/current_panel.html" if fragment else "pages/converter.html"
