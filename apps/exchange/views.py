@@ -419,7 +419,6 @@ def picker_options(request: HttpRequest) -> HttpResponse:
     )
 
 
-
 def _series_error(exc: Exception) -> tuple[int, dict[str, str]]:
     if isinstance(exc, RateSeriesRangeError):
         return 422, {
