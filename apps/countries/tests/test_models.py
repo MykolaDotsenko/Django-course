@@ -81,3 +81,17 @@ def test_archived_currency_remains_representable(finland):
 
     assert CountryCurrency.objects.on_date(date(1998, 1, 1)).get() == link
     assert not CountryCurrency.objects.current().filter(currency=fim).exists()
+
+
+@pytest.mark.django_db
+def test_current_relationship_excludes_future_valid_from(finland, eur):
+    CountryCurrency.objects.create(
+        country=finland,
+        currency=eur,
+        is_primary=True,
+        valid_from=date(2099, 1, 1),
+        source="test",
+    )
+
+    assert not CountryCurrency.objects.current(as_of=date(2026, 9, 20)).exists()
+    assert CountryCurrency.objects.current(as_of=date(2099, 1, 1)).exists()
