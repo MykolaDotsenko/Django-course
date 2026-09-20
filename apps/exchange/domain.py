@@ -60,6 +60,16 @@ class ObservationGranularity(StrEnum):
     UNKNOWN = "unknown"
 
 
+class RateSeriesGrouping(StrEnum):
+    DAILY = "daily"
+    WEEK = "week"
+    MONTH = "month"
+
+
+class RateSeriesRangeError(FxDomainError):
+    pass
+
+
 @dataclass(frozen=True)
 class FxSourcePolicy:
     mode: ProviderPolicyMode = ProviderPolicyMode.BLEND
@@ -191,6 +201,75 @@ class RateQuote:
             and self.requested_date is not None
             and self.effective_date < self.requested_date
         )
+
+
+@dataclass(frozen=True)
+class RateSeriesPoint:
+    observation_date: date
+    rate: Decimal
+    provider_keys: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.rate, Decimal):
+            raise FxDomainError("FX series rate must be a Decimal.")
+        if not self.rate.is_finite() or self.rate <= 0:
+            raise FxDomainError("FX series rate must be a finite positive Decimal.")
+        providers = tuple(
+            sorted({key.lower().strip() for key in self.provider_keys if key.strip()})
+        )
+        object.__setattr__(self, "provider_keys", providers)
+
+
+@dataclass(frozen=True)
+class RateSeries:
+    base_currency: str
+    quote_currency: str
+    start_date: date
+    end_date: date
+    grouping: RateSeriesGrouping
+    points: tuple[RateSeriesPoint, ...]
+    fetched_at: datetime
+    provider_policy: FxSourcePolicy
+
+    def __post_init__(self) -> None:
+        base = normalize_currency_code(self.base_currency)
+        quote = normalize_currency_code(self.quote_currency)
+        if self.end_date < self.start_date:
+            raise RateSeriesRangeError("FX series end date cannot precede start date.")
+        if self.fetched_at.tzinfo is None:
+            raise FxDomainError("FX series fetched_at must be timezone-aware.")
+
+        previous_date: date | None = None
+        for point in self.points:
+            if not self.start_date <= point.observation_date <= self.end_date:
+                raise FxDomainError("FX series observation falls outside requested range.")
+            if previous_date is not None and point.observation_date <= previous_date:
+                raise FxDomainError("FX series observations must be strictly date-ordered.")
+            if (
+                self.provider_policy.mode is ProviderPolicyMode.PINNED
+                and self.provider_policy.provider_key not in point.provider_keys
+            ):
+                raise FxDomainError(
+                    "Pinned FX series observation must attribute the pinned provider."
+                )
+            previous_date = point.observation_date
+
+        object.__setattr__(self, "base_currency", base)
+        object.__setattr__(self, "quote_currency", quote)
+
+    @property
+    def minimum_point(self) -> RateSeriesPoint | None:
+        return min(self.points, key=lambda point: point.rate, default=None)
+
+    @property
+    def maximum_point(self) -> RateSeriesPoint | None:
+        return max(self.points, key=lambda point: point.rate, default=None)
+
+
+@dataclass(frozen=True)
+class RateSeriesResult:
+    series: RateSeries
+    stale: bool
 
 
 @dataclass(frozen=True)
