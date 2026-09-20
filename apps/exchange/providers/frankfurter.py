@@ -105,11 +105,20 @@ def parse_rate_payload(
 
 
 class FrankfurterProvider:
-    def __init__(self, *, base_url: str = DEFAULT_BASE_URL, timeout_seconds: float = 3.0):
+    def __init__(
+        self,
+        *,
+        base_url: str = DEFAULT_BASE_URL,
+        timeout_seconds: float = 3.0,
+        max_attempts: int = 2,
+    ):
         if timeout_seconds <= 0:
             raise ValueError("Frankfurter timeout must be positive.")
+        if max_attempts not in {1, 2}:
+            raise ValueError("Frankfurter max_attempts must be 1 or 2.")
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
+        self.max_attempts = max_attempts
 
     def latest_quote(self, base: str, quote: str, policy: FxSourcePolicy) -> RateQuote:
         return self._fetch_quote(base, quote, requested_date=None, policy=policy)
@@ -147,17 +156,32 @@ class FrankfurterProvider:
             headers={"Accept": "application/json", "User-Agent": "cultural-currency-converter/0.1"},
         )
         fetched_at = datetime.now(UTC)
-        try:
-            with urlopen(request, timeout=self.timeout_seconds) as response:
-                raw = response.read()
-        except HTTPError as exc:
-            if exc.code == 429:
-                raise FxProviderRateLimited("Frankfurter rate limit reached.") from exc
-            if exc.code in {400, 404, 422}:
-                raise FxProviderUnsupportedPair("Frankfurter does not support this rate query.") from exc
-            raise FxProviderUnavailable(f"Frankfurter returned HTTP {exc.code}.") from exc
-        except (URLError, TimeoutError, socket.timeout, HTTPException) as exc:
-            raise FxProviderUnavailable("Frankfurter request failed.") from exc
+        raw: bytes | None = None
+        last_transient_error: Exception | None = None
+        for attempt in range(self.max_attempts):
+            try:
+                with urlopen(request, timeout=self.timeout_seconds) as response:
+                    raw = response.read()
+                break
+            except HTTPError as exc:
+                if exc.code == 429:
+                    raise FxProviderRateLimited("Frankfurter rate limit reached.") from exc
+                if exc.code in {400, 404, 422}:
+                    raise FxProviderUnsupportedPair(
+                        "Frankfurter does not support this rate query."
+                    ) from exc
+                last_transient_error = exc
+                if attempt + 1 == self.max_attempts:
+                    raise FxProviderUnavailable(
+                        f"Frankfurter returned HTTP {exc.code}."
+                    ) from exc
+            except (URLError, TimeoutError, socket.timeout, HTTPException) as exc:
+                last_transient_error = exc
+                if attempt + 1 == self.max_attempts:
+                    raise FxProviderUnavailable("Frankfurter request failed.") from exc
+
+        if raw is None:
+            raise FxProviderUnavailable("Frankfurter request failed.") from last_transient_error
 
         try:
             payload = json.loads(raw, parse_float=Decimal, parse_int=Decimal)
