@@ -14,6 +14,9 @@ from apps.exchange.domain import (
     ObservationGranularity,
     ProviderPolicyMode,
     RateQuote,
+    RateSeries,
+    RateSeriesGrouping,
+    RateSeriesPoint,
     normalize_currency_code,
 )
 from apps.exchange.providers.base import FxProvider, FxProviderInvalidPayload, FxProviderUnavailable
@@ -48,6 +51,23 @@ def historical_cache_key(
     return (
         f"fx:{CACHE_VERSION}:historical:{policy.mode.value}:{policy.cache_identity}:"
         f"{base_code}:{quote_code}:{effective_date.isoformat()}"
+    )
+
+
+def rate_series_cache_key(
+    base: str,
+    quote: str,
+    start_date: date,
+    end_date: date,
+    grouping: RateSeriesGrouping,
+    policy: FxSourcePolicy,
+) -> str:
+    base_code = normalize_currency_code(base)
+    quote_code = normalize_currency_code(quote)
+    return (
+        f"fx-series:{CACHE_VERSION}:{policy.mode.value}:{policy.cache_identity}:"
+        f"{base_code}:{quote_code}:{start_date.isoformat()}:{end_date.isoformat()}:"
+        f"{grouping.value}"
     )
 
 
@@ -122,8 +142,77 @@ def deserialize_quote(value: Any) -> RateQuote | None:
         return None
 
 
+
+
+def serialize_series(series: RateSeries) -> dict[str, Any]:
+    return {
+        "base_currency": series.base_currency,
+        "quote_currency": series.quote_currency,
+        "start_date": series.start_date.isoformat(),
+        "end_date": series.end_date.isoformat(),
+        "grouping": series.grouping.value,
+        "fetched_at": series.fetched_at.isoformat(),
+        "provider_policy": {
+            "mode": series.provider_policy.mode.value,
+            "provider_key": series.provider_policy.provider_key,
+            "include_attribution": series.provider_policy.include_attribution,
+        },
+        "points": [
+            {
+                "observation_date": point.observation_date.isoformat(),
+                "rate": str(point.rate),
+                "provider_keys": list(point.provider_keys),
+            }
+            for point in series.points
+        ],
+    }
+
+
+def deserialize_series(value: Any) -> RateSeries | None:
+    if not isinstance(value, dict):
+        return None
+    try:
+        raw_policy = value["provider_policy"]
+        raw_points = value["points"]
+        if not isinstance(raw_policy, dict) or not isinstance(raw_points, list):
+            return None
+        policy = FxSourcePolicy(
+            mode=ProviderPolicyMode(raw_policy["mode"]),
+            provider_key=raw_policy.get("provider_key"),
+            include_attribution=bool(raw_policy.get("include_attribution", True)),
+        )
+        points: list[RateSeriesPoint] = []
+        for raw_point in raw_points:
+            if not isinstance(raw_point, dict):
+                return None
+            raw_provider_keys = raw_point.get("provider_keys")
+            if not isinstance(raw_provider_keys, (list, tuple)) or not all(
+                isinstance(key, str) for key in raw_provider_keys
+            ):
+                return None
+            points.append(
+                RateSeriesPoint(
+                    observation_date=date.fromisoformat(raw_point["observation_date"]),
+                    rate=Decimal(raw_point["rate"]),
+                    provider_keys=tuple(raw_provider_keys),
+                )
+            )
+        return RateSeries(
+            base_currency=value["base_currency"],
+            quote_currency=value["quote_currency"],
+            start_date=date.fromisoformat(value["start_date"]),
+            end_date=date.fromisoformat(value["end_date"]),
+            grouping=RateSeriesGrouping(value["grouping"]),
+            points=tuple(points),
+            fetched_at=datetime.fromisoformat(value["fetched_at"]),
+            provider_policy=policy,
+        )
+    except (KeyError, TypeError, ValueError, ArithmeticError):
+        return None
+
+
 def classify_quote_freshness(
-    quote: RateQuote,
+    quote: RateQuote | RateSeries,
     *,
     now: datetime,
     fresh_for: timedelta,
@@ -213,6 +302,139 @@ class LatestQuoteGateway:
             cache.set(key, serialize_quote(quote), timeout=self.physical_ttl_seconds)
         except Exception:
             logger.warning("FX cache write failed", extra={"cache_key": key}, exc_info=True)
+
+
+
+
+class HistoricalSeriesGateway:
+    def __init__(
+        self,
+        provider: FxProvider,
+        *,
+        fresh_for: timedelta = timedelta(hours=24),
+        stale_for: timedelta = timedelta(days=30),
+        physical_ttl_seconds: int = 31 * 24 * 60 * 60,
+    ):
+        if fresh_for <= timedelta(0) or stale_for <= fresh_for:
+            raise ValueError("FX series freshness windows must be positive and ordered.")
+        self.provider = provider
+        self.fresh_for = fresh_for
+        self.stale_for = stale_for
+        self.physical_ttl_seconds = physical_ttl_seconds
+
+    def get(
+        self,
+        base: str,
+        quote: str,
+        start_date: date,
+        end_date: date,
+        grouping: RateSeriesGrouping,
+        policy: FxSourcePolicy,
+        *,
+        now: datetime,
+    ) -> tuple[RateSeries, bool]:
+        key = rate_series_cache_key(
+            base,
+            quote,
+            start_date,
+            end_date,
+            grouping,
+            policy,
+        )
+        cached = self._cache_get(key)
+        if (
+            cached is not None
+            and classify_quote_freshness(
+                cached,
+                now=now,
+                fresh_for=self.fresh_for,
+                stale_for=self.stale_for,
+            )
+            is QuoteFreshness.FRESH
+        ):
+            return cached, False
+
+        try:
+            fresh = self.provider.rate_series(
+                base,
+                quote,
+                start_date,
+                end_date,
+                grouping,
+                policy,
+            )
+            self._assert_series_identity(
+                fresh,
+                base=base,
+                quote=quote,
+                start_date=start_date,
+                end_date=end_date,
+                grouping=grouping,
+                policy=policy,
+            )
+        except (FxProviderUnavailable, FxProviderInvalidPayload):
+            if (
+                cached is not None
+                and classify_quote_freshness(
+                    cached,
+                    now=now,
+                    fresh_for=self.fresh_for,
+                    stale_for=self.stale_for,
+                )
+                is QuoteFreshness.STALE
+            ):
+                return cached, True
+            raise
+
+        self._cache_set(key, fresh)
+        return fresh, False
+
+    @staticmethod
+    def _assert_series_identity(
+        series: RateSeries,
+        *,
+        base: str,
+        quote: str,
+        start_date: date,
+        end_date: date,
+        grouping: RateSeriesGrouping,
+        policy: FxSourcePolicy,
+    ) -> None:
+        if series.base_currency != base.upper() or series.quote_currency != quote.upper():
+            raise FxProviderInvalidPayload("Provider returned a series for a different pair.")
+        if series.start_date != start_date or series.end_date != end_date:
+            raise FxProviderInvalidPayload("Provider returned a series for a different date range.")
+        if series.grouping is not grouping:
+            raise FxProviderInvalidPayload("Provider returned a series with different grouping.")
+        if series.provider_policy != policy:
+            raise FxProviderInvalidPayload(
+                "Provider returned a series under a different source policy."
+            )
+
+    def _cache_get(self, key: str) -> RateSeries | None:
+        try:
+            return deserialize_series(cache.get(key))
+        except Exception:
+            logger.warning(
+                "Historical FX series cache read failed",
+                extra={"cache_key": key},
+                exc_info=True,
+            )
+            return None
+
+    def _cache_set(self, key: str, series: RateSeries) -> None:
+        try:
+            cache.set(
+                key,
+                serialize_series(series),
+                timeout=self.physical_ttl_seconds,
+            )
+        except Exception:
+            logger.warning(
+                "Historical FX series cache write failed",
+                extra={"cache_key": key},
+                exc_info=True,
+            )
 
 
 class HistoricalQuoteGateway:
