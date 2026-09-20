@@ -116,6 +116,11 @@ LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
+        "cultural_currency.exchange": {
+            "handlers": ["console_json"],
+            "level": "INFO",
+            "propagate": False,
+        },
         "django": {
             "handlers": ["console_json"],
             "level": "WARNING",
