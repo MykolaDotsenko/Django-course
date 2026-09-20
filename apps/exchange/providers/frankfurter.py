@@ -57,9 +57,19 @@ def _currency_code(value: Any) -> str:
 
 
 def _provider_keys(payload: dict[str, Any], policy: FxSourcePolicy) -> tuple[str, ...]:
-    provider_keys = _provider_keys(payload, policy)
+    raw_providers = payload.get("providers")
+    if raw_providers is None:
+        raw_providers = []
+        if policy.mode is ProviderPolicyMode.PINNED and policy.include_attribution:
+            raise FxProviderInvalidPayload(
+                "Frankfurter omitted attribution for a pinned-provider quote."
+            )
+    if not isinstance(raw_providers, list):
+        raise FxProviderInvalidPayload("Frankfurter provider attribution must be an array.")
+    provider_keys = tuple(str(key).lower().strip() for key in raw_providers if str(key).strip())
+    if policy.mode is ProviderPolicyMode.PINNED and not provider_keys:
+        provider_keys = (policy.provider_key or "",)
     return provider_keys
-
 
 def _rate_decimal(value: Any) -> Decimal:
     if isinstance(value, bool):
@@ -97,18 +107,7 @@ def parse_rate_payload(
     except ValueError as exc:
         raise FxProviderInvalidPayload("Frankfurter returned an invalid observation date.") from exc
 
-    raw_providers = payload.get("providers")
-    if raw_providers is None:
-        raw_providers = []
-        if policy.mode is ProviderPolicyMode.PINNED and policy.include_attribution:
-            raise FxProviderInvalidPayload(
-                "Frankfurter omitted attribution for a pinned-provider quote."
-            )
-    if not isinstance(raw_providers, list):
-        raise FxProviderInvalidPayload("Frankfurter provider attribution must be an array.")
-    provider_keys = tuple(str(key).lower().strip() for key in raw_providers if str(key).strip())
-    if policy.mode is ProviderPolicyMode.PINNED and not provider_keys:
-        provider_keys = (policy.provider_key or "",)
+    provider_keys = _provider_keys(payload, policy)
 
     try:
         return RateQuote(
