@@ -155,7 +155,6 @@ def test_coverage_sync_dry_run_reports_without_persisting():
     assert not Currency.objects.filter(code="FIM").exists()
 
 
-
 @pytest.mark.django_db
 def test_coverage_sync_is_idempotent_for_identical_snapshot():
     records = (snapshot("EUR"),)
