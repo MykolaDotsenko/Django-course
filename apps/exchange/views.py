@@ -124,9 +124,10 @@ def converter(request: HttpRequest) -> HttpResponse:
     convert_requested = False
 
     if request.method == "POST":
-        data = _swap_payload(request) if request.POST.get("action") == "swap" else request.POST
+        swapping = request.POST.get("action") == "swap"
+        data = _swap_payload(request) if swapping else request.POST
         form = CurrentConversionForm(data)
-        convert_requested = True
+        convert_requested = not swapping or request.POST.get("conversion_active") == "1"
     else:
         convert_requested = request.GET.get("convert") == "1"
         form = (
@@ -137,7 +138,8 @@ def converter(request: HttpRequest) -> HttpResponse:
 
     result = None
     error = None
-    if convert_requested and form.is_valid():
+    form_valid = form.is_valid() if convert_requested else False
+    if form_valid:
         cleaned = form.cleaned_data
         quote_currency = form.currency_for_code(cleaned["destination_currency"])
         try:
@@ -162,7 +164,6 @@ def converter(request: HttpRequest) -> HttpResponse:
         request.method == "POST"
         and not _is_htmx(request)
         and result is not None
-        and form.is_valid()
     ):
         return redirect(_canonical_conversion_url(form))
 
