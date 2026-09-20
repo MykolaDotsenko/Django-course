@@ -299,7 +299,9 @@ class HistoricalQuoteGateway:
         try:
             return deserialize_quote(cache.get(key))
         except Exception:
-            logger.warning("Historical FX cache read failed", extra={"cache_key": key}, exc_info=True)
+            logger.warning(
+                "Historical FX cache read failed", extra={"cache_key": key}, exc_info=True
+            )
             return None
 
     def _cache_set(self, key: str, quote: RateQuote) -> None:
