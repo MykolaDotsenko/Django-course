@@ -25,7 +25,6 @@ from apps.exchange.providers.frankfurter import (
     parse_rate_payload,
 )
 
-
 def test_frankfurter_v2_rate_normalizes_decimal_and_attribution():
     result = parse_rate_payload(
         {
@@ -46,7 +45,6 @@ def test_frankfurter_v2_rate_normalizes_decimal_and_attribution():
     assert result.provider_keys == ("boj", "ecb")
     assert result.effective_date == date(2026, 9, 18)
     assert result.observation_granularity is ObservationGranularity.DAILY
-
 
 @pytest.mark.parametrize(
     "payload",
@@ -69,7 +67,6 @@ def test_malformed_or_wrong_pair_payload_is_rejected(payload):
             policy=DEFAULT_SOURCE_POLICY,
             fetched_at=datetime(2026, 9, 20, tzinfo=UTC),
         )
-
 
 def test_pinned_quote_retains_identity_when_attribution_expansion_is_disabled():
     policy = FxSourcePolicy(
@@ -101,7 +98,6 @@ class FakeResponse:
     def read(self, size=-1):
         return self.payload if size < 0 else self.payload[:size]
 
-
 def test_transient_network_failure_retries_at_most_once():
     payload = b'{"date":"2026-09-18","base":"EUR","quote":"JPY","rate":174.5,"providers":["ECB"]}'
     attempts = [URLError("temporary"), FakeResponse(payload)]
@@ -119,7 +115,6 @@ def test_transient_network_failure_retries_at_most_once():
     assert mocked.call_count == 2
     assert result.rate == Decimal("174.5")
 
-
 def test_rate_limit_is_not_retried():
     error = HTTPError(
         url="https://api.frankfurter.dev/v2/rate/EUR/JPY",
@@ -136,7 +131,6 @@ def test_rate_limit_is_not_retried():
 
     assert mocked.call_count == 1
 
-
 def test_invalid_currency_code_is_rejected_before_network_call():
     provider = FrankfurterProvider()
 
@@ -145,7 +139,6 @@ def test_invalid_currency_code_is_rejected_before_network_call():
             provider.latest_quote("EUR/USD", "JPY", DEFAULT_SOURCE_POLICY)
 
     mocked.assert_not_called()
-
 
 def test_blended_pegged_rate_may_omit_provider_attribution():
     result = parse_rate_payload(
@@ -159,7 +152,6 @@ def test_blended_pegged_rate_may_omit_provider_attribution():
 
     assert result.provider_keys == ()
 
-
 def test_pinned_quote_missing_requested_attribution_is_rejected():
     policy = FxSourcePolicy(mode=ProviderPolicyMode.PINNED, provider_key="ecb")
     with pytest.raises(FxProviderInvalidPayload, match="pinned-provider"):
@@ -171,7 +163,6 @@ def test_pinned_quote_missing_requested_attribution_is_rejected():
             policy=policy,
             fetched_at=datetime(2026, 9, 20, tzinfo=UTC),
         )
-
 
 @pytest.mark.parametrize(
     ("status", "error_type"),
@@ -193,7 +184,6 @@ def test_authentication_failures_are_not_retried(status, error_type):
 
     assert mocked.call_count == 1
 
-
 def test_non_retryable_unexpected_4xx_is_not_retried():
     error = HTTPError(
         url="https://api.frankfurter.dev/v2/rate/EUR/JPY",
@@ -210,7 +200,6 @@ def test_non_retryable_unexpected_4xx_is_not_retried():
 
     assert mocked.call_count == 1
 
-
 def test_timeout_is_normalized_after_bounded_retry():
     provider = FrankfurterProvider(max_attempts=2)
 
@@ -223,7 +212,6 @@ def test_timeout_is_normalized_after_bounded_retry():
 
     assert mocked.call_count == 2
 
-
 def test_oversized_single_rate_response_is_rejected_before_json_parsing():
     provider = FrankfurterProvider(max_attempts=1)
     response = FakeResponse(b"x" * (MAX_RESPONSE_BYTES + 1))
@@ -231,7 +219,6 @@ def test_oversized_single_rate_response_is_rejected_before_json_parsing():
     with patch("apps.exchange.providers.frankfurter.urlopen", return_value=response):
         with pytest.raises(FxProviderInvalidPayload, match="size limit"):
             provider.latest_quote("EUR", "JPY", DEFAULT_SOURCE_POLICY)
-
 
 
 @pytest.mark.parametrize(
