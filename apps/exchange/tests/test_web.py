@@ -171,12 +171,12 @@ def test_provider_unavailable_preserves_form_without_numeric_result(client, refe
 
 
 @pytest.mark.django_db
-def test_swap_exchanges_complete_context_and_keeps_amount(client, reference_data):
+def test_swap_before_first_conversion_does_not_request_rate(client, reference_data):
     gateway = FakeGateway()
     with patch("apps.exchange.views.build_latest_quote_gateway", return_value=gateway):
         response = client.post(
             reverse("converter"),
-            payload(action="swap"),
+            payload(action="swap", conversion_active="0"),
             HTTP_HX_REQUEST="true",
         )
 
@@ -184,6 +184,22 @@ def test_swap_exchanges_complete_context_and_keeps_amount(client, reference_data
     assert b"Japan" in response.content
     assert b"Finland" in response.content
     assert b'value="100.00"' in response.content
+    assert b"current-conversion-result" not in response.content
+    assert gateway.calls == []
+
+
+@pytest.mark.django_db
+def test_swap_after_success_refreshes_the_swapped_pair(client, reference_data):
+    gateway = FakeGateway()
+    with patch("apps.exchange.views.build_latest_quote_gateway", return_value=gateway):
+        response = client.post(
+            reverse("converter"),
+            payload(action="swap", conversion_active="1"),
+            HTTP_HX_REQUEST="true",
+        )
+
+    assert response.status_code == 200
+    assert b"current-conversion-result" in response.content
     assert gateway.calls[0][0:2] == ("JPY", "EUR")
 
 
