@@ -290,6 +290,28 @@
                     value="retry">Retry reference rate</button>
           </div>
         {% endif %}
+        {% if result_component.historical_trend %}
+          {% with trend=result_component.historical_trend %}
+            <section class="qa-historical-trend-entry"
+                     aria-labelledby="historical-trend-entry-title">
+              <div>
+                <p class="qa-foundation-kicker">Historical context</p>
+                <h3 id="historical-trend-entry-title">See this rate in the past</h3>
+                <p>
+                  Inspect a bounded reference-rate series ending at the actual observation used.
+                </p>
+              </div>
+              <a class="qa-secondary-button"
+                 href="{% url 'historical_series' %}?base={{ trend.base_currency }}&quote={{ trend.quote_currency }}&selected_date={{ trend.selected_date_iso }}&requested_date={{ trend.requested_date_iso }}&period=1y"
+                 hx-get="{% url 'historical_series' %}?base={{ trend.base_currency }}&quote={{ trend.quote_currency }}&selected_date={{ trend.selected_date_iso }}&requested_date={{ trend.requested_date_iso }}&period=1y"
+                 hx-target="#historical-trend-slot"
+                 hx-swap="innerHTML">
+                View historical trend
+              </a>
+            </section>
+            <div id="historical-trend-slot" aria-live="polite"></div>
+          {% endwith %}
+        {% endif %}
         <p class="qa-visually-hidden"
            role="status"
            aria-live="polite"
