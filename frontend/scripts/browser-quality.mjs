@@ -39,8 +39,7 @@ async function assertNoHorizontalOverflow(page, label) {
         return {
           tag: element.tagName.toLowerCase(),
           id: element.id,
-          className:
-            typeof element.className === "string" ? element.className.trim() : "",
+          className: typeof element.className === "string" ? element.className.trim() : "",
           left: Math.round(rect.left),
           right: Math.round(rect.right),
           width: Math.round(rect.width),
@@ -54,8 +53,11 @@ async function assertNoHorizontalOverflow(page, label) {
           element.left < -1 ||
           element.scrollWidth > element.clientWidth + 1,
       )
-      .sort((a, b) => Math.max(b.right - clientWidth, b.scrollWidth - b.clientWidth) -
-        Math.max(a.right - clientWidth, a.scrollWidth - a.clientWidth))
+      .sort(
+        (a, b) =>
+          Math.max(b.right - clientWidth, b.scrollWidth - b.clientWidth) -
+          Math.max(a.right - clientWidth, a.scrollWidth - a.clientWidth),
+      )
       .slice(0, 5);
 
     return {
