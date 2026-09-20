@@ -90,9 +90,7 @@ def test_rate_series_rejects_observation_outside_range():
             start_date=date(2026, 1, 1),
             end_date=date(2026, 1, 31),
             grouping=RateSeriesGrouping.DAILY,
-            points=(
-                RateSeriesPoint(date(2025, 12, 31), Decimal("174.5"), ("ecb",)),
-            ),
+            points=(RateSeriesPoint(date(2025, 12, 31), Decimal("174.5"), ("ecb",)),),
             fetched_at=NOW,
             provider_policy=DEFAULT_SOURCE_POLICY,
         )
@@ -182,7 +180,6 @@ def test_invalid_series_ranges_fail_before_gateway_construction(start_date, end_
             gateway=exploding_gateway,
             now=NOW,
         )
-
 
 
 @pytest.mark.parametrize(
