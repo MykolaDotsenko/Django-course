@@ -171,9 +171,7 @@ class FrankfurterProvider:
                     ) from exc
                 last_transient_error = exc
                 if attempt + 1 == self.max_attempts:
-                    raise FxProviderUnavailable(
-                        f"Frankfurter returned HTTP {exc.code}."
-                    ) from exc
+                    raise FxProviderUnavailable(f"Frankfurter returned HTTP {exc.code}.") from exc
             except (URLError, TimeoutError, socket.timeout, HTTPException) as exc:
                 last_transient_error = exc
                 if attempt + 1 == self.max_attempts:

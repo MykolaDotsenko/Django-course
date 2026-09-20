@@ -56,9 +56,7 @@ def test_fresh_cache_hit_skips_provider():
     cache.set(latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY), serialize_quote(cached), 100)
     provider = FakeProvider(error=AssertionError("provider must not be called"))
 
-    result, stale = LatestQuoteGateway(provider).get(
-        "EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW
-    )
+    result, stale = LatestQuoteGateway(provider).get("EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW)
 
     assert result == cached
     assert stale is False
@@ -70,9 +68,7 @@ def test_provider_failure_uses_only_bounded_semantically_matching_stale_quote():
     cache.set(latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY), serialize_quote(cached), 100)
     provider = FakeProvider(error=FxProviderUnavailable("down"))
 
-    result, stale = LatestQuoteGateway(provider).get(
-        "EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW
-    )
+    result, stale = LatestQuoteGateway(provider).get("EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW)
 
     assert result == cached
     assert stale is True

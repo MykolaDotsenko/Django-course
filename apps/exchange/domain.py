@@ -68,7 +68,9 @@ class RateQuote:
             raise FxDomainError("FX rate must be a finite positive Decimal.")
         if self.fetched_at.tzinfo is None:
             raise FxDomainError("FX fetched_at must be timezone-aware.")
-        providers = tuple(sorted({key.lower().strip() for key in self.provider_keys if key.strip()}))
+        providers = tuple(
+            sorted({key.lower().strip() for key in self.provider_keys if key.strip()})
+        )
         if self.provider_policy.mode is ProviderPolicyMode.PINNED:
             if self.provider_policy.provider_key not in providers:
                 raise FxDomainError("Pinned FX quote must attribute the pinned provider.")

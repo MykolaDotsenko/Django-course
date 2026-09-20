@@ -124,20 +124,30 @@ class LatestQuoteGateway:
         self.stale_for = stale_for
         self.physical_ttl_seconds = physical_ttl_seconds
 
-    def get(self, base: str, quote: str, policy: FxSourcePolicy, *, now: datetime) -> tuple[RateQuote, bool]:
+    def get(
+        self, base: str, quote: str, policy: FxSourcePolicy, *, now: datetime
+    ) -> tuple[RateQuote, bool]:
         key = latest_cache_key(base, quote, policy)
         cached = self._cache_get(key)
-        if cached and classify_quote_freshness(
-            cached, now=now, fresh_for=self.fresh_for, stale_for=self.stale_for
-        ) is QuoteFreshness.FRESH:
+        if (
+            cached
+            and classify_quote_freshness(
+                cached, now=now, fresh_for=self.fresh_for, stale_for=self.stale_for
+            )
+            is QuoteFreshness.FRESH
+        ):
             return cached, False
 
         try:
             fresh = self.provider.latest_quote(base, quote, policy)
         except (FxProviderUnavailable, FxProviderInvalidPayload):
-            if cached and classify_quote_freshness(
-                cached, now=now, fresh_for=self.fresh_for, stale_for=self.stale_for
-            ) is QuoteFreshness.STALE:
+            if (
+                cached
+                and classify_quote_freshness(
+                    cached, now=now, fresh_for=self.fresh_for, stale_for=self.stale_for
+                )
+                is QuoteFreshness.STALE
+            ):
                 return cached, True
             raise
 
