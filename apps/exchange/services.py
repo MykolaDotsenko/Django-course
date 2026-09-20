@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from typing import Callable
 
 from apps.exchange.cache import HistoricalQuoteGateway, LatestQuoteGateway
 from apps.exchange.domain import (
@@ -55,7 +56,7 @@ def quote_historical_conversion(
     quote_currency: str,
     quote_minor_units: int,
     requested_date: date,
-    gateway: HistoricalQuoteGateway,
+    gateway: HistoricalQuoteGateway | Callable[[], HistoricalQuoteGateway],
     base_metadata: HistoricalCurrencyMetadata | None = None,
     quote_metadata: HistoricalCurrencyMetadata | None = None,
     policy: FxSourcePolicy = DEFAULT_SOURCE_POLICY,
@@ -85,7 +86,8 @@ def quote_historical_conversion(
             stale=False,
         )
 
-    quote = gateway.get(base_code, quote_code, requested_date, policy)
+    resolved_gateway = gateway() if callable(gateway) else gateway
+    quote = resolved_gateway.get(base_code, quote_code, requested_date, policy)
     return ConversionResult(
         input_amount=amount,
         output_amount=convert_amount(amount, quote, minor_units=quote_minor_units),
