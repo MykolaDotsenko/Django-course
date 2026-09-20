@@ -6,6 +6,26 @@ from typing import Protocol
 from apps.exchange.domain import FxSourcePolicy, RateQuote
 
 
+class FxProviderError(RuntimeError):
+    pass
+
+
+class FxProviderUnavailable(FxProviderError):
+    pass
+
+
+class FxProviderRateLimited(FxProviderUnavailable):
+    pass
+
+
+class FxProviderUnsupportedPair(FxProviderError):
+    pass
+
+
+class FxProviderInvalidPayload(FxProviderError):
+    pass
+
+
 class FxProvider(Protocol):
     def latest_quote(self, base: str, quote: str, policy: FxSourcePolicy) -> RateQuote: ...
 
