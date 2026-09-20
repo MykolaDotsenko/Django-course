@@ -16,3 +16,8 @@ repos:
         entry: python manage.py check
         language: system
         pass_filenames: false
+      - id: djlint-check
+        name: Django template format
+        entry: djlint templates --check
+        language: system
+        pass_filenames: false
