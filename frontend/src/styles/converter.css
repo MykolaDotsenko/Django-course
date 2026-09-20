@@ -789,3 +789,19 @@
   min-inline-size: 0;
   max-inline-size: 100%;
 }
+
+.qa-result__header,
+.qa-result__title,
+.qa-status-badge {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.qa-result__title,
+.qa-status-badge {
+  overflow-wrap: anywhere;
+}
+
+.qa-status-badge {
+  white-space: normal;
+}
