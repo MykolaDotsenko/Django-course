@@ -9,6 +9,7 @@ from apps.exchange.domain import (
     ConversionResult,
     FxSourcePolicy,
     convert_amount,
+    normalize_currency_code,
     same_currency_quote,
 )
 
@@ -24,8 +25,10 @@ def quote_conversion(
     now: datetime | None = None,
 ) -> ConversionResult:
     current_time = now or datetime.now(UTC)
-    if base_currency.upper() == quote_currency.upper():
-        quote = same_currency_quote(base_currency, fetched_at=current_time)
+    base_code = normalize_currency_code(base_currency)
+    quote_code = normalize_currency_code(quote_currency)
+    if base_code == quote_code:
+        quote = same_currency_quote(base_code, fetched_at=current_time)
         return ConversionResult(
             input_amount=amount,
             output_amount=convert_amount(amount, quote, minor_units=quote_minor_units),
@@ -33,7 +36,7 @@ def quote_conversion(
             stale=False,
         )
 
-    quote, stale = gateway.get(base_currency, quote_currency, policy, now=current_time)
+    quote, stale = gateway.get(base_code, quote_code, policy, now=current_time)
     return ConversionResult(
         input_amount=amount,
         output_amount=convert_amount(amount, quote, minor_units=quote_minor_units),
