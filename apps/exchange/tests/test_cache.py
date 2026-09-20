@@ -1,8 +1,8 @@
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
-import pytest
 from django.core.cache import cache
+import pytest
 
 from apps.exchange.cache import LatestQuoteGateway, latest_cache_key, serialize_quote
 from apps.exchange.domain import (
