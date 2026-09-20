@@ -146,9 +146,11 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
 
   await assertAxe(page, "current-converter/result");
 
-  await page.locator("#id_requested_date").fill("1998-06-15");
-  const historicalPost = waitForPost();
   await page.locator("#id_rate_mode_1").check();
+  await page.locator("#id_requested_date").waitFor({ state: "visible" });
+  const historicalPost = waitForPost();
+  await page.locator("#id_requested_date").fill("1998-06-15");
+  await page.locator("#id_requested_date").dispatchEvent("change");
   await historicalPost;
   await page.locator("#current-conversion-result").waitFor();
 
@@ -178,6 +180,7 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   await page.locator("#id_rate_mode_0").check();
   await latestPost;
   await page.locator("#current-conversion-result").waitFor();
+  await page.locator("[data-historical-date-field]").waitFor({ state: "hidden" });
 
   const previousAmount = await page
     .locator("#current-conversion-result .qa-result__input")
