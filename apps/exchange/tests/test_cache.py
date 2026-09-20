@@ -674,3 +674,43 @@ def test_rate_series_provider_identity_is_verified_before_caching():
             DEFAULT_SOURCE_POLICY,
             now=NOW,
         )
+
+
+def test_rate_series_semantically_wrong_fresh_cache_is_ignored():
+    requested = make_rate_series(fetched_at=NOW - timedelta(hours=1))
+    wrong = RateSeries(
+        base_currency="EUR",
+        quote_currency="USD",
+        start_date=requested.start_date,
+        end_date=requested.end_date,
+        grouping=requested.grouping,
+        points=(
+            RateSeriesPoint(date(2026, 1, 2), Decimal("1.1"), ("ecb",)),
+        ),
+        fetched_at=NOW - timedelta(hours=1),
+        provider_policy=DEFAULT_SOURCE_POLICY,
+    )
+    key = rate_series_cache_key(
+        "EUR",
+        "JPY",
+        requested.start_date,
+        requested.end_date,
+        requested.grouping,
+        DEFAULT_SOURCE_POLICY,
+    )
+    cache.set(key, serialize_series(wrong), 100)
+    provider = FakeProvider(result=requested)
+
+    result, stale = HistoricalSeriesGateway(provider).get(
+        "EUR",
+        "JPY",
+        requested.start_date,
+        requested.end_date,
+        requested.grouping,
+        DEFAULT_SOURCE_POLICY,
+        now=NOW,
+    )
+
+    assert result == requested
+    assert stale is False
+    assert provider.calls == 1
