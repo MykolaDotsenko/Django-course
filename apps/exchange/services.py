@@ -99,7 +99,6 @@ def quote_historical_conversion(
     )
 
 
-
 MAX_RATE_SERIES_DAYS = 10 * 366
 DAILY_SERIES_MAX_DAYS = 366
 WEEKLY_SERIES_MAX_DAYS = 5 * 366
