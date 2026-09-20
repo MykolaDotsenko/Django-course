@@ -142,8 +142,6 @@ def deserialize_quote(value: Any) -> RateQuote | None:
         return None
 
 
-
-
 def serialize_series(series: RateSeries) -> dict[str, Any]:
     return {
         "base_currency": series.base_currency,
@@ -302,8 +300,6 @@ class LatestQuoteGateway:
             cache.set(key, serialize_quote(quote), timeout=self.physical_ttl_seconds)
         except Exception:
             logger.warning("FX cache write failed", extra={"cache_key": key}, exc_info=True)
-
-
 
 
 class HistoricalSeriesGateway:
