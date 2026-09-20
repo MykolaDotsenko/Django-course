@@ -107,7 +107,7 @@ async function assertKeyboardFocus(page, surface) {
   }
 }
 
-async function assertCurrentConverterFlow(page, consoleErrors) {
+async function assertCurrentConverterFlow(page) {
   const waitForPost = () =>
     page.waitForResponse(
       (response) =>
@@ -146,20 +146,26 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
 
   await assertAxe(page, "current-converter/result");
 
-  const previousAmount = await page.locator("#current-conversion-result .qa-result__input").innerText();
+  const previousAmount = await page
+    .locator("#current-conversion-result .qa-result__input")
+    .innerText();
+  const invalidRefresh = waitForPost();
   await page.locator("#id_amount").fill("-1");
-  await waitForPost();
+  await invalidRefresh;
   await page.getByText("Enter zero or a positive amount.").waitFor();
 
-  const preservedAmount = await page.locator("#current-conversion-result .qa-result__input").innerText();
+  const preservedAmount = await page
+    .locator("#current-conversion-result .qa-result__input")
+    .innerText();
   assert(
     preservedAmount === previousAmount,
     "current-converter: failed refresh replaced the previous successful result",
   );
   await page.getByText("Previous result — fix the changed inputs to update it.").waitFor();
 
+  const correctedRefresh = waitForPost();
   await page.locator("#id_amount").fill("12.50");
-  await waitForPost();
+  await correctedRefresh;
   await page.locator("#current-conversion-result").waitFor();
   await page.waitForFunction(
     () => document.querySelector("[data-previous-result-note]")?.hidden === true,
@@ -389,7 +395,7 @@ try {
       }
 
       if (surface.name === "current-converter" && viewport.name === "wide-1440") {
-        await assertCurrentConverterFlow(page, consoleErrors);
+        await assertCurrentConverterFlow(page);
       }
 
       if (viewport.name === "mobile-390") {
