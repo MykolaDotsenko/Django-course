@@ -54,3 +54,25 @@ def test_historical_quote_cannot_claim_future_effective_observation():
             provider_keys=("ecb",),
             historical=True,
         )
+
+
+@pytest.mark.parametrize("raw_rate", [1.25, 1, "1.25"])
+def test_rate_quote_rejects_non_decimal_rate_types(raw_rate):
+    with pytest.raises(FxDomainError, match="must be a Decimal"):
+        RateQuote(
+            base_currency="EUR",
+            quote_currency="JPY",
+            rate=raw_rate,
+            requested_date=None,
+            effective_date=date(2026, 9, 18),
+            fetched_at=datetime(2026, 9, 20, tzinfo=UTC),
+            provider_policy=DEFAULT_SOURCE_POLICY,
+            provider_keys=("ecb",),
+            historical=False,
+        )
+
+
+@pytest.mark.parametrize("raw_amount", [1.25, 1, "1.25"])
+def test_conversion_rejects_non_decimal_amount_types(raw_amount):
+    with pytest.raises(FxDomainError, match="Amount must be a Decimal"):
+        convert_amount(raw_amount, quote(), minor_units=2)
