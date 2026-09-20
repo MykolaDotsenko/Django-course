@@ -242,7 +242,6 @@ class CurrentConversionForm(forms.Form):
             )
 
 
-
 SERIES_PERIOD_CHOICES = (
     ("1y", "1Y"),
     ("5y", "5Y"),
