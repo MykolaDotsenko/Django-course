@@ -1,39 +1,36 @@
 {% load vite %}
-<!doctype html>
+<!DOCTYPE html>
 <html lang="{% block html_lang %}en{% endblock %}">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
-  <meta name="theme-color" content="#F6F7F3">
-  <title>{% block title %}Cultural Currency Converter{% endblock %}</title>
-  {% block head_meta %}{% endblock %}
-  {% vite_asset "frontend/src/app.ts" %}
-</head>
-<body class="qa-shell">
-  <a class="qa-skip-link" href="#main-content">Skip to content</a>
-
-  <header class="qa-shell__header">
-    <div class="qa-shell__frame qa-shell__header-inner">
-      <div class="qa-brand" aria-label="Cultural Currency Converter">
-        <span class="qa-brand__mark" aria-hidden="true">
-          <span class="qa-brand__line"></span>
-        </span>
-        <span>Cultural Currency</span>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#F6F7F3">
+    <title>{% block title %}Cultural Currency Converter{% endblock %}</title>
+    {% block head_meta %}{% endblock %}
+    {% vite_asset "frontend/src/app.ts" %}
+  </head>
+  <body class="qa-shell">
+    <a class="qa-skip-link" href="#main-content">Skip to content</a>
+    <header class="qa-shell__header">
+      <div class="qa-shell__frame qa-shell__header-inner">
+        <div class="qa-brand" aria-label="Cultural Currency Converter">
+          <span class="qa-brand__mark" aria-hidden="true">
+            <span class="qa-brand__line"></span>
+          </span>
+          <span>Cultural Currency</span>
+        </div>
+        {% block header_actions %}{% endblock %}
       </div>
-      {% block header_actions %}{% endblock %}
-    </div>
-  </header>
-
-  <main id="main-content" class="qa-shell__main" tabindex="-1">
-    {% block content %}{% endblock %}
-  </main>
-
-  <footer class="qa-shell__footer">
-    <div class="qa-shell__frame qa-shell__footer-inner">
-      <p>Convert money. Understand local value. Discover culture.</p>
-      <p>Reference data is attributed where shown.</p>
-    </div>
-  </footer>
-</body>
+    </header>
+    <main id="main-content" class="qa-shell__main" tabindex="-1">
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="qa-shell__footer">
+      <div class="qa-shell__frame qa-shell__footer-inner">
+        <p>Convert money. Understand local value. Discover culture.</p>
+        <p>Reference data is attributed where shown.</p>
+      </div>
+    </footer>
+  </body>
 </html>
