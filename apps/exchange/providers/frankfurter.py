@@ -71,6 +71,7 @@ def _provider_keys(payload: dict[str, Any], policy: FxSourcePolicy) -> tuple[str
         provider_keys = (policy.provider_key or "",)
     return provider_keys
 
+
 def _rate_decimal(value: Any) -> Decimal:
     if isinstance(value, bool):
         raise FxProviderInvalidPayload("Frankfurter returned an invalid rate.")
