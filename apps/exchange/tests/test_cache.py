@@ -390,3 +390,79 @@ def test_quarterly_observation_can_span_quarter_without_daily_fallback_failure()
     )
 
     assert result.observation_granularity is ObservationGranularity.QUARTERLY
+
+
+def test_historical_invalidation_refetches_corrected_observation():
+    original = make_historical_quote(
+        requested_date=date(1998, 6, 15),
+        effective_date=date(1998, 6, 12),
+    )
+    corrected = RateQuote(
+        base_currency="EUR",
+        quote_currency="JPY",
+        rate=Decimal("180.25"),
+        requested_date=date(1998, 6, 15),
+        effective_date=date(1998, 6, 15),
+        fetched_at=NOW,
+        provider_policy=DEFAULT_SOURCE_POLICY,
+        provider_keys=("ecb",),
+        historical=True,
+        observation_granularity=ObservationGranularity.DAILY,
+    )
+    first_provider = FakeProvider(result=original)
+    first_gateway = HistoricalQuoteGateway(first_provider)
+
+    first = first_gateway.get(
+        "EUR",
+        "JPY",
+        date(1998, 6, 15),
+        DEFAULT_SOURCE_POLICY,
+    )
+    assert first == original
+    assert first_provider.calls == 1
+
+    first_gateway.invalidate(
+        "EUR",
+        "JPY",
+        date(1998, 6, 15),
+        DEFAULT_SOURCE_POLICY,
+    )
+
+    second_provider = FakeProvider(result=corrected)
+    second = HistoricalQuoteGateway(second_provider).get(
+        "EUR",
+        "JPY",
+        date(1998, 6, 15),
+        DEFAULT_SOURCE_POLICY,
+    )
+
+    assert second == corrected
+    assert second_provider.calls == 1
+
+
+def test_historical_invalidation_removes_resolution_and_observation_keys():
+    historical = make_historical_quote(
+        requested_date=date(1998, 6, 15),
+        effective_date=date(1998, 6, 12),
+    )
+    gateway = HistoricalQuoteGateway(FakeProvider(result=historical))
+    gateway.get("EUR", "JPY", historical.requested_date, DEFAULT_SOURCE_POLICY)
+
+    resolution_key = historical_resolution_cache_key(
+        "EUR", "JPY", historical.requested_date, DEFAULT_SOURCE_POLICY
+    )
+    observation_key = historical_cache_key(
+        "EUR", "JPY", historical.effective_date, DEFAULT_SOURCE_POLICY
+    )
+    assert cache.get(resolution_key) is not None
+    assert cache.get(observation_key) is not None
+
+    gateway.invalidate(
+        "EUR",
+        "JPY",
+        historical.requested_date,
+        DEFAULT_SOURCE_POLICY,
+    )
+
+    assert cache.get(resolution_key) is None
+    assert cache.get(observation_key) is None

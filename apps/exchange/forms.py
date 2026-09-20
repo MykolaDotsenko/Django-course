@@ -101,6 +101,21 @@ class CurrentConversionForm(forms.Form):
             Currency.objects.all() if historical_mode else Currency.objects.filter(is_active=True)
         )
         currencies = list(currency_query.order_by("code"))
+
+        self._archived_bound_codes: set[str] = set()
+        if self.is_bound and not historical_mode:
+            raw_codes = {
+                str(self.data.get(field_name) or "").upper().strip()
+                for field_name in ("source_currency", "destination_currency")
+            }
+            raw_codes.discard("")
+            archived_bound = list(
+                Currency.objects.filter(code__in=raw_codes, is_active=False)
+                .only("code", "name")
+                .order_by("code")
+            )
+            self._archived_bound_codes = {currency.code for currency in archived_bound}
+            currencies.extend(archived_bound)
         countries = list(Country.objects.filter(is_active=True).order_by("name"))
 
         self._currency_by_code = {currency.code: currency for currency in currencies}
@@ -180,8 +195,22 @@ class CurrentConversionForm(forms.Form):
                 self.add_error("amount", exc)
 
         if rate_mode == RATE_MODE_LATEST:
-            self._validate_country_currency("source", cleaned)
-            self._validate_country_currency("destination", cleaned)
+            archived_sides: set[str] = set()
+            for side in ("source", "destination"):
+                raw_code = str(self.data.get(f"{side}_currency") or "").upper().strip()
+                if raw_code not in self._archived_bound_codes:
+                    continue
+                currency = self.currency_for_code(raw_code)
+                if currency is not None:
+                    archived_sides.add(side)
+                    self.add_error(
+                        f"{side}_currency",
+                        f"{currency.name} ({currency.code}) is archived and has no current-market "
+                        "interpretation. Switch Rate date to Historical date to use it.",
+                    )
+            for side in ("source", "destination"):
+                if side not in archived_sides:
+                    self._validate_country_currency(side, cleaned)
         return cleaned
 
     @property

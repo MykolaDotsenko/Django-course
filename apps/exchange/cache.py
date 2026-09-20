@@ -266,6 +266,28 @@ class HistoricalQuoteGateway:
         )
         return historical
 
+    def invalidate(
+        self,
+        base: str,
+        quote: str,
+        requested_date: date,
+        policy: FxSourcePolicy,
+    ) -> None:
+        resolution_key = historical_resolution_cache_key(base, quote, requested_date, policy)
+        cached = self._cache_get(resolution_key)
+        keys = [resolution_key]
+        if cached is not None:
+            keys.append(historical_cache_key(base, quote, cached.effective_date, policy))
+        for key in keys:
+            try:
+                cache.delete(key)
+            except Exception:
+                logger.warning(
+                    "Historical FX cache invalidation failed",
+                    extra={"cache_key": key},
+                    exc_info=True,
+                )
+
     def _assert_gap(self, quote: RateQuote) -> None:
         if quote.requested_date is None:
             raise FxProviderInvalidPayload("Historical quote omitted its requested date.")

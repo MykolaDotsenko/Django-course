@@ -513,3 +513,115 @@ def test_monthly_historical_observation_never_claims_daily_precision(client, ref
     assert b"Observation frequency" in response.content
     assert b"Monthly" in response.content
     assert b"Previous available observation" not in response.content
+
+
+@pytest.mark.django_db
+def test_archived_currency_in_latest_mode_gets_transition_guidance_without_provider(
+    client, reference_data
+):
+    with patch("apps.exchange.views.build_latest_quote_gateway") as factory:
+        response = client.get(
+            reverse("converter"),
+            {
+                "convert": "1",
+                **payload(source_currency="FIM"),
+            },
+        )
+
+    assert response.status_code == 200
+    assert b"Finnish markka (FIM) is archived" in response.content
+    assert b"Switch Rate date to Historical date" in response.content
+    factory.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_archived_currency_in_latest_mode_post_is_422_and_never_builds_provider(
+    client, reference_data
+):
+    with patch("apps.exchange.views.build_latest_quote_gateway") as factory:
+        response = client.post(
+            reverse("converter"),
+            payload(source_currency="FIM"),
+            HTTP_HX_REQUEST="true",
+        )
+
+    assert response.status_code == 422
+    assert b"Finnish markka (FIM) is archived" in response.content
+    factory.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_historical_deep_link_reproduces_requested_state(client, reference_data):
+    gateway = FakeHistoricalGateway(effective_date=date(1998, 6, 12))
+    with patch("apps.exchange.views.build_historical_quote_gateway", return_value=gateway):
+        response = client.get(
+            reverse("converter"),
+            {
+                "convert": "1",
+                "amount": "100.00",
+                "source_country": "FI",
+                "source_currency": "FIM",
+                "destination_country": "JP",
+                "destination_currency": "JPY",
+                "rate_mode": "historical",
+                "requested_date": "1998-06-15",
+            },
+        )
+
+    assert response.status_code == 200
+    assert b"<html" in response.content
+    assert b"Finnish markka" in response.content
+    assert b"15 Jun 1998" in response.content
+    assert b"12 Jun 1998" in response.content
+    assert b"Previous available observation" in response.content
+    assert gateway.calls == [("FIM", "JPY", date(1998, 6, 15), DEFAULT_SOURCE_POLICY)]
+
+
+@pytest.mark.django_db
+def test_historical_full_post_redirect_deep_link_preserves_date_and_archived_currency(
+    client, reference_data
+):
+    gateway = FakeHistoricalGateway()
+    with patch("apps.exchange.views.build_historical_quote_gateway", return_value=gateway):
+        response = client.post(
+            reverse("converter"),
+            payload(
+                rate_mode="historical",
+                requested_date="1998-06-15",
+                source_currency="FIM",
+            ),
+        )
+
+    assert response.status_code == 302
+    location = response["Location"]
+    assert "source_currency=FIM" in location
+    assert "rate_mode=historical" in location
+    assert "requested_date=1998-06-15" in location
+
+
+@pytest.mark.django_db
+def test_historical_htmx_and_full_get_render_equivalent_numeric_semantics(client, reference_data):
+    htmx_gateway = FakeHistoricalGateway(effective_date=date(1998, 6, 12))
+    with patch("apps.exchange.views.build_historical_quote_gateway", return_value=htmx_gateway):
+        fragment = client.post(
+            reverse("converter"),
+            payload(rate_mode="historical", requested_date="1998-06-15"),
+            HTTP_HX_REQUEST="true",
+        )
+
+    full_gateway = FakeHistoricalGateway(effective_date=date(1998, 6, 12))
+    with patch("apps.exchange.views.build_historical_quote_gateway", return_value=full_gateway):
+        full = client.get(
+            reverse("converter"),
+            {
+                "convert": "1",
+                **payload(rate_mode="historical", requested_date="1998-06-15"),
+            },
+        )
+
+    for response in (fragment, full):
+        assert response.status_code == 200
+        assert b"17450" in response.content
+        assert b"15 Jun 1998" in response.content
+        assert b"12 Jun 1998" in response.content
+        assert b"Previous available observation" in response.content
