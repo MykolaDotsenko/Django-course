@@ -80,6 +80,15 @@ class CurrentConversionForm(forms.Form):
     destination_currency = forms.ChoiceField(label="Destination currency")
 
     def __init__(self, *args, **kwargs):
+        if args and args[0] is not None and "rate_mode" not in args[0]:
+            data = args[0].copy()
+            data["rate_mode"] = RATE_MODE_LATEST
+            args = (data, *args[1:])
+        elif kwargs.get("data") is not None and "rate_mode" not in kwargs["data"]:
+            data = kwargs["data"].copy()
+            data["rate_mode"] = RATE_MODE_LATEST
+            kwargs["data"] = data
+
         super().__init__(*args, **kwargs)
 
         raw_mode = (
