@@ -74,7 +74,7 @@ function cssColor(element: Element, property: string, fallback: string): string 
 }
 
 function renderRateChart(canvas: HTMLCanvasElement): void {
-  if (canvas.dataset.rateChartEnhanced === "true") return;
+  if (!canvas.isConnected || canvas.dataset.rateChartEnhanced === "true") return;
 
   const statusId = canvas.getAttribute("aria-describedby");
   const status = statusId ? document.getElementById(statusId) : null;
@@ -185,5 +185,19 @@ function renderRateChart(canvas: HTMLCanvasElement): void {
 export function enhanceRateCharts(root: ParentNode = document): void {
   for (const canvas of root.querySelectorAll<HTMLCanvasElement>("[data-rate-chart]")) {
     renderRateChart(canvas);
+  }
+}
+
+
+export function destroyRateCharts(root: ParentNode): void {
+  const canvases: HTMLCanvasElement[] = [];
+  if (root instanceof HTMLCanvasElement && root.matches("[data-rate-chart]")) {
+    canvases.push(root);
+  }
+  canvases.push(...root.querySelectorAll<HTMLCanvasElement>("[data-rate-chart]"));
+
+  for (const canvas of canvases) {
+    Chart.getChart(canvas)?.destroy();
+    delete canvas.dataset.rateChartEnhanced;
   }
 }
