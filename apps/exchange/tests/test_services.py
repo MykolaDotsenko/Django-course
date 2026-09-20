@@ -19,6 +19,7 @@ class ExplodingGateway:
     def get(self, *args, **kwargs):
         raise AssertionError("same-currency conversion must not call the provider gateway")
 
+
 def test_same_currency_fast_path_uses_exact_one_without_provider():
     result = quote_conversion(
         amount=Decimal("12.345"),
@@ -32,6 +33,7 @@ def test_same_currency_fast_path_uses_exact_one_without_provider():
     assert result.quote.rate == Decimal("1")
     assert result.output_amount == Decimal("12.34")
     assert result.stale is False
+
 
 @pytest.mark.parametrize("base_currency", ["EU", "EUR/USD", "€UR", "ΕUR"])
 def test_invalid_currency_syntax_is_rejected_before_gateway(base_currency):
@@ -62,6 +64,7 @@ class HistoricalGateway:
         self.calls.append((base, quote, requested_date, policy))
         return self.quote
 
+
 def test_historical_same_currency_preserves_requested_and_effective_date_without_provider():
     requested = date(1998, 6, 15)
     result = quote_historical_conversion(
@@ -80,6 +83,7 @@ def test_historical_same_currency_preserves_requested_and_effective_date_without
     assert result.quote.effective_date == requested
     assert result.output_amount == Decimal("12.34")
 
+
 def test_historical_future_date_is_rejected_before_gateway():
     with pytest.raises(HistoricalDateError):
         quote_historical_conversion(
@@ -91,6 +95,7 @@ def test_historical_future_date_is_rejected_before_gateway():
             gateway=HistoricalExplodingGateway(),
             now=datetime(2026, 9, 20, tzinfo=UTC),
         )
+
 
 def test_historical_conversion_uses_gateway_quote():
     requested = date(2026, 9, 18)
@@ -119,6 +124,7 @@ def test_historical_conversion_uses_gateway_quote():
 
     assert result.output_amount == Decimal("1745")
     assert gateway.calls == [("EUR", "JPY", requested, DEFAULT_SOURCE_POLICY)]
+
 
 
 @pytest.mark.parametrize(
@@ -164,6 +170,7 @@ def test_historical_known_bounds_fail_before_gateway(metadata, requested, reason
         )
 
     assert captured.value.reason is reason
+
 
 def test_latest_observation_date_is_not_treated_as_terminal_coverage():
     requested = date(2026, 9, 20)
