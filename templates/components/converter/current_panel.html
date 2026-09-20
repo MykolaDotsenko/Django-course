@@ -215,8 +215,13 @@
         <span>Convert</span>
       </button>
     </div>
-    <div class="qa-workspace__result">
+    <div class="qa-workspace__result"
+         id="conversion-result-region"
+         {% if result_component %}hx-preserve="true"{% endif %}>
       {% if result_component %}
+        <p class="qa-result-update-note"
+           data-previous-result-note
+           hidden>Previous result — waiting for a successful update.</p>
         {% with component=result_component %}
           {% include "components/converter/primitives.html#conversion-result" %}
         {% endwith %}
