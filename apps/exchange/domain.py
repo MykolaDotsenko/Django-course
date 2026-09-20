@@ -287,6 +287,28 @@ class ConversionResult:
     stale: bool
 
 
+@dataclass(frozen=True)
+class ThenNowComparison:
+    historical: ConversionResult
+    latest: ConversionResult
+    rate_difference_percent: Decimal
+
+    def __post_init__(self) -> None:
+        if self.historical.input_amount != self.latest.input_amount:
+            raise FxDomainError("Then & now comparisons require the same input amount.")
+        if (
+            self.historical.quote.base_currency != self.latest.quote.base_currency
+            or self.historical.quote.quote_currency != self.latest.quote.quote_currency
+        ):
+            raise FxDomainError("Then & now comparisons require the same directional currency pair.")
+        if not self.historical.quote.historical:
+            raise FxDomainError("Then & now historical side must use a historical quote.")
+        if self.latest.quote.historical:
+            raise FxDomainError("Then & now latest side must use a latest quote.")
+        if not self.rate_difference_percent.is_finite():
+            raise FxDomainError("Then & now rate difference must be finite.")
+
+
 def convert_amount(amount: Decimal, quote: RateQuote, *, minor_units: int) -> Decimal:
     if not isinstance(amount, Decimal):
         raise FxDomainError("Amount must be a Decimal.")
