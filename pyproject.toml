@@ -69,3 +69,7 @@ exclude_also = [
 profile = "django"
 indent = 2
 max_line_length = 100
+
+# The media contract intentionally uses a trusted dynamic aspect-ratio style; see docs/28.
+[tool.djlint.per-file-ignores]
+"templates/components/media/image_frame.html" = "H021"
