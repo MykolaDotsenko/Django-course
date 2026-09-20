@@ -6,6 +6,8 @@ on:
       - "frontend/**"
       - "templates/**"
       - "apps/common/**"
+      - "apps/countries/**"
+      - "apps/exchange/**"
       - "config/**"
       - "scripts/**"
       - "pyproject.toml"
@@ -86,6 +88,11 @@ jobs:
       - name: Django system check
         run: python manage.py check
 
+      - name: Prepare product reference data
+        run: |
+          python manage.py migrate --noinput
+          python manage.py seed_reference_data
+
       - name: Start design QA server
         run: |
           python manage.py runserver 127.0.0.1:8000 --noreload > /tmp/browser-quality-server.log 2>&1 &
@@ -97,6 +104,7 @@ jobs:
           import urllib.request
 
           urls = (
+              "http://127.0.0.1:8000/",
               "http://127.0.0.1:8000/_design/shell/",
               "http://127.0.0.1:8000/_design/converter/",
           )
