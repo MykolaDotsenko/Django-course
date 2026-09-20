@@ -155,6 +155,7 @@ def serialize_series(series: RateSeries) -> dict[str, Any]:
             "provider_key": series.provider_policy.provider_key,
             "include_attribution": series.provider_policy.include_attribution,
         },
+        "observation_granularity": series.observation_granularity.value,
         "points": [
             {
                 "observation_date": point.observation_date.isoformat(),
@@ -204,6 +205,9 @@ def deserialize_series(value: Any) -> RateSeries | None:
             points=tuple(points),
             fetched_at=datetime.fromisoformat(value["fetched_at"]),
             provider_policy=policy,
+            observation_granularity=ObservationGranularity(
+                value.get("observation_granularity", ObservationGranularity.DAILY.value)
+            ),
         )
     except (KeyError, TypeError, ValueError, ArithmeticError):
         return None
