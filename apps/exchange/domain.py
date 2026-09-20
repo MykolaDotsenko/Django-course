@@ -64,6 +64,8 @@ class RateQuote:
         quote = self.quote_currency.upper().strip()
         if len(base) != 3 or len(quote) != 3 or not base.isalpha() or not quote.isalpha():
             raise FxDomainError("FX quotes require three-letter alphabetic currency codes.")
+        if not isinstance(self.rate, Decimal):
+            raise FxDomainError("FX rate must be a Decimal.")
         if self.rate <= 0 or not self.rate.is_finite():
             raise FxDomainError("FX rate must be a finite positive Decimal.")
         if self.fetched_at.tzinfo is None:
@@ -92,8 +94,12 @@ class ConversionResult:
 
 
 def convert_amount(amount: Decimal, quote: RateQuote, *, minor_units: int) -> Decimal:
+    if not isinstance(amount, Decimal):
+        raise FxDomainError("Amount must be a Decimal.")
     if not amount.is_finite():
         raise FxDomainError("Amount must be a finite Decimal.")
+    if isinstance(minor_units, bool) or not isinstance(minor_units, int):
+        raise FxDomainError("Minor units must be an integer.")
     if not 0 <= minor_units <= 6:
         raise FxDomainError("Minor units must be between 0 and 6.")
     quantum = Decimal(1).scaleb(-minor_units)
