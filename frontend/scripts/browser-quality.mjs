@@ -107,7 +107,7 @@ async function assertKeyboardFocus(page, surface) {
   }
 }
 
-async function assertCurrentConverterFlow(page) {
+async function assertCurrentConverterFlow(page, consoleErrors) {
   const waitForPost = () =>
     page.waitForResponse(
       (response) =>
@@ -174,6 +174,17 @@ async function assertCurrentConverterFlow(page) {
   await Promise.all([waitForPost(), page.locator("#swap-contexts").click()]);
   const focused = await page.evaluate(() => document.activeElement?.id ?? "");
   assert(focused === "swap-contexts", `current-converter: swap focus moved to ${focused}`);
+
+  const expectedValidationErrors = consoleErrors.filter((message) =>
+    message.includes("status of 422 (Unprocessable Content)"),
+  );
+  assert(
+    expectedValidationErrors.length === 2,
+    `current-converter: expected exactly two handled validation 422 console messages, found ${expectedValidationErrors.length}`,
+  );
+  for (const message of expectedValidationErrors) {
+    consoleErrors.splice(consoleErrors.indexOf(message), 1);
+  }
 }
 
 async function assertReducedMotion(page, surface) {
@@ -395,7 +406,7 @@ try {
       }
 
       if (surface.name === "current-converter" && viewport.name === "wide-1440") {
-        await assertCurrentConverterFlow(page);
+        await assertCurrentConverterFlow(page, consoleErrors);
       }
 
       if (viewport.name === "mobile-390") {
