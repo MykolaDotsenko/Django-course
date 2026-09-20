@@ -260,3 +260,19 @@ def test_multiple_validation_errors_render_linked_summary(client, reference_data
     assert b'href="#id_amount"' in response.content
     assert b'href="#id_destination_currency"' in response.content
     factory.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_failed_active_refresh_keeps_enhanced_mode_enabled(client, reference_data):
+    with patch("apps.exchange.views.build_latest_quote_gateway") as factory:
+        response = client.post(
+            reverse("converter"),
+            payload(amount="-1", conversion_active="1"),
+            HTTP_HX_REQUEST="true",
+        )
+
+    assert response.status_code == 422
+    assert b'data-has-result="true"' in response.content
+    assert b'name="conversion_active"' in response.content
+    assert b'value="1"' in response.content
+    factory.assert_not_called()
