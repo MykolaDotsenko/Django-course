@@ -98,6 +98,7 @@ def test_htmx_conversion_returns_fragment_and_pushes_bookmarkable_url(client, re
 
     assert response.status_code == 200
     assert b"<html" not in response.content
+    assert b'id="current-conversion-result"' in response.content
     assert b"17450" in response.content
     assert b"18 Sep 2026" in response.content
     assert b"Frankfurter" in response.content
