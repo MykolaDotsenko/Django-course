@@ -126,7 +126,6 @@ def test_historical_conversion_uses_gateway_quote():
     assert gateway.calls == [("EUR", "JPY", requested, DEFAULT_SOURCE_POLICY)]
 
 
-
 @pytest.mark.parametrize(
     ("metadata", "requested", "reason"),
     [
