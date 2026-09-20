@@ -1,7 +1,7 @@
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from urllib.error import HTTPError, URLError
 from unittest.mock import patch
+from urllib.error import HTTPError, URLError
 
 import pytest
 
@@ -84,10 +84,7 @@ class FakeResponse:
 
 
 def test_transient_network_failure_retries_at_most_once():
-    payload = (
-        b'{"date":"2026-09-18","base":"EUR","quote":"JPY","rate":174.5,'
-        b'"providers":["ECB"]}'
-    )
+    payload = b'{"date":"2026-09-18","base":"EUR","quote":"JPY","rate":174.5,"providers":["ECB"]}'
     attempts = [URLError("temporary"), FakeResponse(payload)]
 
     def fake_urlopen(*args, **kwargs):
