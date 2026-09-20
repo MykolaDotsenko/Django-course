@@ -245,3 +245,61 @@
   font-size: var(--text-body-sm);
   font-weight: 650;
 }
+
+.qa-rate-date {
+  display: grid;
+  gap: var(--qa-space-4);
+  margin: 0;
+  padding: var(--qa-space-4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-soft);
+}
+
+.qa-rate-date__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--qa-space-3) var(--qa-space-5);
+}
+
+.qa-rate-date__choice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--qa-space-2);
+  min-height: 2.75rem;
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.qa-rate-date__choice input {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+
+.qa-date-input {
+  width: min(100%, 18rem);
+  min-height: 3rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--color-border-control);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+.qa-date-input:focus-visible {
+  border-color: var(--color-focus);
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.qa-status-badge--historical,
+.qa-status-badge--historical-previous {
+  border-color: var(--color-border-control);
+}
+
+@media (forced-colors: active) {
+  .qa-rate-date,
+  .qa-date-input {
+    border-color: CanvasText;
+  }
+}

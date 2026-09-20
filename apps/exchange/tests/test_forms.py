@@ -1,7 +1,9 @@
+from datetime import timedelta
 from decimal import Decimal
 
 import pytest
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from apps.countries.models import Country, CountryCurrency, Currency
 from apps.exchange.forms import CurrentConversionForm, parse_amount_text
@@ -94,3 +96,56 @@ def test_form_normalizes_decimal_comma_to_decimal(reference_data):
 def test_amount_parser_rejects_value_above_product_bound():
     with pytest.raises(ValidationError, match="1,000,000,000"):
         parse_amount_text("1000000000.01", minor_units=2)
+
+
+@pytest.mark.django_db
+def test_historical_mode_requires_requested_date(reference_data):
+    form = CurrentConversionForm(
+        {
+            "rate_mode": "historical",
+            "amount": "100",
+            "source_country": "FI",
+            "source_currency": "EUR",
+            "destination_country": "JP",
+            "destination_currency": "JPY",
+        }
+    )
+
+    assert not form.is_valid()
+    assert form.errors["requested_date"] == ["Choose a historical date."]
+
+
+@pytest.mark.django_db
+def test_historical_mode_rejects_future_date(reference_data):
+    form = CurrentConversionForm(
+        {
+            "rate_mode": "historical",
+            "requested_date": (timezone.localdate() + timedelta(days=1)).isoformat(),
+            "amount": "100",
+            "source_country": "FI",
+            "source_currency": "EUR",
+            "destination_country": "JP",
+            "destination_currency": "JPY",
+        }
+    )
+
+    assert not form.is_valid()
+    assert form.errors["requested_date"] == ["Historical date cannot be in the future."]
+
+
+@pytest.mark.django_db
+def test_latest_mode_ignores_unsubmitted_historical_date(reference_data):
+    form = CurrentConversionForm(
+        {
+            "rate_mode": "latest",
+            "requested_date": "1998-06-15",
+            "amount": "100",
+            "source_country": "FI",
+            "source_currency": "EUR",
+            "destination_country": "JP",
+            "destination_currency": "JPY",
+        }
+    )
+
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["requested_date"] is None

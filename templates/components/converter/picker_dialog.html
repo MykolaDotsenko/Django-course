@@ -28,7 +28,7 @@
              hx-get="{% url 'picker_options' %}"
              hx-trigger="focus, input changed delay:250ms, search"
              hx-target="#{{ side }}-picker-results"
-             hx-include="#{{ side }}-picker-side"
+             hx-include="#{{ side }}-picker-side, input[name='rate_mode']:checked, #id_requested_date"
              hx-sync="this:replace">
       <input id="{{ side }}-picker-side"
              type="hidden"

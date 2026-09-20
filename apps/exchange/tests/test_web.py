@@ -38,6 +38,27 @@ class UnavailableGateway:
         raise FxProviderUnavailable("down")
 
 
+class FakeHistoricalGateway:
+    def __init__(self, *, effective_date=None):
+        self.effective_date = effective_date
+        self.calls = []
+
+    def get(self, base, quote, requested_date, policy):
+        self.calls.append((base, quote, requested_date, policy))
+        effective = self.effective_date or requested_date
+        return RateQuote(
+            base_currency=base,
+            quote_currency=quote,
+            rate=Decimal("174.50"),
+            requested_date=requested_date,
+            effective_date=effective,
+            fetched_at=datetime(2026, 9, 20, 8, tzinfo=UTC),
+            provider_policy=DEFAULT_SOURCE_POLICY,
+            provider_keys=("ecb",),
+            historical=True,
+        )
+
+
 @pytest.fixture(autouse=True)
 def use_vite_dev_mode(settings):
     settings.VITE_DEV_SERVER_ENABLED = True
@@ -49,10 +70,25 @@ def reference_data(db):
     jp = Country.objects.create(iso2="JP", iso3="JPN", name="Japan")
     eur = Currency.objects.create(code="EUR", name="Euro", symbol="€", minor_units=2)
     jpy = Currency.objects.create(code="JPY", name="Japanese yen", symbol="¥", minor_units=0)
+    fim = Currency.objects.create(
+        code="FIM",
+        name="Finnish markka",
+        symbol="mk",
+        minor_units=2,
+        is_active=False,
+    )
+    CountryCurrency.objects.create(
+        country=fi,
+        currency=fim,
+        is_primary=True,
+        valid_to=date(2001, 12, 31),
+        source="test",
+    )
     CountryCurrency.objects.create(
         country=fi,
         currency=eur,
         is_primary=True,
+        valid_from=date(2002, 1, 1),
         source="test",
     )
     CountryCurrency.objects.create(
@@ -61,7 +97,7 @@ def reference_data(db):
         is_primary=True,
         source="test",
     )
-    return fi, jp, eur, jpy
+    return fi, jp, eur, jpy, fim
 
 
 def payload(**overrides):
@@ -306,3 +342,83 @@ def test_successful_active_htmx_refresh_never_emits_preserve_placeholder(client,
     assert response.status_code == 200
     assert b'id="current-conversion-result"' in response.content
     assert b'hx-preserve="true"' not in response.content
+
+
+@pytest.mark.django_db
+def test_historical_htmx_conversion_preserves_requested_and_observation_dates(
+    client, reference_data
+):
+    gateway = FakeHistoricalGateway()
+    with patch("apps.exchange.views.build_historical_quote_gateway", return_value=gateway):
+        response = client.post(
+            reverse("converter"),
+            payload(rate_mode="historical", requested_date="1998-06-15"),
+            HTTP_HX_REQUEST="true",
+        )
+
+    assert response.status_code == 200
+    assert b"Historical reference" in response.content
+    assert b"Requested date" in response.content
+    assert b"15 Jun 1998" in response.content
+    assert b"Observation date" in response.content
+    assert "rate_mode=historical" in response["HX-Push-Url"]
+    assert "requested_date=1998-06-15" in response["HX-Push-Url"]
+    assert gateway.calls[0][2] == date(1998, 6, 15)
+
+
+@pytest.mark.django_db
+def test_historical_previous_observation_is_explicit(client, reference_data):
+    gateway = FakeHistoricalGateway(effective_date=date(1998, 6, 12))
+    with patch("apps.exchange.views.build_historical_quote_gateway", return_value=gateway):
+        response = client.post(
+            reverse("converter"),
+            payload(rate_mode="historical", requested_date="1998-06-14"),
+            HTTP_HX_REQUEST="true",
+        )
+
+    assert response.status_code == 200
+    assert b"Previous available observation" in response.content
+    assert b"14 Jun 1998" in response.content
+    assert b"12 Jun 1998" in response.content
+
+
+@pytest.mark.django_db
+def test_future_historical_date_never_builds_provider_gateway(client, reference_data):
+    with patch("apps.exchange.views.build_historical_quote_gateway") as factory:
+        response = client.post(
+            reverse("converter"),
+            payload(rate_mode="historical", requested_date="2999-01-01"),
+            HTTP_HX_REQUEST="true",
+        )
+
+    assert response.status_code == 422
+    assert b"Historical date cannot be in the future" in response.content
+    factory.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_historical_picker_exposes_archived_currency_for_selected_date(client, reference_data):
+    response = client.get(
+        reverse("picker_options"),
+        {
+            "side": "source",
+            "q": "markka",
+            "rate_mode": "historical",
+            "requested_date": "1998-06-15",
+        },
+    )
+
+    assert response.status_code == 200
+    assert b"Finnish markka" in response.content
+    assert b"FIM" in response.content
+
+
+@pytest.mark.django_db
+def test_current_picker_keeps_archived_currency_hidden(client, reference_data):
+    response = client.get(
+        reverse("picker_options"),
+        {"side": "source", "q": "markka"},
+    )
+
+    assert response.status_code == 200
+    assert b"Finnish markka" not in response.content

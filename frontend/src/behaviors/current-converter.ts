@@ -4,7 +4,18 @@ export function requestFocusRestore(id: string): void {
   restoreFocusId = id;
 }
 
+function syncHistoricalDateField(form: HTMLFormElement): void {
+  const field = form.querySelector<HTMLElement>("[data-historical-date-field]");
+  const historical = form.querySelector<HTMLInputElement>(
+    'input[name="rate_mode"][value="historical"]',
+  );
+  if (!field || !historical) return;
+
+  field.hidden = !historical.checked;
+}
+
 function enhanceAutoRefresh(form: HTMLFormElement): void {
+  syncHistoricalDateField(form);
   if (form.dataset.autoRefreshWired === "true") return;
   form.dataset.autoRefreshWired = "true";
 
@@ -20,10 +31,35 @@ function enhanceAutoRefresh(form: HTMLFormElement): void {
   });
 
   form.addEventListener("change", (event) => {
-    if (form.dataset.hasResult !== "true") return;
     const target = event.target;
     if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
+
+    if (target.name === "rate_mode") {
+      syncHistoricalDateField(form);
+      if (form.dataset.hasResult !== "true") return;
+
+      if (target.value === "historical") {
+        const requestedDate = form.querySelector<HTMLInputElement>("#id_requested_date");
+        if (!requestedDate?.value) {
+          requestedDate?.focus();
+          return;
+        }
+      }
+
+      form.requestSubmit();
+      return;
+    }
+
+    if (form.dataset.hasResult !== "true") return;
     if (target.type === "hidden" || target.id === "id_amount") return;
+
+    if (target.id === "id_requested_date") {
+      const historical = form.querySelector<HTMLInputElement>(
+        'input[name="rate_mode"][value="historical"]',
+      );
+      if (!historical?.checked || !target.value) return;
+    }
+
     form.requestSubmit();
   });
 }

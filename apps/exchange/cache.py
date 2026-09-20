@@ -10,6 +10,7 @@ from django.core.cache import cache
 
 from apps.exchange.domain import (
     FxSourcePolicy,
+    HistoricalObservationUnavailable,
     ObservationGranularity,
     ProviderPolicyMode,
     RateQuote,
@@ -47,6 +48,20 @@ def historical_cache_key(
     return (
         f"fx:{CACHE_VERSION}:historical:{policy.mode.value}:{policy.cache_identity}:"
         f"{base_code}:{quote_code}:{effective_date.isoformat()}"
+    )
+
+
+def historical_resolution_cache_key(
+    base: str,
+    quote: str,
+    requested_date: date,
+    policy: FxSourcePolicy,
+) -> str:
+    base_code = normalize_currency_code(base)
+    quote_code = normalize_currency_code(quote)
+    return (
+        f"fx:{CACHE_VERSION}:historical-resolution:{policy.mode.value}:{policy.cache_identity}:"
+        f"{base_code}:{quote_code}:{requested_date.isoformat()}"
     )
 
 
@@ -198,3 +213,103 @@ class LatestQuoteGateway:
             cache.set(key, serialize_quote(quote), timeout=self.physical_ttl_seconds)
         except Exception:
             logger.warning("FX cache write failed", extra={"cache_key": key}, exc_info=True)
+
+
+class HistoricalQuoteGateway:
+    def __init__(
+        self,
+        provider: FxProvider,
+        *,
+        max_previous_gap: timedelta = timedelta(days=7),
+        physical_ttl_seconds: int = 365 * 24 * 60 * 60,
+    ):
+        if max_previous_gap < timedelta(0):
+            raise ValueError("Historical previous-observation gap cannot be negative.")
+        self.provider = provider
+        self.max_previous_gap = max_previous_gap
+        self.physical_ttl_seconds = physical_ttl_seconds
+
+    def get(
+        self,
+        base: str,
+        quote: str,
+        requested_date: date,
+        policy: FxSourcePolicy,
+    ) -> RateQuote:
+        resolution_key = historical_resolution_cache_key(base, quote, requested_date, policy)
+        cached = self._cache_get(resolution_key)
+        if cached is not None:
+            self._assert_quote_identity(
+                cached,
+                base=base,
+                quote=quote,
+                requested_date=requested_date,
+                policy=policy,
+            )
+            self._assert_gap(cached)
+            return cached
+
+        historical = self.provider.historical_quote(base, quote, requested_date, policy)
+        self._assert_quote_identity(
+            historical,
+            base=base,
+            quote=quote,
+            requested_date=requested_date,
+            policy=policy,
+        )
+        self._assert_gap(historical)
+
+        self._cache_set(resolution_key, historical)
+        self._cache_set(
+            historical_cache_key(base, quote, historical.effective_date, policy),
+            historical,
+        )
+        return historical
+
+    def _assert_gap(self, quote: RateQuote) -> None:
+        if quote.requested_date is None:
+            raise FxProviderInvalidPayload("Historical quote omitted its requested date.")
+        gap = quote.requested_date - quote.effective_date
+        if gap > self.max_previous_gap:
+            raise HistoricalObservationUnavailable(
+                "No historical observation is available within the allowed previous-date window."
+            )
+
+    @staticmethod
+    def _assert_quote_identity(
+        quote_value: RateQuote,
+        *,
+        base: str,
+        quote: str,
+        requested_date: date,
+        policy: FxSourcePolicy,
+    ) -> None:
+        if quote_value.base_currency != base.upper() or quote_value.quote_currency != quote.upper():
+            raise FxProviderInvalidPayload("Provider returned a quote for a different pair.")
+        if quote_value.provider_policy != policy:
+            raise FxProviderInvalidPayload(
+                "Provider returned a quote under a different source policy."
+            )
+        if not quote_value.historical or quote_value.requested_date != requested_date:
+            raise FxProviderInvalidPayload(
+                "Historical quote does not preserve the requested-date semantics."
+            )
+
+    def _cache_get(self, key: str) -> RateQuote | None:
+        try:
+            return deserialize_quote(cache.get(key))
+        except Exception:
+            logger.warning(
+                "Historical FX cache read failed", extra={"cache_key": key}, exc_info=True
+            )
+            return None
+
+    def _cache_set(self, key: str, quote: RateQuote) -> None:
+        try:
+            cache.set(key, serialize_quote(quote), timeout=self.physical_ttl_seconds)
+        except Exception:
+            logger.warning(
+                "Historical FX cache write failed",
+                extra={"cache_key": key},
+                exc_info=True,
+            )

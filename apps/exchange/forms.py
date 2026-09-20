@@ -4,10 +4,17 @@ import re
 from decimal import Decimal, InvalidOperation
 
 from django import forms
+from django.utils import timezone
 
 from apps.countries.models import Country, CountryCurrency, Currency
 
 MAX_CONVERSION_AMOUNT = Decimal("1000000000")
+RATE_MODE_LATEST = "latest"
+RATE_MODE_HISTORICAL = "historical"
+RATE_MODE_CHOICES = (
+    (RATE_MODE_LATEST, "Latest available"),
+    (RATE_MODE_HISTORICAL, "Historical date"),
+)
 _AMOUNT_PATTERN = re.compile(r"^\d+(?:[.,]\d+)?$")
 
 
@@ -54,6 +61,18 @@ def parse_amount_text(value: str, *, minor_units: int) -> Decimal:
 
 
 class CurrentConversionForm(forms.Form):
+    rate_mode = forms.ChoiceField(
+        required=False,
+        choices=RATE_MODE_CHOICES,
+        initial=RATE_MODE_LATEST,
+        widget=forms.RadioSelect,
+        label="Rate date",
+    )
+    requested_date = forms.DateField(
+        required=False,
+        label="Historical date",
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
     amount = forms.CharField(max_length=64, label="Amount")
     source_country = forms.ChoiceField(required=False, label="Source country")
     source_currency = forms.ChoiceField(label="Source currency")
@@ -61,9 +80,27 @@ class CurrentConversionForm(forms.Form):
     destination_currency = forms.ChoiceField(label="Destination currency")
 
     def __init__(self, *args, **kwargs):
+        if args and args[0] is not None and "rate_mode" not in args[0]:
+            data = args[0].copy()
+            data["rate_mode"] = RATE_MODE_LATEST
+            args = (data, *args[1:])
+        elif kwargs.get("data") is not None and "rate_mode" not in kwargs["data"]:
+            data = kwargs["data"].copy()
+            data["rate_mode"] = RATE_MODE_LATEST
+            kwargs["data"] = data
+
         super().__init__(*args, **kwargs)
 
-        currencies = list(Currency.objects.filter(is_active=True).order_by("code"))
+        raw_mode = (
+            self.data.get("rate_mode")
+            if self.is_bound
+            else self.initial.get("rate_mode", RATE_MODE_LATEST)
+        )
+        historical_mode = raw_mode == RATE_MODE_HISTORICAL
+        currency_query = (
+            Currency.objects.all() if historical_mode else Currency.objects.filter(is_active=True)
+        )
+        currencies = list(currency_query.order_by("code"))
         countries = list(Country.objects.filter(is_active=True).order_by("name"))
 
         self._currency_by_code = {currency.code: currency for currency in currencies}
@@ -80,6 +117,13 @@ class CurrentConversionForm(forms.Form):
         self.fields["destination_currency"].choices = currency_choices
         self.fields["source_country"].choices = country_choices
         self.fields["destination_country"].choices = country_choices
+
+        self.fields["requested_date"].widget.attrs.update(
+            {
+                "class": "qa-date-input",
+                "max": timezone.localdate().isoformat(),
+            }
+        )
 
         for field_name in (
             "source_country",
@@ -112,6 +156,17 @@ class CurrentConversionForm(forms.Form):
     def clean(self):
         cleaned = super().clean()
 
+        rate_mode = cleaned.get("rate_mode") or RATE_MODE_LATEST
+        cleaned["rate_mode"] = rate_mode
+        requested_date = cleaned.get("requested_date")
+        if rate_mode == RATE_MODE_HISTORICAL:
+            if requested_date is None:
+                self.add_error("requested_date", "Choose a historical date.")
+            elif requested_date > timezone.localdate():
+                self.add_error("requested_date", "Historical date cannot be in the future.")
+        else:
+            cleaned["requested_date"] = None
+
         source_code = cleaned.get("source_currency")
         source_currency = self.currency_for_code(source_code)
         raw_amount = cleaned.get("amount")
@@ -124,9 +179,16 @@ class CurrentConversionForm(forms.Form):
             except forms.ValidationError as exc:
                 self.add_error("amount", exc)
 
-        self._validate_country_currency("source", cleaned)
-        self._validate_country_currency("destination", cleaned)
+        if rate_mode == RATE_MODE_LATEST:
+            self._validate_country_currency("source", cleaned)
+            self._validate_country_currency("destination", cleaned)
         return cleaned
+
+    @property
+    def historical_mode(self) -> bool:
+        if self.is_bound:
+            return self.data.get("rate_mode") == RATE_MODE_HISTORICAL
+        return self.initial.get("rate_mode") == RATE_MODE_HISTORICAL
 
     def _validate_country_currency(self, side: str, cleaned: dict[str, object]) -> None:
         country_code = cleaned.get(f"{side}_country")

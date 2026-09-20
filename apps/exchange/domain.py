@@ -10,6 +10,18 @@ class FxDomainError(ValueError):
     pass
 
 
+class HistoricalConversionError(FxDomainError):
+    pass
+
+
+class HistoricalDateError(HistoricalConversionError):
+    pass
+
+
+class HistoricalObservationUnavailable(HistoricalConversionError):
+    pass
+
+
 class ProviderPolicyMode(StrEnum):
     BLEND = "blend"
     PINNED = "pinned"
@@ -91,6 +103,14 @@ class RateQuote:
         object.__setattr__(self, "quote_currency", quote)
         object.__setattr__(self, "provider_keys", providers)
 
+    @property
+    def used_previous_observation(self) -> bool:
+        return bool(
+            self.historical
+            and self.requested_date is not None
+            and self.effective_date < self.requested_date
+        )
+
 
 @dataclass(frozen=True)
 class ConversionResult:
@@ -116,16 +136,21 @@ def convert_amount(amount: Decimal, quote: RateQuote, *, minor_units: int) -> De
         raise FxDomainError("Conversion cannot be represented at the requested precision.") from exc
 
 
-def same_currency_quote(currency: str, *, fetched_at: datetime) -> RateQuote:
+def same_currency_quote(
+    currency: str,
+    *,
+    fetched_at: datetime,
+    requested_date: date | None = None,
+) -> RateQuote:
     code = normalize_currency_code(currency)
     return RateQuote(
         base_currency=code,
         quote_currency=code,
         rate=Decimal("1"),
-        requested_date=None,
-        effective_date=fetched_at.date(),
+        requested_date=requested_date,
+        effective_date=requested_date or fetched_at.date(),
         fetched_at=fetched_at,
         provider_policy=DEFAULT_SOURCE_POLICY,
         provider_keys=(),
-        historical=False,
+        historical=requested_date is not None,
     )

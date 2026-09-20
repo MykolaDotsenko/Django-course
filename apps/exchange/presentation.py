@@ -55,25 +55,51 @@ def build_result_component(
     quote_minor_units = quote_currency.minor_units if quote_currency else 2
 
     same_currency = result.quote.base_currency == result.quote.quote_currency
+    historical = result.quote.historical
+    used_previous = result.quote.used_previous_observation
     provider_keys = ", ".join(key.upper() for key in result.quote.provider_keys)
     if same_currency:
         provider = "Exact same-currency rate"
-        data_class = "Exact 1:1"
-        explanation = "The currencies are identical, so no external rate request is required."
+        data_class = "Historical exact 1:1" if historical else "Exact 1:1"
+        explanation = (
+            "The currencies are identical, so no external historical observation is required."
+            if historical
+            else "The currencies are identical, so no external rate request is required."
+        )
     else:
         provider = "Frankfurter"
         if provider_keys:
             provider = f"{provider} · {provider_keys}"
-        data_class = "Cached reference" if result.stale else "Reference rate"
-        explanation = (
-            "A cached reference quote is being used because a fresh provider response is "
-            "temporarily unavailable."
-            if result.stale
-            else "Reference exchange-rate data is informational; payment providers may use "
-            "different rates or add fees."
-        )
+        if historical:
+            data_class = (
+                "Previous available observation" if used_previous else "Historical reference"
+            )
+            explanation = (
+                "The selected date had no accepted exact observation, so the nearest published "
+                "observation on or before it was used within the seven-day policy."
+                if used_previous
+                else "Historical reference exchange-rate data for the selected date."
+            )
+        else:
+            data_class = "Cached reference" if result.stale else "Reference rate"
+            explanation = (
+                "A cached reference quote is being used because a fresh provider response is "
+                "temporarily unavailable."
+                if result.stale
+                else "Reference exchange-rate data is informational; payment providers may use "
+                "different rates or add fees."
+            )
 
-    effective_date = None if same_currency else date_format(result.quote.effective_date, "j M Y")
+    requested_date = (
+        date_format(result.quote.requested_date, "j M Y")
+        if result.quote.requested_date is not None
+        else None
+    )
+    effective_date = (
+        date_format(result.quote.effective_date, "j M Y")
+        if historical or not same_currency
+        else None
+    )
     fetched_at = None if same_currency else result.quote.fetched_at.strftime("%d %b %Y · %H:%M UTC")
     input_text = _money_text(result.input_amount, minor_units=base_minor_units)
     output_text = _money_text(result.output_amount, minor_units=quote_minor_units)
@@ -88,19 +114,36 @@ def build_result_component(
         "exact": same_currency,
         "stale": result.stale,
         "status": (
-            {"kind": "exact", "label": "Exact 1:1"}
-            if same_currency
-            else {
-                "kind": "cached" if result.stale else "reference",
-                "label": "Cached reference" if result.stale else "Reference rate",
-            }
+            {"kind": "historical", "label": "Historical exact 1:1"}
+            if historical and same_currency
+            else (
+                {
+                    "kind": "historical-previous" if used_previous else "historical",
+                    "label": (
+                        "Previous available observation"
+                        if used_previous
+                        else "Historical reference"
+                    ),
+                }
+                if historical
+                else (
+                    {"kind": "exact", "label": "Exact 1:1"}
+                    if same_currency
+                    else {
+                        "kind": "cached" if result.stale else "reference",
+                        "label": "Cached reference" if result.stale else "Reference rate",
+                    }
+                )
+            )
         ),
         "rate_meta": {
             "rate_line": (
                 f"1 {result.quote.base_currency} = {rate_text} {result.quote.quote_currency}"
             ),
             "data_class": data_class,
+            "requested_date": requested_date,
             "effective_date": effective_date,
+            "effective_date_label": "Observation date" if historical else "Effective date",
             "provider": provider,
             "fetched_at": fetched_at,
             "explanation": explanation,
@@ -109,13 +152,28 @@ def build_result_component(
             (
                 f"{input_text} {result.quote.base_currency} remains "
                 f"{output_text} {result.quote.quote_currency}. "
-                "No exchange-rate lookup was required."
+                + (
+                    f"Historical identity conversion for {requested_date}."
+                    if historical
+                    else "No exchange-rate lookup was required."
+                )
             )
             if same_currency
             else (
                 f"{input_text} {result.quote.base_currency} is approximately "
                 f"{output_text} {result.quote.quote_currency}. "
-                f"Reference rate effective {effective_date}."
+                + (
+                    (
+                        f"Requested {requested_date}; previous available observation "
+                        f"{effective_date}."
+                    )
+                    if used_previous
+                    else (
+                        f"Historical observation {effective_date}."
+                        if historical
+                        else f"Reference rate effective {effective_date}."
+                    )
+                )
             )
         ),
     }

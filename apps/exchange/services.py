@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
-from apps.exchange.cache import LatestQuoteGateway
+from apps.exchange.cache import HistoricalQuoteGateway, LatestQuoteGateway
 from apps.exchange.domain import (
     DEFAULT_SOURCE_POLICY,
     ConversionResult,
     FxSourcePolicy,
+    HistoricalDateError,
     convert_amount,
     normalize_currency_code,
     same_currency_quote,
@@ -42,4 +43,43 @@ def quote_conversion(
         output_amount=convert_amount(amount, quote, minor_units=quote_minor_units),
         quote=quote,
         stale=stale,
+    )
+
+
+def quote_historical_conversion(
+    *,
+    amount: Decimal,
+    base_currency: str,
+    quote_currency: str,
+    quote_minor_units: int,
+    requested_date: date,
+    gateway: HistoricalQuoteGateway,
+    policy: FxSourcePolicy = DEFAULT_SOURCE_POLICY,
+    now: datetime | None = None,
+) -> ConversionResult:
+    current_time = now or datetime.now(UTC)
+    if requested_date > current_time.date():
+        raise HistoricalDateError("Historical date cannot be in the future.")
+
+    base_code = normalize_currency_code(base_currency)
+    quote_code = normalize_currency_code(quote_currency)
+    if base_code == quote_code:
+        quote = same_currency_quote(
+            base_code,
+            fetched_at=current_time,
+            requested_date=requested_date,
+        )
+        return ConversionResult(
+            input_amount=amount,
+            output_amount=convert_amount(amount, quote, minor_units=quote_minor_units),
+            quote=quote,
+            stale=False,
+        )
+
+    quote = gateway.get(base_code, quote_code, requested_date, policy)
+    return ConversionResult(
+        input_amount=amount,
+        output_amount=convert_amount(amount, quote, minor_units=quote_minor_units),
+        quote=quote,
+        stale=False,
     )

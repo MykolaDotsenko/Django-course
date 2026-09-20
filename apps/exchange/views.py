@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import date
 from urllib.parse import urlencode
 
 from django.http import HttpRequest, HttpResponse
@@ -10,9 +11,10 @@ from django.utils.cache import patch_vary_headers
 from django.views.decorators.http import require_GET, require_http_methods
 
 from apps.countries.models import CountryCurrency, Currency
-from apps.exchange.cache import LatestQuoteGateway
+from apps.exchange.cache import HistoricalQuoteGateway, LatestQuoteGateway
 from apps.exchange.config import load_fx_runtime_config
-from apps.exchange.forms import CurrentConversionForm
+from apps.exchange.domain import HistoricalObservationUnavailable
+from apps.exchange.forms import RATE_MODE_HISTORICAL, CurrentConversionForm
 from apps.exchange.presentation import build_converter_context
 from apps.exchange.providers.base import (
     FxProviderError,
@@ -20,7 +22,7 @@ from apps.exchange.providers.base import (
     FxProviderUnavailable,
     FxProviderUnsupportedPair,
 )
-from apps.exchange.services import quote_conversion
+from apps.exchange.services import quote_conversion, quote_historical_conversion
 
 logger = logging.getLogger("cultural_currency.exchange")
 
@@ -28,6 +30,11 @@ logger = logging.getLogger("cultural_currency.exchange")
 def build_latest_quote_gateway() -> LatestQuoteGateway:
     config = load_fx_runtime_config()
     return LatestQuoteGateway(config.build_provider())
+
+
+def build_historical_quote_gateway() -> HistoricalQuoteGateway:
+    config = load_fx_runtime_config()
+    return HistoricalQuoteGateway(config.build_provider())
 
 
 def _is_htmx(request: HttpRequest) -> bool:
@@ -81,6 +88,9 @@ def _canonical_conversion_url(form: CurrentConversionForm) -> str:
         "destination_country": cleaned.get("destination_country", ""),
         "destination_currency": cleaned["destination_currency"],
     }
+    if cleaned.get("rate_mode") == RATE_MODE_HISTORICAL:
+        params["rate_mode"] = RATE_MODE_HISTORICAL
+        params["requested_date"] = cleaned["requested_date"].isoformat()
     return f"{reverse('converter')}?{urlencode(params)}"
 
 
@@ -97,8 +107,28 @@ def _swap_payload(request: HttpRequest):
     return payload
 
 
-def _conversion_error(exc: FxProviderError) -> dict[str, str]:
+def _conversion_error(
+    exc: FxProviderError | HistoricalObservationUnavailable,
+    *,
+    historical: bool = False,
+) -> dict[str, str]:
+    if isinstance(exc, HistoricalObservationUnavailable):
+        return {
+            "title": "No nearby historical observation is available.",
+            "detail": (
+                "The nearest published observation is outside the allowed seven-day "
+                "previous-observation window. Choose another date."
+            ),
+        }
     if isinstance(exc, FxProviderUnsupportedPair):
+        if historical:
+            return {
+                "title": "No historical observation is available for this pair and date.",
+                "detail": (
+                    "Try another date or currency pair. Historical provider coverage can differ "
+                    "from current coverage."
+                ),
+            }
         return {
             "title": "This currency pair is not available.",
             "detail": "Choose another supported currency pair and try again.",
@@ -146,16 +176,27 @@ def converter(request: HttpRequest) -> HttpResponse:
     if form_valid:
         cleaned = form.cleaned_data
         quote_currency = form.currency_for_code(cleaned["destination_currency"])
+        historical = cleaned.get("rate_mode") == RATE_MODE_HISTORICAL
         try:
-            result = quote_conversion(
-                amount=cleaned["amount_decimal"],
-                base_currency=cleaned["source_currency"],
-                quote_currency=cleaned["destination_currency"],
-                quote_minor_units=quote_currency.minor_units if quote_currency else 2,
-                gateway=build_latest_quote_gateway(),
-            )
-        except FxProviderError as exc:
-            if isinstance(exc, FxProviderUnsupportedPair):
+            if historical:
+                result = quote_historical_conversion(
+                    amount=cleaned["amount_decimal"],
+                    base_currency=cleaned["source_currency"],
+                    quote_currency=cleaned["destination_currency"],
+                    quote_minor_units=quote_currency.minor_units if quote_currency else 2,
+                    requested_date=cleaned["requested_date"],
+                    gateway=build_historical_quote_gateway(),
+                )
+            else:
+                result = quote_conversion(
+                    amount=cleaned["amount_decimal"],
+                    base_currency=cleaned["source_currency"],
+                    quote_currency=cleaned["destination_currency"],
+                    quote_minor_units=quote_currency.minor_units if quote_currency else 2,
+                    gateway=build_latest_quote_gateway(),
+                )
+        except (FxProviderError, HistoricalObservationUnavailable) as exc:
+            if isinstance(exc, (FxProviderUnsupportedPair, HistoricalObservationUnavailable)):
                 response_status = 422
             elif isinstance(exc, FxProviderInvalidPayload):
                 response_status = 502
@@ -169,7 +210,7 @@ def converter(request: HttpRequest) -> HttpResponse:
                     "error_code": exc.__class__.__name__,
                 },
             )
-            error = _conversion_error(exc)
+            error = _conversion_error(exc, historical=historical)
 
     if convert_requested and not form_valid and request.method == "POST":
         response_status = 422
@@ -208,8 +249,24 @@ def picker_options(request: HttpRequest) -> HttpResponse:
         side = "source"
 
     query = " ".join(request.GET.get("q", "").split())[:80]
-    currency_filter = Currency.objects.filter(is_active=True)
-    links = CountryCurrency.objects.current().select_related("country", "currency")
+    historical_mode = request.GET.get("rate_mode") == RATE_MODE_HISTORICAL
+    raw_requested_date = request.GET.get("requested_date", "")
+    selected_date = None
+    if historical_mode and raw_requested_date:
+        try:
+            selected_date = date.fromisoformat(raw_requested_date)
+        except ValueError:
+            selected_date = None
+
+    currency_filter = (
+        Currency.objects.all() if historical_mode else Currency.objects.filter(is_active=True)
+    )
+    if historical_mode and selected_date is not None:
+        links = CountryCurrency.objects.on_date(selected_date).select_related("country", "currency")
+    elif historical_mode:
+        links = CountryCurrency.objects.select_related("country", "currency")
+    else:
+        links = CountryCurrency.objects.current().select_related("country", "currency")
 
     if query:
         from django.db.models import Q
