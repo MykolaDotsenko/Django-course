@@ -434,7 +434,6 @@ def test_current_picker_keeps_archived_currency_hidden(client, reference_data):
     assert b"Finnish markka" not in response.content
 
 
-
 @pytest.mark.django_db
 def test_historical_currency_suggestion_action_replays_conversion_with_suggested_code(
     client, reference_data
