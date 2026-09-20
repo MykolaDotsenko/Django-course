@@ -10,6 +10,7 @@ from apps.exchange.providers.frankfurter import (
     FrankfurterProvider,
     FxProviderInvalidPayload,
     FxProviderRateLimited,
+    FxProviderUnsupportedPair,
     parse_rate_payload,
 )
 
@@ -115,3 +116,13 @@ def test_rate_limit_is_not_retried():
             provider.latest_quote("EUR", "JPY", DEFAULT_SOURCE_POLICY)
 
     assert mocked.call_count == 1
+
+
+def test_invalid_currency_code_is_rejected_before_network_call():
+    provider = FrankfurterProvider()
+
+    with patch("apps.exchange.providers.frankfurter.urlopen") as mocked:
+        with pytest.raises(FxProviderUnsupportedPair):
+            provider.latest_quote("EUR/USD", "JPY", DEFAULT_SOURCE_POLICY)
+
+    mocked.assert_not_called()
