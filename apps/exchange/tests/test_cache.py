@@ -480,7 +480,6 @@ def test_historical_invalidation_removes_resolution_and_observation_keys():
     assert cache.get(observation_key) is None
 
 
-
 def make_rate_series(
     *,
     start_date=date(2026, 1, 1),
@@ -489,7 +488,7 @@ def make_rate_series(
     fetched_at=NOW,
     policy=DEFAULT_SOURCE_POLICY,
 ):
-    providers = ((policy.provider_key,) if policy.provider_key else ("ecb",))
+    providers = (policy.provider_key,) if policy.provider_key else ("ecb",)
     return RateSeries(
         base_currency="EUR",
         quote_currency="JPY",
@@ -659,9 +658,7 @@ def test_rate_series_provider_identity_is_verified_before_caching():
         start_date=date(2026, 1, 1),
         end_date=date(2026, 1, 7),
         grouping=RateSeriesGrouping.DAILY,
-        points=(
-            RateSeriesPoint(date(2026, 1, 2), Decimal("1.1"), ("ecb",)),
-        ),
+        points=(RateSeriesPoint(date(2026, 1, 2), Decimal("1.1"), ("ecb",)),),
         fetched_at=NOW,
         provider_policy=DEFAULT_SOURCE_POLICY,
     )
