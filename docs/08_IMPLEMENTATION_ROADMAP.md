@@ -257,6 +257,14 @@ At this point the basic product is useful and already expresses the product's si
 
 ## Implementation PR 6 — Historical FX converter
 
+**Execution split:** this milestone is delivered incrementally so current-conversion trust semantics stay reviewable:
+
+1. **PR 6A — historical date mode foundation:** shared converter mode/date controls, future-date validation, historical quote gateway/cache resolution, bounded previous-observation policy, requested/effective-date provenance, historical deep links, archived-currency picker visibility and browser QA;
+2. **PR 6B — lifecycle and coverage completion:** explicit historical out-of-coverage domain errors, currency/provider coverage metadata, country/date historical-currency suggestions and lower-frequency observation semantics;
+3. **PR 6C — historical acceptance hardening:** exact/fallback/out-of-coverage E2E matrix, final accessibility/reflow evidence and documentation status update.
+
+PR 6A intentionally does not silently replace an explicitly selected currency when a country used a different currency on the chosen date.
+
 **Goal:** make selected-date conversion a first-class product capability.
 
 Deliverables:
