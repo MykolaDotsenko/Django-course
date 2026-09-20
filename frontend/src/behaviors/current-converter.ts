@@ -1,5 +1,38 @@
 let restoreFocusId: string | null = null;
 
+export function requestFocusRestore(id: string): void {
+  restoreFocusId = id;
+}
+
+function enhanceAutoRefresh(form: HTMLFormElement): void {
+  if (form.dataset.autoRefreshWired === "true") return;
+  form.dataset.autoRefreshWired = "true";
+
+  let amountTimer: number | undefined;
+
+  form.addEventListener("input", (event) => {
+    if (form.dataset.hasResult !== "true") return;
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement) || target.id !== "id_amount") return;
+
+    window.clearTimeout(amountTimer);
+    amountTimer = window.setTimeout(() => form.requestSubmit(), 400);
+  });
+
+  form.addEventListener("change", (event) => {
+    if (form.dataset.hasResult !== "true") return;
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
+    if (target.type === "hidden" || target.id === "id_amount") return;
+    form.requestSubmit();
+  });
+}
+
+function enhanceCurrentConverterBehavior(): void {
+  const form = document.querySelector<HTMLFormElement>("[data-current-conversion-form]");
+  if (form) enhanceAutoRefresh(form);
+}
+
 document.addEventListener("click", (event) => {
   const target = event.target;
   if (!(target instanceof Element)) return;
@@ -7,7 +40,24 @@ document.addEventListener("click", (event) => {
   if (swap) restoreFocusId = swap.id;
 });
 
+document.addEventListener("htmx:beforeSwap", (event) => {
+  const detail = (
+    event as CustomEvent<{
+      xhr: XMLHttpRequest;
+      shouldSwap: boolean;
+      isError: boolean;
+    }>
+  ).detail;
+  if (![422, 502, 503].includes(detail.xhr.status)) return;
+
+  detail.shouldSwap = true;
+  detail.isError = false;
+});
+
+document.addEventListener("DOMContentLoaded", enhanceCurrentConverterBehavior);
 document.addEventListener("htmx:afterSwap", () => {
+  enhanceCurrentConverterBehavior();
+
   if (!restoreFocusId) return;
   document.getElementById(restoreFocusId)?.focus();
   restoreFocusId = null;
