@@ -417,3 +417,33 @@ def test_oversized_series_response_is_rejected_before_json_parsing():
                 RateSeriesGrouping.DAILY,
                 DEFAULT_SOURCE_POLICY,
             )
+
+
+
+def test_series_keeps_requested_grouping_separate_from_provider_cadence():
+    policy = FxSourcePolicy(
+        mode=ProviderPolicyMode.PINNED,
+        provider_key="hmrc",
+        include_attribution=False,
+    )
+    result = parse_series_payload(
+        [
+            {
+                "date": "2026-01-01",
+                "base": "EUR",
+                "quote": "GBP",
+                "rate": Decimal("0.84"),
+            }
+        ],
+        expected_base="EUR",
+        expected_quote="GBP",
+        start_date=date(2026, 1, 1),
+        end_date=date(2026, 12, 31),
+        grouping=RateSeriesGrouping.MONTH,
+        policy=policy,
+        fetched_at=datetime(2027, 1, 1, tzinfo=UTC),
+    )
+
+    assert result.grouping is RateSeriesGrouping.MONTH
+    assert result.observation_granularity is ObservationGranularity.MONTHLY
+    assert result.points[0].provider_keys == ("hmrc",)
