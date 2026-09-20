@@ -123,11 +123,14 @@ def _conversion_error(exc: FxProviderError) -> dict[str, str]:
 def converter(request: HttpRequest) -> HttpResponse:
     convert_requested = False
 
+    conversion_active = False
+
     if request.method == "POST":
         swapping = request.POST.get("action") == "swap"
+        conversion_active = request.POST.get("conversion_active") == "1"
         data = _swap_payload(request) if swapping else request.POST
         form = CurrentConversionForm(data)
-        convert_requested = not swapping or request.POST.get("conversion_active") == "1"
+        convert_requested = not swapping or conversion_active
     else:
         convert_requested = request.GET.get("convert") == "1"
         form = (
@@ -179,6 +182,7 @@ def converter(request: HttpRequest) -> HttpResponse:
         result=result,
         conversion_error=error,
         validation_attempted=convert_requested,
+        conversion_active=conversion_active,
     )
     fragment = _is_htmx(request) and not _is_history_restore(request)
     template = "components/converter/current_panel.html" if fragment else "pages/converter.html"
