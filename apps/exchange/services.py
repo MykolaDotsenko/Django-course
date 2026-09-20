@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_EVEN, Decimal
 from typing import Callable
 
 from apps.exchange.cache import HistoricalQuoteGateway, HistoricalSeriesGateway, LatestQuoteGateway
@@ -14,6 +14,7 @@ from apps.exchange.domain import (
     RateSeriesGrouping,
     RateSeriesRangeError,
     RateSeriesResult,
+    ThenNowComparison,
     convert_amount,
     normalize_currency_code,
     same_currency_quote,
@@ -150,3 +151,22 @@ def get_rate_series(
         now=current_time,
     )
     return RateSeriesResult(series=series, stale=stale)
+
+
+
+def compare_historical_to_latest(
+    historical: ConversionResult,
+    latest: ConversionResult,
+) -> ThenNowComparison:
+    if historical.quote.rate <= 0:
+        raise FxDomainError("Historical comparison rate must be positive.")
+    percent = (
+        (latest.quote.rate - historical.quote.rate)
+        / historical.quote.rate
+        * Decimal("100")
+    ).quantize(Decimal("0.1"), rounding=ROUND_HALF_EVEN)
+    return ThenNowComparison(
+        historical=historical,
+        latest=latest,
+        rate_difference_percent=percent,
+    )
