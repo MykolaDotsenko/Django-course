@@ -81,9 +81,17 @@
           {{ component.data_class }}
         </dd>
       </div>
+      {% if component.requested_date %}
+        <div>
+          <dt>Requested date</dt>
+          <dd>
+            {{ component.requested_date }}
+          </dd>
+        </div>
+      {% endif %}
       {% if component.effective_date %}
         <div>
-          <dt>Effective date</dt>
+          <dt>{{ component.effective_date_label|default:"Effective date" }}</dt>
           <dd>
             {{ component.effective_date }}
           </dd>
