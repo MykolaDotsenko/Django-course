@@ -97,7 +97,6 @@ def test_current_relationship_excludes_future_valid_from(finland, eur):
     assert CountryCurrency.objects.current(as_of=date(2099, 1, 1)).exists()
 
 
-
 @pytest.mark.django_db
 def test_currency_covered_on_treats_latest_observation_as_non_terminal():
     eur = Currency.objects.create(
