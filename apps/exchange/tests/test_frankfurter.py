@@ -11,11 +11,17 @@ from apps.exchange.domain import (
     ObservationGranularity,
     ProviderPolicyMode,
 )
-from apps.exchange.providers.frankfurter import (
-    FrankfurterProvider,
+from apps.exchange.providers.base import (
+    FxProviderAuthenticationError,
     FxProviderInvalidPayload,
     FxProviderRateLimited,
+    FxProviderTimeout,
+    FxProviderUnavailable,
     FxProviderUnsupportedPair,
+)
+from apps.exchange.providers.frankfurter import (
+    MAX_RESPONSE_BYTES,
+    FrankfurterProvider,
     parse_rate_payload,
 )
 
@@ -92,8 +98,8 @@ class FakeResponse:
     def __exit__(self, exc_type, exc, tb):
         return False
 
-    def read(self):
-        return self.payload
+    def read(self, size=-1):
+        return self.payload if size < 0 else self.payload[:size]
 
 
 def test_transient_network_failure_retries_at_most_once():
@@ -141,13 +147,84 @@ def test_invalid_currency_code_is_rejected_before_network_call():
     mocked.assert_not_called()
 
 
-def test_missing_requested_provider_attribution_is_rejected():
-    with pytest.raises(FxProviderInvalidPayload, match="omitted requested provider attribution"):
+def test_blended_pegged_rate_may_omit_provider_attribution():
+    result = parse_rate_payload(
+        {"date": "2026-09-18", "base": "USD", "quote": "HKD", "rate": Decimal("7.8")},
+        expected_base="USD",
+        expected_quote="HKD",
+        requested_date=None,
+        policy=DEFAULT_SOURCE_POLICY,
+        fetched_at=datetime(2026, 9, 20, tzinfo=UTC),
+    )
+
+    assert result.provider_keys == ()
+
+
+def test_pinned_quote_missing_requested_attribution_is_rejected():
+    policy = FxSourcePolicy(mode=ProviderPolicyMode.PINNED, provider_key="ecb")
+    with pytest.raises(FxProviderInvalidPayload, match="pinned-provider"):
         parse_rate_payload(
             {"date": "2026-09-18", "base": "EUR", "quote": "JPY", "rate": Decimal("174.5")},
             expected_base="EUR",
             expected_quote="JPY",
             requested_date=None,
-            policy=DEFAULT_SOURCE_POLICY,
+            policy=policy,
             fetched_at=datetime(2026, 9, 20, tzinfo=UTC),
         )
+
+
+@pytest.mark.parametrize(("status", "error_type"), [(401, FxProviderAuthenticationError), (403, FxProviderAuthenticationError)])
+def test_authentication_failures_are_not_retried(status, error_type):
+    error = HTTPError(
+        url="https://api.frankfurter.dev/v2/rate/EUR/JPY",
+        code=status,
+        msg="auth failure",
+        hdrs=None,
+        fp=None,
+    )
+    provider = FrankfurterProvider(max_attempts=2)
+
+    with patch("apps.exchange.providers.frankfurter.urlopen", side_effect=error) as mocked:
+        with pytest.raises(error_type):
+            provider.latest_quote("EUR", "JPY", DEFAULT_SOURCE_POLICY)
+
+    assert mocked.call_count == 1
+
+
+def test_non_retryable_unexpected_4xx_is_not_retried():
+    error = HTTPError(
+        url="https://api.frankfurter.dev/v2/rate/EUR/JPY",
+        code=418,
+        msg="client error",
+        hdrs=None,
+        fp=None,
+    )
+    provider = FrankfurterProvider(max_attempts=2)
+
+    with patch("apps.exchange.providers.frankfurter.urlopen", side_effect=error) as mocked:
+        with pytest.raises(FxProviderUnavailable):
+            provider.latest_quote("EUR", "JPY", DEFAULT_SOURCE_POLICY)
+
+    assert mocked.call_count == 1
+
+
+def test_timeout_is_normalized_after_bounded_retry():
+    provider = FrankfurterProvider(max_attempts=2)
+
+    with patch(
+        "apps.exchange.providers.frankfurter.urlopen",
+        side_effect=TimeoutError("slow"),
+    ) as mocked:
+        with pytest.raises(FxProviderTimeout):
+            provider.latest_quote("EUR", "JPY", DEFAULT_SOURCE_POLICY)
+
+    assert mocked.call_count == 2
+
+
+def test_oversized_single_rate_response_is_rejected_before_json_parsing():
+    provider = FrankfurterProvider(max_attempts=1)
+    response = FakeResponse(b"x" * (MAX_RESPONSE_BYTES + 1))
+
+    with patch("apps.exchange.providers.frankfurter.urlopen", return_value=response):
+        with pytest.raises(FxProviderInvalidPayload, match="size limit"):
+            provider.latest_quote("EUR", "JPY", DEFAULT_SOURCE_POLICY)
