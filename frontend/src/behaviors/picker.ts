@@ -2,7 +2,7 @@ import Combobox from "@github/combobox-nav";
 
 const activeComboboxes = new WeakMap<HTMLInputElement, Combobox>();
 
-function formForDialog(dialog: HTMLDialogElement): HTMLFormElement | null {
+function currentConversionForm(): HTMLFormElement | null {
   return document.querySelector<HTMLFormElement>("[data-current-conversion-form]");
 }
 
@@ -14,7 +14,7 @@ function refreshAfterSelection(form: HTMLFormElement): void {
 
 function commitOption(dialog: HTMLDialogElement, option: HTMLElement): void {
   const side = dialog.dataset.pickerDialog;
-  const form = formForDialog(dialog);
+  const form = currentConversionForm();
   if (!side || !form) return;
 
   const countrySelect = form.querySelector<HTMLSelectElement>(`[name="${side}_country"]`);
