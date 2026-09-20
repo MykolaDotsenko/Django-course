@@ -150,7 +150,6 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   await page.locator("#id_requested_date").waitFor({ state: "visible" });
   const historicalPost = waitForPost();
   await page.locator("#id_requested_date").fill("1998-06-15");
-  await page.locator("#id_requested_date").dispatchEvent("change");
   await historicalPost;
   await page.locator("#current-conversion-result").waitFor();
 
