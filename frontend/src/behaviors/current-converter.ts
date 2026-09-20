@@ -31,11 +31,6 @@ function enhanceAutoRefresh(form: HTMLFormElement): void {
 function enhanceCurrentConverterBehavior(): void {
   const form = document.querySelector<HTMLFormElement>("[data-current-conversion-form]");
   if (form) enhanceAutoRefresh(form);
-
-  const resultRegion = document.getElementById("conversion-result-region");
-  if (resultRegion?.querySelector("#current-conversion-result")) {
-    resultRegion.setAttribute("hx-preserve", "true");
-  }
 }
 
 document.addEventListener("click", (event) => {
@@ -65,16 +60,11 @@ document.addEventListener("htmx:beforeSwap", (event) => {
     }>
   ).detail;
 
-  const resultRegion = document.getElementById("conversion-result-region");
-
-  if (detail.xhr.status === 200) {
-    resultRegion?.removeAttribute("hx-preserve");
-    return;
-  }
-
   if (![422, 502, 503].includes(detail.xhr.status)) return;
 
-  const note = resultRegion?.querySelector<HTMLElement>("[data-previous-result-note]");
+  const note = document
+    .getElementById("conversion-result-region")
+    ?.querySelector<HTMLElement>("[data-previous-result-note]");
   if (note) {
     note.hidden = false;
     note.textContent =
