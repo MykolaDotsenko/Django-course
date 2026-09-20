@@ -67,13 +67,7 @@ def build_rate_series_component(
         (point for point in series.points if point.observation_date == selected_date),
         None,
     )
-    provider_keys = sorted(
-        {
-            key.upper()
-            for point in series.points
-            for key in point.provider_keys
-        }
-    )
+    provider_keys = sorted({key.upper() for point in series.points for key in point.provider_keys})
 
     period_links = []
     for key, label in (("1y", "1Y"), ("5y", "5Y"), ("10y", "10Y")):
