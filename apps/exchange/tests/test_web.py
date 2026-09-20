@@ -515,7 +515,6 @@ def test_monthly_historical_observation_never_claims_daily_precision(client, ref
     assert b"Previous available observation" not in response.content
 
 
-
 @pytest.mark.django_db
 def test_archived_currency_in_latest_mode_gets_transition_guidance_without_provider(
     client, reference_data
