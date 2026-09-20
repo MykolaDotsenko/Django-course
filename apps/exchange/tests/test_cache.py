@@ -11,7 +11,7 @@ from apps.exchange.domain import (
     ProviderPolicyMode,
     RateQuote,
 )
-from apps.exchange.providers.frankfurter import FxProviderUnavailable
+from apps.exchange.providers.frankfurter import FxProviderInvalidPayload, FxProviderUnavailable
 
 
 NOW = datetime(2026, 9, 20, 12, tzinfo=UTC)
@@ -92,3 +92,23 @@ def test_provider_policy_changes_cache_identity():
     assert latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY) != latest_cache_key(
         "EUR", "JPY", pinned
     )
+
+
+def test_malformed_provider_response_can_fall_back_to_matching_stale_quote():
+    cached = make_quote(fetched_at=NOW - timedelta(days=2))
+    cache.set(latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY), serialize_quote(cached), 100)
+    gateway = LatestQuoteGateway(FakeProvider(error=FxProviderInvalidPayload("bad payload")))
+
+    result, stale = gateway.get("EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW)
+
+    assert result == cached
+    assert stale is True
+
+
+def test_wrong_pair_cache_key_is_never_reused_on_failure():
+    cached = make_quote(fetched_at=NOW - timedelta(days=2))
+    cache.set(latest_cache_key("EUR", "USD", DEFAULT_SOURCE_POLICY), serialize_quote(cached), 100)
+    gateway = LatestQuoteGateway(FakeProvider(error=FxProviderUnavailable("down")))
+
+    with pytest.raises(FxProviderUnavailable):
+        gateway.get("EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW)
