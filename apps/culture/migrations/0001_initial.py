@@ -39,7 +39,12 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 ("title", models.CharField(max_length=240)),
-                ("summary", models.TextField()),
+                (
+                    "summary",
+                    models.TextField(
+                        validators=[django.core.validators.MaxLengthValidator(2000)]
+                    ),
+                ),
                 ("start_date", models.DateField(blank=True, null=True)),
                 ("end_date", models.DateField(blank=True, null=True)),
                 (

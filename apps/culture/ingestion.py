@@ -47,6 +47,14 @@ def upsert_wikidata_story_candidate(
         raise ValueError("Story relevance weight must be between 0 and 100.")
     if start_date and end_date and end_date < start_date:
         raise ValueError("Story end_date cannot precede start_date.")
+    normalized_title = (title or item.label).strip()
+    normalized_summary = (summary or item.description).strip()
+    if not normalized_title:
+        raise ValueError("Story candidate title is required.")
+    if not normalized_summary:
+        raise ValueError("Story candidate summary is required.")
+    if len(normalized_summary) > 2000:
+        raise ValueError("Story candidate summary exceeds 2000 characters.")
 
     protected_statuses = {
         StoryMomentStatus.APPROVED,
@@ -70,8 +78,8 @@ def upsert_wikidata_story_candidate(
 
         defaults = {
             "category": category,
-            "title": (title or item.label).strip()[:240],
-            "summary": (summary or item.description).strip(),
+            "title": normalized_title[:240],
+            "summary": normalized_summary,
             "start_date": start_date,
             "end_date": end_date,
             "date_precision": date_precision,

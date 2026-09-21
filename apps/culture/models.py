@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date
 
 from django.core.exceptions import ValidationError
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxLengthValidator, MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
 
@@ -59,7 +59,7 @@ class StoryMomentQuerySet(models.QuerySet):
 class StoryMoment(models.Model):
     category = models.CharField(max_length=32, choices=StoryMomentCategory.choices)
     title = models.CharField(max_length=240)
-    summary = models.TextField()
+    summary = models.TextField(validators=[MaxLengthValidator(2000)])
     countries = models.ManyToManyField(
         "countries.Country",
         blank=True,
@@ -123,6 +123,25 @@ class StoryMoment(models.Model):
             ),
         ]
 
+    _IMMUTABLE_EDITORIAL_FIELDS = (
+        "category",
+        "title",
+        "summary",
+        "start_date",
+        "end_date",
+        "date_precision",
+        "source_kind",
+        "source_name",
+        "source_url",
+        "external_id",
+        "source_published_at",
+        "source_retrieved_at",
+        "verified_at",
+        "relevance_weight",
+        "supports_causality",
+        "causal_support_note",
+    )
+
     def clean(self) -> None:
         super().clean()
         if self.start_date and self.end_date and self.end_date < self.start_date:
@@ -133,6 +152,39 @@ class StoryMoment(models.Model):
             )
         if not self.start_date and self.end_date:
             raise ValidationError({"start_date": "end_date requires start_date."})
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            current = (
+                StoryMoment.objects.filter(pk=self.pk)
+                .values("status", *self._IMMUTABLE_EDITORIAL_FIELDS)
+                .first()
+            )
+            if current and current["status"] in {
+                StoryMomentStatus.PUBLISHED,
+                StoryMomentStatus.RETIRED,
+            }:
+                changed = [
+                    field_name
+                    for field_name in self._IMMUTABLE_EDITORIAL_FIELDS
+                    if current[field_name] != getattr(self, field_name)
+                ]
+                if changed:
+                    raise ValidationError(
+                        "Published or retired story content is immutable; create a new reviewed "
+                        "story version instead."
+                    )
+                if current["status"] == StoryMomentStatus.PUBLISHED and self.status not in {
+                    StoryMomentStatus.PUBLISHED,
+                    StoryMomentStatus.RETIRED,
+                }:
+                    raise ValidationError("Published stories may only transition to retired.")
+                if (
+                    current["status"] == StoryMomentStatus.RETIRED
+                    and self.status != StoryMomentStatus.RETIRED
+                ):
+                    raise ValidationError("Retired stories are immutable.")
+        super().save(*args, **kwargs)
 
     @property
     def is_published(self) -> bool:

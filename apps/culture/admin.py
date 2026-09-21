@@ -33,6 +33,33 @@ class StoryMomentAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = list(super().get_readonly_fields(request, obj))
+        if obj and obj.status in {"published", "retired"}:
+            fields.extend(
+                [
+                    "category",
+                    "title",
+                    "summary",
+                    "countries",
+                    "currencies",
+                    "start_date",
+                    "end_date",
+                    "date_precision",
+                    "source_kind",
+                    "source_name",
+                    "source_url",
+                    "external_id",
+                    "source_published_at",
+                    "source_retrieved_at",
+                    "verified_at",
+                    "relevance_weight",
+                    "supports_causality",
+                    "causal_support_note",
+                ]
+            )
+        return tuple(fields)
     actions = (
         "approve_selected",
         "publish_selected",
