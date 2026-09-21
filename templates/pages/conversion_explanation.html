@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Conversion explanation · Cultural Currency Converter{% endblock %}
+{% block head_meta %}
+  <meta name="robots" content="noindex">
+  <meta name="description"
+        content="Optional plain-language explanation of an existing reference conversion.">
+{% endblock %}
+{% block content %}
+  <section class="qa-foundation-intro" aria-labelledby="explanation-page-title">
+    <p class="qa-foundation-kicker">Explain this</p>
+    <h1 id="explanation-page-title">Reference conversion, in plain language.</h1>
+    <p class="qa-foundation-lede">
+      This optional explanation can only summarize the signed conversion facts produced by the
+      application. It cannot replace or recalculate the reference rate.
+    </p>
+  </section>
+  {% include "components/converter/explanation.html" %}
+  <p><a class="qa-secondary-button" href="{% url 'converter' %}">Back to converter</a></p>
+{% endblock %}

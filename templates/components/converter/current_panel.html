@@ -282,6 +282,39 @@
         {% with component=result_component %}
           {% include "components/converter/primitives.html#conversion-result" %}
         {% endwith %}
+        {% if result_component.ai_explanation %}
+          <div class="qa-ai-explanation-entry">
+            <div>
+              <p class="qa-foundation-kicker">Optional explanation</p>
+              <h3>Want the reference conversion in plain language?</h3>
+              <p>
+                Gemini receives only the signed public conversion facts shown here. It cannot
+                change the rate or browse for additional facts.
+              </p>
+            </div>
+            <input type="hidden"
+                   name="explanation_token"
+                   value="{{ result_component.ai_explanation.token }}">
+            <button class="qa-secondary-button"
+                    type="submit"
+                    formaction="{% url 'conversion_explanation' %}"
+                    formmethod="post"
+                    hx-post="{% url 'conversion_explanation' %}"
+                    hx-include="closest form"
+                    hx-target="#conversion-explanation-region"
+                    hx-swap="innerHTML"
+                    hx-sync="#conversion-explanation-region:replace"
+                    hx-indicator="#explanation-loading">
+              Explain this
+            </button>
+          </div>
+          <div id="conversion-explanation-region"
+               class="qa-ai-explanation-region"
+               aria-live="polite">
+            <span id="explanation-loading"
+                  class="qa-loading-indicator htmx-indicator">Generating optional explanation…</span>
+          </div>
+        {% endif %}
         {% if result_component.stale %}
           <div class="qa-result-actions">
             <button class="qa-secondary-button"
