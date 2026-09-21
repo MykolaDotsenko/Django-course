@@ -132,7 +132,13 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     );
 
   await page.locator("#id_amount").fill("-1");
-  await Promise.all([waitForPost(), page.locator(".qa-primary-button").click()]);
+  const invalidSubmit = waitForPost();
+  await page.locator(".qa-primary-button").click();
+  const invalidSubmitResponse = await invalidSubmit;
+  assert(
+    invalidSubmitResponse.status() === 422,
+    `current-converter: invalid submit returned ${invalidSubmitResponse.status()} instead of 422`,
+  );
   await page.getByText("Enter zero or a positive amount.").waitFor();
 
   await page.locator("#source-picker-trigger").click();
@@ -245,7 +251,11 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     .innerText();
   const invalidRefresh = waitForPost();
   await page.locator("#id_amount").fill("-1");
-  await invalidRefresh;
+  const invalidRefreshResponse = await invalidRefresh;
+  assert(
+    invalidRefreshResponse.status() === 422,
+    `current-converter: invalid progressive refresh returned ${invalidRefreshResponse.status()} instead of 422`,
+  );
   await page.getByText("Enter zero or a positive amount.").waitFor();
 
   const preservedAmount = await page
@@ -269,14 +279,11 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   const focused = await page.evaluate(() => document.activeElement?.id ?? "");
   assert(focused === "swap-contexts", `current-converter: swap focus moved to ${focused}`);
 
-  const expectedValidationErrors = consoleErrors.filter((message) =>
-    message.includes("status of 422 (Unprocessable Content)"),
-  );
-  assert(
-    expectedValidationErrors.length === 2,
-    `current-converter: expected exactly two handled validation 422 console messages, found ${expectedValidationErrors.length}`,
-  );
-  for (const message of expectedValidationErrors) {
+  for (const message of consoleErrors.filter(
+    (entry) =>
+      entry.includes("422") &&
+      (entry.includes("Unprocessable Content") || entry.includes("Unprocessable Entity")),
+  )) {
     consoleErrors.splice(consoleErrors.indexOf(message), 1);
   }
 }
