@@ -1,0 +1,170 @@
+from __future__ import annotations
+
+import io
+import tempfile
+from datetime import date
+from pathlib import Path
+
+import pytest
+from django.test import override_settings
+from PIL import Image
+
+from apps.media.models import (
+    DatePrecision,
+    MediaAsset,
+    MediaKind,
+    MediaRole,
+    MediaSourceKind,
+    MediaStatus,
+)
+from apps.media.services import (
+    MediaPublicationError,
+    approve_media_asset,
+    attach_media_bytes,
+    publish_media_asset,
+    retire_media_asset,
+    select_published_media,
+    upsert_media_candidates,
+)
+from apps.media.sources.base import MediaCandidate
+
+
+def _png() -> bytes:
+    output = io.BytesIO()
+    Image.new("RGB", (12, 8), (12, 34, 56)).save(output, "PNG")
+    return output.getvalue()
+
+
+@pytest.fixture
+def media_root():
+    with tempfile.TemporaryDirectory() as directory:
+        with override_settings(MEDIA_ROOT=Path(directory)):
+            yield
+
+
+def _valid_sourced_asset() -> MediaAsset:
+    return MediaAsset.objects.create(
+        kind=MediaKind.ARTWORK,
+        source_kind=MediaSourceKind.WIKIMEDIA_COMMONS,
+        role=MediaRole.STORY_COVER,
+        title="Valid sourced art",
+        alt_text="A sourced editorial artwork",
+        source_name="Wikimedia Commons",
+        source_url="https://commons.wikimedia.org/wiki/File:Valid.png",
+        source_media_url="https://upload.wikimedia.org/valid.png",
+        creator="Creator",
+        licence_id="CC0",
+        licence_url="https://creativecommons.org/publicdomain/zero/1.0/",
+        rights_statement="CC0",
+        attribution_text="Creator · CC0",
+    )
+
+
+@pytest.mark.django_db
+def test_publish_rejects_unapproved_asset(media_root):
+    asset = _valid_sourced_asset()
+    attach_media_bytes(asset, _png(), filename="valid.png")
+
+    with pytest.raises(MediaPublicationError, match="approved"):
+        publish_media_asset(asset)
+
+
+@pytest.mark.django_db
+def test_published_asset_can_be_retired_but_not_reapproved(media_root):
+    asset = _valid_sourced_asset()
+    attach_media_bytes(asset, _png(), filename="valid.png")
+    approve_media_asset(asset)
+    publish_media_asset(asset)
+    retire_media_asset(asset)
+
+    assert asset.status == MediaStatus.RETIRED
+    with pytest.raises(MediaPublicationError, match="Cannot approve"):
+        approve_media_asset(asset)
+
+
+@pytest.mark.django_db
+def test_selector_returns_none_when_only_nonpublished_media_exists():
+    MediaAsset.objects.create(
+        kind=MediaKind.ARTWORK,
+        source_kind=MediaSourceKind.MANUAL,
+        role=MediaRole.STORY_COVER,
+        title="Draft",
+        status=MediaStatus.APPROVED,
+    )
+
+    assert select_published_media(role=MediaRole.STORY_COVER) is None
+
+
+@pytest.mark.django_db
+def test_archival_media_requires_temporal_scope_and_precision(media_root):
+    asset = _valid_sourced_asset()
+    asset.kind = MediaKind.ARCHIVAL_PHOTO
+    asset.save(update_fields=("kind",))
+    attach_media_bytes(asset, _png(), filename="valid.png")
+
+    with pytest.raises(MediaPublicationError, match="temporal precision"):
+        approve_media_asset(asset)
+
+    asset.date_precision = DatePrecision.YEAR
+    asset.save(update_fields=("date_precision",))
+    with pytest.raises(MediaPublicationError, match="temporal scope"):
+        approve_media_asset(asset)
+
+
+@pytest.mark.django_db
+def test_candidate_ingestion_rejects_non_https_source_url():
+    candidate = MediaCandidate(
+        source_kind=MediaSourceKind.WIKIMEDIA_COMMONS,
+        external_id="bad",
+        title="Bad",
+        source_name="Source",
+        source_url="http://example.test/file",
+    )
+
+    with pytest.raises(MediaPublicationError, match="HTTPS"):
+        upsert_media_candidates(
+            (candidate,),
+            role=MediaRole.STORY_COVER,
+            kind=MediaKind.ARTWORK,
+        )
+
+
+@pytest.mark.django_db
+def test_protected_published_candidate_is_not_downgraded(media_root):
+    asset = _valid_sourced_asset()
+    asset.external_id = "protected"
+    asset.save(update_fields=("external_id",))
+    attach_media_bytes(asset, _png(), filename="valid.png")
+    approve_media_asset(asset)
+    publish_media_asset(asset)
+
+    candidate = MediaCandidate(
+        source_kind=MediaSourceKind.WIKIMEDIA_COMMONS,
+        external_id="protected",
+        title="Upstream changed title",
+        source_name="Wikimedia Commons",
+        source_url="https://commons.wikimedia.org/wiki/File:Valid.png",
+    )
+    summary = upsert_media_candidates(
+        (candidate,),
+        role=MediaRole.STORY_COVER,
+        kind=MediaKind.ARTWORK,
+    )
+
+    asset.refresh_from_db()
+    assert summary.skipped_protected == 1
+    assert asset.status == MediaStatus.PUBLISHED
+    assert asset.title == "Valid sourced art"
+
+
+@pytest.mark.django_db
+def test_unknown_role_and_generated_ingestion_kind_are_rejected():
+    with pytest.raises(ValueError, match="role"):
+        select_published_media(role="not-a-role")
+
+    with pytest.raises(ValueError, match="non-generated"):
+        upsert_media_candidates(
+            (),
+            role=MediaRole.STORY_COVER,
+            kind=MediaKind.GENERATED_ILLUSTRATION,
+        )
