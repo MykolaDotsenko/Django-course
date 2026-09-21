@@ -14,6 +14,7 @@ from apps.exchange.views import (
     historical_series,
     picker_options,
 )
+from apps.travel.views import saved_state
 
 urlpatterns = [
     path("", converter, name="converter"),
@@ -21,6 +22,7 @@ urlpatterns = [
     path("conversion/explain/", conversion_explanation, name="conversion_explanation"),
     path("story/", money_culture_story, name="money_culture_story"),
     path("historical/series/", historical_series, name="historical_series"),
+    path("saved/", saved_state, name="saved_state"),
     path("health/live/", health_live, name="health_live"),
     path("health/ready/", health_ready, name="health_ready"),
     path("admin/", admin.site.urls),

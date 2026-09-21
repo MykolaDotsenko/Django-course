@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Saved & recent · Cultural Currency Converter{% endblock %}
+{% block head_meta %}
+  <meta name="description"
+        content="Review browser-local saved currency pairs and recent conversions.">
+{% endblock %}
+{% block header_actions %}
+  <a class="qa-header-link" href="{% url 'converter' %}">Converter</a>
+{% endblock %}
+{% block content %}
+  <section class="qa-foundation-intro qa-saved-intro"
+           aria-labelledby="saved-page-title">
+    <p class="qa-foundation-kicker">Return faster</p>
+    <h1 id="saved-page-title">Saved &amp; recent</h1>
+    <p class="qa-foundation-lede">
+      These favourites and recent conversions are stored only in this browser. They are not
+      uploaded to an account or copied to the server.
+    </p>
+  </section>
+  <div class="qa-saved-state"
+       data-local-saved-state-page
+       data-converter-url="{% url 'converter' %}">
+    <div class="qa-inline-alert qa-saved-state__storage-note"
+         data-local-storage-status
+         role="status"
+         aria-live="polite">
+      <p>Checking browser storage…</p>
+    </div>
+    <section class="qa-saved-section" aria-labelledby="saved-pairs-title">
+      <div class="qa-saved-section__heading">
+        <div>
+          <p class="qa-foundation-kicker">Favourites</p>
+          <h2 id="saved-pairs-title">Saved pairs</h2>
+          <p>Pairs restore country and currency context only. Amount is intentionally left blank.</p>
+        </div>
+        <button class="qa-secondary-button"
+                type="button"
+                data-clear-favourites>Clear saved pairs</button>
+      </div>
+      <p class="qa-saved-empty" data-favourites-empty>No saved pairs yet. Save a pair after a conversion for quicker access.</p>
+      <div class="qa-saved-list" data-favourites-list></div>
+    </section>
+    <section class="qa-saved-section" aria-labelledby="recent-conversions-title">
+      <div class="qa-saved-section__heading">
+        <div>
+          <p class="qa-foundation-kicker">Recent</p>
+          <h2 id="recent-conversions-title">Recent conversions</h2>
+          <p>Up to 10 recent conversions stay on this device so you can repeat or reverse them.</p>
+        </div>
+        <button class="qa-secondary-button"
+                type="button"
+                data-clear-recents>Clear recent history</button>
+      </div>
+      <p class="qa-saved-empty" data-recents-empty>No recent conversions in this browser yet.</p>
+      <div class="qa-saved-list" data-recents-list></div>
+    </section>
+    <p class="qa-saved-state__privacy">
+      Clearing browser site data also removes these items. Account sync is a later, explicit feature.
+    </p>
+  </div>
+{% endblock %}

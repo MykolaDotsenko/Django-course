@@ -141,15 +141,20 @@ def build_result_component(
     output_text = _money_text(result.output_amount, minor_units=quote_minor_units)
     rate_text = _decimal_text(result.quote.rate)
 
+    source_country_code = _selected_value(form, "source_country")
+    destination_country_code = _selected_value(form, "destination_country")
+    source_country = form.country_for_code(source_country_code)
+    destination_country = form.country_for_code(destination_country_code)
+
     story_date = (
         result.quote.requested_date
         if historical and result.quote.requested_date is not None
         else timezone.localdate()
     )
     story_params = {
-        "source_country": _selected_value(form, "source_country"),
+        "source_country": source_country_code,
         "source_currency": result.quote.base_currency,
-        "destination_country": _selected_value(form, "destination_country"),
+        "destination_country": destination_country_code,
         "destination_currency": result.quote.quote_currency,
         "selected_date": story_date.isoformat(),
         "historical": "1" if historical else "0",
@@ -163,6 +168,23 @@ def build_result_component(
         "output_currency": result.quote.quote_currency,
         "exact": same_currency,
         "stale": result.stale,
+        "local_state": {
+            "input_amount": format(result.input_amount, "f"),
+            "output_amount": format(result.output_amount, "f"),
+            "source_currency": result.quote.base_currency,
+            "destination_currency": result.quote.quote_currency,
+            "source_country": source_country_code,
+            "source_country_name": source_country.name if source_country else "",
+            "destination_country": destination_country_code,
+            "destination_country_name": destination_country.name if destination_country else "",
+            "rate_mode": "historical" if historical else "latest",
+            "requested_date": (
+                result.quote.requested_date.isoformat()
+                if result.quote.requested_date is not None
+                else ""
+            ),
+            "effective_date": result.quote.effective_date.isoformat(),
+        },
         "money_culture_story": {
             "href": f"{reverse('money_culture_story')}?{urlencode(story_params)}",
             "historical": historical,
