@@ -611,7 +611,22 @@ or simply maintain idempotent saved state.
 
 Core conversion unaffected.
 
-Saved control explains inability only when user attempts it.
+Saved control explains inability only when user attempts it. The Saved & recent page may show the
+storage-unavailable state immediately because persistence is the purpose of that page.
+
+### Amount policy
+
+Anonymous favourites store pair/context only. They do not remember the last amount. Reopening a
+favourite restores the normalized pair and intentionally leaves Amount blank.
+
+Recent conversions are different: they are an explicit local history and therefore retain the
+successful amount/result plus current/historical date metadata so Repeat and Swap can reproduce the
+same semantic request.
+
+### Recents write rule
+
+Only a newly rendered successful conversion snapshot may create/update a recent item. Validation or
+provider-error refreshes that preserve the previous result must not create a new history entry.
 
 ---
 
