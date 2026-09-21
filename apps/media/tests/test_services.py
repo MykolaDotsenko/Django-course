@@ -313,3 +313,52 @@ def test_responsive_derivative_is_hashed_but_never_auto_published(media_root):
     assert len(derivative.content_hash) == 64
     assert derivative.status == MediaStatus.NEEDS_REVIEW
     assert derivative.published_at is None
+
+
+@pytest.mark.django_db
+def test_historical_selector_prefers_dated_ai_over_undated_neutral_sourced_media(media_root):
+    neutral = MediaAsset.objects.create(
+        kind=MediaKind.ARTWORK,
+        source_kind=MediaSourceKind.WIKIMEDIA_COMMONS,
+        role=MediaRole.STORY_COVER,
+        title="Neutral sourced artwork",
+        alt_text="Neutral sourced artwork",
+        source_name="Wikimedia Commons",
+        source_url="https://commons.wikimedia.org/wiki/File:Neutral.png",
+        creator="Creator",
+        licence_id="CC0",
+        rights_statement="CC0",
+        attribution_text="Creator · CC0",
+    )
+    attach_media_bytes(neutral, _png_bytes((81, 82, 83)), filename="neutral.png")
+    approve_media_asset(neutral)
+    publish_media_asset(neutral)
+
+    ai = MediaAsset.objects.create(
+        kind=MediaKind.GENERATED_ILLUSTRATION,
+        source_kind=MediaSourceKind.GENERATED,
+        role=MediaRole.STORY_COVER,
+        title="Dated generated illustration",
+        alt_text="Dated generated editorial illustration",
+        valid_from=date(1995, 1, 1),
+        valid_to=date(1995, 12, 31),
+        date_precision=DatePrecision.YEAR,
+        generated_by_ai=True,
+        ai_label="AI-generated editorial illustration",
+        generation_provider="example-provider",
+        generation_model="example-model",
+        prompt_version="media-prompt:v1",
+        prompt_hash="c" * 64,
+        generated_at=datetime(2026, 9, 21, tzinfo=UTC),
+    )
+    attach_media_bytes(ai, _png_bytes((84, 85, 86)), filename="ai.png")
+    approve_media_asset(ai)
+    publish_media_asset(ai)
+
+    selected = select_published_media(
+        role=MediaRole.STORY_COVER,
+        target_date=date(1995, 6, 1),
+    )
+
+    assert selected is not None
+    assert selected.asset.pk == ai.pk

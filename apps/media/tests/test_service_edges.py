@@ -203,3 +203,45 @@ def test_reject_cannot_rewrite_published_asset(media_root):
 
     with pytest.raises(MediaPublicationError, match="cannot be rejected"):
         reject_media_asset(asset)
+
+
+@pytest.mark.django_db
+def test_ai_approval_requires_real_sha256_prompt_hash(media_root):
+    asset = MediaAsset.objects.create(
+        kind=MediaKind.GENERATED_ILLUSTRATION,
+        source_kind=MediaSourceKind.GENERATED,
+        role=MediaRole.STORY_COVER,
+        title="Generated",
+        alt_text="Generated editorial illustration",
+        generated_by_ai=True,
+        ai_label="AI-generated editorial illustration",
+        generation_provider="provider",
+        generation_model="model",
+        prompt_version="v1",
+        prompt_hash="z" * 64,
+    )
+    attach_media_bytes(asset, _png(), filename="generated.png")
+
+    with pytest.raises(MediaPublicationError, match="prompt_hash"):
+        approve_media_asset(asset)
+
+
+@pytest.mark.django_db
+def test_ai_approval_requires_explicit_ai_generated_label(media_root):
+    asset = MediaAsset.objects.create(
+        kind=MediaKind.GENERATED_ILLUSTRATION,
+        source_kind=MediaSourceKind.GENERATED,
+        role=MediaRole.STORY_COVER,
+        title="Generated",
+        alt_text="Generated editorial illustration",
+        generated_by_ai=True,
+        ai_label="Editorial illustration",
+        generation_provider="provider",
+        generation_model="model",
+        prompt_version="v1",
+        prompt_hash="a" * 64,
+    )
+    attach_media_bytes(asset, _png(), filename="generated.png")
+
+    with pytest.raises(MediaPublicationError, match="explicitly"):
+        approve_media_asset(asset)

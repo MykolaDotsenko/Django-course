@@ -48,3 +48,18 @@ def test_oversized_payload_is_rejected_before_decode():
 def test_unknown_bytes_are_rejected():
     with pytest.raises(MediaValidationError, match="decodable"):
         validate_raster_image(b"not-an-image", filename="broken.png")
+
+
+def test_reencoded_managed_bytes_strip_exif_metadata():
+    output = io.BytesIO()
+    image = Image.new("RGB", (16, 12), (10, 20, 30))
+    exif = Image.Exif()
+    exif[315] = "Private author metadata"
+    image.save(output, format="JPEG", exif=exif)
+
+    from apps.media.services import _sanitize_raster_bytes
+
+    sanitized = _sanitize_raster_bytes(output.getvalue(), image_format="JPEG")
+
+    with Image.open(io.BytesIO(sanitized)) as reopened:
+        assert len(reopened.getexif()) == 0

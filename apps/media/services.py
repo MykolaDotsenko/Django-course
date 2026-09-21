@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import re
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
@@ -57,7 +58,6 @@ class SelectedMedia:
 _HISTORICAL_ROLES = {
     MediaRole.COMPARISON_THEN,
     MediaRole.HISTORICAL_TIMELINE,
-    MediaRole.STORY_CHAPTER,
 }
 _TEMPORAL_SCORE = {
     DatePrecision.EXACT_DAY: 1000,
@@ -69,6 +69,12 @@ _TEMPORAL_SCORE = {
     DatePrecision.UNKNOWN: 0,
 }
 _FORMAT_EXTENSION = {"JPEG": ".jpg", "PNG": ".png", "WEBP": ".webp"}
+_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
+
+
+def _validate_sha256(value: str, *, field_name: str) -> None:
+    if not _SHA256_PATTERN.fullmatch(value.lower()):
+        raise MediaPublicationError(f"{field_name} must be a valid SHA-256 hex digest.")
 
 
 def _validate_https_url(value: str, *, field_name: str, required: bool = False) -> None:
@@ -84,8 +90,9 @@ def _validate_https_url(value: str, *, field_name: str, required: bool = False) 
 def _validate_publishable_metadata(asset: MediaAsset) -> None:
     if not asset.storage_file:
         raise MediaPublicationError("Published media requires a managed storage file.")
-    if not asset.content_hash or len(asset.content_hash) != 64:
+    if not asset.content_hash:
         raise MediaPublicationError("Published media requires a SHA-256 content hash.")
+    _validate_sha256(asset.content_hash, field_name="content_hash")
     if not asset.width or not asset.height:
         raise MediaPublicationError("Published media requires positive intrinsic dimensions.")
     if not asset.is_decorative and not asset.alt_text.strip():
@@ -108,6 +115,11 @@ def _validate_publishable_metadata(asset: MediaAsset) -> None:
                 + ", ".join(missing)
                 + "."
             )
+        if "ai" not in asset.ai_label.casefold() or "generated" not in asset.ai_label.casefold():
+            raise MediaPublicationError(
+                "AI-generated media authenticity label must explicitly say it is AI-generated."
+            )
+        _validate_sha256(asset.prompt_hash, field_name="prompt_hash")
         if asset.kind != MediaKind.GENERATED_ILLUSTRATION:
             raise MediaPublicationError("AI media must use generated_illustration kind.")
         if asset.source_kind != MediaSourceKind.GENERATED:
@@ -126,11 +138,13 @@ def _validate_publishable_metadata(asset: MediaAsset) -> None:
             raise MediaPublicationError("Sourced media requires licence or rights metadata.")
         if not asset.attribution_text.strip():
             raise MediaPublicationError("Sourced media requires attribution text.")
-        if asset.kind == MediaKind.ARCHIVAL_PHOTO:
+        if asset.kind == MediaKind.ARCHIVAL_PHOTO or asset.role in _HISTORICAL_ROLES:
             if asset.date_precision == DatePrecision.UNKNOWN:
-                raise MediaPublicationError("Archival media requires honest temporal precision.")
+                raise MediaPublicationError(
+                    "Historical sourced media requires honest temporal precision."
+                )
             if asset.valid_from is None and asset.valid_to is None:
-                raise MediaPublicationError("Archival media requires a temporal scope.")
+                raise MediaPublicationError("Historical sourced media requires a temporal scope.")
 
     asset.full_clean(exclude={"storage_file"})
 
@@ -481,18 +495,34 @@ def select_published_media(
     if not candidates:
         return None
 
-    def score(asset: MediaAsset) -> tuple[int, datetime, int]:
-        value = 0
+    def score(asset: MediaAsset) -> tuple[int, int, int, int, datetime, int]:
+        semantic_specificity = 0
         if country is not None and asset.country_id == country.id:
-            value += 5000
+            semantic_specificity += 2
         if currency is not None and asset.currency_id == currency.id:
-            value += 3000
-        value += 2000 if not asset.generated_by_ai else 500
-        if target_date is not None:
-            value += _TEMPORAL_SCORE.get(asset.date_precision, 0)
-        if aspect_ratio and asset.aspect_ratio == aspect_ratio:
-            value += 100
-        return value, asset.published_at or asset.updated_at, asset.pk
+            semantic_specificity += 1
+
+        temporal_score = _TEMPORAL_SCORE.get(asset.date_precision, 0)
+        if target_date is None:
+            authenticity_rank = 3 if not asset.generated_by_ai else 2
+        elif not asset.generated_by_ai and temporal_score > 0:
+            authenticity_rank = 4
+        elif asset.generated_by_ai and temporal_score > 0:
+            authenticity_rank = 3
+        elif not asset.generated_by_ai:
+            authenticity_rank = 2
+        else:
+            authenticity_rank = 1
+
+        aspect_match = int(bool(aspect_ratio and asset.aspect_ratio == aspect_ratio))
+        return (
+            semantic_specificity,
+            authenticity_rank,
+            temporal_score,
+            aspect_match,
+            asset.published_at or asset.updated_at,
+            asset.pk,
+        )
 
     selected = max(candidates, key=score)
     return SelectedMedia(
