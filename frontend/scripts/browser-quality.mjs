@@ -139,14 +139,18 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   const search = page.locator("#source-picker-search");
   await search.fill("JPY");
   await page.locator("#source-picker-listbox").waitFor();
-  await page.waitForFunction(
-    () => document.querySelector("#source-picker-listbox")?.dataset.commitWired === "true",
-  );
-  await page
-    .locator(
-      '#source-picker-listbox [data-picker-option][data-country-code="JP"][data-currency-code="JPY"]',
-    )
-    .waitFor();
+  await page.waitForFunction(() => {
+    const list = document.querySelector("#source-picker-listbox");
+    if (!(list instanceof HTMLElement) || list.dataset.commitWired !== "true") return false;
+    const options = Array.from(list.querySelectorAll("[data-picker-option]"));
+    return (
+      options.length === 2 &&
+      options[0]?.getAttribute("data-country-code") === "" &&
+      options[0]?.getAttribute("data-currency-code") === "JPY" &&
+      options[1]?.getAttribute("data-country-code") === "JP" &&
+      options[1]?.getAttribute("data-currency-code") === "JPY"
+    );
+  });
   await search.press("ArrowDown");
   await search.press("ArrowDown");
   await search.press("Enter");
