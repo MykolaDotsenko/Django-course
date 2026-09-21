@@ -131,15 +131,15 @@ apps/
 ├── countries/
 ├── exchange/
 ├── culture/
-└── media/
+├── media/
+└── travel/
 ```
 
 Planned boundaries are introduced only with their owning feature:
 
 ```text
 apps/
-├── accounts/   # identity/ownership, PR12
-└── travel/     # saved state and trips/budgets
+└── accounts/   # identity/ownership, PR12
 ```
 
 A future `statistics/` app is introduced only when historical purchasing-power methodology becomes production scope.
@@ -268,11 +268,15 @@ Does not own:
 
 Owns:
 
-- FavouritePair;
-- server-side recent conversions when/if enabled;
-- Trip;
-- TripBudgetItem;
+- the Saved & recent presentation boundary;
+- future authenticated FavouritePair persistence;
+- server-side recent conversions only if explicitly introduced;
+- future Trip and TripBudgetItem persistence;
 - saved travel-specific state.
+
+PR11 Phase A does **not** persist anonymous favourites or history in Django/PostgreSQL. The browser
+owns that versioned localStorage state; Django only serves the page shell and validates pair-restore
+URL parameters.
 
 Does not own:
 
