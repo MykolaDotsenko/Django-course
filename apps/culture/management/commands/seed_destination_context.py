@@ -10,9 +10,10 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
-        if not Country.objects.filter(iso2="JP").exists() or not Currency.objects.filter(
-            code="JPY"
-        ).exists():
+        if (
+            not Country.objects.filter(iso2="JP").exists()
+            or not Currency.objects.filter(code="JPY").exists()
+        ):
             raise CommandError(
                 "Japan/JPY reference data is missing. Run seed_reference_data first."
             )

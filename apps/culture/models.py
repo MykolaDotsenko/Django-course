@@ -237,7 +237,9 @@ class CulturalProfile(models.Model):
                 self.dcc_warning,
             )
         ):
-            raise ValidationError("Published cultural profiles require at least one guidance field.")
+            raise ValidationError(
+                "Published cultural profiles require at least one guidance field."
+            )
 
     def __str__(self) -> str:
         return f"{self.country.name} payment context"

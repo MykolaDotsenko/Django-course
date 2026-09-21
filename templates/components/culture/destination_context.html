@@ -1,11 +1,11 @@
-{% with context=component %}
+{% with destination_context=component %}
   <section class="qa-destination-context"
            aria-labelledby="destination-context-title">
     <div class="qa-destination-context__heading">
       <div>
         <p class="qa-foundation-kicker">Explore</p>
         <h3 id="destination-context-title">
-          What does this amount mean in {{ context.country_name }}?
+          What does this amount mean in {{ destination_context.country_name }}?
         </h3>
       </div>
       <nav class="qa-explore-nav" aria-label="Explore conversion context">
@@ -14,8 +14,8 @@
         <a href="#money-culture-entry-title">Money &amp; culture</a>
       </nav>
     </div>
-    {% if context.historical_notice %}
-      <p class="qa-context-freshness-note">{{ context.historical_notice }}</p>
+    {% if destination_context.historical_notice %}
+      <p class="qa-context-freshness-note">{{ destination_context.historical_notice }}</p>
     {% endif %}
     <div class="qa-destination-context__grid">
       <section id="everyday-value"
@@ -25,9 +25,9 @@
           <p class="qa-foundation-kicker">Everyday value</p>
           <h4 id="everyday-value-title">What this amount roughly buys</h4>
         </div>
-        {% if context.prices %}
+        {% if destination_context.prices %}
           <div class="qa-price-grid">
-            {% for price in context.prices %}
+            {% for price in destination_context.prices %}
               <article class="qa-price-card">
                 <div>
                   <p class="qa-price-card__label">{{ price.label }}</p>
@@ -59,14 +59,14 @@
                aria-labelledby="payment-context-title">
         <div>
           <p class="qa-foundation-kicker">Payment context</p>
-          <h4 id="payment-context-title">Paying in {{ context.country_name }}</h4>
+          <h4 id="payment-context-title">Paying in {{ destination_context.country_name }}</h4>
         </div>
-        {% if context.payment %}
-          {% if context.payment.summary %}
-            <p>{{ context.payment.summary }}</p>
+        {% if destination_context.payment %}
+          {% if destination_context.payment.summary %}
+            <p>{{ destination_context.payment.summary }}</p>
           {% endif %}
           <dl class="qa-payment-list">
-            {% for row in context.payment.rows %}
+            {% for row in destination_context.payment.rows %}
               <div>
                 <dt>{{ row.label }}</dt>
                 <dd>{{ row.text }}</dd>
@@ -74,10 +74,10 @@
             {% endfor %}
           </dl>
           <p class="qa-context-source">
-            Verified {{ context.payment.verified }} ·
-            <a href="{{ context.payment.source_url }}"
+            Verified {{ destination_context.payment.verified }} ·
+            <a href="{{ destination_context.payment.source_url }}"
                rel="noopener noreferrer"
-               target="_blank">{{ context.payment.source_name }}</a>
+               target="_blank">{{ destination_context.payment.source_name }}</a>
           </p>
         {% else %}
           <p class="qa-context-empty">

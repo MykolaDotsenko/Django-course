@@ -147,8 +147,11 @@ def test_destination_context_does_not_backdate_current_context(japan_context):
 
 @pytest.mark.django_db
 def test_currency_only_conversion_has_no_destination_context(japan_context):
-    assert build_destination_context(
-        country_code="",
-        converted_amount=Decimal("1000"),
-        quote_currency="JPY",
-    ) is None
+    assert (
+        build_destination_context(
+            country_code="",
+            converted_amount=Decimal("1000"),
+            quote_currency="JPY",
+        )
+        is None
+    )
