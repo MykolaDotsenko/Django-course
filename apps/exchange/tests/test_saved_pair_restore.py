@@ -1,6 +1,7 @@
 from datetime import date
 
 import pytest
+from django.test import override_settings
 
 from apps.countries.models import Country, CountryCurrency, Currency
 
@@ -28,6 +29,7 @@ def saved_pair_reference_data(db):
 
 
 @pytest.mark.django_db
+@override_settings(VITE_DEV_SERVER_ENABLED=True)
 def test_load_saved_pair_restores_context_without_conversion(
     client,
     saved_pair_reference_data,
@@ -60,6 +62,7 @@ def test_load_saved_pair_restores_context_without_conversion(
 
 
 @pytest.mark.django_db
+@override_settings(VITE_DEV_SERVER_ENABLED=True)
 def test_load_saved_pair_drops_invalid_country_currency_association(
     client,
     saved_pair_reference_data,
