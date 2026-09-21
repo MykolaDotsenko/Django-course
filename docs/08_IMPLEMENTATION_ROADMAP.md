@@ -296,8 +296,8 @@ Acceptance:
 **Execution split:** this milestone is delivered as three bounded slices:
 
 1. **PR 7.1 — bounded series backend:** normalized RateSeries domain, Frankfurter series adapter, provider-policy-aware cache, 10-year range cap and automatic daily/weekly/monthly grouping. **Implemented.**
-2. **PR 7.2 — accessible trend surface:** progressive historical-trend entry, 1Y/5Y/10Y/custom range contract, high/low/end textual summary, provider/granularity disclosure, no-JS page, HTMX fragment and table fallback. **Current implementation slice.**
-3. **PR 7.3 — visual chart and comparison completion:** Chart.js 4 lazy/dynamic chunk, selected-observation marker, latest-reference comparison, Then & now presentation and final chart interaction/browser acceptance.
+2. **PR 7.2 — accessible trend surface:** progressive historical-trend entry, 1Y/5Y/10Y/custom range contract, high/low/end textual summary, provider/granularity disclosure, no-JS page, HTMX fragment and table fallback. **Implemented.**
+3. **PR 7.3 — visual chart and comparison completion:** Chart.js 4 lazy/dynamic chunk, selected-observation marker, latest-reference comparison, Then & now presentation and final chart interaction/browser acceptance. **Implemented.**
 
 The accessible table/text representation remains canonical product information even after the visual chart is added.
 
@@ -323,6 +323,8 @@ Acceptance:
 ---
 
 ## Implementation PR 7A — Media asset pipeline
+
+**Execution status:** implemented by the dedicated managed-media delivery slice. The milestone adds `apps.media`, review-gated MediaAsset persistence, Django Storage-backed managed bytes, safe raster normalization, content-hash identity/deduplication, explicit publication transitions, deterministic local selection, Quiet Atlas fallback, responsive WebP derivatives and bounded Wikimedia Commons / Europeana candidate ingestion. The optional ImageGenerator adapter remains intentionally deferred until the PR7B/provider benchmark boundary; PR7A contains no runtime image generation.
 
 **Goal:** support sourced historical/editorial media and optional reviewed AI illustrations without making images a runtime dependency.
 

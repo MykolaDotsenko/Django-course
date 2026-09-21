@@ -237,9 +237,11 @@ PR 2C's Chromium smoke captures 1440px, 768px, 390px and 320px widths and reject
 
 PR 2F completed the milestone browser-quality gate: `djlint templates --check`, locked Playwright + `@axe-core/playwright`, transition-edge/reflow checks, reduced-motion and forced-colors emulation, and machine-readable browser performance evidence.
 
-PR 3, PR 4/4.1 and PR 5 are merged. The real current-conversion route is now the primary web QA surface: initial server-rendered form, explicit first conversion, no-JavaScript POST, HTMX panel replacement/history, searchable picker, swap/focus restoration, stale trust metadata and browser race protection are exercised through the same architecture boundaries used by production code.
+PR 3 through PR 7.3 are merged: the repository now has canonical country/currency identity, trusted current conversion, historical lifecycle/coverage semantics, bounded historical series, an accessible trend surface, lazy Chart.js rendering and Then & Now comparison.
 
-The next bounded product slice is PR 6: historical conversion. It must extend the merged current-conversion flow with requested-date/effective-date semantics instead of creating a parallel form or client-side truth path.
+The roadmap PR7A media milestone is implemented through the dedicated `apps.media` boundary. Media candidate discovery is request-independent; only locally published assets are selectable; managed bytes are validated/sanitized and stored through Django Storage; missing media falls back to Quiet Atlas without affecting conversion.
+
+The next bounded roadmap milestone is PR7B: the provider-isolated AI capability foundation. It must consume trusted source packets and the existing media/story boundaries rather than making AI a new source of financial or historical truth.
 
 ---
 

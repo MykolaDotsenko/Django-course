@@ -1908,3 +1908,168 @@ They remain under `static/images/quiet-atlas/` because they change with releases
 This does not change the core rule:
 
 > Country/year editorial media remains stored/curated content, not on-demand AI output.
+
+
+---
+
+# 84. Implemented PR7A managed-media boundary
+
+The roadmap PR7A milestone is now implemented as a dedicated Django app:
+
+\`\`\`text
+apps/media/
+├── models.py
+├── services.py
+├── presentation.py
+├── validation.py
+├── sources/
+│   ├── wikimedia.py
+│   └── europeana.py
+└── management/commands/
+    ├── ingest_media_candidates.py
+    ├── attach_media_file.py
+    └── build_media_derivative.py
+\`\`\`
+
+The persisted \`MediaAsset\` owns metadata and storage identity, not binary image bytes. Managed bytes are written through Django's \`default_storage\` / \`FileField\` abstraction. Local development uses \`MEDIA_ROOT\`; a production deployment can replace the configured Django storage backend without changing media-domain code.
+
+## 84.1 Publication lifecycle
+
+The executable lifecycle is:
+
+\`\`\`text
+candidate / needs_review
+→ explicit approval
+→ approved
+→ explicit publish
+→ published
+→ optional retirement
+\`\`\`
+
+Rejected unpublished candidates are explicit state as well.
+
+Important enforcement:
+
+- Django admin exposes controlled transition actions rather than editable publication/status fields;
+- managed binary fields/status/timestamps are read-only in admin;
+- ingestion never auto-publishes;
+- responsive derivative creation never auto-publishes;
+- approved/published bytes are immutable in place;
+- replacement means publishing a new content-hashed asset.
+
+## 84.2 Binary validation and privacy boundary
+
+Managed media currently accepts only decoded single-frame:
+
+- JPEG;
+- PNG;
+- WebP.
+
+Before storage the pipeline:
+
+1. bounds the input byte size;
+2. rejects third-party SVG;
+3. decodes/verifies the raster;
+4. bounds dimensions and total pixel count;
+5. verifies filename extension against decoded format;
+6. applies EXIF orientation;
+7. re-encodes the raster without original metadata;
+8. computes SHA-256 over the sanitized bytes;
+9. stores under a content-hash-derived immutable key.
+
+This means untrusted EXIF/GPS/application metadata is not propagated into the served managed asset.
+
+Third-party SVG remains rejected rather than served unsanitized. Release-owned reviewed Quiet Atlas SVG files continue to use Django staticfiles and are a different trust class.
+
+## 84.3 Provenance and publication gates
+
+A sourced asset cannot be published without:
+
+- a managed storage file;
+- SHA-256 identity;
+- intrinsic dimensions;
+- non-decorative alt text;
+- explicit editorial review;
+- canonical HTTPS source URL;
+- source/institution metadata;
+- licence or rights statement;
+- attribution text.
+
+Historical sourced assets require explicit temporal precision/scope.
+
+AI-generated illustration metadata is supported for pre-generated reviewed assets, but runtime generation is not part of PR7A. A generated asset cannot publish without:
+
+- \`generated_by_ai=true\`;
+- generated-illustration kind/source semantics;
+- a visible label that explicitly identifies it as AI-generated;
+- provider/model;
+- prompt version;
+- valid SHA-256 prompt hash;
+- temporal precision when used in a historical role.
+
+The visible authenticity label is carried through the normalized \`ImageViewModel\` and shared media template; it is not hidden only in alt text.
+
+## 84.4 Selection and request-path isolation
+
+User-facing selection reads only local \`PUBLISHED\` rows.
+
+Selection considers:
+
+- semantic country/currency specificity;
+- sourced/AI authenticity class;
+- temporal precision for historical requests;
+- requested aspect-ratio preference;
+- publication recency as a deterministic tie-breaker.
+
+For historical context, temporally relevant sourced media outranks AI illustration. A dated AI illustration may outrank an undated neutral asset rather than allowing a present-day/temporally-unknown image to masquerade as historical evidence.
+
+When no managed asset qualifies, presentation falls back to the existing release-owned Quiet Atlas registry.
+
+The selector performs no:
+
+- Wikimedia request;
+- Europeana request;
+- AI/image-generation request;
+- hot archive search.
+
+## 84.5 Editorial ingestion commands
+
+Metadata candidate discovery is request-independent:
+
+\`\`\`bash
+python manage.py ingest_media_candidates \
+  --source wikimedia \
+  --query "Finland markka 1998" \
+  --role historical_timeline \
+  --kind archival_photo \
+  --country FI
+\`\`\`
+
+Europeana candidate search additionally requires the server-side \`EUROPEANA_API_KEY\`.
+
+Candidate ingestion stores normalized review metadata only. A reviewed local raster can then be validated/sanitized and attached:
+
+\`\`\`bash
+python manage.py attach_media_file --asset-id 123 --path ./candidate.jpg
+\`\`\`
+
+Reviewed managed media can receive an explicitly requested responsive derivative:
+
+\`\`\`bash
+python manage.py build_media_derivative --asset-id 123 --width 768
+\`\`\`
+
+The derivative is WebP, content-hashed and remains review-gated.
+
+## 84.6 Intentionally deferred
+
+PR7A does not select:
+
+- an S3 vendor/package before a deployment platform exists;
+- a runtime ImageGenerator provider;
+- automatic external binary mirroring;
+- AI generation from country/year selector changes;
+- auto-publishing;
+- media CDN-specific application code.
+
+Those boundaries remain separate so media trust does not depend on provider novelty or deployment convenience.
