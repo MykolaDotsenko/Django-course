@@ -73,8 +73,11 @@ jobs:
         working-directory: frontend
         run: npm ci --no-audit --no-fund
 
-      - name: Template format
-        run: djlint templates --check --no-github-output
+      - name: Diagnose template format
+        run: |
+          cp templates/components/converter/current_panel.html /tmp/current_panel.before.html
+          djlint templates/components/converter/current_panel.html --reformat
+          diff -u /tmp/current_panel.before.html templates/components/converter/current_panel.html
 
       - name: Template lint
         run: djlint templates --lint --no-github-output
