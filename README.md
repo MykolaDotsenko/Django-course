@@ -103,17 +103,19 @@ The handbook covers:
 
 ## Delivery strategy
 
-The rebuild is intentionally incremental. PR2 established the locked Django/Vite/TypeScript/Quiet Atlas web foundation and browser-quality gates. PR3 introduced canonical country/currency identity. PR4–PR7.3 delivered trusted current/historical FX, bounded series, the accessible chart and Then & Now. PR7A added provenance-safe managed media. PR7B added the bounded Gemini Explain this capability without putting AI on the financial truth path. PR8 added reviewed currency-era facts and deterministic Money & culture storytelling. PR9–PR10 complete the P0 Explore triad with sourced payment context and scoped everyday-value observations.
+The rebuild is intentionally incremental. PR2 established the locked Django/Vite/TypeScript/Quiet Atlas web foundation and browser-quality gates. PR3 introduced canonical country/currency identity. PR4–PR7.3 delivered trusted current/historical FX, bounded series, the accessible chart and Then & Now. PR7A added provenance-safe managed media. PR7B added the bounded Gemini Explain this capability without putting AI on the financial truth path. PR8 added reviewed currency-era facts and deterministic Money & culture storytelling. PR9–PR10 complete the P0 Explore triad with sourced payment context and scoped everyday-value observations. PR11 adds anonymous browser-local favourites and bounded recent conversions without creating hidden server history.
 
 See [docs/08_IMPLEMENTATION_ROADMAP.md](docs/08_IMPLEMENTATION_ROADMAP.md).
 
 ## Current status
 
-**Phase:** P0 web Explore triad implemented through PR10 → PR11 favourites/recent conversions next.
+**Phase:** PR11 anonymous favourites/recent conversions implemented → PR12 accounts and ownership next.
 
 The executable web product now covers current/historical conversion, scoped sourced everyday-value
 context, payment/cash/tipping guidance, Money & culture storytelling, historical charts/Then & Now,
-managed media and the bounded optional Gemini explanation. Destination context is local at request
-time, carries provenance/trust metadata and cannot invalidate the conversion. Browser QA runs a full
-Chromium gate plus Firefox/WebKit smoke coverage. Wikidata remains a management-command candidate
-source, never a web-request dependency.
+managed media, the bounded optional Gemini explanation, browser-local saved pairs and bounded recent
+conversion history. Anonymous saved state is versioned localStorage only: no account, token or hidden
+server copy is created. Destination context remains local at request time, carries provenance/trust
+metadata and cannot invalidate the conversion. Browser QA runs a full Chromium gate plus
+Firefox/WebKit smoke coverage, including the Saved & recent surface. Wikidata remains a
+management-command candidate source, never a web-request dependency.
