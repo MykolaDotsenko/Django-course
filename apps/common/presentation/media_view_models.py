@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from django.templatetags.static import static
 
-from .media_assets import AssetKind, StaticMediaAsset
+from .media_assets import StaticMediaAsset
 
 
 @dataclass(frozen=True, slots=True)
@@ -13,7 +13,7 @@ class ImageViewModel:
     ratio: str
     alt: str
     decorative: bool
-    kind: AssetKind
+    kind: str
     label: str
     width: int
     height: int

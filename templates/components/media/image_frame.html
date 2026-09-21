@@ -10,7 +10,25 @@
          {% if fetchpriority %}fetchpriority="{{ fetchpriority }}"{% endif %}
          {% if image.decorative %}aria-hidden="true"{% endif %}>
   </div>
-  {% if caption %}
-    <figcaption class="qa-media__caption">{{ caption }}</figcaption>
+  {% if caption or image.caption or image.authenticity_label or image.attribution_text %}
+    <figcaption class="qa-media__caption">
+      {% if caption %}
+        <span>{{ caption }}</span>
+      {% elif image.caption %}
+        <span>{{ image.caption }}</span>
+      {% endif %}
+      {% if image.authenticity_label %}
+        <span class="qa-media__authenticity">{{ image.authenticity_label }}</span>
+      {% endif %}
+      {% if image.attribution_text %}
+        {% if image.source_url %}
+          <a class="qa-media__attribution"
+             href="{{ image.source_url }}"
+             rel="noopener noreferrer">{{ image.attribution_text }}</a>
+        {% else %}
+          <span class="qa-media__attribution">{{ image.attribution_text }}</span>
+        {% endif %}
+      {% endif %}
+    </figcaption>
   {% endif %}
 </figure>
