@@ -189,22 +189,31 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   await page.getByText("Cup of coffee", { exact: true }).waitFor();
   await page.getByText("Tokyo Metro regular ticket", { exact: true }).waitFor();
   await page.getByRole("heading", { name: "Paying in Japan" }).waitFor();
-  await page.waitForFunction(
-    (key) => {
-      const raw = localStorage.getItem(key);
-      if (!raw) return false;
-      const parsed = JSON.parse(raw);
-      return parsed.version === 1 && parsed.recent?.length === 1;
-    },
-    LOCAL_STATE_KEY,
-  );
+  await page.waitForFunction((key) => {
+    const raw = localStorage.getItem(key);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    return parsed.version === 1 && parsed.recent?.length === 1;
+  }, LOCAL_STATE_KEY);
   await page.getByRole("button", { name: "Save pair" }).click();
   await page.getByRole("button", { name: "Remove saved pair" }).waitFor();
-  const savedState = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}"), LOCAL_STATE_KEY);
-  assert(savedState.favourites?.length === 1, "current-converter: favourite was not stored locally");
-  assert(savedState.recent?.length === 1, "current-converter: successful conversion was not recorded once");
+  const savedState = await page.evaluate(
+    (key) => JSON.parse(localStorage.getItem(key) ?? "{}"),
+    LOCAL_STATE_KEY,
+  );
+  assert(
+    savedState.favourites?.length === 1,
+    "current-converter: favourite was not stored locally",
+  );
+  assert(
+    savedState.recent?.length === 1,
+    "current-converter: successful conversion was not recorded once",
+  );
   assert(savedState.recent[0]?.amount === "12", "current-converter: recent amount is incorrect");
-  assert(savedState.recent[0]?.sourceCountry === "JP", "current-converter: recent source context is incorrect");
+  assert(
+    savedState.recent[0]?.sourceCountry === "JP",
+    "current-converter: recent source context is incorrect",
+  );
   await assertAxe(page, "current-converter/result");
 
   const waitForStory = page.waitForResponse(
@@ -355,10 +364,10 @@ async function assertSavedStateFlow(page) {
     ],
   };
 
-  await page.evaluate(
-    ({ key, state }) => localStorage.setItem(key, JSON.stringify(state)),
-    { key: LOCAL_STATE_KEY, state: sampleState },
-  );
+  await page.evaluate(({ key, state }) => localStorage.setItem(key, JSON.stringify(state)), {
+    key: LOCAL_STATE_KEY,
+    state: sampleState,
+  });
   await page.reload({ waitUntil: "networkidle" });
 
   await page.getByRole("heading", { name: "EUR → JPY" }).waitFor();
@@ -366,16 +375,37 @@ async function assertSavedStateFlow(page) {
   await page.getByText("100 FIM → 21.35 USD", { exact: true }).waitFor();
 
   const savedRow = page.locator("[data-saved-pair-id]").first();
-  const usePair = new URL(await savedRow.getByRole("link", { name: "Use pair" }).getAttribute("href"), BASE_URL);
-  assert(usePair.searchParams.get("load") === "1", "saved-state: favourite does not use pair-load mode");
-  assert(usePair.searchParams.get("amount") === null, "saved-state: favourite unexpectedly stores amount");
-  assert(usePair.searchParams.get("source_country") === "FI", "saved-state: favourite source country missing");
+  const usePair = new URL(
+    await savedRow.getByRole("link", { name: "Use pair" }).getAttribute("href"),
+    BASE_URL,
+  );
+  assert(
+    usePair.searchParams.get("load") === "1",
+    "saved-state: favourite does not use pair-load mode",
+  );
+  assert(
+    usePair.searchParams.get("amount") === null,
+    "saved-state: favourite unexpectedly stores amount",
+  );
+  assert(
+    usePair.searchParams.get("source_country") === "FI",
+    "saved-state: favourite source country missing",
+  );
 
   const latestRecent = page.locator("[data-recent-conversion-id]").first();
-  const repeat = new URL(await latestRecent.getByRole("link", { name: "Repeat" }).getAttribute("href"), BASE_URL);
-  assert(repeat.searchParams.get("convert") === "1", "saved-state: repeat does not request conversion");
+  const repeat = new URL(
+    await latestRecent.getByRole("link", { name: "Repeat" }).getAttribute("href"),
+    BASE_URL,
+  );
+  assert(
+    repeat.searchParams.get("convert") === "1",
+    "saved-state: repeat does not request conversion",
+  );
   assert(repeat.searchParams.get("amount") === "100", "saved-state: repeat amount missing");
-  const swap = new URL(await latestRecent.getByRole("link", { name: "Swap" }).getAttribute("href"), BASE_URL);
+  const swap = new URL(
+    await latestRecent.getByRole("link", { name: "Swap" }).getAttribute("href"),
+    BASE_URL,
+  );
   assert(
     swap.searchParams.get("source_currency") === "JPY" &&
       swap.searchParams.get("destination_currency") === "EUR",
@@ -403,10 +433,10 @@ async function assertSavedStateFlow(page) {
     })
     .waitFor();
 
-  await page.evaluate(
-    ({ key, state }) => localStorage.setItem(key, JSON.stringify(state)),
-    { key: LOCAL_STATE_KEY, state: sampleState },
-  );
+  await page.evaluate(({ key, state }) => localStorage.setItem(key, JSON.stringify(state)), {
+    key: LOCAL_STATE_KEY,
+    state: sampleState,
+  });
   await page.reload({ waitUntil: "networkidle" });
   await page.getByRole("heading", { name: "EUR → JPY" }).waitFor();
   await assertAxe(page, "saved-state/populated");
