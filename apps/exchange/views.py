@@ -73,11 +73,11 @@ def build_historical_series_gateway() -> HistoricalSeriesGateway:
 
 
 def _is_htmx(request: HttpRequest) -> bool:
-    return request.headers.get("HX-Request", "").lower() == "true"
+    return bool(request.htmx)
 
 
 def _is_history_restore(request: HttpRequest) -> bool:
-    return request.headers.get("HX-History-Restore-Request", "").lower() == "true"
+    return bool(request.htmx.history_restore_request)
 
 
 def _country_for_currency(currency_code: str, *, preferred: str = "") -> str:
