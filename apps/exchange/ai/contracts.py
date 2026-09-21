@@ -20,6 +20,7 @@ class ExplanationPacket:
     locale: str
     facts: tuple[GroundedFact, ...]
     allowed_currencies: tuple[str, ...]
+    allowed_uppercase_tokens: tuple[str, ...]
     allowed_dates: tuple[str, ...]
     allowed_numbers: tuple[str, ...]
 
@@ -29,6 +30,7 @@ class ExplanationPacket:
             "locale": self.locale,
             "facts": [asdict(fact) for fact in self.facts],
             "allowed_currencies": list(self.allowed_currencies),
+            "allowed_uppercase_tokens": list(self.allowed_uppercase_tokens),
             "allowed_dates": list(self.allowed_dates),
             "allowed_numbers": list(self.allowed_numbers),
         }

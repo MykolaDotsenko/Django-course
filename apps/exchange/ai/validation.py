@@ -142,10 +142,10 @@ def _validate_semantics(text: str, *, packet: ExplanationPacket) -> None:
     if "%" in text:
         raise ExplanationValidationError("Explanation introduces an unsupported percentage.")
 
-    allowed_currencies = set(packet.allowed_currencies)
-    unknown_currencies = set(_CURRENCY_RE.findall(text)) - allowed_currencies
-    if unknown_currencies:
-        raise ExplanationValidationError("Explanation introduces an unknown currency code.")
+    allowed_uppercase = set(packet.allowed_currencies) | set(packet.allowed_uppercase_tokens)
+    unknown_uppercase = set(_CURRENCY_RE.findall(text)) - allowed_uppercase
+    if unknown_uppercase:
+        raise ExplanationValidationError("Explanation introduces an unknown uppercase code.")
 
     allowed_dates = set(packet.allowed_dates)
     observed_dates = set(_DATE_RE.findall(text))

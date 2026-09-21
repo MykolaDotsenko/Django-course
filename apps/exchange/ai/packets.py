@@ -105,6 +105,7 @@ def build_explanation_packet(
         locale=locale,
         facts=tuple(facts),
         allowed_currencies=(snapshot.base_currency, snapshot.quote_currency),
+        allowed_uppercase_tokens=tuple(key.upper() for key in snapshot.provider_keys),
         allowed_dates=tuple(sorted(set(allowed_dates))),
         allowed_numbers=(
             "1",
