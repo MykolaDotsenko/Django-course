@@ -26,10 +26,7 @@ def _output(
 ) -> dict[str, object]:
     return {
         "headline": headline,
-        "bullets": [
-            {"text": text, "supporting_fact_ids": fact_ids}
-            for text, fact_ids in bullets
-        ],
+        "bullets": [{"text": text, "supporting_fact_ids": fact_ids} for text, fact_ids in bullets],
         "caveat": caveat,
     }
 

@@ -649,9 +649,7 @@ def conversion_explanation(request: HttpRequest) -> HttpResponse:
     }
     fragment = request.headers.get("HX-Request") == "true"
     template = (
-        "components/converter/explanation.html"
-        if fragment
-        else "pages/conversion_explanation.html"
+        "components/converter/explanation.html" if fragment else "pages/conversion_explanation.html"
     )
     response = render(request, template, context, status=response_status)
     patch_vary_headers(response, ["HX-Request"])

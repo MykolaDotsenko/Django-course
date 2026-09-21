@@ -59,8 +59,7 @@ def build_explanation_packet(
             GroundedFact(
                 id="observation_frequency",
                 statement=(
-                    "The source observation frequency is "
-                    f"{snapshot.observation_granularity.value}."
+                    f"The source observation frequency is {snapshot.observation_granularity.value}."
                 ),
             )
         )

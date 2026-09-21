@@ -89,7 +89,7 @@ class FakeDrafter:
         )
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_live_explanation_is_validated_persisted_and_reused(snapshot):
     drafter = FakeDrafter()
     service = RuntimeExplanationService(
@@ -116,7 +116,7 @@ def test_live_explanation_is_validated_persisted_and_reused(snapshot):
     assert stored.provider_response_id == "response-1"
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_provider_failure_returns_deterministic_fallback_and_sets_cooldown(snapshot):
     drafter = FakeDrafter(error=AIProviderUnavailable("down"))
     service = RuntimeExplanationService(
@@ -137,7 +137,7 @@ def test_provider_failure_returns_deterministic_fallback_and_sets_cooldown(snaps
     assert RuntimeExplanationCache.objects.count() == 0
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_schema_valid_but_semantically_invalid_output_falls_back(snapshot):
     payload = _payload()
     payload["bullets"][0]["supporting_fact_ids"] = ["invented_fact"]
@@ -170,7 +170,7 @@ def test_disabled_service_never_calls_provider(snapshot):
     assert drafter.calls == 0
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_corrupt_persistent_cache_is_deleted_before_live_generation(snapshot):
     drafter = FakeDrafter()
     service = RuntimeExplanationService(

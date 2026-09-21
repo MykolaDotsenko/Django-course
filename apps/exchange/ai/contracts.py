@@ -86,5 +86,4 @@ class ProviderExplanation:
 
 
 class ExplanationDrafter(Protocol):
-    def draft(self, packet: ExplanationPacket) -> ProviderExplanation:
-        ...
+    def draft(self, packet: ExplanationPacket) -> ProviderExplanation: ...

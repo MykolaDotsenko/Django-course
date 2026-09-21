@@ -66,9 +66,7 @@ def test_valid_grounded_payload_is_normalized(packet):
     ("mutation", "message"),
     [
         (
-            lambda payload: payload["bullets"][0].update(
-                supporting_fact_ids=["not-a-real-fact"]
-            ),
+            lambda payload: payload["bullets"][0].update(supporting_fact_ids=["not-a-real-fact"]),
             "unknown fact ID",
         ),
         (
@@ -78,15 +76,11 @@ def test_valid_grounded_payload_is_normalized(packet):
             "causal",
         ),
         (
-            lambda payload: payload["bullets"][0].update(
-                text="You should exchange 100 EUR now."
-            ),
+            lambda payload: payload["bullets"][0].update(text="You should exchange 100 EUR now."),
             "advice",
         ),
         (
-            lambda payload: payload["bullets"][0].update(
-                text="100 EUR is a 5% gain."
-            ),
+            lambda payload: payload["bullets"][0].update(text="100 EUR is a 5% gain."),
             "market interpretation|percentage",
         ),
         (
@@ -96,15 +90,11 @@ def test_valid_grounded_payload_is_normalized(packet):
             "uppercase code",
         ),
         (
-            lambda payload: payload["bullets"][0].update(
-                text="The date is 2026-09-19."
-            ),
+            lambda payload: payload["bullets"][0].update(text="The date is 2026-09-19."),
             "unknown date",
         ),
         (
-            lambda payload: payload["bullets"][0].update(
-                text="The rate is 999 EUR."
-            ),
+            lambda payload: payload["bullets"][0].update(text="The rate is 999 EUR."),
             "unsupported number",
         ),
         (

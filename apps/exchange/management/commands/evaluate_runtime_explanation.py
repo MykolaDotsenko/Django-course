@@ -89,7 +89,5 @@ class Command(BaseCommand):
             raise CommandError(f"LIVE FAIL [{model}]: " + " | ".join(failures))
 
         self.stdout.write(
-            self.style.SUCCESS(
-                f"LIVE PASS [{model}]: {len(RUNTIME_EXPLANATION_EVAL_CASES)} cases"
-            )
+            self.style.SUCCESS(f"LIVE PASS [{model}]: {len(RUNTIME_EXPLANATION_EVAL_CASES)} cases")
         )
