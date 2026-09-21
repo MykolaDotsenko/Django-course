@@ -45,14 +45,10 @@ class StoryComposition:
 
 def compose_story(request: StoryRequest) -> StoryComposition:
     country_codes = tuple(
-        code
-        for code in (request.source_country, request.destination_country)
-        if code
+        code for code in (request.source_country, request.destination_country) if code
     )
     currency_codes = tuple(
-        code
-        for code in (request.source_currency, request.destination_currency)
-        if code
+        code for code in (request.source_currency, request.destination_currency) if code
     )
 
     era_links = currency_era_links(
@@ -138,9 +134,7 @@ def _moment_chapter(moment: StoryMoment) -> StoryChapter:
         label="Sourced money history",
         title=moment.title,
         body=moment.summary,
-        source_refs=(
-            StorySourceRef(label=moment.source_name, url=moment.source_url),
-        ),
+        source_refs=(StorySourceRef(label=moment.source_name, url=moment.source_url),),
         temporal_scope=_temporal_scope(moment.start_date, moment.end_date),
         relevance=moment.relevance_weight,
     )

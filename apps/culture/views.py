@@ -54,9 +54,7 @@ def money_culture_story(request: HttpRequest) -> HttpResponse:
                 role=MediaRole.STORY_COVER,
                 country=country,
                 currency=currency,
-                target_date=(
-                    story_request.selected_date if story_request.historical else None
-                ),
+                target_date=story_request.selected_date if story_request.historical else None,
             )
 
     context = {
@@ -65,11 +63,7 @@ def money_culture_story(request: HttpRequest) -> HttpResponse:
         "story_media": story_media,
     }
     fragment = request.headers.get("HX-Request") == "true"
-    template = (
-        "components/culture/story.html"
-        if fragment
-        else "pages/money_culture_story.html"
-    )
+    template = "components/culture/story.html" if fragment else "pages/money_culture_story.html"
     response = render(request, template, context, status=response_status)
     patch_vary_headers(response, ["HX-Request"])
     return response

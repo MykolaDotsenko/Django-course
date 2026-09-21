@@ -16,9 +16,7 @@ class Command(BaseCommand):
             set(Country.objects.filter(iso2__in=required_countries).values_list("iso2", flat=True))
             != required_countries
             or set(
-                Currency.objects.filter(code__in=required_currencies).values_list(
-                    "code", flat=True
-                )
+                Currency.objects.filter(code__in=required_currencies).values_list("code", flat=True)
             )
             != required_currencies
         ):
