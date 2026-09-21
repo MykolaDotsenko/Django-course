@@ -8,6 +8,7 @@ runtime boundary in config.environment.
 import os
 from pathlib import Path
 
+from config.ai import load_ai_config
 from config.database import load_database_config
 from config.environment import load_runtime_config
 
@@ -70,6 +71,17 @@ DATABASE_CONFIG = load_database_config(
 )
 DATABASES = {"default": DATABASE_CONFIG.as_django_settings()}
 
+AI_CONFIG = load_ai_config(os.environ)
+AI_PROVIDER = AI_CONFIG.provider
+AI_TEXT_MODEL = AI_CONFIG.text_model
+AI_RUNTIME_EXPLANATION_ENABLED = AI_CONFIG.runtime_explanation_enabled
+AI_EDITORIAL_GENERATION_ENABLED = AI_CONFIG.editorial_generation_enabled
+AI_IMAGE_GENERATION_ENABLED = AI_CONFIG.image_generation_enabled
+AI_FALLBACK_MODE = AI_CONFIG.fallback_mode
+AI_TIMEOUT_SECONDS = AI_CONFIG.timeout_seconds
+AI_MAX_ATTEMPTS = AI_CONFIG.max_attempts
+GEMINI_API_KEY = AI_CONFIG.gemini_api_key
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -121,6 +133,11 @@ LOGGING = {
             "propagate": False,
         },
         "cultural_currency.exchange": {
+            "handlers": ["console_json"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "cultural_currency.ai": {
             "handlers": ["console_json"],
             "level": "INFO",
             "propagate": False,
