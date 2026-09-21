@@ -212,3 +212,19 @@ def test_management_command_validates_relationship_before_network(monkeypatch):
             category=StoryMomentCategory.CULTURAL_MONEY_FACT,
         )
     assert called is False
+
+
+@pytest.mark.django_db
+def test_wikidata_candidate_rejects_oversized_summary(item, finland):
+    with pytest.raises(ValueError, match="2000"):
+        upsert_wikidata_story_candidate(
+            item,
+            category=StoryMomentCategory.CULTURAL_MONEY_FACT,
+            country=finland,
+            currency=None,
+            start_date=None,
+            end_date=None,
+            date_precision=StoryDatePrecision.UNKNOWN,
+            relevance_weight=50,
+            summary="x" * 2001,
+        )

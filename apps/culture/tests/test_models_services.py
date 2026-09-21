@@ -237,3 +237,51 @@ def test_currency_relationship_can_carry_canonical_source(finland, euro):
     )
 
     assert link.source.startswith("https://")
+
+
+@pytest.mark.django_db
+def test_published_story_editorial_content_is_immutable(finland):
+    moment = _moment(title="Published fact")
+    moment.countries.add(finland)
+    approve_story_moment(moment)
+    publish_story_moment(moment)
+
+    moment.summary = "Quietly edited after publication."
+    with pytest.raises(ValidationError, match="immutable"):
+        moment.save()
+
+
+@pytest.mark.django_db
+def test_published_story_relations_are_immutable(finland, euro):
+    moment = _moment(title="Published relations")
+    moment.countries.add(finland)
+    approve_story_moment(moment)
+    publish_story_moment(moment)
+
+    with pytest.raises(ValidationError, match="relationships are immutable"):
+        moment.currencies.add(euro)
+
+    with pytest.raises(ValidationError, match="relationships are immutable"):
+        moment.countries.clear()
+
+
+@pytest.mark.django_db
+def test_retired_story_cannot_be_resurrected(finland):
+    moment = _moment(title="Retired fact")
+    moment.countries.add(finland)
+    approve_story_moment(moment)
+    publish_story_moment(moment)
+    retire_story_moment(moment)
+
+    moment.status = StoryMomentStatus.PUBLISHED
+    with pytest.raises(ValidationError, match="Retired stories are immutable"):
+        moment.save()
+
+
+@pytest.mark.django_db
+def test_story_summary_has_bounded_editorial_length(finland):
+    moment = _moment(summary="x" * 2001)
+    moment.countries.add(finland)
+
+    with pytest.raises(StoryPublicationError, match="2000"):
+        approve_story_moment(moment)

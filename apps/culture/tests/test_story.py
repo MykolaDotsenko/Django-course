@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
 from apps.countries.models import Country, CountryCurrency, Currency
@@ -135,3 +137,32 @@ def test_no_relationships_and_no_story_moments_returns_unavailable(db):
 
     assert story.status == "unavailable"
     assert story.chapters == ()
+
+
+@pytest.mark.django_db
+def test_story_composer_has_bounded_query_count_with_reviewed_fact(context_data):
+    fi, _jp, eur, _jpy = context_data
+    moment = StoryMoment.objects.create(
+        category=StoryMomentCategory.MONETARY_UNION,
+        title="Bounded query story",
+        summary="A reviewed sourced monetary fact.",
+        start_date=date(1999, 1, 1),
+        end_date=date(1999, 1, 1),
+        date_precision=StoryDatePrecision.EXACT_DAY,
+        source_kind=StorySourceKind.OFFICIAL,
+        source_name="Official source",
+        source_url="https://example.org/query-budget",
+        verified_at=timezone.now(),
+        relevance_weight=80,
+        status=StoryMomentStatus.NEEDS_REVIEW,
+    )
+    moment.countries.add(fi)
+    moment.currencies.add(eur)
+    approve_story_moment(moment)
+    publish_story_moment(moment)
+
+    with CaptureQueriesContext(connection) as captured:
+        story = compose_story(_request())
+
+    assert story.status == "full"
+    assert len(captured) <= 4
