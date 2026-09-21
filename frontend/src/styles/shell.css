@@ -333,6 +333,26 @@
 }
 
 @media (max-width: 30rem) {
+  .qa-shell__header-inner {
+    align-items: stretch;
+    flex-direction: column;
+    padding-block: var(--qa-space-3);
+  }
+
+  .qa-brand {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .qa-header-link {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
   .qa-foundation-spec > div {
     grid-template-columns: 1fr;
     gap: var(--qa-space-2);
