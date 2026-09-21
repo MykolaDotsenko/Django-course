@@ -4,6 +4,7 @@ import re
 from datetime import date, datetime
 from urllib.parse import urlsplit
 
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils import timezone
 
@@ -64,7 +65,10 @@ def _validate_publishable(moment: StoryMoment) -> None:
             raise StoryPublicationError(
                 "Causal story wording requires explicit source support and an editorial note."
             )
-    moment.full_clean()
+    try:
+        moment.full_clean()
+    except ValidationError as exc:
+        raise StoryPublicationError(str(exc)) from exc
 
 
 def approve_story_moment(
