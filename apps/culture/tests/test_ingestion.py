@@ -15,7 +15,6 @@ from apps.culture.models import (
     StoryMoment,
     StoryMomentCategory,
     StoryMomentStatus,
-    StorySourceKind,
 )
 from apps.culture.services import approve_story_moment, publish_story_moment
 from integrations.wikidata import WikidataItem
