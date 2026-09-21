@@ -137,11 +137,17 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
 
   await page.locator("#source-picker-trigger").click();
   const search = page.locator("#source-picker-search");
-  await search.fill("japan");
+  await search.fill("JPY");
   await page.locator("#source-picker-listbox").waitFor();
   await page.waitForFunction(
     () => document.querySelector("#source-picker-listbox")?.dataset.commitWired === "true",
   );
+  await page
+    .locator(
+      '#source-picker-listbox [data-picker-option][data-country-code="JP"][data-currency-code="JPY"]',
+    )
+    .waitFor();
+  await search.press("ArrowDown");
   await search.press("ArrowDown");
   await search.press("Enter");
   await page.locator('[data-picker-dialog="source"]').waitFor({ state: "hidden" });
