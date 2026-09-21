@@ -1,4 +1,5 @@
 import django.core.validators
+import django.db.models.deletion
 from django.db import migrations, models
 
 
@@ -25,7 +26,7 @@ class Migration(migrations.Migration):
                 ("verified_at", models.DateTimeField(blank=True, null=True)),
                 ("is_published", models.BooleanField(db_index=True, default=False)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
-                ("country", models.OneToOneField(on_delete=models.deletion.CASCADE, related_name="cultural_profile", to="countries.country")),
+                ("country", models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name="cultural_profile", to="countries.country")),
             ],
             options={"ordering": ("country__name",)},
         ),
@@ -47,8 +48,8 @@ class Migration(migrations.Migration):
                 ("display_order", models.PositiveSmallIntegerField(default=100)),
                 ("is_published", models.BooleanField(db_index=True, default=False)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
-                ("country", models.ForeignKey(on_delete=models.deletion.CASCADE, related_name="typical_prices", to="countries.country")),
-                ("currency", models.ForeignKey(on_delete=models.deletion.PROTECT, related_name="typical_prices", to="countries.currency")),
+                ("country", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name="typical_prices", to="countries.country")),
+                ("currency", models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name="typical_prices", to="countries.currency")),
             ],
             options={
                 "ordering": ("display_order", "city", "label", "pk"),

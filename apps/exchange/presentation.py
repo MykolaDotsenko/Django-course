@@ -12,10 +12,29 @@ from apps.exchange.ai.tokens import build_conversion_explanation_token
 from apps.exchange.domain import ConversionResult, ObservationGranularity
 from apps.exchange.forms import CurrentConversionForm
 
-_THEME_BY_COUNTRY = {
+_FEATURED_THEME_BY_COUNTRY = {
     "FI": "fi",
     "JP": "jp",
 }
+_ATLAS_THEME_KEYS = (
+    "atlas-fjord",
+    "atlas-moss",
+    "atlas-clay",
+    "atlas-slate",
+    "atlas-sand",
+    "atlas-plum",
+)
+
+
+def _country_theme(country_code: str) -> str:
+    code = country_code.upper().strip()
+    if not code:
+        return ""
+    featured = _FEATURED_THEME_BY_COUNTRY.get(code)
+    if featured:
+        return featured
+    checksum = sum((index + 1) * ord(character) for index, character in enumerate(code))
+    return _ATLAS_THEME_KEYS[checksum % len(_ATLAS_THEME_KEYS)]
 
 
 def _decimal_text(value: Decimal) -> str:
@@ -45,7 +64,7 @@ def _selection_context(form: CurrentConversionForm, side: str) -> dict[str, str]
         "country_name": country.name if country else "No country context",
         "currency_code": currency.code if currency else currency_code,
         "currency_name": currency.name if currency else "Choose currency",
-        "theme": _THEME_BY_COUNTRY.get(country.iso2, "") if country else "",
+        "theme": _country_theme(country.iso2) if country else "",
     }
 
 
@@ -297,6 +316,7 @@ def build_converter_context(
     conversion_active: bool = False,
     preserve_previous_result: bool = False,
     historical_currency_suggestions: list[tuple[str, object]] | None = None,
+    destination_context_component: dict[str, object] | None = None,
 ) -> dict[str, object]:
     return {
         "form": form,
@@ -309,5 +329,6 @@ def build_converter_context(
         "conversion_active": conversion_active or result is not None,
         "preserve_previous_result": preserve_previous_result,
         "historical_currency_suggestions": historical_currency_suggestions or [],
+        "destination_context_component": destination_context_component,
         "reference_data_ready": form.reference_data_ready,
     }

@@ -1,0 +1,89 @@
+{% with context=component %}
+  <section class="qa-destination-context"
+           aria-labelledby="destination-context-title">
+    <div class="qa-destination-context__heading">
+      <div>
+        <p class="qa-foundation-kicker">Explore</p>
+        <h3 id="destination-context-title">
+          What does this amount mean in {{ context.country_name }}?
+        </h3>
+      </div>
+      <nav class="qa-explore-nav" aria-label="Explore conversion context">
+        <a href="#everyday-value">Everyday value</a>
+        <a href="#payment-context">Payment context</a>
+        <a href="#money-culture-entry-title">Money &amp; culture</a>
+      </nav>
+    </div>
+    {% if context.historical_notice %}
+      <p class="qa-context-freshness-note">{{ context.historical_notice }}</p>
+    {% endif %}
+    <div class="qa-destination-context__grid">
+      <section id="everyday-value"
+               class="qa-context-section"
+               aria-labelledby="everyday-value-title">
+        <div>
+          <p class="qa-foundation-kicker">Everyday value</p>
+          <h4 id="everyday-value-title">What this amount roughly buys</h4>
+        </div>
+        {% if context.prices %}
+          <div class="qa-price-grid">
+            {% for price in context.prices %}
+              <article class="qa-price-card">
+                <div>
+                  <p class="qa-price-card__label">{{ price.label }}</p>
+                  <p class="qa-price-card__price">{{ price.price_text }} typical</p>
+                  <p class="qa-price-card__equivalent">{{ price.equivalent_text }}</p>
+                </div>
+                <p class="qa-price-card__meta">
+                  {{ price.scope }} · {{ price.observed }} · {{ price.confidence }} confidence
+                </p>
+                <a href="{{ price.source_url }}"
+                   rel="noopener noreferrer"
+                   target="_blank">Source: {{ price.source_name }}</a>
+              </article>
+            {% endfor %}
+          </div>
+          <p class="qa-context-disclaimer">
+            Approximate observed prices vary by location and merchant. They are context, not a
+            guaranteed price.
+          </p>
+        {% else %}
+          <p class="qa-context-empty">
+            Recent sourced everyday-price observations are not available for this destination yet.
+          </p>
+        {% endif %}
+      </section>
+      <section id="payment-context"
+               class="qa-context-section"
+               aria-labelledby="payment-context-title">
+        <div>
+          <p class="qa-foundation-kicker">Payment context</p>
+          <h4 id="payment-context-title">Paying in {{ context.country_name }}</h4>
+        </div>
+        {% if context.payment %}
+          {% if context.payment.summary %}
+            <p>{{ context.payment.summary }}</p>
+          {% endif %}
+          <dl class="qa-payment-list">
+            {% for row in context.payment.rows %}
+              <div>
+                <dt>{{ row.label }}</dt>
+                <dd>{{ row.text }}</dd>
+              </div>
+            {% endfor %}
+          </dl>
+          <p class="qa-context-source">
+            Verified {{ context.payment.verified }} ·
+            <a href="{{ context.payment.source_url }}"
+               rel="noopener noreferrer"
+               target="_blank">{{ context.payment.source_name }}</a>
+          </p>
+        {% else %}
+          <p class="qa-context-empty">
+            Reviewed payment guidance is not available for this destination yet.
+          </p>
+        {% endif %}
+      </section>
+    </div>
+  </section>
+{% endwith %}

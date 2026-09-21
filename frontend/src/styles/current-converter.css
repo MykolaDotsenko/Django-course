@@ -490,3 +490,198 @@
     border-color: CanvasText;
   }
 }
+
+
+.qa-destination-context {
+  display: grid;
+  gap: var(--qa-space-5);
+  margin-block-start: var(--qa-space-6);
+  padding-block-start: var(--qa-space-6);
+  border-block-start: 1px solid var(--color-border-subtle);
+}
+
+.qa-destination-context__heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--qa-space-4);
+}
+
+.qa-destination-context__heading h3,
+.qa-context-section h4,
+.qa-context-section p {
+  margin-block-end: 0;
+}
+
+.qa-explore-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--qa-space-2);
+}
+
+.qa-explore-nav a {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  padding-inline: var(--qa-space-4);
+  border: 1px solid var(--color-border-control);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: var(--text-body-sm);
+  font-weight: 650;
+}
+
+.qa-explore-nav a:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.qa-context-freshness-note,
+.qa-context-disclaimer,
+.qa-context-source,
+.qa-context-empty {
+  color: var(--color-muted);
+  font-size: var(--text-body-sm);
+}
+
+.qa-context-freshness-note {
+  margin: 0;
+  padding: var(--qa-space-3) var(--qa-space-4);
+  border-inline-start: 0.25rem solid var(--color-history);
+  background: var(--color-history-soft);
+}
+
+.qa-destination-context__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: var(--qa-space-5);
+}
+
+.qa-context-section {
+  display: grid;
+  align-content: start;
+  gap: var(--qa-space-4);
+  min-width: 0;
+  padding: var(--qa-space-5);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-soft);
+}
+
+.qa-price-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--qa-space-3);
+}
+
+.qa-price-card {
+  display: grid;
+  align-content: space-between;
+  gap: var(--qa-space-3);
+  min-width: 0;
+  padding: var(--qa-space-4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.qa-price-card__label,
+.qa-price-card__price,
+.qa-price-card__equivalent,
+.qa-price-card__meta {
+  margin: 0;
+}
+
+.qa-price-card__label {
+  font-weight: 750;
+}
+
+.qa-price-card__price {
+  margin-block-start: var(--qa-space-2);
+  color: var(--color-muted);
+  font-size: var(--text-body-sm);
+}
+
+.qa-price-card__equivalent {
+  margin-block-start: var(--qa-space-3);
+  font-size: var(--text-heading-3);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.qa-price-card__meta {
+  color: var(--color-muted);
+  font-size: var(--text-meta);
+}
+
+.qa-payment-list {
+  display: grid;
+  margin: 0;
+}
+
+.qa-payment-list > div {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 0.3fr) minmax(0, 1fr);
+  gap: var(--qa-space-3);
+  padding-block: var(--qa-space-3);
+  border-block-end: 1px solid var(--color-border-subtle);
+}
+
+.qa-payment-list > div:last-child {
+  border-block-end: 0;
+}
+
+.qa-payment-list dt {
+  color: var(--color-muted);
+  font-size: var(--text-body-sm);
+  font-weight: 700;
+}
+
+.qa-payment-list dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 58rem) {
+  .qa-destination-context__heading,
+  .qa-destination-context__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .qa-explore-nav {
+    justify-content: flex-start;
+  }
+
+  .qa-price-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 30rem) {
+  .qa-payment-list > div {
+    grid-template-columns: 1fr;
+    gap: var(--qa-space-1);
+  }
+
+  .qa-explore-nav a {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (forced-colors: active) {
+  .qa-destination-context,
+  .qa-context-section,
+  .qa-price-card,
+  .qa-payment-list > div,
+  .qa-explore-nav a {
+    border-color: CanvasText;
+  }
+
+  .qa-context-freshness-note {
+    border-color: CanvasText;
+  }
+}
