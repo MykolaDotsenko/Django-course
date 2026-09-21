@@ -363,3 +363,60 @@
     border-color: CanvasText;
   }
 }
+
+.qa-ai-explanation-entry,
+.qa-ai-explanation {
+  display: grid;
+  gap: var(--qa-space-4);
+  margin-block-start: var(--qa-space-5);
+  padding: var(--qa-space-5);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-soft);
+}
+
+.qa-ai-explanation-entry {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.qa-ai-explanation-entry h3,
+.qa-ai-explanation-entry p,
+.qa-ai-explanation h3,
+.qa-ai-explanation p {
+  margin-block-end: 0;
+}
+
+.qa-ai-explanation__meta {
+  color: var(--color-muted);
+  font-size: var(--text-body-sm);
+}
+
+.qa-ai-explanation__bullets {
+  display: grid;
+  gap: var(--qa-space-2);
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+
+.qa-ai-explanation-region {
+  min-height: 1.5rem;
+}
+
+@media (max-width: 42rem) {
+  .qa-ai-explanation-entry {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .qa-ai-explanation-entry .qa-secondary-button {
+    justify-self: start;
+  }
+}
+
+@media (forced-colors: active) {
+  .qa-ai-explanation-entry,
+  .qa-ai-explanation {
+    border-color: CanvasText;
+  }
+}

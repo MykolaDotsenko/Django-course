@@ -12,6 +12,8 @@ dependencies = [
     "django-template-partials==25.3",
     "psycopg[binary]==3.3.6",
     "Pillow==12.3.0",
+    "google-genai==2.24.0",
+    "httpx==0.28.1",
 ]
 
 [project.optional-dependencies]
@@ -32,12 +34,12 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["apps*", "config*"]
+include = ["apps*", "config*", "integrations*"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py", "*_tests.py"]
-testpaths = ["apps", "config"]
+testpaths = ["apps", "config", "integrations"]
 addopts = ["-ra", "--strict-config", "--strict-markers"]
 
 [tool.ruff]
@@ -55,7 +57,7 @@ line-ending = "auto"
 
 [tool.coverage.run]
 branch = true
-source = ["apps"]
+source = ["apps", "integrations"]
 
 [tool.coverage.report]
 fail_under = 90

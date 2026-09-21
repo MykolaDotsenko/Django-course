@@ -5,7 +5,8 @@ from datetime import date
 from decimal import Decimal
 from urllib.parse import urlencode
 
-from django.http import HttpRequest, HttpResponse
+from django.conf import settings
+from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.cache import patch_vary_headers
@@ -13,6 +14,8 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from apps.countries.models import CountryCurrency, Currency
 from apps.countries.services import historical_currency_suggestion
+from apps.exchange.ai.service import build_runtime_explanation_service
+from apps.exchange.ai.tokens import ExplanationTokenError, load_conversion_explanation_token
 from apps.exchange.cache import HistoricalQuoteGateway, HistoricalSeriesGateway, LatestQuoteGateway
 from apps.exchange.config import load_fx_runtime_config
 from apps.exchange.domain import (
@@ -611,3 +614,42 @@ def historical_series(request: HttpRequest) -> HttpResponse:
         context,
         status=response_status,
     )
+
+
+@require_http_methods(["POST"])
+def conversion_explanation(request: HttpRequest) -> HttpResponse:
+    if not settings.AI_RUNTIME_EXPLANATION_ENABLED:
+        raise Http404("Runtime AI explanation is disabled.")
+
+    token = request.POST.get("explanation_token", "")
+    explanation = None
+    explanation_error = None
+    response_status = 200
+
+    try:
+        snapshot = load_conversion_explanation_token(token)
+    except ExplanationTokenError:
+        response_status = 422
+        explanation_error = {
+            "title": "This explanation request is no longer valid.",
+            "detail": "Run the conversion again, then choose Explain this.",
+        }
+    else:
+        service = build_runtime_explanation_service()
+        delivery = service.explain(snapshot)
+        explanation = {
+            "result": delivery.result,
+            "cache_status": delivery.cache_status,
+        }
+
+    context = {
+        "explanation": explanation,
+        "explanation_error": explanation_error,
+    }
+    fragment = request.headers.get("HX-Request") == "true"
+    template = (
+        "components/converter/explanation.html" if fragment else "pages/conversion_explanation.html"
+    )
+    response = render(request, template, context, status=response_status)
+    patch_vary_headers(response, ["HX-Request"])
+    return response

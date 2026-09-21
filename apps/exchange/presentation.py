@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from django.conf import settings
 from django.utils.formats import date_format
 
+from apps.exchange.ai.tokens import build_conversion_explanation_token
 from apps.exchange.domain import ConversionResult, ObservationGranularity
 from apps.exchange.forms import CurrentConversionForm
 
@@ -125,6 +127,14 @@ def build_result_component(
         "output_currency": result.quote.quote_currency,
         "exact": same_currency,
         "stale": result.stale,
+        "ai_explanation": (
+            {
+                "token": build_conversion_explanation_token(result),
+                "label": "Optional AI explanation",
+            }
+            if settings.AI_RUNTIME_EXPLANATION_ENABLED and not same_currency
+            else None
+        ),
         "historical_trend": (
             {
                 "base_currency": result.quote.base_currency,
