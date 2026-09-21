@@ -11,6 +11,7 @@ dependencies = [
     "Django==5.2.17",
     "django-template-partials==25.3",
     "psycopg[binary]==3.3.6",
+    "Pillow==12.3.0",
 ]
 
 [project.optional-dependencies]
