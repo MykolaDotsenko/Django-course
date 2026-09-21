@@ -142,8 +142,15 @@ def approve_media_asset(
 ) -> MediaAsset:
     if asset.status in {MediaStatus.PUBLISHED, MediaStatus.RETIRED, MediaStatus.REJECTED}:
         raise MediaPublicationError(f"Cannot approve media in {asset.status} state.")
+
+    previous_reviewed_at = asset.reviewed_at
     asset.reviewed_at = reviewed_at or timezone.now()
-    _validate_publishable_metadata(asset)
+    try:
+        _validate_publishable_metadata(asset)
+    except Exception:
+        asset.reviewed_at = previous_reviewed_at
+        raise
+
     asset.status = MediaStatus.APPROVED
     asset.save()
     return asset
@@ -168,6 +175,15 @@ def retire_media_asset(asset: MediaAsset) -> MediaAsset:
         raise MediaPublicationError("Only published media can be retired.")
     asset.status = MediaStatus.RETIRED
     asset.save(update_fields=("status", "updated_at"))
+    return asset
+
+
+def reject_media_asset(asset: MediaAsset) -> MediaAsset:
+    if asset.status in {MediaStatus.PUBLISHED, MediaStatus.RETIRED}:
+        raise MediaPublicationError("Published/retired media cannot be rejected in place.")
+    asset.status = MediaStatus.REJECTED
+    asset.reviewed_at = timezone.now()
+    asset.save(update_fields=("status", "reviewed_at", "updated_at"))
     return asset
 
 

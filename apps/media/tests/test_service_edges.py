@@ -22,6 +22,7 @@ from apps.media.services import (
     approve_media_asset,
     attach_media_bytes,
     publish_media_asset,
+    reject_media_asset,
     retire_media_asset,
     select_published_media,
     upsert_media_candidates,
@@ -168,3 +169,37 @@ def test_unknown_role_and_generated_ingestion_kind_are_rejected():
             role=MediaRole.STORY_COVER,
             kind=MediaKind.GENERATED_ILLUSTRATION,
         )
+
+
+@pytest.mark.django_db
+def test_failed_approval_does_not_leave_in_memory_review_marker(media_root):
+    asset = _valid_sourced_asset()
+    asset.rights_statement = ""
+    asset.licence_id = ""
+    attach_media_bytes(asset, _png(), filename="valid.png")
+
+    assert asset.reviewed_at is None
+    with pytest.raises(MediaPublicationError):
+        approve_media_asset(asset)
+    assert asset.reviewed_at is None
+
+
+@pytest.mark.django_db
+def test_reject_marks_unpublished_candidate_reviewed():
+    asset = _valid_sourced_asset()
+
+    reject_media_asset(asset)
+
+    assert asset.status == MediaStatus.REJECTED
+    assert asset.reviewed_at is not None
+
+
+@pytest.mark.django_db
+def test_reject_cannot_rewrite_published_asset(media_root):
+    asset = _valid_sourced_asset()
+    attach_media_bytes(asset, _png(), filename="valid.png")
+    approve_media_asset(asset)
+    publish_media_asset(asset)
+
+    with pytest.raises(MediaPublicationError, match="cannot be rejected"):
+        reject_media_asset(asset)
