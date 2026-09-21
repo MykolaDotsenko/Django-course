@@ -171,18 +171,44 @@ def retire_media_asset(asset: MediaAsset) -> MediaAsset:
     return asset
 
 
+def _sanitize_raster_bytes(data: bytes, *, image_format: str) -> bytes:
+    with Image.open(io.BytesIO(data)) as image:
+        image = ImageOps.exif_transpose(image)
+        image.load()
+        if image_format == "JPEG":
+            normalized = image.convert("RGB")
+        elif image.mode not in {"RGB", "RGBA"}:
+            normalized = image.convert("RGBA" if "A" in image.getbands() else "RGB")
+        else:
+            normalized = image.copy()
+
+    output = io.BytesIO()
+    if image_format == "JPEG":
+        normalized.save(output, format="JPEG", quality=92, optimize=True, progressive=True)
+    elif image_format == "PNG":
+        normalized.save(output, format="PNG", optimize=True)
+    else:
+        normalized.save(output, format="WEBP", quality=90, method=6)
+    return output.getvalue()
+
+
 def attach_media_bytes(
     asset: MediaAsset,
     data: bytes,
     *,
     filename: str,
 ) -> MediaAsset:
+    if asset.pk is None:
+        raise MediaPublicationError("Media asset must be persisted before bytes are attached.")
     if asset.status in {MediaStatus.APPROVED, MediaStatus.PUBLISHED, MediaStatus.RETIRED}:
         raise MediaPublicationError(
             "Approved/published media bytes are immutable; create a new asset instead."
         )
 
-    validated = validate_raster_image(data, filename=filename)
+    incoming = validate_raster_image(data, filename=filename)
+    sanitized_data = _sanitize_raster_bytes(data, image_format=incoming.format)
+    normalized_filename = f"normalized{_FORMAT_EXTENSION[incoming.format]}"
+    validated = validate_raster_image(sanitized_data, filename=normalized_filename)
     duplicate = (
         MediaAsset.objects.filter(content_hash=validated.content_hash)
         .exclude(pk=asset.pk)
@@ -197,7 +223,7 @@ def attach_media_bytes(
     storage_name = f"{bucket}/{validated.content_hash[:2]}/{validated.content_hash}{suffix}"
     created_storage_object = False
     if not default_storage.exists(storage_name):
-        storage_name = default_storage.save(storage_name, ContentFile(data))
+        storage_name = default_storage.save(storage_name, ContentFile(sanitized_data))
         created_storage_object = True
 
     try:

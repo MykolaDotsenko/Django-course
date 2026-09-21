@@ -68,6 +68,8 @@ def validate_raster_image(
                     width, height = image.size
                     frames = getattr(image, "n_frames", 1)
                     image.verify()
+                with Image.open(io.BytesIO(data)) as decoded:
+                    decoded.load()
             except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
                 raise MediaValidationError(
                     "Media bytes are not a safe decodable raster image."

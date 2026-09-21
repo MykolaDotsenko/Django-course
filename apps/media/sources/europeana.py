@@ -20,7 +20,23 @@ def _first_text(value: Any) -> str:
     if isinstance(value, str):
         return value.strip()
     if isinstance(value, list):
-        return next((_first_text(item) for item in value if _first_text(item)), "")
+        for item in value:
+            text = _first_text(item)
+            if text:
+                return text
+    return ""
+
+
+def _first_https(*values: Any) -> str:
+    for value in values:
+        if isinstance(value, list):
+            candidates = value
+        else:
+            candidates = (value,)
+        for candidate in candidates:
+            text = _first_text(candidate)
+            if text.startswith("https://"):
+                return text
     return ""
 
 
@@ -44,12 +60,10 @@ def parse_europeana_search_payload(
         if not external_id or not title:
             continue
 
-        canonical_url = _first_text(item.get("guid")) or _first_text(item.get("edmIsShownAt"))
-        media_url = _first_text(item.get("edmIsShownBy")) or _first_text(item.get("edmPreview"))
-        if not canonical_url.startswith("https://"):
+        canonical_url = _first_https(item.get("guid"), item.get("edmIsShownAt"))
+        media_url = _first_https(item.get("edmIsShownBy"), item.get("edmPreview"))
+        if not canonical_url:
             continue
-        if media_url and not media_url.startswith("https://"):
-            media_url = ""
 
         source_name = _first_text(item.get("dataProvider")) or _first_text(item.get("provider"))
         creator = _first_text(item.get("dcCreator"))
