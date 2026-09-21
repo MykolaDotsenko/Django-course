@@ -357,6 +357,8 @@ Acceptance:
 
 ## Implementation PR 7B — AI integration foundation
 
+**Execution status:** implemented. The runtime capability is an explicit user-triggered Explain this flow with signed trusted conversion packets, Gemini structured output, application-side semantic validation, persistent cache, deterministic fallback, versioned prompts/evals and zero live-provider dependency in normal CI.
+
 **Goal:** add bounded, provider-isolated editorial AI without making AI a source of truth or runtime requirement.
 
 Deliverables:
@@ -394,6 +396,8 @@ Acceptance:
 ---
 
 ## Implementation PR 8 — Currency eras and deterministic storytelling
+
+**Execution status:** implemented by the dedicated apps.culture slice. The canonical story is assembled from published StoryMoment records plus CountryCurrency history; story facts are review-gated, provenance-backed and date-filtered in historical mode. Wikidata uses targeted QID-only management-command ingestion and never runs in the web request path. The optional AI editorial-draft workflow remains non-required because the deterministic composer is complete and canonical.
 
 **Goal:** add the “story behind this rate” without sacrificing trust.
 

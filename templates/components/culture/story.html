@@ -1,0 +1,53 @@
+{% if story_error %}
+  <section class="qa-inline-alert qa-inline-alert--error" role="status">
+    <h3>{{ story_error.title }}</h3>
+    <p>{{ story_error.detail }}</p>
+  </section>
+{% elif story %}
+  <section class="qa-story-surface" aria-labelledby="money-culture-story-title">
+    <div>
+      <p class="qa-foundation-kicker">
+        Money &amp; culture
+        {% if story.historical %}· {{ story.selected_date|date:"j M Y" }}{% endif %}
+      </p>
+      <h2 id="money-culture-story-title">The sourced story behind this currency context</h2>
+      {% if story.status == "partial" %}
+        <p>Only the sourced context currently available is shown. Missing facts are not filled in.</p>
+      {% elif story.status == "unavailable" %}
+        <p>No reviewed story facts are available for this context yet.</p>
+      {% else %}
+        <p>Deterministic chapters assembled from reviewed currency relationships and story facts.</p>
+      {% endif %}
+    </div>
+    {% if story.status != "unavailable" %}
+      {% if story_media %}
+        {% include "components/media/image_frame.html" with image=story_media.image loading="lazy" %}
+      {% endif %}
+      <div class="qa-story-chapters">
+        {% for chapter in story.chapters %}
+          <article class="qa-story-chapter">
+            <div>
+              <p class="qa-foundation-kicker">{{ chapter.label }}</p>
+              <h3>{{ chapter.title }}</h3>
+            </div>
+            <p>{{ chapter.body }}</p>
+            <p class="qa-story-chapter__meta">Temporal scope: {{ chapter.temporal_scope }}</p>
+            {% if chapter.source_refs %}
+              <div class="qa-story-source-list" aria-label="Sources">
+                {% for source in chapter.source_refs %}
+                  <a href="{{ source.url }}"
+                     rel="noopener noreferrer"
+                     target="_blank">{{ source.label }}</a>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    {% endif %}
+    <p class="qa-story-chapter__meta">
+      Story chapters are deterministic and sourced. They do not claim that an event caused an
+      exchange-rate movement unless reviewed source material explicitly supports that claim.
+    </p>
+  </section>
+{% endif %}

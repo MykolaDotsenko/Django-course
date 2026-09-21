@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "template_partials",
     "apps.common",
     "apps.countries",
+    "apps.culture",
     "apps.exchange",
     "apps.media",
 ]
@@ -138,6 +139,11 @@ LOGGING = {
             "propagate": False,
         },
         "cultural_currency.ai": {
+            "handlers": ["console_json"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "cultural_currency.culture": {
             "handlers": ["console_json"],
             "level": "INFO",
             "propagate": False,
