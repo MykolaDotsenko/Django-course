@@ -105,9 +105,7 @@ def compose_story(request: StoryRequest) -> StoryComposition:
 def _currency_era_chapter(link, *, side: str) -> StoryChapter:
     date_text = _range_text(link.valid_from, link.valid_to)
     role_text = (
-        "primary currency relationship"
-        if link.is_primary
-        else "recorded currency relationship"
+        "primary currency relationship" if link.is_primary else "recorded currency relationship"
     )
     body = (
         f"{link.country.name} records {link.currency.name} ({link.currency.code}) as a "
