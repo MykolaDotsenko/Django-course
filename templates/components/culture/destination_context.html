@@ -4,9 +4,7 @@
     <div class="qa-destination-context__heading">
       <div>
         <p class="qa-foundation-kicker">Explore</p>
-        <h3 id="destination-context-title">
-          What does this amount mean in {{ destination_context.country_name }}?
-        </h3>
+        <h3 id="destination-context-title">What does this amount mean in {{ destination_context.country_name }}?</h3>
       </div>
       <nav class="qa-explore-nav" aria-label="Explore conversion context">
         <a href="#everyday-value">Everyday value</a>
@@ -69,7 +67,9 @@
             {% for row in destination_context.payment.rows %}
               <div>
                 <dt>{{ row.label }}</dt>
-                <dd>{{ row.text }}</dd>
+                <dd>
+                  {{ row.text }}
+                </dd>
               </div>
             {% endfor %}
           </dl>

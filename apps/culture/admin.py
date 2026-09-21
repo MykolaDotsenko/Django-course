@@ -108,7 +108,6 @@ class StoryMomentAdmin(admin.ModelAdmin):
             )
 
 
-
 @admin.register(CulturalProfile)
 class CulturalProfileAdmin(admin.ModelAdmin):
     list_display = ("country", "is_published", "source_name", "verified_at", "updated_at")
