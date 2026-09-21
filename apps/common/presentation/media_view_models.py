@@ -17,6 +17,10 @@ class ImageViewModel:
     label: str
     width: int
     height: int
+    caption: str = ""
+    attribution_text: str = ""
+    source_url: str = ""
+    authenticity_label: str = ""
 
 
 @dataclass(frozen=True, slots=True)
