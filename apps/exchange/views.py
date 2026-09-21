@@ -616,7 +616,6 @@ def historical_series(request: HttpRequest) -> HttpResponse:
     )
 
 
-
 @require_http_methods(["POST"])
 def conversion_explanation(request: HttpRequest) -> HttpResponse:
     if not settings.AI_RUNTIME_EXPLANATION_ENABLED:
