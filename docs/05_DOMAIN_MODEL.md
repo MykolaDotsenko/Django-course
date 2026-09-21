@@ -113,8 +113,11 @@ CulturalProfile
 - tipping
 - atm_notes
 - dcc_warning
+- source_name
+- source_url
 - source_notes
 - verified_at
+- is_published
 ```
 
 Large free-text blobs should remain structured enough that the UI can render sections independently.
@@ -157,6 +160,7 @@ TypicalPrice
 - source_url
 - source_name
 - observed_at
+- source_class: authoritative | curated_factual | approximate_contextual
 - confidence
 - is_published
 ```

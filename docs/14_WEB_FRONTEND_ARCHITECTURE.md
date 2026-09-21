@@ -1102,7 +1102,13 @@ The base Django template owns:
 - stable page frame;
 - no navigation destination that does not yet exist.
 
-Country atmosphere is represented by vetted `data-country-theme` scopes. The first QA examples are Finland and Japan. Their accents affect only decorative presentation variables; text/status semantics, focus order and component mechanics remain global Quiet Atlas behavior.
+Country atmosphere is represented by vetted `data-country-theme` scopes. Finland and Japan
+retain curated featured palettes. Any other selected ISO country receives a stable deterministic
+Quiet Atlas palette from a small non-semantic fallback set, so bilateral atmosphere no longer
+disappears outside the featured demo pair. Those fallback colours do **not** claim cultural meaning;
+country-specific factual/media content remains separately sourced. All accents affect decorative
+presentation only; text/status semantics, focus order and component mechanics remain global Quiet
+Atlas behavior.
 
 A DEBUG-only `/_design/shell/` surface exists to inspect these foundations without exposing unfinished product UI. It contains no converter form and makes no FX claim.
 

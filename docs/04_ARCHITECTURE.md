@@ -36,35 +36,57 @@ ORM / provider adapter
 
 The web and mobile paths share domain behaviour, not presentation code.
 
-## 2. Target app boundaries
+## 2. Application boundaries
+
+Current implemented boundaries:
 
 ```text
 apps/
-├── accounts/
+├── common/
 ├── countries/
 ├── exchange/
 ├── culture/
-└── travel/
+└── media/
 ```
 
-### accounts
-Identity, user preferences and authenticated ownership.
+Planned durable boundaries are added only when their roadmap phase ships:
+
+```text
+apps/
+├── accounts/   # PR12
+└── travel/     # favourites/recent state and later trips/budgets
+```
+
+### common
+Strictly cross-cutting web/runtime infrastructure: health checks, request context/observability,
+the repo-owned Vite bridge and design-preview presentation helpers. It owns no business model and
+must not become a generic utility dumping ground.
 
 ### countries
-Country/currency metadata and relationships.
+Country/currency metadata and temporal relationships.
 
 ### exchange
 FX provider integration, conversion rules, rate metadata and historical series.
 
 ### culture
-Curated cultural profile, money etiquette and typical-price context.
+Curated payment/cash/tipping context, TypicalPrice observations, StoryMoment facts and deterministic
+money/culture composition.
+
+### media
+Managed media assets, rights/provenance, ingestion boundaries, derivatives, publication states and
+runtime media selection. Media is independent from cultural fact ownership.
+
+### accounts
+Future identity, user preferences and authenticated ownership.
 
 ### travel
-Favourites, recent conversions, saved trips and budgets.
+Future favourites, recent conversions, saved trips and budgets.
 
 ## 3. Why not more apps?
 
-App boundaries should correspond to durable domain capabilities. Avoid “services”, “utils”, “core” and “common” dumping grounds unless a concrete cross-domain responsibility exists.
+App boundaries correspond to durable capabilities. Avoid generic “services”, “utils”, “core” and
+“common” dumping grounds. The existing `apps.common` is a deliberate exception limited to
+cross-cutting HTTP/build/observability infrastructure; domain behavior belongs in its owning app.
 
 ## 4. Web rendering
 
