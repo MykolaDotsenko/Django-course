@@ -257,6 +257,12 @@ class TypicalPriceConfidence(models.TextChoices):
     HIGH = "high", "High"
 
 
+class TypicalPriceSourceClass(models.TextChoices):
+    AUTHORITATIVE = "authoritative", "Authoritative"
+    CURATED_FACTUAL = "curated_factual", "Curated factual"
+    APPROXIMATE_CONTEXTUAL = "approximate_contextual", "Approximate contextual"
+
+
 class TypicalPrice(models.Model):
     country = models.ForeignKey(
         "countries.Country",
@@ -277,6 +283,11 @@ class TypicalPrice(models.Model):
     source_url = models.URLField(max_length=700)
     observed_at = models.DateField()
     verified_at = models.DateTimeField(null=True, blank=True)
+    source_class = models.CharField(
+        max_length=24,
+        choices=TypicalPriceSourceClass.choices,
+        default=TypicalPriceSourceClass.APPROXIMATE_CONTEXTUAL,
+    )
     confidence = models.CharField(
         max_length=12,
         choices=TypicalPriceConfidence.choices,

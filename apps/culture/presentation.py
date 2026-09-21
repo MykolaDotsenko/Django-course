@@ -48,6 +48,7 @@ def build_destination_context_component(
             "equivalent_text": _equivalent_text(price.equivalent),
             "scope": price.scope_label,
             "observed": date_format(price.observed_at, "M Y"),
+            "source_class": price.source_class.replace("_", " ").capitalize(),
             "confidence": price.confidence.capitalize(),
             "source_name": price.source_name,
             "source_url": price.source_url,

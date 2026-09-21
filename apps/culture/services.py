@@ -211,6 +211,7 @@ class TypicalPriceContext:
     amount_low: Decimal
     amount_high: Decimal | None
     observed_at: date
+    source_class: str
     confidence: str
     source_name: str
     source_url: str
@@ -336,6 +337,7 @@ def build_destination_context(
             amount_low=row.amount_low,
             amount_high=row.amount_high,
             observed_at=row.observed_at,
+            source_class=row.source_class,
             confidence=row.confidence,
             source_name=row.source_name,
             source_url=row.source_url,

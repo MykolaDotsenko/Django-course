@@ -128,10 +128,11 @@ class TypicalPriceAdmin(admin.ModelAdmin):
         "amount_high",
         "currency",
         "observed_at",
+        "source_class",
         "confidence",
         "is_published",
     )
-    list_filter = ("is_published", "confidence", "category", "country")
+    list_filter = ("is_published", "source_class", "confidence", "category", "country")
     search_fields = ("label", "country__name", "city", "source_name")
     list_select_related = ("country", "currency")
     ordering = ("display_order", "country__name", "city", "label")

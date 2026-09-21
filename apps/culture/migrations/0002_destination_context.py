@@ -43,6 +43,7 @@ class Migration(migrations.Migration):
                 ("source_url", models.URLField(max_length=700)),
                 ("observed_at", models.DateField()),
                 ("verified_at", models.DateTimeField(blank=True, null=True)),
+                ("source_class", models.CharField(choices=[("authoritative", "Authoritative"), ("curated_factual", "Curated factual"), ("approximate_contextual", "Approximate contextual")], default="approximate_contextual", max_length=24)),
                 ("confidence", models.CharField(choices=[("low", "Low"), ("medium", "Medium"), ("high", "High")], default="medium", max_length=12)),
                 ("notes", models.TextField(blank=True, validators=[django.core.validators.MaxLengthValidator(1200)])),
                 ("display_order", models.PositiveSmallIntegerField(default=100)),

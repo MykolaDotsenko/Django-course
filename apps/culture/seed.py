@@ -16,6 +16,7 @@ from apps.culture.models import (
     TypicalPrice,
     TypicalPriceCategory,
     TypicalPriceConfidence,
+    TypicalPriceSourceClass,
 )
 from apps.culture.services import approve_story_moment, publish_story_moment
 
@@ -179,6 +180,7 @@ def seed_demo_destination_context() -> tuple[int, int]:
             "amount_high": Decimal("600"),
             "source_name": "Japan National Tourism Organization (JNTO)",
             "source_url": _JNTO_BUDGET_SOURCE,
+            "source_class": TypicalPriceSourceClass.APPROXIMATE_CONTEXTUAL,
             "confidence": TypicalPriceConfidence.MEDIUM,
             "display_order": 10,
             "notes": "JNTO travel-budget comparison range; approximate current travel context.",
@@ -191,6 +193,7 @@ def seed_demo_destination_context() -> tuple[int, int]:
             "amount_high": Decimal("1000"),
             "source_name": "Japan National Tourism Organization (JNTO)",
             "source_url": _JNTO_FAQ_SOURCE,
+            "source_class": TypicalPriceSourceClass.APPROXIMATE_CONTEXTUAL,
             "confidence": TypicalPriceConfidence.MEDIUM,
             "display_order": 20,
             "notes": "JNTO FAQ example for convenience-store or casual-restaurant meals.",
@@ -203,6 +206,7 @@ def seed_demo_destination_context() -> tuple[int, int]:
             "amount_high": Decimal("330"),
             "source_name": "Tokyo Metro",
             "source_url": _TOKYO_METRO_FARE_SOURCE,
+            "source_class": TypicalPriceSourceClass.AUTHORITATIVE,
             "confidence": TypicalPriceConfidence.HIGH,
             "display_order": 30,
             "notes": "Adult regular-ticket fare range, distance dependent.",
@@ -224,6 +228,7 @@ def seed_demo_destination_context() -> tuple[int, int]:
                 "source_name": spec["source_name"],
                 "source_url": spec["source_url"],
                 "verified_at": verified_at,
+                "source_class": spec["source_class"],
                 "confidence": spec["confidence"],
                 "notes": spec["notes"],
                 "display_order": spec["display_order"],
