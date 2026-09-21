@@ -396,14 +396,22 @@ StoryMoment
 - category
 - title
 - summary
-- start_date
+- start_date: nullable
 - end_date: nullable
+- date_precision
+- source_kind
 - source_name
 - source_url
+- external_id: optional upstream identity
 - source_published_at: nullable
+- source_retrieved_at: nullable
 - verified_at
 - relevance_weight
-- is_published
+- supports_causality
+- causal_support_note
+- status: candidate | needs_review | approved | published | retired | rejected
+- reviewed_at
+- published_at
 ```
 
 Suggested categories:
@@ -428,6 +436,7 @@ Concept:
 ```text
 StoryChapter
 - kind
+- label
 - title
 - body
 - source_refs[]

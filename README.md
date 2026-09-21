@@ -103,12 +103,12 @@ The handbook covers:
 
 ## Delivery strategy
 
-The rebuild is intentionally incremental. PR2 established the locked Django/Vite/TypeScript/Quiet Atlas web foundation and browser-quality gates. PR3 introduced the canonical country/currency domain and import boundary. PR4 added the Decimal-safe FX domain, Frankfurter v2 adapter, semantic cache and bounded stale fallback. PR5 delivered the current-conversion vertical slice. PR6 completed historical conversion lifecycle/coverage semantics. PR7.1–7.3 added bounded historical series, the accessible trend surface, lazy Chart.js visualization and Then & Now comparison. The roadmap PR7A milestone now adds the provenance-safe managed-media pipeline while preserving the existing Quiet Atlas static fallback.
+The rebuild is intentionally incremental. PR2 established the locked Django/Vite/TypeScript/Quiet Atlas web foundation and browser-quality gates. PR3 introduced canonical country/currency identity. PR4–PR7.3 delivered trusted current/historical FX, bounded series, the accessible chart and Then & Now. PR7A added provenance-safe managed media. PR7B added the bounded Gemini Explain this capability without putting AI on the financial truth path. PR8 adds reviewed currency-era facts and deterministic Money & culture storytelling with candidate-only Wikidata ingestion.
 
 See [docs/08_IMPLEMENTATION_ROADMAP.md](docs/08_IMPLEMENTATION_ROADMAP.md).
 
 ## Current status
 
-**Phase:** historical chart/Then & Now complete → roadmap PR7A managed-media pipeline implemented → PR7B AI foundation next.
+**Phase:** PR7B bounded AI foundation implemented → PR8 deterministic Money & culture storytelling implemented → PR9 payment context next.
 
-The Django product shell, runtime configuration, PostgreSQL path, observability baseline, current/historical conversion flow, historical chart, managed-media domain, frontend build and Quiet Atlas UI are executable and CI-backed. Managed media is selected only from locally published records; Wikimedia Commons and Europeana are editorial candidate-ingestion boundaries, never user-request-path dependencies. Missing managed media deterministically falls back to the release-owned Quiet Atlas asset registry.
+The Django product shell, runtime configuration, PostgreSQL path, current/historical conversion flow, historical chart, managed-media domain, bounded Gemini explanation, deterministic story composer, frontend build and Quiet Atlas UI are executable and CI-backed. Runtime stories use only locally reviewed/published facts and canonical country/currency history. Wikidata is an explicit management-command candidate source, never a web-request dependency, and missing story facts produce fewer chapters rather than generated filler.

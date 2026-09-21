@@ -580,19 +580,21 @@ Never interpret an upstream failure as an empty authoritative dataset.
 Example flow:
 
 ~~~text
-targeted Wikidata fetch
+explicit QID management command
   ↓
-WikidataFactCandidate
+fixed Wikibase REST API endpoint + required User-Agent
   ↓
-schema/reference/date validation
+bounded Wikidata item response
   ↓
-editorial candidate
+normalized candidate metadata
   ↓
-StoryMoment is_published=false
+StoryMoment status=needs_review
   ↓
-human/source verification
+human/source/date/causality verification
   ↓
-publish
+approved
+  ↓
+explicit publish
 ~~~
 
 No direct external-to-public pipeline.
@@ -1087,3 +1089,23 @@ Deployment does not depend on third-party import API availability.
 10. Durable-write side effects execute after commit.
 11. Stale data requires exact semantic cache identity.
 12. Failure is represented explicitly, never with fake numeric data.
+
+
+---
+
+# 44. Implemented Money & culture request path
+
+PR8 keeps story loading outside the conversion request:
+
+successful conversion
+→ render deterministic story URL
+→ user explicitly opens Money & culture
+→ GET /story/
+→ validate country/currency/date/mode
+→ read local CountryCurrency history + local PUBLISHED StoryMoment rows
+→ deterministic StoryChapter[]
+→ HTMX fragment OR full no-JS page
+
+No Wikidata, Wikimedia, Europeana or AI provider call occurs in this request path.
+
+Historical story selection excludes unpublished facts, undated facts and dated facts outside their reviewed temporal scope. Current storytelling can include reviewed past money-history moments. A composition exception produces a story-only unavailable state; it cannot invalidate or replace the already completed conversion.

@@ -1000,3 +1000,32 @@ That feature becomes a real asynchronous workload with:
 - spend limits.
 
 At that point a task queue may finally be justified.
+
+
+---
+
+# 64. Story candidate ingestion
+
+PR8 implements targeted Wikidata discovery as an editorial command, not a runtime research service.
+
+Example command:
+
+python manage.py ingest_story_candidate --item Q4916 --category monetary_union --country FI --currency EUR --start-date 1999-01-01 --end-date 1999-01-01 --date-precision exact_day
+
+Properties:
+
+- the input entity must be an explicit QID;
+- the provider endpoint is fixed to the versioned Wikibase REST API;
+- response size and timeout are bounded;
+- an explicit Wikimedia-compatible User-Agent is sent;
+- the result is always an unpublished needs_review candidate;
+- reviewed/approved/published/retired rows are protected from upstream overwrite;
+- --dry-run rolls all local writes back;
+- no fuzzy search or broad SPARQL query is part of the product request path.
+
+The deterministic portfolio slice can be seeded after country/currency reference data:
+
+python manage.py seed_reference_data
+python manage.py seed_story_data
+
+The reviewed demo story seed uses official European Commission and Bank of Japan sources. Seeded rows pass the same approve/publish service gates as editor-created content rather than bypassing the lifecycle.
