@@ -60,6 +60,7 @@ class StoryMomentAdmin(admin.ModelAdmin):
                 ]
             )
         return tuple(fields)
+
     actions = (
         "approve_selected",
         "publish_selected",
