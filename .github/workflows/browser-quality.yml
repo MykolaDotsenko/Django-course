@@ -76,11 +76,10 @@ jobs:
       - name: Diagnose template format
         run: |
           cp templates/components/converter/current_panel.html /tmp/current_panel.before.html
-          djlint templates/components/converter/current_panel.html --reformat
+          djlint templates/components/converter/current_panel.html --reformat || true
           echo "===DJLINT_FORMATTED_BEGIN==="
           cat templates/components/converter/current_panel.html
           echo "===DJLINT_FORMATTED_END==="
-          exit 1
 
       - name: Template lint
         run: djlint templates --lint --no-github-output
