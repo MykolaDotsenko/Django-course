@@ -39,7 +39,7 @@ include = ["apps*", "config*", "integrations*"]
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py", "*_tests.py"]
-testpaths = ["apps", "config"]
+testpaths = ["apps", "config", "integrations"]
 addopts = ["-ra", "--strict-config", "--strict-markers"]
 
 [tool.ruff]
@@ -57,7 +57,7 @@ line-ending = "auto"
 
 [tool.coverage.run]
 branch = true
-source = ["apps"]
+source = ["apps", "integrations"]
 
 [tool.coverage.report]
 fail_under = 90
