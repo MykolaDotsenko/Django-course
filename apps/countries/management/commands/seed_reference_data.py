@@ -46,18 +46,42 @@ class Command(BaseCommand):
             )
 
         relationships = [
-            ("FI", "FIM", True, None, date(2001, 12, 31), "historical_primary"),
-            ("FI", "EUR", True, date(2002, 1, 1), None, "current_primary"),
-            ("JP", "JPY", True, None, None, "current_primary"),
-            ("US", "USD", True, None, None, "current_primary"),
+            (
+                "FI",
+                "FIM",
+                True,
+                None,
+                date(2001, 12, 31),
+                "historical_primary",
+                "https://economy-finance.ec.europa.eu/euro/eu-countries-and-euro/finland-and-euro_en",
+            ),
+            (
+                "FI",
+                "EUR",
+                True,
+                date(2002, 1, 1),
+                None,
+                "current_primary",
+                "https://economy-finance.ec.europa.eu/euro/eu-countries-and-euro/finland-and-euro_en",
+            ),
+            (
+                "JP",
+                "JPY",
+                True,
+                None,
+                None,
+                "current_primary",
+                "https://www.boj.or.jp/en/about/education/oshiete/money/c02.htm",
+            ),
+            ("US", "USD", True, None, None, "current_primary", SOURCE),
         ]
-        for iso2, code, primary, valid_from, valid_to, role in relationships:
+        for iso2, code, primary, valid_from, valid_to, role, source in relationships:
             CountryCurrency.objects.update_or_create(
                 country=country_rows[iso2],
                 currency=currency_rows[code],
                 valid_from=valid_from,
                 valid_to=valid_to,
-                defaults={"is_primary": primary, "usage_role": role, "source": SOURCE},
+                defaults={"is_primary": primary, "usage_role": role, "source": source},
             )
 
         self.stdout.write(self.style.SUCCESS("Deterministic reference data is ready."))
