@@ -143,9 +143,13 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     () => document.querySelector("#source-picker-listbox")?.dataset.commitWired === "true",
   );
   await search.press("ArrowDown");
-  await search.press("ArrowDown");
   await search.press("Enter");
   await page.locator('[data-picker-dialog="source"]').waitFor({ state: "hidden" });
+  assert(
+    (await page.locator("#id_source_country").inputValue()) === "JP" &&
+      (await page.locator("#id_source_currency").inputValue()) === "JPY",
+    "current-converter: Japan/JPY picker selection did not commit",
+  );
 
   await page.locator("#id_amount").fill("12");
   await Promise.all([waitForPost(), page.locator(".qa-primary-button").click()]);
