@@ -22,7 +22,6 @@ from apps.media.models import (
 )
 from apps.media.presentation import build_media_asset_image_view_model, select_media_for_display
 from apps.media.services import (
-    MediaPublicationError,
     approve_media_asset,
     attach_media_bytes,
     publish_media_asset,
