@@ -28,7 +28,7 @@
         {% for chapter in story.chapters %}
           <article class="qa-story-chapter">
             <div>
-              <p class="qa-foundation-kicker">{{ chapter.kind|cut:"_"|title }}</p>
+              <p class="qa-foundation-kicker">{{ chapter.label }}</p>
               <h3>{{ chapter.title }}</h3>
             </div>
             <p>{{ chapter.body }}</p>

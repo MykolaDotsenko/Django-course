@@ -27,6 +27,7 @@ class StorySourceRef:
 @dataclass(frozen=True, slots=True)
 class StoryChapter:
     kind: str
+    label: str
     title: str
     body: str
     source_refs: tuple[StorySourceRef, ...]
@@ -122,6 +123,7 @@ def _currency_era_chapter(link, *, side: str) -> StoryChapter:
 
     return StoryChapter(
         kind=f"{side}_currency_era",
+        label=f"{side.title()} currency era",
         title=f"{link.country.name} · {link.currency.code}",
         body=body,
         source_refs=source_refs,
@@ -133,6 +135,7 @@ def _currency_era_chapter(link, *, side: str) -> StoryChapter:
 def _moment_chapter(moment: StoryMoment) -> StoryChapter:
     return StoryChapter(
         kind="historical_moment",
+        label="Sourced money history",
         title=moment.title,
         body=moment.summary,
         source_refs=(

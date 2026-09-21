@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from django import forms
+from django.utils import timezone
 
 from apps.countries.models import Country, Currency
 from apps.culture.story import StoryRequest
@@ -12,7 +13,7 @@ class StoryRequestForm(forms.Form):
     destination_country = forms.CharField(required=False, max_length=2)
     destination_currency = forms.CharField(required=False, max_length=3)
     selected_date = forms.DateField()
-    historical = forms.BooleanField(required=False)
+    historical = forms.ChoiceField(choices=(("0", "Current"), ("1", "Historical")))
 
     def clean(self):
         cleaned = super().clean()
@@ -30,6 +31,12 @@ class StoryRequestForm(forms.Form):
             cleaned[field_name] = code
             if code and not Currency.objects.filter(code=code).exists():
                 self.add_error(field_name, "Unknown currency code.")
+
+        if cleaned["selected_date"] > timezone.localdate():
+            self.add_error("selected_date", "Story date cannot be in the future.")
+
+        if cleaned.get("historical") == "0":
+            cleaned["selected_date"] = timezone.localdate()
 
         if not any(
             cleaned.get(field)
@@ -53,5 +60,5 @@ class StoryRequestForm(forms.Form):
             destination_country=self.cleaned_data["destination_country"],
             destination_currency=self.cleaned_data["destination_currency"],
             selected_date=self.cleaned_data["selected_date"],
-            historical=bool(self.cleaned_data["historical"]),
+            historical=self.cleaned_data["historical"] == "1",
         )
