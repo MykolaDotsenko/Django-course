@@ -6,7 +6,6 @@ from apps.media.models import MediaSourceKind
 from apps.media.sources.europeana import parse_europeana_search_payload
 from apps.media.sources.wikimedia import parse_wikimedia_search_payload
 
-
 NOW = datetime(2026, 9, 21, 10, 0, tzinfo=UTC)
 
 

@@ -4,7 +4,6 @@ import io
 import re
 from dataclasses import dataclass
 from datetime import date, datetime
-from pathlib import Path
 from urllib.parse import urlsplit
 
 from django.core.files.base import ContentFile

@@ -1,9 +1,10 @@
 # Generated for Cultural Currency Converter PR7A media pipeline.
 
-import apps.media.models
 import django.core.validators
 import django.db.models.deletion
 from django.db import migrations, models
+
+import apps.media.models
 
 
 class Migration(migrations.Migration):
