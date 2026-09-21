@@ -224,8 +224,8 @@ def test_unpublished_managed_media_cannot_be_rendered():
     ("role", "with_country", "expected_label"),
     [
         (MediaRole.COUNTRY_TEASER, True, "Finland local value"),
-        (MediaRole.COMPARISON_THEN, False, "Then and now comparison"),
-        (MediaRole.COMPARISON_NOW, False, "Then and now comparison"),
+        (MediaRole.COMPARISON_THEN, False, "Then and now comparison illustration"),
+        (MediaRole.COMPARISON_NOW, False, "Then and now comparison illustration"),
         (MediaRole.STORY_COVER, False, "Generic historical fallback"),
         (MediaRole.STORY_CHAPTER, False, "Generic historical fallback"),
         (MediaRole.HISTORICAL_TIMELINE, False, "Generic historical fallback"),
@@ -236,9 +236,7 @@ def test_unpublished_managed_media_cannot_be_rendered():
 )
 def test_quiet_atlas_fallback_covers_every_media_role(role, with_country, expected_label):
     country = (
-        Country.objects.create(iso2="FI", iso3="FIN", name="Finland")
-        if with_country
-        else None
+        Country.objects.create(iso2="FI", iso3="FIN", name="Finland") if with_country else None
     )
 
     selection = select_media_for_display(role=role, country=country)
