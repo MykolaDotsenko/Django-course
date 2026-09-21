@@ -26,11 +26,7 @@ class Command(BaseCommand):
         parser.add_argument("--role", choices=MediaRole.values, required=True)
         parser.add_argument(
             "--kind",
-            choices=[
-                value
-                for value in MediaKind.values
-                if value != MediaKind.GENERATED_ILLUSTRATION
-            ],
+            choices=[value for value in MediaKind.values if value != MediaKind.GENERATED_ILLUSTRATION],
             required=True,
         )
         parser.add_argument("--country")

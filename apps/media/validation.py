@@ -69,16 +69,18 @@ def validate_raster_image(
                     frames = getattr(image, "n_frames", 1)
                     image.verify()
             except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
-                raise MediaValidationError("Media bytes are not a safe decodable raster image.") from exc
+                raise MediaValidationError(
+                    "Media bytes are not a safe decodable raster image."
+                ) from exc
             except Image.DecompressionBombWarning as exc:
-                raise MediaValidationError("Media image exceeds the safe pixel-count limit.") from exc
+                raise MediaValidationError(
+                    "Media image exceeds the safe pixel-count limit."
+                ) from exc
     finally:
         Image.MAX_IMAGE_PIXELS = previous_max_pixels
 
     if image_format not in ALLOWED_RASTER_FORMATS:
-        raise MediaValidationError(
-            f"Unsupported raster image format {image_format or 'unknown'}."
-        )
+        raise MediaValidationError(f"Unsupported raster image format {image_format or 'unknown'}.")
     if width <= 0 or height <= 0:
         raise MediaValidationError("Media image dimensions must be positive.")
     if width > MAX_MEDIA_DIMENSION or height > MAX_MEDIA_DIMENSION:

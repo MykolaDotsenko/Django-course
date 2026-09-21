@@ -75,9 +75,8 @@ def parse_wikimedia_search_payload(
 
         canonical_url = str(page.get("canonicalurl") or "").strip()
         if not canonical_url.startswith("https://"):
-            canonical_url = (
-                "https://commons.wikimedia.org/wiki/"
-                + quote(str(page.get("title") or "").replace(" ", "_"), safe=":()_-")
+            canonical_url = "https://commons.wikimedia.org/wiki/" + quote(
+                str(page.get("title") or "").replace(" ", "_"), safe=":()_-"
             )
 
         width = imageinfo.get("width")
@@ -152,9 +151,7 @@ class WikimediaCommonsClient:
             with urlopen(request, timeout=self.timeout_seconds) as response:
                 raw = response.read(MAX_RESPONSE_BYTES + 1)
         except HTTPError as exc:
-            raise MediaSourceError(
-                f"Wikimedia Commons returned HTTP {exc.code}."
-            ) from exc
+            raise MediaSourceError(f"Wikimedia Commons returned HTTP {exc.code}.") from exc
         except (URLError, HTTPException, TimeoutError, socket.timeout) as exc:
             raise MediaSourceError("Wikimedia Commons request failed.") from exc
 

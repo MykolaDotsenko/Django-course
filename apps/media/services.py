@@ -194,9 +194,7 @@ def attach_media_bytes(
 
     suffix = _FORMAT_EXTENSION[validated.format]
     bucket = "generated" if asset.generated_by_ai else "sourced"
-    storage_name = (
-        f"{bucket}/{validated.content_hash[:2]}/{validated.content_hash}{suffix}"
-    )
+    storage_name = f"{bucket}/{validated.content_hash[:2]}/{validated.content_hash}{suffix}"
     created_storage_object = False
     if not default_storage.exists(storage_name):
         storage_name = default_storage.save(storage_name, ContentFile(data))
@@ -228,7 +226,9 @@ def create_responsive_derivative(
     if not source.storage_file:
         raise MediaPublicationError("Responsive derivatives require source bytes.")
     if not 1 <= width < (source.width or 0):
-        raise MediaPublicationError("Derivative width must be positive and smaller than the source.")
+        raise MediaPublicationError(
+            "Derivative width must be positive and smaller than the source."
+        )
 
     with source.storage_file.open("rb") as source_file:
         raw = source_file.read()
@@ -307,7 +307,9 @@ def upsert_media_candidates(
     created = updated = unchanged = skipped_protected = 0
     with transaction.atomic():
         for candidate in candidates:
-            _validate_https_url(candidate.source_url, field_name="candidate source_url", required=True)
+            _validate_https_url(
+                candidate.source_url, field_name="candidate source_url", required=True
+            )
             _validate_https_url(
                 candidate.source_media_url,
                 field_name="candidate source_media_url",
