@@ -1,5 +1,7 @@
 """URL configuration for Cultural Currency Converter."""
 
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
 
@@ -19,3 +21,6 @@ urlpatterns = [
     path("_design/converter/", converter_preview, name="converter_preview"),
     path("_design/rate-series/", rate_series_preview, name="rate_series_preview"),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

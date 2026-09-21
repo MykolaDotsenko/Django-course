@@ -61,6 +61,7 @@ DJANGO_SECRET_KEY
 DATABASE_URL credentials
 object-storage credentials
 GEMINI_API_KEY
+EUROPEANA_API_KEY
 future authenticated provider keys
 ```
 
@@ -243,9 +244,9 @@ A PR introducing configuration must answer:
 
 # 14. Implemented foundation boundary
 
-The foundation now consumes security-sensitive Django configuration through `config.environment.load_runtime_config()`.
+The Django runtime consumes its security-sensitive core through `config.environment.load_runtime_config()`. Request-independent management commands may additionally read narrowly scoped provider credentials from the process environment.
 
-Canonical variables implemented at this stage:
+Canonical application/command environment variables implemented at this stage:
 
 ```text
 APP_ENV
@@ -253,6 +254,7 @@ DJANGO_DEBUG
 DJANGO_ALLOWED_HOSTS
 DJANGO_SECRET_KEY
 DATABASE_URL
+EUROPEANA_API_KEY
 ```
 
 Rules:
@@ -266,7 +268,8 @@ Rules:
 - malformed booleans, hosts or environment names fail fast;
 - production session/CSRF cookies are marked secure;
 - `.env.example` contains only variables the application actually consumes;
-- arbitrary `.env` files are not silently loaded into production configuration.
+- arbitrary `.env` files are not silently loaded into production configuration;
+- `EUROPEANA_API_KEY` is optional for normal runtime/test operation and required only by the explicit Europeana editorial candidate-ingestion command.
 
 Database configuration is now implemented through `config.database.load_database_config()`.
 

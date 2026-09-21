@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "apps.common",
     "apps.countries",
     "apps.exchange",
+    "apps.media",
 ]
 
 MIDDLEWARE = [
@@ -83,6 +84,9 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 VITE_DEV_SERVER_ENABLED = APP_ENV == "local" and DEBUG
 VITE_DEV_SERVER_ORIGIN = "http://127.0.0.1:5173"

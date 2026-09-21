@@ -103,12 +103,12 @@ The handbook covers:
 
 ## Delivery strategy
 
-The rebuild is intentionally incremental. PR2A established the locked frontend build, PR2B connected Django to Vite, PR2D added reusable accessible converter primitives, and PR2E composed them into the responsive bilateral Quiet Atlas experience. PR2F and its corrective follow-up now harden that surface with template, accessibility, 200% text-reflow, exact container-transition, contrast and compressed-payload quality gates. PR3 introduced the canonical country/currency domain and import boundary. PR4 added the Decimal-safe FX domain, Frankfurter v2 adapter, semantic cache and bounded stale fallback.
+The rebuild is intentionally incremental. PR2 established the locked Django/Vite/TypeScript/Quiet Atlas web foundation and browser-quality gates. PR3 introduced the canonical country/currency domain and import boundary. PR4 added the Decimal-safe FX domain, Frankfurter v2 adapter, semantic cache and bounded stale fallback. PR5 delivered the current-conversion vertical slice. PR6 completed historical conversion lifecycle/coverage semantics. PR7.1–7.3 added bounded historical series, the accessible trend surface, lazy Chart.js visualization and Then & Now comparison. The roadmap PR7A milestone now adds the provenance-safe managed-media pipeline while preserving the existing Quiet Atlas static fallback.
 
 See [docs/08_IMPLEMENTATION_ROADMAP.md](docs/08_IMPLEMENTATION_ROADMAP.md).
 
 ## Current status
 
-**Phase:** PR5 HTMX current-conversion vertical slice complete → PR6 historical conversion next.
+**Phase:** historical chart/Then & Now complete → roadmap PR7A managed-media pipeline implemented → PR7B AI foundation next.
 
-The Django product shell, runtime configuration, PostgreSQL path, observability baseline, frontend build, Vite bridge and Quiet Atlas shell are executable and CI-backed. DEBUG-only design surfaces exercise the semantic shell, converter primitives and responsive bilateral composition without claiming FX business behavior.
+The Django product shell, runtime configuration, PostgreSQL path, observability baseline, current/historical conversion flow, historical chart, managed-media domain, frontend build and Quiet Atlas UI are executable and CI-backed. Managed media is selected only from locally published records; Wikimedia Commons and Europeana are editorial candidate-ingestion boundaries, never user-request-path dependencies. Missing managed media deterministically falls back to the release-owned Quiet Atlas asset registry.

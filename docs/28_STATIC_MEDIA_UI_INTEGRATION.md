@@ -14,7 +14,7 @@ The goal is to make media:
 - replaceable;
 - accessible;
 - performance-safe;
-- future-compatible with sourced MediaAsset records;
+- compatible with sourced MediaAsset records;
 - testable;
 - free from hardcoded template paths.
 
@@ -1182,3 +1182,37 @@ Playwright now validates all 28 at:
 The original content-pack constraint remains:
 
 > Delivery-format derivatives are allowed only for concrete rendering surfaces; they are not permission to create more decorative country cards.
+
+
+---
+
+# 35. Managed MediaAsset integration implemented
+
+The original static-media architecture remains the deterministic fallback and is now joined by the roadmap PR7A managed-media path.
+
+Current presentation flow:
+
+\`\`\`text
+domain/application context
+        ↓
+apps.media.services.select_published_media()
+        ↓
+published managed MediaAsset?
+        ├── yes → managed storage URL + provenance/authenticity metadata
+        └── no  → Quiet Atlas static selector
+                         ↓
+               normalized ImageViewModel
+                         ↓
+               shared media template
+\`\`\`
+
+The shared \`ImageViewModel\` now supports both release-owned static assets and managed assets with optional:
+
+- caption;
+- attribution text;
+- canonical source URL;
+- visible authenticity label.
+
+Templates still do not know database-selection rules, external provider schemas or static filenames.
+
+The managed selector is deliberately read-only and local. External archive search remains a management-command/editorial concern, so rendering a page never creates a Wikimedia/Europeana/AI dependency.

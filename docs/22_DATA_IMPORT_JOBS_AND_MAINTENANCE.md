@@ -883,29 +883,35 @@ A scheduled/import job is production-ready when:
 
 ## 57. Sourced-media ingestion
 
-Potential command:
+Implemented command:
 
 ```text
-manage.py ingest_media_candidate \
+manage.py ingest_media_candidates \
   --source wikimedia \
-  --country FI \
-  --year 1998
+  --query "Finland markka 1998" \
+  --role historical_timeline \
+  --kind archival_photo \
+  --country FI
 ```
 
-The command does not publish the first search result.
+Europeana uses the same command with `--source europeana` and a server-side `EUROPEANA_API_KEY`.
 
-Flow:
+The command does not download or publish the first search result. It stores normalized review metadata only.
+
+Implemented review flow:
 
 ```text
-search source
-→ fetch record metadata
-→ rights/date/relevance validation
-→ download approved candidate when allowed
-→ image validation/derivatives
-→ unpublished MediaAsset
-→ editorial review
-→ publish
+search fixed reviewed source
+→ normalize candidate metadata
+→ unpublished needs_review MediaAsset
+→ human rights/date/relevance review
+→ attach reviewed local raster through attach_media_file
+→ decode / sanitize / SHA-256 / Django Storage
+→ explicit approve action
+→ explicit publish action
 ```
+
+This deliberately keeps binary acquisition/review separate from search-result discovery rather than turning arbitrary remote URLs into a media proxy.
 
 ## 58. AI media generation command
 
@@ -939,13 +945,9 @@ Published stored asset selection is read-only.
 
 ## 60. Media derivatives
 
-A processing command/service can create:
+The implemented `build_media_derivative` command/service creates an explicitly requested responsive WebP width from reviewed managed source media. It re-encodes the derivative, computes a content hash, records `derivative_of` / `variant_width`, and leaves the derivative unpublished for review.
 
-- responsive widths;
-- WebP/AVIF where supported;
-- safe JPEG/PNG fallback;
-- content hash;
-- focal-point-aware crops.
+AVIF, focal-point-aware cropping and multi-width batch generation remain later optimizations that require a concrete delivery need.
 
 Do not regenerate derivatives on every web request.
 
