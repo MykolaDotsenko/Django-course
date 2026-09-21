@@ -483,6 +483,13 @@ Historical mode keeps current price context separate unless explicit historical 
 
 ## Implementation PR 11 — Favourites and recent conversions
 
+**Execution status:** Phase A implemented. Anonymous saved state uses a versioned, validated and
+bounded localStorage contract. Favourites store semantic country/currency pair context only and do
+not retain an amount. Recent conversions retain the successful amount/result plus current/historical
+date metadata, deduplicate by semantic conversion identity and are capped at 10. The Saved & recent
+surface supports restore/repeat/swap/remove/clear, corrupted-storage recovery and explicit local-only
+privacy copy. Storage failure never blocks conversion.
+
 **Goal:** improve repeat-use value.
 
 Phase A:
@@ -490,7 +497,7 @@ Phase A:
 - anonymous browser-local recent/favourites;
 - clear local persistence controls.
 
-Phase B:
+Phase B — intentionally deferred until accounts are introduced:
 
 - durable user sync after accounts are introduced;
 - authenticated FavouritePair database uniqueness guarantee;
