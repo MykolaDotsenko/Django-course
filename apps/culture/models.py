@@ -192,3 +192,140 @@ class StoryMoment(models.Model):
 
     def __str__(self) -> str:
         return f"{self.title} [{self.category}]"
+
+
+class CulturalProfile(models.Model):
+    country = models.OneToOneField(
+        "countries.Country",
+        on_delete=models.CASCADE,
+        related_name="cultural_profile",
+    )
+    summary = models.TextField(blank=True, validators=[MaxLengthValidator(1200)])
+    payment_customs = models.TextField(blank=True, validators=[MaxLengthValidator(1200)])
+    cash_usage = models.TextField(blank=True, validators=[MaxLengthValidator(1200)])
+    tipping = models.TextField(blank=True, validators=[MaxLengthValidator(1200)])
+    atm_notes = models.TextField(blank=True, validators=[MaxLengthValidator(1200)])
+    dcc_warning = models.TextField(blank=True, validators=[MaxLengthValidator(1200)])
+    source_name = models.CharField(max_length=200, blank=True)
+    source_url = models.URLField(max_length=700, blank=True)
+    source_notes = models.TextField(blank=True, validators=[MaxLengthValidator(2000)])
+    verified_at = models.DateTimeField(null=True, blank=True)
+    is_published = models.BooleanField(default=False, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("country__name",)
+
+    def clean(self) -> None:
+        super().clean()
+        if not self.is_published:
+            return
+        if not self.source_name.strip() or not self.source_url.strip() or self.verified_at is None:
+            raise ValidationError(
+                "Published cultural profiles require source name, HTTPS source URL and verification."
+            )
+        if not self.source_url.startswith("https://"):
+            raise ValidationError({"source_url": "Published cultural profiles require HTTPS."})
+        if not any(
+            value.strip()
+            for value in (
+                self.summary,
+                self.payment_customs,
+                self.cash_usage,
+                self.tipping,
+                self.atm_notes,
+                self.dcc_warning,
+            )
+        ):
+            raise ValidationError("Published cultural profiles require at least one guidance field.")
+
+    def __str__(self) -> str:
+        return f"{self.country.name} payment context"
+
+
+class TypicalPriceCategory(models.TextChoices):
+    COFFEE = "coffee", "Coffee"
+    CASUAL_MEAL = "casual_meal", "Casual meal"
+    TRANSIT = "transit", "Transit"
+    GROCERIES = "groceries", "Groceries"
+    OTHER = "other", "Other"
+
+
+class TypicalPriceConfidence(models.TextChoices):
+    LOW = "low", "Low"
+    MEDIUM = "medium", "Medium"
+    HIGH = "high", "High"
+
+
+class TypicalPrice(models.Model):
+    country = models.ForeignKey(
+        "countries.Country",
+        on_delete=models.CASCADE,
+        related_name="typical_prices",
+    )
+    city = models.CharField(max_length=120, blank=True)
+    category = models.CharField(max_length=24, choices=TypicalPriceCategory.choices)
+    label = models.CharField(max_length=160)
+    amount_low = models.DecimalField(max_digits=12, decimal_places=2)
+    amount_high = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    currency = models.ForeignKey(
+        "countries.Currency",
+        on_delete=models.PROTECT,
+        related_name="typical_prices",
+    )
+    source_name = models.CharField(max_length=200)
+    source_url = models.URLField(max_length=700)
+    observed_at = models.DateField()
+    verified_at = models.DateTimeField(null=True, blank=True)
+    confidence = models.CharField(
+        max_length=12,
+        choices=TypicalPriceConfidence.choices,
+        default=TypicalPriceConfidence.MEDIUM,
+    )
+    notes = models.TextField(blank=True, validators=[MaxLengthValidator(1200)])
+    display_order = models.PositiveSmallIntegerField(default=100)
+    is_published = models.BooleanField(default=False, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("display_order", "city", "label", "pk")
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(amount_low__gt=0),
+                name="typical_price_low_positive",
+            ),
+            models.CheckConstraint(
+                condition=Q(amount_high__isnull=True) | Q(amount_high__gte=models.F("amount_low")),
+                name="typical_price_range_ordered",
+            ),
+            models.UniqueConstraint(
+                fields=("country", "city", "category", "label", "observed_at"),
+                name="typical_price_observation_identity",
+            ),
+        ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.amount_low is not None and self.amount_low <= 0:
+            raise ValidationError({"amount_low": "Typical price must be positive."})
+        if (
+            self.amount_high is not None
+            and self.amount_low is not None
+            and self.amount_high < self.amount_low
+        ):
+            raise ValidationError({"amount_high": "High price cannot be below low price."})
+        if not self.is_published:
+            return
+        if not self.source_name.strip() or not self.source_url.strip() or self.verified_at is None:
+            raise ValidationError(
+                "Published typical prices require source name, HTTPS source URL and verification."
+            )
+        if not self.source_url.startswith("https://"):
+            raise ValidationError({"source_url": "Published typical prices require HTTPS."})
+
+    @property
+    def scope_label(self) -> str:
+        return self.city or f"{self.country.name} · national estimate"
+
+    def __str__(self) -> str:
+        return f"{self.country.iso2} · {self.label}"
