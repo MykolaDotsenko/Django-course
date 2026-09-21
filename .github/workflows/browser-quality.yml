@@ -7,6 +7,7 @@ on:
       - "templates/**"
       - "apps/common/**"
       - "apps/countries/**"
+      - "apps/culture/**"
       - "apps/exchange/**"
       - "config/**"
       - "scripts/**"
@@ -20,6 +21,7 @@ on:
       - "templates/**"
       - "apps/common/**"
       - "apps/countries/**"
+      - "apps/culture/**"
       - "apps/exchange/**"
       - "config/**"
       - "scripts/**"
@@ -94,6 +96,7 @@ jobs:
         run: |
           python manage.py migrate --noinput
           python manage.py seed_reference_data
+          python manage.py seed_story_data
 
       - name: Start design QA server
         run: |

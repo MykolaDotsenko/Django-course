@@ -149,6 +149,28 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
 
   await assertAxe(page, "current-converter/result");
 
+  const waitForStory = page.waitForResponse(
+    (response) =>
+      response.request().method() === "GET" && new URL(response.url()).pathname === "/story/",
+  );
+  await page.getByRole("link", { name: "Explore money & culture" }).click();
+  await waitForStory;
+  await page.locator(".qa-story-surface").waitFor();
+  const storyText = await page.locator(".qa-story-surface").innerText();
+  assert(
+    storyText.includes("The sourced story behind this currency context"),
+    "current-converter: progressive money-and-culture story did not render",
+  );
+  assert(
+    storyText.includes("Temporal scope:"),
+    "current-converter: story temporal provenance is missing",
+  );
+  assert(
+    (await page.locator(".qa-story-surface a[href^='https://']").count()) > 0,
+    "current-converter: story source links are missing",
+  );
+  await assertAxe(page, "current-converter/story");
+
   await page.locator("#id_rate_mode_1").check();
   await page.locator("#id_requested_date").waitFor({ state: "visible" });
   const historicalPost = waitForPost();
