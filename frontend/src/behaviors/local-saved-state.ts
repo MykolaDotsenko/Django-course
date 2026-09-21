@@ -158,11 +158,7 @@ function normalizeRecent(value: unknown): RecentConversion | null {
   const amount = normalizedAmount(value.amount);
   const outputAmount = normalizedAmount(value.outputAmount);
   const rateMode =
-    value.rateMode === "historical"
-      ? "historical"
-      : value.rateMode === "latest"
-        ? "latest"
-        : null;
+    value.rateMode === "historical" ? "historical" : value.rateMode === "latest" ? "latest" : null;
   const requestedDate = normalizedIsoDate(value.requestedDate, true);
   const effectiveDate = normalizedIsoDate(value.effectiveDate);
   const convertedAt = normalizedTimestamp(value.convertedAt);
@@ -379,9 +375,11 @@ function enhanceConversionSnapshots(): void {
 
     if (snapshot.dataset.localStateWired !== "true") {
       snapshot.dataset.localStateWired = "true";
-      snapshot.querySelector<HTMLButtonElement>("[data-save-pair]")?.addEventListener("click", () => {
-        toggleFavourite(snapshot);
-      });
+      snapshot
+        .querySelector<HTMLButtonElement>("[data-save-pair]")
+        ?.addEventListener("click", () => {
+          toggleFavourite(snapshot);
+        });
     }
     if (snapshot.dataset.recentRecorded !== "true") {
       snapshot.dataset.recentRecorded = "true";
@@ -531,11 +529,7 @@ function recentMeta(recent: RecentConversion): string {
   return `Latest available · effective ${dateLabel(recent.effectiveDate)}`;
 }
 
-function renderRecents(
-  page: HTMLElement,
-  state: LocalPreferencesV1,
-  converterUrl: string,
-): void {
+function renderRecents(page: HTMLElement, state: LocalPreferencesV1, converterUrl: string): void {
   const list = page.querySelector<HTMLElement>("[data-recents-list]");
   const empty = page.querySelector<HTMLElement>("[data-recents-empty]");
   if (!list || !empty) return;
