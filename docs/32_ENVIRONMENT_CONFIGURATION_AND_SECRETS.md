@@ -244,9 +244,9 @@ A PR introducing configuration must answer:
 
 # 14. Implemented foundation boundary
 
-The foundation now consumes security-sensitive Django configuration through `config.environment.load_runtime_config()`.
+The Django runtime consumes its security-sensitive core through `config.environment.load_runtime_config()`. Request-independent management commands may additionally read narrowly scoped provider credentials from the process environment.
 
-Canonical variables implemented at this stage:
+Canonical application/command environment variables implemented at this stage:
 
 ```text
 APP_ENV
