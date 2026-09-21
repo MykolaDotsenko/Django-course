@@ -1,19 +1,23 @@
 from __future__ import annotations
 
 import re
-from datetime import date, datetime
+from dataclasses import dataclass
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 from urllib.parse import urlsplit
 
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils import timezone
 
-from apps.countries.models import CountryCurrency
+from apps.countries.models import Country, CountryCurrency
 from apps.culture.models import (
+    CulturalProfile,
     StoryDatePrecision,
     StoryMoment,
     StoryMomentCategory,
     StoryMomentStatus,
+    TypicalPrice,
 )
 
 _CAUSAL_RE = re.compile(
@@ -170,4 +174,186 @@ def currency_era_links(
         )
         .select_related("country", "currency")
         .order_by("country__name", "-is_primary", "-valid_from")
+    )
+
+
+PRICE_CONTEXT_MAX_AGE = timedelta(days=730)
+
+
+@dataclass(frozen=True, slots=True)
+class PurchaseEquivalent:
+    minimum_count: Decimal
+    maximum_count: Decimal
+    status: str
+
+
+@dataclass(frozen=True, slots=True)
+class PaymentContext:
+    summary: str
+    payment_customs: str
+    cash_usage: str
+    tipping: str
+    atm_notes: str
+    dcc_warning: str
+    source_name: str
+    source_url: str
+    verified_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class TypicalPriceContext:
+    label: str
+    category: str
+    city: str
+    country_name: str
+    currency_code: str
+    currency_minor_units: int
+    amount_low: Decimal
+    amount_high: Decimal | None
+    observed_at: date
+    source_class: str
+    confidence: str
+    source_name: str
+    source_url: str
+    equivalent: PurchaseEquivalent
+
+    @property
+    def scope_label(self) -> str:
+        return self.city or f"{self.country_name} · national estimate"
+
+
+@dataclass(frozen=True, slots=True)
+class DestinationContext:
+    country_code: str
+    country_name: str
+    as_of: date
+    payment: PaymentContext | None
+    prices: tuple[TypicalPriceContext, ...]
+
+    @property
+    def has_content(self) -> bool:
+        return self.payment is not None or bool(self.prices)
+
+
+def calculate_purchase_equivalent(
+    converted_amount: Decimal,
+    price_low: Decimal,
+    price_high: Decimal | None = None,
+) -> PurchaseEquivalent:
+    if converted_amount < 0:
+        raise ValueError("Converted amount cannot be negative.")
+    if price_low <= 0:
+        raise ValueError("Typical price lower bound must be positive.")
+    if price_high is not None and price_high < price_low:
+        raise ValueError("Typical price upper bound cannot be below the lower bound.")
+
+    effective_high = price_high or price_low
+    minimum_count = converted_amount / effective_high
+    maximum_count = converted_amount / price_low
+
+    if converted_amount == 0:
+        status = "zero"
+    elif maximum_count < 1:
+        status = "below_one"
+    elif minimum_count < 1:
+        status = "up_to"
+    elif price_high is None or minimum_count == maximum_count:
+        status = "single"
+    else:
+        status = "range"
+
+    return PurchaseEquivalent(
+        minimum_count=minimum_count,
+        maximum_count=maximum_count,
+        status=status,
+    )
+
+
+def build_destination_context(
+    *,
+    country_code: str,
+    converted_amount: Decimal,
+    quote_currency: str,
+    as_of: date | None = None,
+    price_limit: int = 3,
+) -> DestinationContext | None:
+    if not country_code:
+        return None
+    if not 1 <= price_limit <= 6:
+        raise ValueError("Destination price limit must be between 1 and 6.")
+
+    country = Country.objects.filter(iso2=country_code.upper(), is_active=True).first()
+    if country is None:
+        return None
+
+    selected_date = as_of or timezone.localdate()
+    profile = (
+        CulturalProfile.objects.filter(
+            country=country,
+            is_published=True,
+            verified_at__isnull=False,
+        )
+        .exclude(source_name="")
+        .exclude(source_url="")
+        .first()
+    )
+    payment = None
+    if profile is not None:
+        payment = PaymentContext(
+            summary=profile.summary,
+            payment_customs=profile.payment_customs,
+            cash_usage=profile.cash_usage,
+            tipping=profile.tipping,
+            atm_notes=profile.atm_notes,
+            dcc_warning=profile.dcc_warning,
+            source_name=profile.source_name,
+            source_url=profile.source_url,
+            verified_at=profile.verified_at,
+        )
+
+    cutoff = selected_date - PRICE_CONTEXT_MAX_AGE
+    price_rows = (
+        TypicalPrice.objects.filter(
+            country=country,
+            currency__code=quote_currency.upper(),
+            is_published=True,
+            verified_at__isnull=False,
+            observed_at__gte=cutoff,
+            observed_at__lte=selected_date,
+        )
+        .exclude(source_name="")
+        .exclude(source_url="")
+        .select_related("country", "currency")
+        .order_by("display_order", "city", "label", "pk")[:price_limit]
+    )
+    prices = tuple(
+        TypicalPriceContext(
+            label=row.label,
+            category=row.category,
+            city=row.city,
+            country_name=row.country.name,
+            currency_code=row.currency.code,
+            currency_minor_units=row.currency.minor_units,
+            amount_low=row.amount_low,
+            amount_high=row.amount_high,
+            observed_at=row.observed_at,
+            source_class=row.source_class,
+            confidence=row.confidence,
+            source_name=row.source_name,
+            source_url=row.source_url,
+            equivalent=calculate_purchase_equivalent(
+                converted_amount,
+                row.amount_low,
+                row.amount_high,
+            ),
+        )
+        for row in price_rows
+    )
+
+    return DestinationContext(
+        country_code=country.iso2,
+        country_name=country.name,
+        as_of=selected_date,
+        payment=payment,
+        prices=prices,
     )

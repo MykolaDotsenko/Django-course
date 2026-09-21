@@ -395,11 +395,16 @@ Any significant growth requires explanation in the PR.
 
 ## 23. Browser matrix
 
-Design/behavior review:
+Automated CI now uses:
 
-- current Chromium;
-- current Firefox;
-- current WebKit/Safari representation.
+- Chromium — full browser-quality gate: P0 flow, axe, reflow, reduced motion, forced colors,
+  responsive transition checks and bundle/performance evidence;
+- Firefox — high-value converter/rate-series smoke flow plus axe/overflow/reduced-motion checks;
+- WebKit — high-value converter/rate-series smoke flow plus axe/overflow/reduced-motion checks.
+
+This split verifies cross-engine behavior without tripling the most expensive visual/performance
+lane. Manual release review still includes current Chromium, Firefox and WebKit/Safari
+representation.
 
 Product baseline follows Tailwind 4:
 

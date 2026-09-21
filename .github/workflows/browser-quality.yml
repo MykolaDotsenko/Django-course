@@ -38,13 +38,25 @@ concurrency:
 
 jobs:
   browser-quality:
-    name: Chromium / axe / reflow / contrast
+    name: ${{ matrix.browser }} / ${{ matrix.scope }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - browser: chromium
+            scope: full
+          - browser: firefox
+            scope: smoke
+          - browser: webkit
+            scope: smoke
     timeout-minutes: 20
     env:
       APP_ENV: test
       DJANGO_DEBUG: "true"
       DJANGO_ALLOWED_HOSTS: testserver,localhost,127.0.0.1
+      BROWSER_QUALITY_ENGINE: ${{ matrix.browser }}
+      BROWSER_QUALITY_SCOPE: ${{ matrix.scope }}
 
     steps:
       - name: Checkout
@@ -85,9 +97,9 @@ jobs:
         working-directory: frontend
         run: npm run quality
 
-      - name: Install Chromium
+      - name: Install browser
         working-directory: frontend
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps ${{ matrix.browser }}
 
       - name: Django system check
         run: python manage.py check
@@ -97,6 +109,7 @@ jobs:
           python manage.py migrate --noinput
           python manage.py seed_reference_data
           python manage.py seed_story_data
+          python manage.py seed_destination_context
 
       - name: Start design QA server
         run: |
@@ -135,7 +148,7 @@ jobs:
       - name: Upload browser quality evidence
         uses: actions/upload-artifact@v7
         with:
-          name: quiet-atlas-browser-quality
+          name: quiet-atlas-browser-quality-${{ matrix.browser }}
           path: artifacts/browser-quality/
           if-no-files-found: error
           retention-days: 14

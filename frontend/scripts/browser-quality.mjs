@@ -3,9 +3,14 @@ import { resolve } from "node:path";
 import { gzipSync } from "node:zlib";
 
 import AxeBuilder from "@axe-core/playwright";
-import { chromium } from "playwright";
+import { chromium, firefox, webkit } from "playwright";
 
 const BASE_URL = process.env.BROWSER_QUALITY_BASE_URL ?? "http://127.0.0.1:8000";
+const BROWSER_ENGINE = process.env.BROWSER_QUALITY_ENGINE ?? "chromium";
+const BROWSER_SCOPE = process.env.BROWSER_QUALITY_SCOPE ?? "full";
+const BROWSER_TYPES = { chromium, firefox, webkit };
+const browserType = BROWSER_TYPES[BROWSER_ENGINE];
+assertBrowserConfiguration();
 const OUTPUT_DIR = resolve(process.cwd(), "../artifacts/browser-quality");
 const BUILD_ASSET_DIR = resolve(process.cwd(), "../static/build/assets");
 const BUILD_MANIFEST_PATH = resolve(process.cwd(), "../static/build/.vite/manifest.json");
@@ -18,6 +23,15 @@ const SURFACES = [
   { name: "current-converter", path: "/" },
   { name: "rate-series", path: "/_design/rate-series/" },
 ];
+
+function assertBrowserConfiguration() {
+  if (!browserType) {
+    throw new Error(`Unsupported browser engine: ${BROWSER_ENGINE}`);
+  }
+  if (!["full", "smoke"].includes(BROWSER_SCOPE)) {
+    throw new Error(`Unsupported browser quality scope: ${BROWSER_SCOPE}`);
+  }
+}
 
 const VIEWPORTS = [
   { name: "wide-1440", width: 1440, height: 1000 },
@@ -118,26 +132,47 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     );
 
   await page.locator("#id_amount").fill("-1");
-  await Promise.all([waitForPost(), page.locator(".qa-primary-button").click()]);
+  const invalidSubmit = waitForPost();
+  await page.locator(".qa-primary-button").click();
+  const invalidSubmitResponse = await invalidSubmit;
+  assert(
+    invalidSubmitResponse.status() === 422,
+    `current-converter: invalid submit returned ${invalidSubmitResponse.status()} instead of 422`,
+  );
   await page.getByText("Enter zero or a positive amount.").waitFor();
 
-  await page.locator("#destination-picker-trigger").click();
-  const search = page.locator("#destination-picker-search");
-  await search.fill("euro");
-  await page.locator("#destination-picker-listbox").waitFor();
-  await page.waitForFunction(
-    () => document.querySelector("#destination-picker-listbox")?.dataset.commitWired === "true",
-  );
+  await page.locator("#source-picker-trigger").click();
+  const search = page.locator("#source-picker-search");
+  await search.fill("JPY");
+  await page.locator("#source-picker-listbox").waitFor();
+  await page.waitForFunction(() => {
+    const list = document.querySelector("#source-picker-listbox");
+    if (!(list instanceof HTMLElement) || list.dataset.commitWired !== "true") return false;
+    const options = Array.from(list.querySelectorAll("[data-picker-option]"));
+    return (
+      options.length === 2 &&
+      options[0]?.getAttribute("data-country-code") === "" &&
+      options[0]?.getAttribute("data-currency-code") === "JPY" &&
+      options[1]?.getAttribute("data-country-code") === "JP" &&
+      options[1]?.getAttribute("data-currency-code") === "JPY"
+    );
+  });
+  await search.press("ArrowDown");
   await search.press("ArrowDown");
   await search.press("Enter");
-  await page.locator('[data-picker-dialog="destination"]').waitFor({ state: "hidden" });
+  await page.locator('[data-picker-dialog="source"]').waitFor({ state: "hidden" });
+  assert(
+    (await page.locator("#id_source_country").inputValue()) === "JP" &&
+      (await page.locator("#id_source_currency").inputValue()) === "JPY",
+    "current-converter: Japan/JPY picker selection did not commit",
+  );
 
-  await page.locator("#id_amount").fill("12.50");
+  await page.locator("#id_amount").fill("12");
   await Promise.all([waitForPost(), page.locator(".qa-primary-button").click()]);
   await page.locator("#current-conversion-result").waitFor();
 
   const resultText = await page.locator("#current-conversion-result").innerText();
-  assert(resultText.includes("12.50 EUR"), "current-converter: same-currency input is missing");
+  assert(resultText.includes("12 JPY"), "current-converter: same-currency input is missing");
   assert(
     resultText.includes("Exact same-currency rate"),
     "current-converter: same-currency provenance is missing",
@@ -147,6 +182,11 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     "current-converter: successful HTMX conversion did not push a bookmarkable URL",
   );
 
+  await page.getByRole("link", { name: "Everyday value" }).waitFor();
+  await page.getByRole("link", { name: "Payment context" }).waitFor();
+  await page.getByText("Cup of coffee", { exact: true }).waitFor();
+  await page.getByText("Tokyo Metro regular ticket", { exact: true }).waitFor();
+  await page.getByRole("heading", { name: "Paying in Japan" }).waitFor();
   await assertAxe(page, "current-converter/result");
 
   const waitForStory = page.waitForResponse(
@@ -211,7 +251,11 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     .innerText();
   const invalidRefresh = waitForPost();
   await page.locator("#id_amount").fill("-1");
-  await invalidRefresh;
+  const invalidRefreshResponse = await invalidRefresh;
+  assert(
+    invalidRefreshResponse.status() === 422,
+    `current-converter: invalid progressive refresh returned ${invalidRefreshResponse.status()} instead of 422`,
+  );
   await page.getByText("Enter zero or a positive amount.").waitFor();
 
   const preservedAmount = await page
@@ -224,7 +268,7 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   await page.getByText("Previous result — fix the changed inputs to update it.").waitFor();
 
   const correctedRefresh = waitForPost();
-  await page.locator("#id_amount").fill("12.50");
+  await page.locator("#id_amount").fill("12");
   await correctedRefresh;
   await page.locator("#current-conversion-result").waitFor();
   await page.waitForFunction(
@@ -235,14 +279,11 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   const focused = await page.evaluate(() => document.activeElement?.id ?? "");
   assert(focused === "swap-contexts", `current-converter: swap focus moved to ${focused}`);
 
-  const expectedValidationErrors = consoleErrors.filter((message) =>
-    message.includes("status of 422 (Unprocessable Content)"),
-  );
-  assert(
-    expectedValidationErrors.length === 2,
-    `current-converter: expected exactly two handled validation 422 console messages, found ${expectedValidationErrors.length}`,
-  );
-  for (const message of expectedValidationErrors) {
+  for (const message of consoleErrors.filter(
+    (entry) =>
+      entry.includes("422") &&
+      (entry.includes("Unprocessable Content") || entry.includes("Unprocessable Entity")),
+  )) {
     consoleErrors.splice(consoleErrors.indexOf(message), 1);
   }
 }
@@ -461,8 +502,18 @@ async function openSurface(page, surface) {
 }
 
 await mkdir(OUTPUT_DIR, { recursive: true });
-const browser = await chromium.launch();
+const browser = await browserType.launch();
+const activeSurfaces =
+  BROWSER_SCOPE === "full"
+    ? SURFACES
+    : SURFACES.filter((surface) => ["current-converter", "rate-series"].includes(surface.name));
+const activeViewports =
+  BROWSER_SCOPE === "full"
+    ? VIEWPORTS
+    : VIEWPORTS.filter((viewport) => ["wide-1440", "mobile-390"].includes(viewport.name));
 const evidence = {
+  browserEngine: BROWSER_ENGINE,
+  scope: BROWSER_SCOPE,
   generatedAt: new Date().toISOString(),
   surfaces: {},
   budgets: {
@@ -472,10 +523,10 @@ const evidence = {
 };
 
 try {
-  for (const surface of SURFACES) {
+  for (const surface of activeSurfaces) {
     evidence.surfaces[surface.name] = {};
 
-    for (const viewport of VIEWPORTS) {
+    for (const viewport of activeViewports) {
       const context = await browser.newContext({
         viewport: { width: viewport.width, height: viewport.height },
         deviceScaleFactor: 1,
@@ -494,7 +545,11 @@ try {
         await assertAxe(page, `${surface.name}/${viewport.name}`);
       }
 
-      if (surface.name === "converter" && viewport.name === "wide-1440") {
+      if (
+        BROWSER_SCOPE === "full" &&
+        surface.name === "converter" &&
+        viewport.name === "wide-1440"
+      ) {
         await assertConverterTransitionLayout(page);
       }
 
@@ -504,10 +559,12 @@ try {
 
       if (viewport.name === "mobile-390") {
         await assertReducedMotion(page, surface.name);
-        await assertForcedColors(page, surface.name);
+        if (BROWSER_SCOPE === "full") {
+          await assertForcedColors(page, surface.name);
+        }
       }
 
-      if (viewport.name === "reflow-320") {
+      if (BROWSER_SCOPE === "full" && viewport.name === "reflow-320") {
         await assertTextExpansion(page, surface.name);
       }
 
@@ -527,34 +584,36 @@ try {
     }
   }
 
-  evidence.compressedAssets = await collectCompressedAssetEvidence();
-  assert(
-    evidence.compressedAssets.coreGzipBytes <= evidence.budgets.coreJavaScriptGzipBytes,
-    `core JavaScript gzip size ${evidence.compressedAssets.coreGzipBytes} B exceeds 100 KiB budget`,
-  );
-
-  const dynamicAssetNames = new Set(
-    evidence.compressedAssets.dynamicFiles.map((file) => file.name),
-  );
-  const requestedDynamicAssets = (surfaceName) =>
-    new Set(
-      Object.values(evidence.surfaces[surfaceName] ?? {})
-        .flatMap((measurement) => measurement.jsPaths ?? [])
-        .map((path) => path.split("/").at(-1))
-        .filter((name) => dynamicAssetNames.has(name)),
+  if (BROWSER_SCOPE === "full") {
+    evidence.compressedAssets = await collectCompressedAssetEvidence();
+    assert(
+      evidence.compressedAssets.coreGzipBytes <= evidence.budgets.coreJavaScriptGzipBytes,
+      `core JavaScript gzip size ${evidence.compressedAssets.coreGzipBytes} B exceeds 100 KiB budget`,
     );
 
-  assert(
-    requestedDynamicAssets("current-converter").size === 0,
-    "current converter unexpectedly loaded a dynamic historical-chart JavaScript chunk",
-  );
-  assert(
-    requestedDynamicAssets("rate-series").size > 0,
-    "historical rate-series surface did not load its dynamic chart JavaScript chunk",
-  );
+    const dynamicAssetNames = new Set(
+      evidence.compressedAssets.dynamicFiles.map((file) => file.name),
+    );
+    const requestedDynamicAssets = (surfaceName) =>
+      new Set(
+        Object.values(evidence.surfaces[surfaceName] ?? {})
+          .flatMap((measurement) => measurement.jsPaths ?? [])
+          .map((path) => path.split("/").at(-1))
+          .filter((name) => dynamicAssetNames.has(name)),
+      );
+
+    assert(
+      requestedDynamicAssets("current-converter").size === 0,
+      "current converter unexpectedly loaded a dynamic historical-chart JavaScript chunk",
+    );
+    assert(
+      requestedDynamicAssets("rate-series").size > 0,
+      "historical rate-series surface did not load its dynamic chart JavaScript chunk",
+    );
+  }
 
   await writeFile(
-    resolve(OUTPUT_DIR, "performance-evidence.json"),
+    resolve(OUTPUT_DIR, `performance-evidence-${BROWSER_ENGINE}.json`),
     `${JSON.stringify(evidence, null, 2)}\n`,
     "utf8",
   );

@@ -265,6 +265,10 @@ At this point the basic product is useful and already expresses the product's si
 
 PR 6A intentionally does not silently replace an explicitly selected currency when a country used a different currency on the chosen date.
 
+**Execution status:** implemented. Historical mode preserves requested/effective dates, bounded
+previous-observation fallback, lifecycle/provider coverage, archived-currency discovery,
+country/date suggestions, stable deep links and browser-level acceptance coverage.
+
 **Goal:** make selected-date conversion a first-class product capability.
 
 Deliverables:
@@ -430,6 +434,10 @@ Acceptance:
 
 ## Implementation PR 9 — Cultural payment context
 
+**Execution status:** implemented. The culture domain now includes a provenance-backed
+`CulturalProfile`, admin editing, locally composed payment/cash/ATM/tipping guidance, explicit
+empty states and historical-mode copy that prevents current customs from being backdated.
+
 **Goal:** add practical current destination intelligence.
 
 Deliverables:
@@ -446,6 +454,12 @@ Historical mode must not automatically backdate current payment customs.
 ---
 
 ## Implementation PR 10 — Typical prices / purchasing context
+
+**Execution status:** implemented. `TypicalPrice` stores city/national scope, Decimal ranges,
+observation date, provenance, trust class and confidence. The destination-context query suppresses
+aged observations, preserves city scope, calculates Decimal purchase equivalents and renders
+transparent source/disclaimer metadata. The portfolio demo uses locally stored JNTO and Tokyo Metro
+observations; no price API is called in the request path.
 
 **Goal:** answer “what does this amount roughly mean locally?” and complete the P0 compact Explore triad together with payment context and money/culture storytelling.
 

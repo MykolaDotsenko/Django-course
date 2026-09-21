@@ -218,6 +218,36 @@
   --qa-context-soft: #f3e9e5;
 }
 
+[data-country-theme="atlas-fjord"] {
+  --qa-context-accent: #4f7180;
+  --qa-context-soft: #e8f0f2;
+}
+
+[data-country-theme="atlas-moss"] {
+  --qa-context-accent: #60755b;
+  --qa-context-soft: #edf1e8;
+}
+
+[data-country-theme="atlas-clay"] {
+  --qa-context-accent: #8a6356;
+  --qa-context-soft: #f3ebe7;
+}
+
+[data-country-theme="atlas-slate"] {
+  --qa-context-accent: #5f687c;
+  --qa-context-soft: #eceef3;
+}
+
+[data-country-theme="atlas-sand"] {
+  --qa-context-accent: #887044;
+  --qa-context-soft: #f4efe3;
+}
+
+[data-country-theme="atlas-plum"] {
+  --qa-context-accent: #785f76;
+  --qa-context-soft: #f1ebf0;
+}
+
 .qa-foundation-section {
   margin-block-start: var(--qa-space-16);
 }

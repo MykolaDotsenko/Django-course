@@ -62,7 +62,7 @@ def money_culture_story(request: HttpRequest) -> HttpResponse:
         "story_error": story_error,
         "story_media": story_media,
     }
-    fragment = request.headers.get("HX-Request") == "true"
+    fragment = bool(request.htmx)
     template = "components/culture/story.html" if fragment else "pages/money_culture_story.html"
     response = render(request, template, context, status=response_status)
     patch_vary_headers(response, ["HX-Request"])

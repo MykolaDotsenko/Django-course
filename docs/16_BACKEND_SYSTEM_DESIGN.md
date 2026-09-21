@@ -123,35 +123,63 @@ If the hosting platform standardizes on ASGI, synchronous Django can still run, 
 
 # 5. Django application boundaries
 
-Target durable domain apps:
+Implemented boundaries:
 
 ```text
 apps/
-├── accounts/
+├── common/
 ├── countries/
 ├── exchange/
 ├── culture/
-└── travel/
+└── media/
+```
+
+Planned boundaries are introduced only with their owning feature:
+
+```text
+apps/
+├── accounts/   # identity/ownership, PR12
+└── travel/     # saved state and trips/budgets
 ```
 
 A future `statistics/` app is introduced only when historical purchasing-power methodology becomes production scope.
 
-Avoid generic `core/`, `services/`, `common/` dumping grounds.
+Avoid generic `core/`, `services/` or catch-all utility packages. `apps.common` is intentionally
+narrow: health/readiness, request-context middleware, structured observability, the Vite template
+bridge and design-preview presentation helpers. It must not own business entities or domain rules.
 
-A tiny project-level package for genuinely cross-cutting infrastructure is acceptable, for example:
+Project configuration remains under:
 
 ```text
 config/
-├── settings/
+├── settings.py
 ├── urls.py
-└── middleware.py
+├── environment.py
+└── database.py
 ```
 
-Cross-domain utility code must have a concrete reason to exist.
+Cross-domain code must protect a concrete infrastructure boundary rather than merely provide a
+convenient import location.
 
 ---
 
 # 6. App responsibility map
+
+## common
+
+Owns:
+
+- health/readiness HTTP endpoints;
+- request correlation and structured observability infrastructure;
+- the repo-owned Django↔Vite manifest bridge;
+- design-preview-only presentation helpers.
+
+Does not own:
+
+- business models;
+- FX semantics;
+- cultural facts;
+- user-owned product state.
 
 ## accounts
 
@@ -214,10 +242,26 @@ Owns:
 - StoryMoment;
 - currency/cultural story composition inputs;
 - editorial provenance;
-- cultural/media source ingestion.
+- cultural fact/source ingestion.
 
 Does not own:
 
+- exchange arithmetic.
+
+## media
+
+Owns:
+
+- MediaAsset persistence/publication state;
+- source/licence/creator/rights provenance;
+- safe media-byte validation and derivatives;
+- bounded Wikimedia/Europeana candidate ingestion;
+- deterministic local media selection.
+
+Does not own:
+
+- StoryMoment factual content;
+- payment/price facts;
 - exchange arithmetic.
 
 ## travel

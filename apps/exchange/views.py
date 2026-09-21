@@ -9,11 +9,14 @@ from django.conf import settings
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.cache import patch_vary_headers
 from django.views.decorators.http import require_GET, require_http_methods
 
 from apps.countries.models import CountryCurrency, Currency
 from apps.countries.services import historical_currency_suggestion
+from apps.culture.presentation import build_destination_context_component
+from apps.culture.services import build_destination_context
 from apps.exchange.ai.service import build_runtime_explanation_service
 from apps.exchange.ai.tokens import ExplanationTokenError, load_conversion_explanation_token
 from apps.exchange.cache import HistoricalQuoteGateway, HistoricalSeriesGateway, LatestQuoteGateway
@@ -70,11 +73,11 @@ def build_historical_series_gateway() -> HistoricalSeriesGateway:
 
 
 def _is_htmx(request: HttpRequest) -> bool:
-    return request.headers.get("HX-Request", "").lower() == "true"
+    return bool(request.htmx)
 
 
 def _is_history_restore(request: HttpRequest) -> bool:
-    return request.headers.get("HX-History-Restore-Request", "").lower() == "true"
+    return bool(request.htmx.history_restore_request)
 
 
 def _country_for_currency(currency_code: str, *, preferred: str = "") -> str:
@@ -334,6 +337,29 @@ def converter(request: HttpRequest) -> HttpResponse:
     if convert_requested and not form_valid and request.method == "POST":
         response_status = 422
 
+    destination_context_component = None
+    if result is not None:
+        try:
+            destination_context = build_destination_context(
+                country_code=cleaned.get("destination_country", ""),
+                converted_amount=result.output_amount,
+                quote_currency=result.quote.quote_currency,
+                as_of=timezone.localdate(),
+            )
+            if destination_context is not None:
+                destination_context_component = build_destination_context_component(
+                    destination_context,
+                    historical=result.quote.historical,
+                )
+        except Exception:
+            logger.exception(
+                "Destination context composition failed",
+                extra={
+                    "destination_country": cleaned.get("destination_country", ""),
+                    "quote_currency": result.quote.quote_currency,
+                },
+            )
+
     if request.method == "POST" and not _is_htmx(request) and result is not None:
         return redirect(_canonical_conversion_url(form))
 
@@ -351,6 +377,7 @@ def converter(request: HttpRequest) -> HttpResponse:
         conversion_active=conversion_active,
         preserve_previous_result=preserve_previous_result,
         historical_currency_suggestions=historical_suggestions,
+        destination_context_component=destination_context_component,
     )
     fragment = _is_htmx(request) and not _is_history_restore(request)
     template = "components/converter/current_panel.html" if fragment else "pages/converter.html"

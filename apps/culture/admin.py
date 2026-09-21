@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from django.contrib import admin, messages
 
-from apps.culture.models import StoryMoment
+from apps.culture.models import CulturalProfile, StoryMoment, TypicalPrice
 from apps.culture.services import (
     StoryPublicationError,
     approve_story_moment,
@@ -106,3 +106,32 @@ class StoryMomentAdmin(admin.ModelAdmin):
                 "Skipped story moments: " + " | ".join(failures[:8]),
                 level=messages.WARNING,
             )
+
+
+@admin.register(CulturalProfile)
+class CulturalProfileAdmin(admin.ModelAdmin):
+    list_display = ("country", "is_published", "source_name", "verified_at", "updated_at")
+    list_filter = ("is_published",)
+    search_fields = ("country__name", "country__iso2", "source_name")
+    list_select_related = ("country",)
+
+
+@admin.register(TypicalPrice)
+class TypicalPriceAdmin(admin.ModelAdmin):
+    list_display = (
+        "label",
+        "country",
+        "city",
+        "category",
+        "amount_low",
+        "amount_high",
+        "currency",
+        "observed_at",
+        "source_class",
+        "confidence",
+        "is_published",
+    )
+    list_filter = ("is_published", "source_class", "confidence", "category", "country")
+    search_fields = ("label", "country__name", "city", "source_name")
+    list_select_related = ("country", "currency")
+    ordering = ("display_order", "country__name", "city", "label")
