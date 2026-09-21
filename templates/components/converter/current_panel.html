@@ -321,6 +321,24 @@
                     value="retry">Retry reference rate</button>
           </div>
         {% endif %}
+        {% if result_component.money_culture_story %}
+          <section class="qa-story-entry" aria-labelledby="money-culture-entry-title">
+            <div>
+              <p class="qa-foundation-kicker">Money &amp; culture</p>
+              <h3 id="money-culture-entry-title">Explore the story behind these currencies</h3>
+              <p>
+                Open sourced currency-era and historical context without changing the conversion.
+              </p>
+            </div>
+            <a class="qa-secondary-button"
+               href="{{ result_component.money_culture_story.href }}"
+               hx-get="{{ result_component.money_culture_story.href }}"
+               hx-target="#money-culture-story-slot"
+               hx-swap="innerHTML"
+               hx-sync="#money-culture-story-slot:replace">Explore money &amp; culture</a>
+          </section>
+          <div id="money-culture-story-slot" aria-live="polite"></div>
+        {% endif %}
         {% if result_component.historical_trend %}
           {% with trend=result_component.historical_trend %}
             <section class="qa-historical-trend-entry"

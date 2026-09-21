@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from urllib.parse import urlencode
 
 from django.conf import settings
+from django.urls import reverse
+from django.utils import timezone
 from django.utils.formats import date_format
 
 from apps.exchange.ai.tokens import build_conversion_explanation_token
@@ -119,6 +122,20 @@ def build_result_component(
     output_text = _money_text(result.output_amount, minor_units=quote_minor_units)
     rate_text = _decimal_text(result.quote.rate)
 
+    story_date = (
+        result.quote.requested_date
+        if historical and result.quote.requested_date is not None
+        else timezone.localdate()
+    )
+    story_params = {
+        "source_country": _selected_value(form, "source_country"),
+        "source_currency": result.quote.base_currency,
+        "destination_country": _selected_value(form, "destination_country"),
+        "destination_currency": result.quote.quote_currency,
+        "selected_date": story_date.isoformat(),
+        "historical": "1" if historical else "0",
+    }
+
     return {
         "id": "current-conversion-result",
         "input_amount": input_text,
@@ -127,6 +144,10 @@ def build_result_component(
         "output_currency": result.quote.quote_currency,
         "exact": same_currency,
         "stale": result.stale,
+        "money_culture_story": {
+            "href": f"{reverse('money_culture_story')}?{urlencode(story_params)}",
+            "historical": historical,
+        },
         "ai_explanation": (
             {
                 "token": build_conversion_explanation_token(result),
