@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
@@ -158,7 +158,7 @@ class AccountWebTests(TestCase):
             rate_mode=RecentConversion.RateMode.LATEST,
             requested_date=None,
             effective_date=date(2026, 9, 22),
-            converted_at="2026-09-22T12:00:00Z",
+            converted_at=datetime(2026, 9, 22, 12, tzinfo=UTC),
         )
         self.client.force_login(user)
 
