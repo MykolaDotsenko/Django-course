@@ -296,7 +296,11 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     const historical = document.querySelector(".qa-historical-trend-entry");
     const save = document.querySelector(".qa-local-save-control");
     const precedes = (first, second) =>
-      Boolean(first && second && first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
+      Boolean(
+        first &&
+          second &&
+          (first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0,
+      );
 
     return {
       complete: Boolean(result && destinationContext && save),
