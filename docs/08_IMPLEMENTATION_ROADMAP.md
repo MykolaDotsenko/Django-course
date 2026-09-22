@@ -498,15 +498,28 @@ Phase A:
 - anonymous browser-local recent/favourites;
 - clear local persistence controls.
 
-Phase B — intentionally deferred until accounts are introduced:
+Phase B — delivered by PR12A for favourites:
 
-- durable user sync after accounts are introduced;
+- durable signed-in favourite sync;
 - authenticated FavouritePair database uniqueness guarantee;
-- concurrent duplicate-save test.
+- PostgreSQL concurrent duplicate-save test;
+- browser-local recent history remains separate until PR12B defines its explicit account policy.
 
 ---
 
 ## Implementation PR 12 — Accounts and ownership
+
+**Execution split:**
+
+1. **PR12A — identity + favourite ownership:** Django session signup/login/profile, durable
+   account-owned FavouritePair persistence, bounded local→account union/deduplication, strict
+   ownership-scoped deletion, account deletion cascade and concurrent duplicate-save protection.
+   **Implemented.**
+2. **PR12B — authenticated recent-history policy:** define the explicit persistence/merge/consent
+   policy for signed-in recent conversions, then implement durable history only to that contract.
+
+PR12A deliberately keeps current/historical conversion anonymous and keeps recent conversion history
+browser-local. Signing in never uploads recents silently.
 
 **Goal:** support cross-device saved state.
 
