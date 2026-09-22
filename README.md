@@ -109,13 +109,15 @@ See [docs/08_IMPLEMENTATION_ROADMAP.md](docs/08_IMPLEMENTATION_ROADMAP.md).
 
 ## Current status
 
-**Phase:** PR11 anonymous favourites/recent conversions implemented → PR12 accounts and ownership next.
+**Phase:** PR12A account identity + durable favourite ownership implemented → PR12B authenticated recent-history policy next.
 
 The executable web product now covers current/historical conversion, scoped sourced everyday-value
 context, payment/cash/tipping guidance, Money & culture storytelling, historical charts/Then & Now,
-managed media, the bounded optional Gemini explanation, browser-local saved pairs and bounded recent
-conversion history. Anonymous saved state is versioned localStorage only: no account, token or hidden
-server copy is created. Destination context remains local at request time, carries provenance/trust
+managed media, the bounded optional Gemini explanation, account-backed saved pairs and bounded
+browser-local recent conversion history. Anonymous saved state remains versioned localStorage only.
+Signed-in favourites are user-owned PostgreSQL rows with ownership-scoped mutations, bounded
+local-to-account union/deduplication and explicit deletion controls; local recent history is not
+silently uploaded. Destination context remains local at request time, carries provenance/trust
 metadata and cannot invalidate the conversion. Browser QA runs a full Chromium gate plus
 Firefox/WebKit smoke coverage, including the Saved & recent surface. Wikidata remains a
 management-command candidate source, never a web-request dependency.
