@@ -242,9 +242,16 @@ PR 3 through PR 7.3 are merged: the repository now has canonical country/currenc
 
 The roadmap PR7A media milestone is implemented through the dedicated `apps.media` boundary. Media candidate discovery is request-independent; only locally published assets are selectable; managed bytes are validated/sanitized and stored through Django Storage; missing media falls back to Quiet Atlas without affecting conversion.
 
-PR7B is implemented as a provider-isolated, explicitly user-triggered AI explanation capability. PR8 is implemented as a separate apps.culture boundary with review-gated StoryMoment facts, deterministic StoryChapter composition, targeted candidate-only Wikidata ingestion and progressive Money & culture disclosure.
+PR7B is implemented as a provider-isolated, explicitly user-triggered AI explanation capability.
+PR8 is implemented as a separate apps.culture boundary with review-gated StoryMoment facts,
+deterministic StoryChapter composition, targeted candidate-only Wikidata ingestion and progressive
+Money & culture disclosure. PR9 and PR10 complete the current P0 Explore triad with sourced payment
+context and scoped everyday-value observations. PR11 Phase A adds versioned, bounded browser-local
+favourites and recent conversions without creating hidden server-side history.
 
-The next bounded roadmap milestone is PR9: current destination payment context. It must remain independently sourced and must not backdate present-day payment customs merely because the user selected a historical FX date.
+The next bounded roadmap milestone is PR12: accounts and ownership for explicit cross-device saved
+state. Anonymous local state remains the privacy-preserving default until that authenticated boundary
+is deliberately introduced.
 
 ---
 
