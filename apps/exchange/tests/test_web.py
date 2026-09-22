@@ -302,6 +302,22 @@ def test_picker_search_matches_country_currency_name_and_code(client, reference_
 
 
 @pytest.mark.django_db
+def test_picker_marks_current_selection_semantically(client, reference_data):
+    response = client.get(
+        reverse("picker_options"),
+        {
+            "side": "source",
+            "source_country": "FI",
+            "source_currency": "EUR",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.content.count(b'aria-selected="true"') == 1
+    assert b"Current selection" in response.content
+
+
+@pytest.mark.django_db
 def test_invalid_deep_link_currency_is_validation_state_not_500(client, reference_data):
     with patch("apps.exchange.views.build_latest_quote_gateway") as factory:
         response = client.get(
