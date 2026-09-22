@@ -127,6 +127,17 @@ def test_causal_wording_requires_explicit_source_support(finland):
 
 
 @pytest.mark.django_db
+def test_story_approval_rejects_credentialed_https_provenance(finland):
+    moment = _moment()
+    moment.source_url = "https://user:secret@example.org/story"
+    moment.save(update_fields=("source_url",))
+    moment.countries.add(finland)
+
+    with pytest.raises(StoryPublicationError, match="credential-free HTTPS"):
+        approve_story_moment(moment)
+
+
+@pytest.mark.django_db
 def test_publish_requires_approved_state(finland):
     moment = _moment()
     moment.countries.add(finland)
