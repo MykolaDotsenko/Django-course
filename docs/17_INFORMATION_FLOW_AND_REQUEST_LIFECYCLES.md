@@ -470,7 +470,8 @@ currency era
 story/timeline
 ~~~
 
-Current travel context is a separately labelled query/action.
+Current travel context is a separately labelled query/action. The web implementation loads it
+only after explicit user intent; it never re-runs or rewrites the historical FX result.
 
 ---
 
