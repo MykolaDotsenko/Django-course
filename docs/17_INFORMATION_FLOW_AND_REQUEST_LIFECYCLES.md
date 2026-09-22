@@ -785,7 +785,46 @@ country/currency validation complete before the short write transaction, the use
 serialize competing merges, and the database unique constraint is the final duplicate barrier.
 
 After a successful merge the browser removes only the merged local favourites. Recent history is
-not included in this request and remains browser-local until PR12B defines an explicit policy.
+never included in this favourite-sync request.
+
+---
+
+# 30A. Authenticated recent-history opt-in
+
+~~~text
+successful conversion
+  ↓
+authenticated?
+  ├─ no  → browser-local recent only
+  └─ yes
+       ↓
+default-off account preference enabled?
+       ├─ no  → browser-local recent only
+       └─ yes
+            ↓
+resolve canonical country/currency references
+            ↓
+short transaction + lock user row
+            ↓
+re-check preference under lock
+            ↓
+upsert by semantic conversion fingerprint
+            ↓
+trim account history to newest 50
+            ↓
+commit
+~~~
+
+Signing in alone never uploads recent history. Existing browser-local recents are not imported by
+PR12B and stay separately visible/clearable on that device.
+
+Disabling the preference stops future account writes but intentionally does not delete existing
+account history. Remove/clear are separate explicit destructive actions. Account deletion cascades
+all account-owned recent rows.
+
+The FX/provider request completes before this persistence transaction begins. If account-history
+persistence fails, the conversion remains valid and the web layer falls back to keeping that recent
+conversion browser-local.
 
 ---
 
