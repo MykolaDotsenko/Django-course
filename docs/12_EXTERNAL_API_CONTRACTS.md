@@ -139,7 +139,10 @@ Do not retry:
 - malformed application inputs;
 - authentication failure without credential change.
 
-P0 request path should normally use at most a small retry count.
+P0 request path should normally use at most a small retry count. The current Frankfurter runtime
+adapter allows one retry for transient idempotent GET failures (selected 5xx, timeout, URL/network,
+HTTP/read or socket-reset failures) and never retries authentication, unsupported-query or
+rate-limit responses.
 
 Caching is preferable to repeated upstream hammering.
 
@@ -241,7 +244,13 @@ Validate:
 - date format;
 - returned pair identity;
 - requested/effective temporal relationship;
-- provider identifiers when expanded.
+- provider identifiers when expanded;
+- pinned-provider attribution identity when attribution is requested.
+
+For a pinned-provider request with expanded attribution, the returned provider list must be a string
+array, must be non-empty and must contain the requested provider identifier. Missing, malformed or
+contradictory attribution is an invalid payload; provenance is not inferred from the query when the
+provider claims to have returned attribution.
 
 Reject:
 
