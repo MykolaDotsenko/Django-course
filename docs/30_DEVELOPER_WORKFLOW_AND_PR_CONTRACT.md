@@ -247,8 +247,10 @@ PR7B is implemented as a provider-isolated, explicitly user-triggered AI explana
 PR9 and PR10 are implemented: current destination payment context and scoped everyday-value
 observations remain independently sourced and are never silently backdated to a historical FX date.
 PR11 Phase A is also implemented with versioned browser-local favourites and bounded recent
-conversions; anonymous history is not persisted by Django. The next bounded roadmap milestone is
-PR12: accounts and ownership for explicit cross-device saved-state sync.
+conversions; anonymous history is not persisted by Django. PR12A adds Django-session account
+identity, account-owned FavouritePair persistence, bounded local→account merge, ownership-scoped
+deletion and account-deletion lifecycle coverage. PR12B is the next bounded slice and must define
+the authenticated recent-history persistence/consent policy before adding server history.
 
 ---
 
