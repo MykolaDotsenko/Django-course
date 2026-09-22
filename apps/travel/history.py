@@ -61,6 +61,11 @@ def record_recent_conversion(
 ) -> RecentConversion | None:
     if not user.is_authenticated:
         return None
+    if not AccountPreferences.objects.filter(
+        user=user,
+        sync_recent_history=True,
+    ).exists():
+        return None
 
     source_currency = Currency.objects.get(code=source_currency_code)
     destination_currency = Currency.objects.get(code=destination_currency_code)
