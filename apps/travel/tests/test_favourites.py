@@ -6,7 +6,7 @@ from threading import Barrier
 
 from django.contrib.auth import get_user_model
 from django.db import close_old_connections
-from django.test import TestCase, TransactionTestCase, skipUnlessDBFeature
+from django.test import TestCase, TransactionTestCase, override_settings, skipUnlessDBFeature
 from django.urls import reverse
 
 from apps.countries.models import Country, CountryCurrency, Currency
@@ -45,6 +45,7 @@ def pair_payload():
     }
 
 
+@override_settings(VITE_DEV_SERVER_ENABLED=True)
 class FavouriteSyncWebTests(TestCase):
     def setUp(self):
         self.eur, self.jpy, self.fi, self.jp = create_reference_data()
