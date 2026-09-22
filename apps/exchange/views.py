@@ -37,13 +37,13 @@ from apps.exchange.forms import (
     HistoricalSeriesForm,
 )
 from apps.exchange.presentation import build_converter_context
-from apps.exchange.queries import search_currency_options
 from apps.exchange.providers.base import (
     FxProviderError,
     FxProviderInvalidPayload,
     FxProviderUnavailable,
     FxProviderUnsupportedPair,
 )
+from apps.exchange.queries import search_currency_options
 from apps.exchange.series_presentation import (
     build_rate_series_component,
     build_then_now_component,
