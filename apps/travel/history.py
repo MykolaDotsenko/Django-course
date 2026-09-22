@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
 
-from apps.accounts.preferences import recent_history_enabled
+from apps.accounts.models import AccountPreferences
 from apps.countries.models import Country, Currency
 from apps.travel.models import RecentConversion
 
@@ -59,7 +59,7 @@ def record_recent_conversion(
     requested_date: date | None,
     effective_date: date,
 ) -> RecentConversion | None:
-    if not recent_history_enabled(user):
+    if not user.is_authenticated:
         return None
 
     source_currency = Currency.objects.get(code=source_currency_code)
@@ -94,6 +94,12 @@ def record_recent_conversion(
     now = timezone.now()
     with transaction.atomic():
         user_model.objects.select_for_update().get(pk=user.pk)
+        if not AccountPreferences.objects.filter(
+            user=user,
+            sync_recent_history=True,
+        ).exists():
+            return None
+
         recent, _ = RecentConversion.objects.update_or_create(
             user=user,
             fingerprint=fingerprint,
