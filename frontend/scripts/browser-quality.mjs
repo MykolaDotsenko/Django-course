@@ -168,7 +168,7 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     invalidSubmitResponse.status() === 422,
     `current-converter: invalid submit returned ${invalidSubmitResponse.status()} instead of 422`,
   );
-  await page.getByText("Enter zero or a positive amount.").waitFor();
+  await page.getByText("Enter zero or a positive amount.", { exact: true }).waitFor();
   await page.locator("#conversion-error-summary").waitFor();
   assert(
     (await page.evaluate(() => document.activeElement?.id ?? "")) === "conversion-error-summary",
