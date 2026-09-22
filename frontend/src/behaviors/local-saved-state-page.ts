@@ -233,6 +233,7 @@ function setStorageStatus(page: HTMLElement, read: ReadResult, overrideMessage =
   if (!status) return;
 
   const accountMode = page.dataset.accountMode === "true";
+  const accountHistoryEnabled = page.dataset.accountHistoryEnabled === "true";
   if (overrideMessage) {
     status.dataset.storageTone = "feedback";
     status.setAttribute("aria-live", "polite");
@@ -241,19 +242,21 @@ function setStorageStatus(page: HTMLElement, read: ReadResult, overrideMessage =
     status.dataset.storageTone = "warning";
     status.setAttribute("aria-live", "polite");
     status.textContent = accountMode
-      ? "Account favourites remain available. Browser storage is unavailable, so recent history is disabled."
+      ? "Account data remains available. Browser storage is unavailable, so browser-only history is disabled."
       : "Browser storage is unavailable. Saved pairs and recent history are disabled; conversion still works.";
   } else if (read.status === "recovered") {
     status.dataset.storageTone = "warning";
     status.setAttribute("aria-live", "polite");
     status.textContent = accountMode
-      ? "Account favourites remain available. Some browser-local recent history was unreadable and has been ignored."
+      ? "Account data remains available. Some browser-only recent history was unreadable and has been ignored."
       : "Some local saved data was unreadable or outdated and has been ignored. Nothing was sent to the server.";
   } else {
     status.dataset.storageTone = "neutral";
     status.setAttribute("aria-live", "off");
     status.textContent = accountMode
-      ? `Saved pairs sync to your account · ${read.state.recent.length} recent stays in this browser.`
+      ? accountHistoryEnabled
+        ? `Account history is on · ${read.state.recent.length} browser-only recent stays on this device.`
+        : `Account history is off · ${read.state.recent.length} browser-only recent stays on this device.`
       : `Stored locally in this browser · ${read.state.favourites.length} saved · ${read.state.recent.length} recent.`;
   }
 }
@@ -303,7 +306,11 @@ export function wireSavedPage(): void {
     page.querySelector<HTMLButtonElement>("[data-clear-recents]")?.addEventListener("click", () => {
       const read = readState();
       if (read.status === "unavailable") return renderSavedPage();
-      persistAndRender({ ...read.state, recent: [] }, "Recent history cleared from this browser.");
+      const message =
+        page.dataset.accountMode === "true"
+          ? "Browser-only history cleared from this device."
+          : "Recent history cleared from this browser.";
+      persistAndRender({ ...read.state, recent: [] }, message);
     });
   }
 
