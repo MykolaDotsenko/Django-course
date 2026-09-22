@@ -18,11 +18,13 @@ _URI_CREDENTIALS_RE = re.compile(
 )
 _BEARER_TOKEN_RE = re.compile(r"(?i)\bBearer\s+[^\s,;]+")
 _QUERY_SECRET_RE = re.compile(
-    r"(?i)(?P<prefix>[?&](?:api[_-]?key|access[_-]?token|token|wskey|secret|password)="
+    r"(?i)(?P<prefix>[?&](?:api[_-]?key|access[_-]?token|refresh[_-]?token|"
+    r"client[_-]?secret|token|wskey|secret|password)="
     r")(?P<value>[^&#\s]+)"
 )
 _NAMED_SECRET_RE = re.compile(
-    r"(?i)(?P<prefix>\b(?:api[_-]?key|access[_-]?token|token|secret|password)"
+    r"(?i)(?P<prefix>\b(?:(?:[A-Za-z0-9]+_)*api[_-]?key|access[_-]?token|"
+    r"refresh[_-]?token|client[_-]?secret|token|wskey|secret|password)"
     r"\s*[:=]\s*[\"']?)(?P<value>[^\s,;\"']+)"
 )
 
