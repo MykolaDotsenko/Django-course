@@ -44,7 +44,6 @@
         {% endif %}
       </p>
     </noscript>
-
     <section class="qa-saved-section" aria-labelledby="saved-pairs-title">
       <div class="qa-saved-section__heading">
         <div>
@@ -73,7 +72,6 @@
                   hidden>Clear saved pairs</button>
         {% endif %}
       </div>
-
       {% if user.is_authenticated %}
         {% if account_favourite_rows %}
           <div class="qa-saved-list" data-account-favourites-list>
@@ -81,9 +79,7 @@
               {% with favourite=row.favourite %}
                 <article class="qa-saved-row" data-account-favourite-id="{{ favourite.pk }}">
                   <div class="qa-saved-row__copy">
-                    <h3>
-                      {{ favourite.source_currency.code }} → {{ favourite.destination_currency.code }}
-                    </h3>
+                    <h3>{{ favourite.source_currency.code }} → {{ favourite.destination_currency.code }}</h3>
                     <p>
                       {% if favourite.source_country %}
                         {{ favourite.source_country.name }}
@@ -104,8 +100,7 @@
                   <div class="qa-saved-row__actions">
                     <a class="qa-secondary-button" href="{{ row.use_url }}">Use pair</a>
                     <a class="qa-secondary-button" href="{{ row.reverse_url }}">Reverse pair</a>
-                    <form method="post"
-                          action="{% url 'delete_favourite' favourite.pk %}">
+                    <form method="post" action="{% url 'delete_favourite' favourite.pk %}">
                       {% csrf_token %}
                       <button class="qa-secondary-button" type="submit">Remove</button>
                     </form>
@@ -125,7 +120,6 @@
         <div class="qa-saved-list" data-favourites-list></div>
       {% endif %}
     </section>
-
     <section class="qa-saved-section" aria-labelledby="recent-conversions-title">
       <div class="qa-saved-section__heading">
         <div>
@@ -144,7 +138,6 @@
       <p class="qa-saved-empty" data-recents-empty>No recent conversions in this browser yet.</p>
       <div class="qa-saved-list" data-recents-list></div>
     </section>
-
     <p class="qa-saved-state__privacy">
       {% if user.is_authenticated %}
         Account favourites can be removed individually or cleared above. Account deletion removes
