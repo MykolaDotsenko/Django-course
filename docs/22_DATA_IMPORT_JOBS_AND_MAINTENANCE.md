@@ -393,6 +393,17 @@ Use source-specific deletion policy:
 - require confirmation;
 - hard delete only when safe.
 
+For the REST Countries current-metadata import, source disappearance uses **report + manual review**,
+not automatic deletion/deactivation. After a validated full snapshot is upserted, the sync reports:
+
+- active countries previously owned by the same source version but absent from the snapshot;
+- current CountryCurrency links owned by that source but absent from the snapshot's country/currency
+  pairs.
+
+The command prints `REVIEW REQUIRED` with canonical identifiers and leaves every flagged row
+unchanged. Operators must determine whether the absence is a source defect, temporary filtering,
+retirement/code migration or a real lifecycle change before applying a separate curated change.
+
 ---
 
 # 24. Source revision
