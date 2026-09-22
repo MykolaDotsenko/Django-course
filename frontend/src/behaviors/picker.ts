@@ -32,14 +32,12 @@ function commitOption(dialog: HTMLDialogElement, option: HTMLElement): void {
   countrySelect.value = countryCode;
   currencySelect.value = currencyCode;
 
-  const media = trigger.querySelector<HTMLElement>(".qa-selector-trigger__media");
   const country = trigger.querySelector<HTMLElement>(".qa-selector-trigger__country");
   const currency = trigger.querySelector<HTMLElement>(".qa-selector-trigger__currency");
 
   const countryName = option.dataset.countryName || "No country context";
   const currencyName = option.dataset.currencyName || currencyCode;
 
-  if (media) media.textContent = countryCode || currencyCode || "FX";
   if (country) country.textContent = countryName;
   if (currency) currency.textContent = `${currencyName} · ${currencyCode}`;
 

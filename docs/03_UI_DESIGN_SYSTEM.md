@@ -138,3 +138,22 @@ Maintain:
 This is a visual direction, not a frozen mood board.
 
 New patterns may replace existing ones when they improve comprehension, accessibility, consistency or perceived product quality. Keep the premium, trustworthy and culturally authentic character coherent across those changes.
+
+
+## Premium composition rules
+
+The premium pass intentionally reduces visible UI chrome.
+
+Prefer:
+
+- one strong surface over nested card stacks;
+- typographic separation before borders;
+- hairline dividers before boxed containers;
+- restrained radii rather than pill-shaped controls;
+- a large monetary result as a primary visual moment;
+- source/destination as one bilateral instrument rather than two independent cards;
+- contextual sections that read like an editorial spread rather than a dashboard.
+
+The project keeps Inter as the self-hosted UI/display typeface for now. Premium hierarchy comes from scale, weight, spacing and composition rather than an unbundled external font dependency.
+
+The free-tier Gemini runtime explanation remains part of the product. Premium visual direction does not imply paid AI infrastructure.

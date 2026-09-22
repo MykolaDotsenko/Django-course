@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light">
-    <meta name="theme-color" content="#F6F7F3">
+    <meta name="theme-color" content="#F5F2EB">
     <title>{% block title %}Cultural Currency Converter{% endblock %}</title>
     {% block head_meta %}{% endblock %}
     {% vite_asset "frontend/src/app.ts" %}
@@ -18,10 +18,7 @@
     <header class="qa-shell__header">
       <div class="qa-shell__frame qa-shell__header-inner">
         <div class="qa-brand" aria-label="Cultural Currency Converter">
-          <span class="qa-brand__mark" aria-hidden="true">
-            <span class="qa-brand__line"></span>
-          </span>
-          <span>Cultural Currency</span>
+          <span class="qa-brand__wordmark">Cultural Currency</span>
         </div>
         <div class="qa-header-actions">
           {% block header_actions %}{% endblock %}

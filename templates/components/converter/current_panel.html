@@ -2,10 +2,8 @@
 <section id="converter-panel"
          class="qa-workspace qa-current-converter"
          aria-labelledby="current-converter-title">
-  <div class="qa-workspace__heading">
-    <p class="qa-foundation-kicker">Convert</p>
-    <h2 id="current-converter-title">One amount, two local contexts.</h2>
-    <p>Choose currencies directly, or add country context when it is useful.</p>
+  <div class="qa-workspace__heading qa-visually-hidden">
+    <h2 id="current-converter-title">Currency converter</h2>
   </div>
   {% if not reference_data_ready %}
     <div class="qa-inline-alert qa-inline-alert--error" role="alert">
@@ -80,7 +78,7 @@
           </p>
         {% else %}
           <p class="qa-field__message" id="amount-hint">
-            Decimal point or comma accepted. Do not use thousands separators.
+            Use a decimal point or comma. No thousands separator.
           </p>
         {% endif %}
       </div>
@@ -125,9 +123,6 @@
                 aria-haspopup="dialog"
                 aria-expanded="false"
                 aria-label="Change source country or currency. Current source: {{ source.country_name }}, {{ source.currency_name }}{% if source.currency_code %} {{ source.currency_code }}{% endif %}.">
-          <span class="qa-selector-trigger__media" aria-hidden="true">
-            {{ source.country_code|default:source.currency_code|default:"FX" }}
-          </span>
           <span class="qa-selector-trigger__copy">
             <span class="qa-selector-trigger__country">{{ source.country_name }}</span>
             <span class="qa-selector-trigger__currency">
@@ -189,9 +184,6 @@
                 aria-haspopup="dialog"
                 aria-expanded="false"
                 aria-label="Change destination country or currency. Current destination: {{ destination.country_name }}, {{ destination.currency_name }}{% if destination.currency_code %} {{ destination.currency_code }}{% endif %}.">
-          <span class="qa-selector-trigger__media" aria-hidden="true">
-            {{ destination.country_code|default:destination.currency_code|default:"FX" }}
-          </span>
           <span class="qa-selector-trigger__copy">
             <span class="qa-selector-trigger__country">{{ destination.country_name }}</span>
             <span class="qa-selector-trigger__currency">

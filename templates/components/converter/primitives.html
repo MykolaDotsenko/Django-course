@@ -36,7 +36,6 @@
             aria-haspopup="dialog"
             aria-expanded="false"
             aria-labelledby="{{ component.id }}-label {{ component.id }}-country {{ component.id }}-currency{% if component.historical %} {{ component.id }}-status{% endif %}">
-      <span class="qa-selector-trigger__media" aria-hidden="true">{{ component.media_text }}</span>
       <span class="qa-selector-trigger__copy">
         <span class="qa-selector-trigger__country" id="{{ component.id }}-country">
           {{ component.country_name }}
