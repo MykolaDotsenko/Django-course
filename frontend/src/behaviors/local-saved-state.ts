@@ -61,6 +61,7 @@ function setFavouriteButtonState(
   const pair = pairFromSnapshot(snapshot);
   if (!button || !label || !pair) return;
 
+  button.hidden = false;
   const saved = isFavourite(pair, state);
   button.setAttribute("aria-pressed", saved ? "true" : "false");
   button.setAttribute("aria-label", saved ? "Remove saved pair" : "Save pair");
