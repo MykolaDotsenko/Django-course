@@ -1,4 +1,5 @@
 let restoreFocusId: string | null = null;
+let focusValidationSummaryAfterRequest = false;
 
 export function requestFocusRestore(id: string): void {
   restoreFocusId = id;
@@ -20,6 +21,14 @@ function enhanceAutoRefresh(form: HTMLFormElement): void {
   form.dataset.autoRefreshWired = "true";
 
   let amountTimer: number | undefined;
+
+  form.addEventListener("submit", (event) => {
+    const submitter = (event as SubmitEvent).submitter;
+    focusValidationSummaryAfterRequest =
+      submitter === null ||
+      (submitter instanceof HTMLButtonElement &&
+        submitter.classList.contains("qa-primary-button"));
+  });
 
   form.addEventListener("input", (event) => {
     if (form.dataset.hasResult !== "true") return;
@@ -78,6 +87,26 @@ function announceConversionResult(target: EventTarget | null, status: number | u
   }, 0);
 }
 
+function focusValidationSummary(
+  target: EventTarget | null,
+  status: number | undefined,
+): boolean {
+  if (
+    !focusValidationSummaryAfterRequest ||
+    status !== 422 ||
+    !(target instanceof Element) ||
+    target.id !== "converter-panel"
+  ) {
+    return false;
+  }
+
+  const summary = target.querySelector<HTMLElement>("#conversion-error-summary");
+  if (!summary) return false;
+
+  summary.focus();
+  return true;
+}
+
 function enhanceCurrentConverterBehavior(): void {
   const form = document.querySelector<HTMLFormElement>("[data-current-conversion-form]");
   if (form) enhanceAutoRefresh(form);
@@ -133,6 +162,13 @@ document.addEventListener("htmx:afterSwap", (event) => {
   const detail = (event as CustomEvent<{ xhr?: XMLHttpRequest }>).detail;
   announceConversionResult(event.target, detail.xhr?.status);
 
+  const focusedValidationSummary = focusValidationSummary(event.target, detail.xhr?.status);
+  focusValidationSummaryAfterRequest = false;
+  if (focusedValidationSummary) {
+    restoreFocusId = null;
+    return;
+  }
+
   if (!restoreFocusId) return;
   document.getElementById(restoreFocusId)?.focus();
   restoreFocusId = null;
@@ -140,8 +176,10 @@ document.addEventListener("htmx:afterSwap", (event) => {
 
 document.addEventListener("htmx:responseError", () => {
   restoreFocusId = null;
+  focusValidationSummaryAfterRequest = false;
 });
 
 document.addEventListener("htmx:sendError", () => {
   restoreFocusId = null;
+  focusValidationSummaryAfterRequest = false;
 });
