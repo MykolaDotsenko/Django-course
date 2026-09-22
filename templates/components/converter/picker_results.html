@@ -6,6 +6,7 @@
     <li class="qa-picker-option"
         id="{{ option.id }}"
         role="option"
+        aria-selected="{% if option.selected %}true{% else %}false{% endif %}"
         data-picker-option
         data-country-code="{{ option.country_code }}"
         data-country-name="{{ option.country_name }}"
