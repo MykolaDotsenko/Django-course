@@ -204,7 +204,7 @@ h3 {
 }
 
 .qa-selector-trigger {
-  min-height: 4.25rem;
+  min-height: 4.5rem;
   grid-template-columns: minmax(0, 1fr) auto auto;
   gap: var(--qa-space-3);
   padding: 0.75rem 0;
