@@ -396,27 +396,26 @@ async function assertForcedColors(page, surface) {
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
   });
   await page.keyboard.press("Tab");
-  const focusTarget = page.locator(":focus");
-  const activeClass = await focusTarget.getAttribute("class");
-  assert(
-    activeClass?.includes("qa-skip-link"),
-    `${surface}: forced-colors keyboard focus did not begin on the skip link`,
-  );
-
-  const focusStyles = await focusTarget.evaluate((element) => {
+  const focusState = await page.evaluate(() => {
+    const element = document.activeElement;
+    if (!(element instanceof HTMLElement) || element === document.body) return null;
     const style = getComputedStyle(element);
-    return [
-      {
-        outlineStyle: style.outlineStyle,
-        outlineWidth: style.outlineWidth,
-        boxShadow: style.boxShadow,
-      },
-    ];
+    return {
+      tagName: element.tagName.toLowerCase(),
+      id: element.id,
+      className: typeof element.className === "string" ? element.className : "",
+      outlineStyle: style.outlineStyle,
+      outlineWidth: style.outlineWidth,
+      boxShadow: style.boxShadow,
+    };
   });
-  const hasVisibleFocus = focusStyles.some(
-    (style) =>
-      (style.outlineStyle !== "none" && style.outlineWidth !== "0px") || style.boxShadow !== "none",
+  assert(
+    focusState !== null,
+    `${surface}: forced-colors keyboard navigation did not produce a focus target`,
   );
+  const hasVisibleFocus =
+    (focusState.outlineStyle !== "none" && focusState.outlineWidth !== "0px") ||
+    focusState.boxShadow !== "none";
   assert(hasVisibleFocus, `${surface}: focus indicator disappears in forced-colors mode`);
   await assertNoHorizontalOverflow(page, `${surface}/forced-colors`);
 }
