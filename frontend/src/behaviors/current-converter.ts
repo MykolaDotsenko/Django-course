@@ -15,6 +15,11 @@ function syncHistoricalDateField(form: HTMLFormElement): void {
   field.hidden = !historical.checked;
 }
 
+function requestProgressiveSubmit(form: HTMLFormElement): void {
+  form.dataset.progressiveSubmitPending = "true";
+  form.requestSubmit();
+}
+
 function enhanceAutoRefresh(form: HTMLFormElement): void {
   syncHistoricalDateField(form);
   if (form.dataset.autoRefreshWired === "true") return;
@@ -23,6 +28,13 @@ function enhanceAutoRefresh(form: HTMLFormElement): void {
   let amountTimer: number | undefined;
 
   form.addEventListener("submit", (event) => {
+    const progressiveSubmit = form.dataset.progressiveSubmitPending === "true";
+    delete form.dataset.progressiveSubmitPending;
+    if (progressiveSubmit) {
+      focusValidationSummaryAfterRequest = false;
+      return;
+    }
+
     const submitter = (event as SubmitEvent).submitter;
     focusValidationSummaryAfterRequest =
       submitter === null ||
@@ -35,7 +47,7 @@ function enhanceAutoRefresh(form: HTMLFormElement): void {
     if (!(target instanceof HTMLInputElement) || target.id !== "id_amount") return;
 
     window.clearTimeout(amountTimer);
-    amountTimer = window.setTimeout(() => form.requestSubmit(), 400);
+    amountTimer = window.setTimeout(() => requestProgressiveSubmit(form), 400);
   });
 
   form.addEventListener("change", (event) => {
@@ -54,7 +66,7 @@ function enhanceAutoRefresh(form: HTMLFormElement): void {
         }
       }
 
-      form.requestSubmit();
+      requestProgressiveSubmit(form);
       return;
     }
 
