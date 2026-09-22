@@ -398,12 +398,14 @@ def picker_options(request: HttpRequest) -> HttpResponse:
         except ValueError:
             selected_date = None
 
+    preferred_country_code = request.GET.get(f"{side}_country", "").upper().strip()
+    preferred_currency_code = request.GET.get(f"{side}_currency", "").upper().strip()
     search_options = search_currency_options(
         query=query,
         historical_mode=historical_mode,
         selected_date=selected_date,
-        preferred_country_code=request.GET.get(f"{side}_country", ""),
-        preferred_currency_code=request.GET.get(f"{side}_currency", ""),
+        preferred_country_code=preferred_country_code,
+        preferred_currency_code=preferred_currency_code,
     )
     options: list[dict[str, object]] = []
     for option in search_options:
@@ -423,6 +425,12 @@ def picker_options(request: HttpRequest) -> HttpResponse:
             if option.country_context
             else "Currency only"
         )
+        current_selection = (
+            option.country_code == preferred_country_code
+            and option.currency_code == preferred_currency_code
+        )
+        if current_selection:
+            meta = f"Current selection · {meta}"
         if option.historical:
             meta += " · Historical"
 
