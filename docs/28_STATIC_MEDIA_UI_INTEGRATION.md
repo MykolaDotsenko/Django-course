@@ -962,11 +962,14 @@ A dedicated preview surface now exists at:
 /_design/media/
 ```
 
-It is registered only when:
+The internal URL is present in the development URL surface, and the preview view enforces:
 
 ```text
 DEBUG = True
 ```
+
+With `DEBUG=False`, the view fails closed with HTTP 404. Browser/design QA enables DEBUG explicitly;
+the preview must never render as a production product surface.
 
 Purpose:
 
