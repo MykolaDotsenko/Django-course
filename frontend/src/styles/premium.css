@@ -400,9 +400,8 @@ h3 {
 
 .qa-rate-meta__facts dt {
   color: var(--color-tertiary);
-  font-size: 0.68rem;
-  letter-spacing: 0.055em;
-  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
 }
 
 .qa-rate-meta__facts dd {
