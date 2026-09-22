@@ -23,7 +23,14 @@
     <p class="qa-saved-state__storage-note"
        data-local-storage-status
        data-storage-tone="neutral"
-       aria-live="off">Checking browser storage…</p>
+       aria-live="off"
+       hidden>Checking browser storage…</p>
+    <noscript>
+      <p class="qa-saved-state__storage-note" data-storage-tone="warning">
+        JavaScript is required to read browser-local saved pairs and recent history. The converter
+        still works without JavaScript.
+      </p>
+    </noscript>
     <section class="qa-saved-section" aria-labelledby="saved-pairs-title">
       <div class="qa-saved-section__heading">
         <div>
