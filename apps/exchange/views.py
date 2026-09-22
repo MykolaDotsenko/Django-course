@@ -336,7 +336,7 @@ def converter(request: HttpRequest) -> HttpResponse:
             if submission.destination_context is not None:
                 destination_context_component = build_destination_context_component(
                     submission.destination_context,
-                    historical=result.quote.historical,
+                    historical=False,
                 )
 
     if convert_requested and not form_valid and request.method == "POST":
