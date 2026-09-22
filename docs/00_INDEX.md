@@ -1,258 +1,125 @@
-# Engineering Handbook Index
+# Documentation Guide
 
-This handbook is the single source of truth for the Cultural Currency Converter rebuild.
+This directory is the working knowledge base for Cultural Currency Converter.
 
-## Documents
+It is intentionally small. Documentation should help a developer or AI understand **why the product exists, what matters, how the current system is shaped, and what to check before changing it**. It should not duplicate the code or freeze past implementation decisions.
 
-1. [Product specification](01_PRODUCT_SPEC.md)
-2. [UX research and experience blueprint](02_UX_RESEARCH_AND_FLOWS.md)
-   - [User case catalog](02A_USER_CASE_CATALOG.md)
-   - [Interaction and state specification](02B_INTERACTION_AND_STATE_SPEC.md)
-   - [Storytelling and historical converter](02C_STORYTELLING_AND_HISTORICAL_CONVERTER.md)
-3. [UI design system](03_UI_DESIGN_SYSTEM.md)
-   - [Visual foundations](03A_VISUAL_FOUNDATIONS.md)
-   - [Screen-by-screen blueprints](03B_SCREEN_BLUEPRINTS.md)
-   - [Component anatomy and dimensions](03C1_COMPONENT_ANATOMY_AND_DIMENSIONS.md)
-   - [Component states and microinteractions](03C_COMPONENT_STATES_AND_MICROINTERACTIONS.md)
-   - [Responsive, motion, accessibility and design QA](03D_RESPONSIVE_MOTION_ACCESSIBILITY.md)
-4. [Architecture](04_ARCHITECTURE.md)
-5. [Domain model](05_DOMAIN_MODEL.md)
-6. [Mobile and API](06_MOBILE_AND_API.md)
-7. [Quality, security and accessibility](07_QUALITY_SECURITY_ACCESSIBILITY.md)
-8. [Implementation roadmap](08_IMPLEMENTATION_ROADMAP.md)
-9. [Architecture decision log](09_ADR_LOG.md)
-10. [Official references](10_REFERENCES.md)
-11. [API research and data-source strategy](11_API_RESEARCH_AND_DATA_SOURCES.md)
-12. [External API integration contracts](12_EXTERNAL_API_CONTRACTS.md)
-13. [Frontend technology strategy](13_FRONTEND_TECHNOLOGY_STRATEGY.md)
-14. [Web frontend architecture](14_WEB_FRONTEND_ARCHITECTURE.md)
-15. [Mobile frontend architecture](15_MOBILE_FRONTEND_ARCHITECTURE.md)
-16. [Backend system design](16_BACKEND_SYSTEM_DESIGN.md)
-17. [Information flow and request lifecycles](17_INFORMATION_FLOW_AND_REQUEST_LIFECYCLES.md)
-18. [Application services and domain orchestration](18_APPLICATION_SERVICES_AND_DOMAIN_ORCHESTRATION.md)
-19. [Data consistency, caching and concurrency](19_DATA_CONSISTENCY_CACHING_AND_CONCURRENCY.md)
-20. [API, security, observability and operations](20_API_SECURITY_OBSERVABILITY_AND_OPERATIONS.md)
-21. [Backend scenario catalog](21_BACKEND_SCENARIO_CATALOG.md)
-22. [Data import, scheduled jobs and maintenance](22_DATA_IMPORT_JOBS_AND_MAINTENANCE.md)
-23. [Media, historical imagery and generative image strategy](23_MEDIA_AND_GENERATIVE_IMAGE_STRATEGY.md)
-24. [AI product strategy and model selection](24_AI_PRODUCT_STRATEGY.md)
-25. [AI integration architecture](25_AI_INTEGRATION_ARCHITECTURE.md)
-26. [AI prompting, evaluations, safety and cost](26_AI_PROMPTS_EVALS_SAFETY_AND_COST.md)
-27. [Static image generation plan](27_STATIC_IMAGE_GENERATION_PLAN.md)
-28. [Static media UI integration architecture](28_STATIC_MEDIA_UI_INTEGRATION.md)
-29. [Original concept traceability and signature experience](29_ORIGINAL_CONCEPT_TRACEABILITY.md)
-30. [Developer workflow and pull request contract](30_DEVELOPER_WORKFLOW_AND_PR_CONTRACT.md)
-31. [Test strategy and requirement traceability](31_TEST_STRATEGY_AND_TRACEABILITY.md)
-32. [Environment, configuration and secrets contract](32_ENVIRONMENT_CONFIGURATION_AND_SECRETS.md)
-33. [Data migrations, fixtures and seeding strategy](33_DATA_MIGRATIONS_FIXTURES_AND_SEEDING.md)
-34. [Release, deployment and rollback runbook](34_RELEASE_DEPLOYMENT_AND_ROLLBACK_RUNBOOK.md)
-35. [Content, internationalization and copy contract](35_CONTENT_I18N_AND_COPY_CONTRACT.md)
-36. [Performance budgets and profiling contract](36_PERFORMANCE_BUDGETS_AND_PROFILING.md)
+## Read this first
 
-## UX decision hierarchy
+For most non-trivial work, use this order:
 
-Before an implementation PR changes the user experience, read in this order:
+1. [AI development guide](AI_DEVELOPMENT_GUIDE.md)
+2. [Product](01_PRODUCT_SPEC.md)
+3. the document closest to the change:
+   - [UX](02_UX_RESEARCH_AND_FLOWS.md)
+   - [Design](03_UI_DESIGN_SYSTEM.md)
+   - [Architecture](04_ARCHITECTURE.md)
+   - [Domain model](05_DOMAIN_MODEL.md)
+   - [Integrations, AI and media](INTEGRATIONS_AI_MEDIA.md)
+   - [Quality, security and accessibility](07_QUALITY_SECURITY_ACCESSIBILITY.md)
+4. [Roadmap](08_IMPLEMENTATION_ROADMAP.md) when planning what to do next
+5. [Decision log](09_ADR_LOG.md) when changing a durable architectural choice
+6. [References](10_REFERENCES.md) when external evidence is needed
 
-1. `01_PRODUCT_SPEC.md` — why the product exists and what is in scope;
-2. `29_ORIGINAL_CONCEPT_TRACEABILITY.md` — which original ideas are preserved/evolved/rejected and the signature bilateral invariant;
-3. `02_UX_RESEARCH_AND_FLOWS.md` — experience principles and end-to-end behaviour;
-4. `02A_USER_CASE_CATALOG.md` — concrete scenarios the product must support;
-5. `02B_INTERACTION_AND_STATE_SPEC.md` — state transitions and recovery rules;
-6. `02C_STORYTELLING_AND_HISTORICAL_CONVERTER.md` — historical FX, money stories and temporal trust rules;
-7. `03_UI_DESIGN_SYSTEM.md` — executive visual/component contract;
-8. `03A_VISUAL_FOUNDATIONS.md` — tokens, hierarchy, typography, color, grid and visual language;
-9. `03B_SCREEN_BLUEPRINTS.md` — screen composition and information density;
-10. `03C1_COMPONENT_ANATOMY_AND_DIMENSIONS.md` — exact component anatomy, sizing and hierarchy;
-11. `03C_COMPONENT_STATES_AND_MICROINTERACTIONS.md` — component state behavior;
-12. `03D_RESPONSIVE_MOTION_ACCESSIBILITY.md` — adaptive/accessibility/motion QA.
+## Source-of-truth hierarchy
 
-A visually attractive implementation that violates the UX state model is not considered correct.
+When information conflicts, do not blindly follow the oldest or most detailed document.
 
-## Working agreement
+Use this order:
 
-Every non-trivial implementation PR should answer:
+1. the current task and explicit product intent;
+2. executable behaviour in code, migrations, tests and CI;
+3. the canonical documents listed above;
+4. active decisions in the ADR log;
+5. roadmap ideas;
+6. external references and historical context.
 
-- What user problem does this solve?
-- Which user-case IDs does it implement or change?
-- Which UX state transitions does it affect?
-- Which acceptance criteria does it satisfy?
-- Which domain invariant can it affect?
-- Does it change security, privacy, accessibility or data provenance?
-- Which handbook section governs the decision?
-- Are new abstractions justified by an actual boundary or regression risk?
-- Does the change preserve web/mobile API compatibility where relevant?
+A mismatch between code and docs is a signal to investigate. Fix the mismatch in the same change when practical.
 
-If a PR changes an architectural decision, update the ADR log in the same PR.
+## What deserves a strong rule
 
-If a PR changes a settled UX rule, update the relevant UX document and explain why.
+Use strong language only for constraints where being flexible can cause real harm or semantic corruption, for example:
 
-## Product hierarchy
+- financial correctness and Decimal/rounding semantics;
+- security and secret handling;
+- privacy and ownership;
+- accessibility requirements;
+- source/provenance integrity;
+- destructive data changes;
+- explicit user consent;
+- invariants enforced by schema, tests or CI.
 
-When trade-offs conflict, optimize in this order:
+For ordinary architecture, UI, dependency and workflow choices, prefer language such as:
+
+- “currently”;
+- “prefer”;
+- “default”;
+- “usually”;
+- “unless there is a measured reason to change”.
+
+The project is expected to improve. A documented preference is not a reason to preserve a worse design.
+
+## Documentation maintenance rules
+
+Keep documentation close to stable knowledge.
+
+Good documentation explains:
+
+- product goals and non-goals;
+- important user flows;
+- domain meaning and invariants;
+- architectural boundaries;
+- external trust boundaries;
+- test/quality expectations;
+- reasons behind durable decisions;
+- active next steps.
+
+Avoid documenting:
+
+- every PR that has already merged;
+- exact implementation details already obvious in code;
+- large catalogs of hypothetical scenarios;
+- repeated copies of the same UX rule;
+- dependency versions already pinned in config files;
+- exact pixel values unless the value is itself a product/accessibility requirement;
+- “locked forever” technology choices.
+
+When a new topic fits an existing canonical document, update that document instead of creating another file.
+
+## Stable product priorities
+
+When trade-offs conflict, generally prefer:
 
 1. correctness and trust;
-2. primary conversion task;
-3. accessibility and recoverability;
+2. the primary conversion task;
+3. privacy, accessibility and recoverability;
 4. clarity and maintainability;
-5. performance;
-6. cultural delight;
+5. useful destination/cultural context;
+6. performance;
 7. decorative novelty.
 
-## Scope guardrail
+These are priorities, not a prohibition on experimentation.
 
-This is **not** a trading platform, remittance product, banking product or real-time market terminal.
+## Product boundary
 
-The product provides travel-oriented informational estimates. It must never imply:
+This is an informational travel-money product, not a trading, banking, remittance or financial-advice platform.
 
-- guaranteed executable exchange rates;
-- regulated financial advice;
-- exact merchant/card/ATM fees without authoritative provider data;
-- universal prices within a country;
-- cultural claims without provenance.
+The UI should avoid implying:
 
-## Evidence rule
+- executable or guaranteed FX rates;
+- exact card/ATM/merchant fees without authoritative data;
+- universal prices for an entire country;
+- current facts as historical facts;
+- cultural or historical claims without adequate provenance.
 
-The documentation distinguishes:
+## Keep the handbook healthy
 
-- **settled product decisions**;
-- **implementation choices**;
-- **research hypotheses**.
+A documentation refactor is successful when a capable developer or AI can answer these questions quickly:
 
-Items marked as research questions should be tested through prototypes/usability work before they are treated as fixed behaviour.
-
-
-## External data decision hierarchy
-
-Before adding or changing a third-party API, read in this order:
-
-1. `11_API_RESEARCH_AND_DATA_SOURCES.md` — whether the source belongs in the product at all;
-2. `12_EXTERNAL_API_CONTRACTS.md` — how it is isolated, normalized, cached and tested;
-3. `04_ARCHITECTURE.md` — where the adapter belongs and whether it may be request-path critical;
-4. `05_DOMAIN_MODEL.md` — which normalized domain concept receives the data;
-5. `07_QUALITY_SECURITY_ACCESSIBILITY.md` — outage, security and testing expectations;
-6. `09_ADR_LOG.md` — durable provider/source decisions.
-
-A new API is not accepted merely because it provides convenient JSON.
-
-
-## Frontend decision hierarchy
-
-Before adding/changing a web or mobile frontend dependency, read:
-
-1. `13_FRONTEND_TECHNOLOGY_STRATEGY.md` — selected/rejected technologies and why;
-2. `14_WEB_FRONTEND_ARCHITECTURE.md` — Django/HTMX/Vite/TypeScript ownership and implementation rules;
-3. `15_MOBILE_FRONTEND_ARCHITECTURE.md` — Expo/React Native/API/offline state ownership;
-4. `03_UI_DESIGN_SYSTEM.md` and detailed Quiet Atlas docs — required visual/interaction behavior;
-5. `02B_INTERACTION_AND_STATE_SPEC.md` — state integrity and recovery rules;
-6. `09_ADR_LOG.md` — durable frontend architecture decisions.
-
-A frontend dependency is not accepted because it is popular, modern, or visually impressive.
-
-It must solve a documented problem with lower total complexity than the native/platform/project-owned alternative.
-
-
-## Backend decision hierarchy
-
-Before implementing or changing backend behavior, read in this order:
-
-1. 16_BACKEND_SYSTEM_DESIGN.md — system boundaries, synchronous Django strategy, transactions, data ownership and deployment shape;
-2. 17_INFORMATION_FLOW_AND_REQUEST_LIFECYCLES.md — exact end-to-end information flow for current/historical conversion, context, mobile and imports;
-3. 18_APPLICATION_SERVICES_AND_DOMAIN_ORCHESTRATION.md — use-case boundaries, domain purity and service responsibilities;
-4. 19_DATA_CONSISTENCY_CACHING_AND_CONCURRENCY.md — PostgreSQL, cache, transaction, stale-data and concurrency rules;
-5. 20_API_SECURITY_OBSERVABILITY_AND_OPERATIONS.md — public contract, auth/security, failures, health and operations;
-6. 21_BACKEND_SCENARIO_CATALOG.md — concrete backend cases and regression coverage;
-7. 22_DATA_IMPORT_JOBS_AND_MAINTENANCE.md — scheduled/import workflows and source maintenance;
-8. 05_DOMAIN_MODEL.md and 12_EXTERNAL_API_CONTRACTS.md — persisted/domain/provider schemas;
-9. 09_ADR_LOG.md — durable decisions.
-
-Every backend implementation PR should list the relevant BE-* scenario IDs.
-
-A backend abstraction is accepted only if it protects a real invariant, integration boundary, transaction, repeated query shape or measurable operational need.
-
-
-## Media decision hierarchy
-
-Before adding a sourced or generated image flow, read:
-
-1. `23_MEDIA_AND_GENERATIVE_IMAGE_STRATEGY.md` — media classes, storage, AI policy, rights/provenance and selection rules;
-2. `03_UI_DESIGN_SYSTEM.md` — visual hierarchy and media restraint;
-3. `05_DOMAIN_MODEL.md` — MediaAsset metadata/provenance;
-4. `22_DATA_IMPORT_JOBS_AND_MAINTENANCE.md` — ingestion/generation jobs;
-5. `10_REFERENCES.md` — source/licensing/provider references.
-
-A missing image is an acceptable state.
-
-A misleading historical image is not.
-
-
-## AI decision hierarchy
-
-Before adding or changing AI behavior, read:
-
-1. `24_AI_PRODUCT_STRATEGY.md` — allowed/rejected use cases and model routing;
-2. `25_AI_INTEGRATION_ARCHITECTURE.md` — capability interfaces, provider boundary, structured outputs and persistence;
-3. `26_AI_PROMPTS_EVALS_SAFETY_AND_COST.md` — prompt versions, eval gates, safety, privacy and spend controls;
-4. `23_MEDIA_AND_GENERATIVE_IMAGE_STRATEGY.md` — image authenticity/storage policy;
-5. `17_INFORMATION_FLOW_AND_REQUEST_LIFECYCLES.md` — deterministic source-of-truth flows;
-6. `09_ADR_LOG.md` — durable decisions.
-
-AI may transform trusted data into candidates.
-
-AI may not become a new source of financial or historical truth.
-
-
-## Static image implementation contract
-
-Before adding or replacing release-owned imagery, read:
-
-1. `27_STATIC_IMAGE_GENERATION_PLAN.md` — asset inventory, prompts, mapping, accessibility and authenticity rules;
-2. `23_MEDIA_AND_GENERATIVE_IMAGE_STRATEGY.md` — sourced/generated media boundaries;
-3. `03_UI_DESIGN_SYSTEM.md` — Quiet Atlas visual hierarchy.
-
-The initial P0 pack lives under `static/images/quiet-atlas/` and is designed to work with zero runtime image-generation cost.
-
-
-## Static-media implementation order
-
-When wiring release-owned visuals into Django/HTMX:
-
-1. `27_STATIC_IMAGE_GENERATION_PLAN.md` — asset inventory and prompt/authenticity contract;
-2. `28_STATIC_MEDIA_UI_INTEGRATION.md` — registry, selectors, view models and template integration;
-3. `03_UI_DESIGN_SYSTEM.md` — visual hierarchy and restraint;
-4. `23_MEDIA_AND_GENERATIVE_IMAGE_STRATEGY.md` — future sourced/AI MediaAsset migration.
-
-Do not hardcode Quiet Atlas filenames throughout page templates.
-
-
-## Signature experience guardrail
-
-The product must not regress into a conventional converter with culture appended only below the result.
-
-Before changing the main converter composition, read:
-
-1. `29_ORIGINAL_CONCEPT_TRACEABILITY.md`;
-2. `01_PRODUCT_SPEC.md`;
-3. `02_UX_RESEARCH_AND_FLOWS.md`;
-4. `03_UI_DESIGN_SYSTEM.md`.
-
-The settled invariant is:
-
-> Source and destination may independently influence atmosphere and context, while arithmetic, controls, trust, accessibility and interaction mechanics remain stable.
-
-
-## Development execution hierarchy
-
-Before starting a non-trivial implementation PR:
-
-1. `30_DEVELOPER_WORKFLOW_AND_PR_CONTRACT.md` — Definition of Ready/Done, scope, review and merge contract;
-2. `31_TEST_STRATEGY_AND_TRACEABILITY.md` — which test layer protects each requirement/invariant;
-3. the product/UX/backend/frontend handbook documents governing the feature;
-4. `32_ENVIRONMENT_CONFIGURATION_AND_SECRETS.md` when configuration/external capabilities change;
-5. `33_DATA_MIGRATIONS_FIXTURES_AND_SEEDING.md` when persisted/schema/import data changes;
-6. `35_CONTENT_I18N_AND_COPY_CONTRACT.md` when user-facing financial/cultural copy changes;
-7. `36_PERFORMANCE_BUDGETS_AND_PROFILING.md` when request, payload, query or media cost changes;
-8. `34_RELEASE_DEPLOYMENT_AND_ROLLBACK_RUNBOOK.md` before production/deployment-sensitive changes.
-
-The repository pull-request template mirrors this execution contract.
-
-A task is not ready when implementation still requires the developer to invent settled product behaviour.
+- What user problem are we solving?
+- What behaviour exists today?
+- Where should this logic live?
+- Which invariants are actually important?
+- Which tests prove the change?
+- Is an old decision still justified?
+- What should be updated if the implementation changes?

@@ -1,60 +1,40 @@
-## Problem
+## Why
 
-<!-- What user/engineering problem does this solve? -->
+What user/problem outcome does this change address?
 
-## Scope
+## What changed
 
-<!-- Exact changes in this PR. -->
+Summarize the implementation and any important trade-offs.
 
-## Out of scope
+## Risk / boundaries
 
-<!-- Explicitly deferred/non-goals. -->
+Note anything relevant to:
 
-## Handbook / scenarios
+- financial/domain semantics;
+- security/privacy/ownership;
+- accessibility;
+- provider/data provenance;
+- migrations/configuration;
+- performance or degraded behaviour.
 
-- Governing docs:
-- User-case IDs:
-- BE-* scenario IDs:
-- ADRs affected:
+Write “none” when not applicable.
 
-## Acceptance criteria
+## Verification
 
-- [ ]
-- [ ]
-
-## Tests
-
-<!-- Commands/suites/manual checks run. -->
-
-- [ ] Fast/unit/integration checks
-- [ ] Browser/E2E when relevant
-- [ ] Accessibility when relevant
-- [ ] Regression test for bug fix when applicable
-
-## Data / migration / configuration impact
-
-- Database/schema:
-- Data import/seed:
-- Environment/config:
-- External provider:
-
-## Security / privacy / accessibility
-
-<!-- State “no material impact” only after checking. -->
+List the relevant automated/manual checks you ran.
 
 ## UI evidence
 
-<!-- Screenshots/video for meaningful visual changes. -->
+For visible interaction changes, add screenshots/video when useful and mention keyboard/accessibility/browser checks where relevant.
 
 ## Documentation
 
-- [ ] Existing docs still describe the implemented behaviour
-- [ ] Updated handbook/ADR where settled behaviour changed
+- [ ] No documentation change needed
+- [ ] Updated the relevant canonical document(s)
+- [ ] Updated the ADR log because a durable architectural decision changed
 
-## Merge checklist
+## Final check
 
-- [ ] PR is bounded and reviewable
-- [ ] CI is green
-- [ ] No debug/secrets/machine-local files
-- [ ] Failure/recovery states are handled
-- [ ] Stacked-PR dependency (if any) is explicit
+- [ ] The change solves the stated problem without unnecessary scope
+- [ ] Relevant tests/checks pass
+- [ ] No stale duplicate implementation/docs were introduced
