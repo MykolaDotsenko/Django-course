@@ -1,0 +1,90 @@
+.qa-account-panel {
+  width: min(100%, 42rem);
+  margin-inline: auto;
+}
+
+.qa-account-panel h1 {
+  margin-block-end: var(--qa-space-4);
+}
+
+.qa-account-panel__lede {
+  max-width: var(--qa-reading-max);
+  margin-block-end: var(--qa-space-8);
+  color: var(--color-muted);
+  font-size: var(--text-body-lg);
+  line-height: 1.6;
+}
+
+.qa-account-form {
+  display: grid;
+  gap: var(--qa-space-5);
+}
+
+.qa-account-form .qa-primary-button {
+  justify-self: start;
+}
+
+.qa-text-input {
+  width: 100%;
+  min-height: 3rem;
+  box-sizing: border-box;
+  padding: var(--qa-space-3) var(--qa-space-4);
+  border: 1px solid var(--color-border-control);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+}
+
+.qa-text-input:focus-visible {
+  border-color: var(--color-focus);
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.qa-account-panel__alternate {
+  margin-block-start: var(--qa-space-6);
+  color: var(--color-muted);
+}
+
+.qa-account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--qa-space-3);
+}
+
+.qa-account-danger {
+  display: grid;
+  gap: var(--qa-space-3);
+  margin-block-start: var(--qa-space-10);
+  padding-block-start: var(--qa-space-6);
+  border-block-start: 1px solid var(--color-border-subtle);
+}
+
+.qa-account-danger h2,
+.qa-account-danger p {
+  margin: 0;
+}
+
+.qa-account-danger p {
+  color: var(--color-muted);
+}
+
+.qa-account-danger .qa-secondary-button {
+  justify-self: start;
+}
+
+@media (max-width: 30rem) {
+  .qa-account-form .qa-primary-button,
+  .qa-account-actions > * {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (forced-colors: active) {
+  .qa-text-input,
+  .qa-account-danger {
+    border-color: CanvasText;
+  }
+}
