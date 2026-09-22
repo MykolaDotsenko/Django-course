@@ -14,7 +14,10 @@
     </div>
   {% endif %}
   {% if conversion_error %}
-    <div class="qa-inline-alert qa-inline-alert--error" role="alert">
+    <div class="qa-inline-alert qa-inline-alert--error"
+         id="conversion-error-alert"
+         role="alert"
+         tabindex="-1">
       <h3>{{ conversion_error.title }}</h3>
       <p>{{ conversion_error.detail }}</p>
       <button class="qa-secondary-button"
@@ -268,8 +271,7 @@
     {% endif %}
     <div class="qa-workspace__action">
       <span id="conversion-loading"
-            class="qa-loading-indicator htmx-indicator"
-            aria-live="polite">Updating reference rate…</span>
+            class="qa-loading-indicator htmx-indicator">Updating reference rate…</span>
       <button class="qa-primary-button"
               type="submit"
               {% if not reference_data_ready %}disabled{% endif %}>
