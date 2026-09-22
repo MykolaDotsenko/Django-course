@@ -1130,30 +1130,43 @@ A DEBUG-only `/_design/shell/` surface exists to inspect these foundations witho
 
 Use only for small anonymous convenience state.
 
-Candidate schema:
+PR11 Phase A uses the versioned key:
+
+```text
+cultural-currency:local-preferences:v1
+```
+
+Concrete semantics:
 
 ```ts
 interface LocalPreferencesV1 {
   version: 1;
-  lastPair?: {
-    base: string;
-    quote: string;
-    sourceCountry?: string;
-    destinationCountry?: string;
-  };
-  favourites: Array<...>;
-  recent: Array<...>;
+  favourites: FavouritePair[];      // max 12
+  recent: RecentConversion[];       // max 10
 }
 ```
 
+A favourite stores only normalized source/destination currency plus optional source/destination
+country context and local display names. It deliberately stores **no amount**. Reopening a favourite
+loads the pair with an empty amount and does not request a rate until the user converts.
+
+A recent conversion stores the successful amount/result, semantic pair/context, current vs
+historical mode, requested historical date where applicable, effective observation date and a local
+timestamp. Repeating the same semantic conversion moves/replaces that item rather than creating a
+visible duplicate.
+
 Rules:
 
-- bounded recent list;
+- favourites are capped at 12 and recents at 10;
 - explicit schema version;
-- parse/validate before use;
-- storage failure does not break conversion;
+- every persisted record is parsed and validated before use;
+- malformed/outdated storage is ignored with a visible recovery message on the Saved page;
+- localStorage/quota failure does not break conversion;
+- failed conversion/HTMX refresh does not create a recent item;
+- anonymous history is never posted to Django;
 - no authentication token;
-- no sensitive trip details.
+- no sensitive trip details;
+- browser/site-data clearing removes the anonymous state.
 
 ---
 

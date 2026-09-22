@@ -92,6 +92,32 @@ def _country_for_currency(currency_code: str, *, preferred: str = "") -> str:
     return links.values_list("country__iso2", flat=True).first() or ""
 
 
+def _loaded_pair_initial(query) -> dict[str, str]:
+    initial = _default_initial()
+    initial["amount"] = ""
+
+    for side in ("source", "destination"):
+        currency_code = str(query.get(f"{side}_currency") or "").upper().strip()
+        if not currency_code:
+            continue
+        if not Currency.objects.filter(code=currency_code, is_active=True).exists():
+            continue
+
+        initial[f"{side}_currency"] = currency_code
+        country_code = str(query.get(f"{side}_country") or "").upper().strip()
+        if not country_code:
+            initial[f"{side}_country"] = ""
+            continue
+
+        associated = CountryCurrency.objects.current().filter(
+            country__iso2=country_code,
+            currency__code=currency_code,
+        )
+        initial[f"{side}_country"] = country_code if associated.exists() else ""
+
+    return initial
+
+
 def _default_initial() -> dict[str, str]:
     currency_codes = list(
         Currency.objects.filter(is_active=True).order_by("code").values_list("code", flat=True)
@@ -258,11 +284,13 @@ def converter(request: HttpRequest) -> HttpResponse:
         convert_requested = using_historical_currency or not swapping or conversion_active
     else:
         convert_requested = request.GET.get("convert") == "1"
-        form = (
-            CurrentConversionForm(request.GET)
-            if convert_requested
-            else CurrentConversionForm(initial=_default_initial())
-        )
+        load_pair_requested = request.GET.get("load") == "1"
+        if convert_requested:
+            form = CurrentConversionForm(request.GET)
+        elif load_pair_requested:
+            form = CurrentConversionForm(initial=_loaded_pair_initial(request.GET))
+        else:
+            form = CurrentConversionForm(initial=_default_initial())
 
     result = None
     error = None

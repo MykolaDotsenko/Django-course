@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "apps.culture",
     "apps.exchange",
     "apps.media",
+    "apps.travel",
 ]
 
 MIDDLEWARE = [
