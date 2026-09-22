@@ -77,8 +77,9 @@ def record_recent_conversion(
         if destination_country_code
         else None
     )
-    input_text = _canonical_decimal(input_amount)
-    output_text = _canonical_decimal(output_amount)
+    input_text = format(input_amount, "f")
+    output_text = format(output_amount, "f")
+    fingerprint_input = _canonical_decimal(input_amount)
     rate_mode = (
         RecentConversion.RateMode.HISTORICAL
         if historical
@@ -90,7 +91,7 @@ def record_recent_conversion(
         destination_currency=destination_currency.code,
         source_country=source_country.iso2 if source_country else "",
         destination_country=destination_country.iso2 if destination_country else "",
-        input_amount=input_text,
+        input_amount=fingerprint_input,
         rate_mode=rate_mode,
         requested_date=normalized_requested_date,
     )
