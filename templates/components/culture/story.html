@@ -35,9 +35,7 @@
             {% if chapter.source_refs %}
               <div class="qa-story-source-list" aria-label="Sources">
                 {% for source in chapter.source_refs %}
-                  <a href="{{ source.url }}"
-                     rel="noopener noreferrer"
-                     target="_blank">{{ source.label }}</a>
+                  <a href="{{ source.url }}">{{ source.label }}</a>
                 {% endfor %}
               </div>
             {% endif %}
