@@ -46,15 +46,15 @@ apps/
 ├── countries/
 ├── exchange/
 ├── culture/
-└── media/
+├── media/
+└── travel/
 ```
 
 Planned durable boundaries are added only when their roadmap phase ships:
 
 ```text
 apps/
-├── accounts/   # PR12
-└── travel/     # favourites/recent state and later trips/budgets
+└── accounts/   # PR12
 ```
 
 ### common
@@ -80,7 +80,9 @@ runtime media selection. Media is independent from cultural fact ownership.
 Future identity, user preferences and authenticated ownership.
 
 ### travel
-Future favourites, recent conversions, saved trips and budgets.
+Owns the Saved & recent web surface and, later, authenticated favourite/trip persistence. PR11
+Phase A intentionally stores anonymous favourites/recents in versioned browser localStorage; the
+travel app renders the server shell but does not receive or persist that anonymous history.
 
 ## 3. Why not more apps?
 
