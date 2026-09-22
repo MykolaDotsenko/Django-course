@@ -234,6 +234,11 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
 
   await page.getByRole("link", { name: "Everyday value" }).waitFor();
   await page.getByRole("link", { name: "Payment context" }).waitFor();
+  assert(
+    (await page.locator("#money-culture-story-slot[aria-live]").count()) === 0 &&
+      (await page.locator("#historical-trend-slot[aria-live]").count()) === 0,
+    "current-converter: large progressive fragments must not be live regions",
+  );
   await page.getByText("Cup of coffee", { exact: true }).waitFor();
   await page.getByText("Tokyo Metro regular ticket", { exact: true }).waitFor();
   await page.getByRole("heading", { name: "Paying in Japan" }).waitFor();
