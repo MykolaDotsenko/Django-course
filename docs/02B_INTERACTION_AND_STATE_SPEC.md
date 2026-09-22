@@ -612,6 +612,28 @@ or simply maintain idempotent saved state.
 When favourites or recents are empty, hide collection-level Clear actions rather than displaying
 disabled destructive controls. The empty-state message should carry the section's visual focus.
 
+### Repeated row actions
+
+Keep compact visible verbs such as Use pair, Repeat, Swap and Remove, but repeated controls must have
+row-specific accessible names. Preserve the visible verb inside the accessible name so speech-input
+and screen-reader users can distinguish actions without losing label-in-name predictability.
+
+Examples:
+
+```text
+Use pair: EUR to JPY
+Repeat conversion: 100 EUR to JPY
+Remove recent conversion: 100 EUR to JPY
+```
+
+### Bulk clear actions
+
+Clearing an entire local collection is destructive even though the data is browser-local. Keep these
+actions secondary in hierarchy, but use restrained danger styling so they cannot be mistaken for a
+routine navigation/action button. Do not add an interruptive confirmation dialog by default; preserve
+the immediate inline success status and reconsider undo/confirmation only if product evidence shows
+accidental bulk deletion is a real problem.
+
 ### Storage unavailable
 
 Core conversion unaffected.
