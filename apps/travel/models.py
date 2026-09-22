@@ -62,7 +62,4 @@ class FavouritePair(models.Model):
         ]
 
     def __str__(self) -> str:
-        return (
-            f"{self.user_id}: {self.source_currency.code}"
-            f" → {self.destination_currency.code}"
-        )
+        return f"{self.user_id}: {self.source_currency.code} → {self.destination_currency.code}"
