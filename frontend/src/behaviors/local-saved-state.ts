@@ -168,7 +168,7 @@ function enhanceConversionSnapshots(): void {
 
     if (snapshot.dataset.recentRecorded !== "true") {
       snapshot.dataset.recentRecorded = "true";
-      addRecent(snapshot);
+      if (snapshot.dataset.accountRecentRecorded !== "true") addRecent(snapshot);
     }
   }
 }
