@@ -12,6 +12,20 @@ _REQUEST_ID = ContextVar("request_id", default=None)
 _REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 _SERVICE_NAME = "cultural-currency-converter"
 
+_REDACTED = "[REDACTED]"
+_URI_CREDENTIALS_RE = re.compile(r"(?P<scheme>[A-Za-z][A-Za-z0-9+.-]*://)(?P<userinfo>[^\s/@]+)@")
+_BEARER_TOKEN_RE = re.compile(r"(?i)\bBearer\s+[^\s,;]+")
+_QUERY_SECRET_RE = re.compile(
+    r"(?i)(?P<prefix>[?&](?:api[_-]?key|access[_-]?token|refresh[_-]?token|"
+    r"client[_-]?secret|token|wskey|secret|password)="
+    r")(?P<value>[^&#\s]+)"
+)
+_NAMED_SECRET_RE = re.compile(
+    r"(?i)(?P<prefix>\b(?:(?:[A-Za-z0-9]+_)*api[_-]?key|access[_-]?token|"
+    r"refresh[_-]?token|client[_-]?secret|token|wskey|secret|password)"
+    r"\s*[:=]\s*[\"']?)(?P<value>[^\s,;\"'&?#]+)"
+)
+
 _LOG_FIELDS = (
     "method",
     "path",
@@ -22,6 +36,25 @@ _LOG_FIELDS = (
     "provider",
     "cache_status",
 )
+
+
+def redact_log_text(value: object) -> str:
+    """Return diagnostic text with common credential forms removed."""
+
+    text = str(value)
+    text = _URI_CREDENTIALS_RE.sub(
+        lambda match: f"{match.group('scheme')}{_REDACTED}@",
+        text,
+    )
+    text = _BEARER_TOKEN_RE.sub(f"Bearer {_REDACTED}", text)
+    text = _QUERY_SECRET_RE.sub(
+        lambda match: f"{match.group('prefix')}{_REDACTED}",
+        text,
+    )
+    return _NAMED_SECRET_RE.sub(
+        lambda match: f"{match.group('prefix')}{_REDACTED}",
+        text,
+    )
 
 
 def normalize_request_id(value: str | None) -> str:
@@ -61,15 +94,15 @@ class JsonFormatter(logging.Formatter):
             "environment": os.environ.get("APP_ENV", "local"),
             "service": _SERVICE_NAME,
             "request_id": getattr(record, "request_id", None) or get_request_id(),
-            "event": record.getMessage(),
+            "event": redact_log_text(record.getMessage()),
         }
 
         for field_name in _LOG_FIELDS:
             value = getattr(record, field_name, None)
             if value is not None:
-                payload[field_name] = value
+                payload[field_name] = redact_log_text(value) if isinstance(value, str) else value
 
         if record.exc_info:
-            payload["exception"] = self.formatException(record.exc_info)
+            payload["exception"] = redact_log_text(self.formatException(record.exc_info))
 
         return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
