@@ -392,27 +392,26 @@ async function assertForcedColors(page, surface) {
     `${surface}: forced-colors media emulation did not apply`,
   );
 
-  const focusTarget =
-    surface === "converter" ? page.locator("#workspace-amount") : page.locator(".qa-skip-link");
-  await focusTarget.focus();
+  await page.evaluate(() => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  });
+  await page.keyboard.press("Tab");
+  const focusTarget = page.locator(":focus");
+  const activeClass = await focusTarget.getAttribute("class");
+  assert(
+    activeClass?.includes("qa-skip-link"),
+    `${surface}: forced-colors keyboard focus did not begin on the skip link`,
+  );
 
   const focusStyles = await focusTarget.evaluate((element) => {
-    const candidates = [
-      element,
-      element.closest(".qa-amount-control"),
-      element.closest(".qa-selector-trigger"),
-      element.closest(".qa-primary-button"),
-      element.closest(".qa-swap-button"),
-    ].filter(Boolean);
-
-    return candidates.map((candidate) => {
-      const style = getComputedStyle(candidate);
-      return {
+    const style = getComputedStyle(element);
+    return [
+      {
         outlineStyle: style.outlineStyle,
         outlineWidth: style.outlineWidth,
         boxShadow: style.boxShadow,
-      };
-    });
+      },
+    ];
   });
   const hasVisibleFocus = focusStyles.some(
     (style) =>
