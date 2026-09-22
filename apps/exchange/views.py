@@ -622,9 +622,7 @@ def historical_series(request: HttpRequest) -> HttpResponse:
     }
     fragment = _is_htmx(request)
     template = (
-        "components/converter/rate_series.html"
-        if fragment
-        else "pages/historical_series.html"
+        "components/converter/rate_series.html" if fragment else "pages/historical_series.html"
     )
     response = render(request, template, context, status=response_status)
     patch_vary_headers(response, ["HX-Request"])
