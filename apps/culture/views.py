@@ -101,14 +101,12 @@ def current_destination_context(request: HttpRequest) -> HttpResponse:
                     "culture.currency": form.cleaned_data["currency"],
                 },
             )
-            response_status = 503
             current_context_error = {
                 "title": "Today's destination context is temporarily unavailable.",
                 "detail": "The historical conversion remains valid. Try this context again later.",
             }
         else:
             if destination_context is None:
-                response_status = 404
                 current_context_error = {
                     "title": "Today's destination context is not available.",
                     "detail": "The historical conversion remains valid.",
