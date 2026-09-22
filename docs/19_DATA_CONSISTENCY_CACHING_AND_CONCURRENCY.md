@@ -348,6 +348,11 @@ CachedRateQuote
 
 Fresh/stale is preferably derived against current time/policy, not trusted as an old stored boolean.
 
+Deserialization alone does not make a cache entry authoritative. On every cache hit, re-check the
+semantic identity required by the lookup: pair, source policy, current-vs-historical mode and
+requested-date/range/grouping semantics as applicable. A structurally valid object stored under the
+wrong key is treated as a cache miss and never as fresh/stale fallback.
+
 ---
 
 # 17. Current quote cache keys
@@ -920,10 +925,13 @@ Test:
 - fresh hit → no provider;
 - provider fails → valid stale;
 - provider fails → too-old stale rejected;
-- wrong pair not reused;
+- wrong pair not reused, including when structurally valid data is stored under the requested key;
 - different provider policy not reused;
+- semantically invalid fresh cache is ignored and provider is refetched;
+- semantically invalid stale cache is never used as provider-failure fallback;
 - cache exception still permits correct path;
-- historical key keeps date semantics.
+- historical resolution cache keeps requested-date and allowed-gap semantics; invalid cached
+  resolution is ignored/refetched rather than blocking the provider path.
 
 ---
 
