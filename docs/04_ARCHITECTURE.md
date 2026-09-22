@@ -42,19 +42,13 @@ Current implemented boundaries:
 
 ```text
 apps/
+├── accounts/
 ├── common/
 ├── countries/
 ├── exchange/
 ├── culture/
 ├── media/
 └── travel/
-```
-
-Planned durable boundaries are added only when their roadmap phase ships:
-
-```text
-apps/
-└── accounts/   # PR12
 ```
 
 ### common
