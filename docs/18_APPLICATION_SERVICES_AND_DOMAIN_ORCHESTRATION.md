@@ -252,9 +252,25 @@ Responsibilities:
 
 - local DB only;
 - search normalized names/codes;
-- prioritize active currencies;
-- expose archived status in historical mode;
+- prioritize the user's current selection when the query is empty;
+- prioritize exact currency/country matches when the user searches;
+- prioritize active currencies in current mode;
+- expose archived/historical status in historical mode;
+- respect the selected historical date for country/currency relationships;
 - bounded result count.
+
+Implemented web ownership:
+
+```text
+Django request/view
+→ parse transport-only side/query/date/current selection
+→ search_currency_options(...)
+→ presentation dictionaries
+→ picker fragment
+```
+
+The query service receives typed values rather than `HttpRequest`, so the same relevance rules can
+be reused by a future API/mobile surface and tested without fabricating HTTP state.
 
 No provider call.
 

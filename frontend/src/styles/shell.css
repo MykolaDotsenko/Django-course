@@ -339,6 +339,24 @@
   }
 }
 
+@media (max-width: 20rem) {
+  .qa-shell__frame,
+  .qa-shell__main {
+    padding-inline: 16px;
+  }
+
+  .qa-shell__header-inner,
+  .qa-shell__footer-inner,
+  .qa-brand {
+    min-inline-size: 0;
+  }
+
+  .qa-brand > span:last-child,
+  .qa-shell__footer p {
+    overflow-wrap: anywhere;
+  }
+}
+
 @media (forced-colors: active) {
   .qa-shell__header,
   .qa-shell__footer,

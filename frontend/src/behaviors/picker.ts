@@ -36,12 +36,18 @@ function commitOption(dialog: HTMLDialogElement, option: HTMLElement): void {
   const country = trigger.querySelector<HTMLElement>(".qa-selector-trigger__country");
   const currency = trigger.querySelector<HTMLElement>(".qa-selector-trigger__currency");
 
+  const countryName = option.dataset.countryName || "No country context";
+  const currencyName = option.dataset.currencyName || currencyCode;
+
   if (media) media.textContent = countryCode || currencyCode || "FX";
-  if (country) country.textContent = option.dataset.countryName || "No country context";
-  if (currency) {
-    const currencyName = option.dataset.currencyName || currencyCode;
-    currency.textContent = `${currencyName} · ${currencyCode}`;
-  }
+  if (country) country.textContent = countryName;
+  if (currency) currency.textContent = `${currencyName} · ${currencyCode}`;
+
+  const roleLabel = side === "source" ? "source" : "destination";
+  trigger.setAttribute(
+    "aria-label",
+    `Change ${roleLabel} country or currency. Current ${roleLabel}: ${countryName}, ${currencyName} ${currencyCode}.`,
+  );
 
   const input = dialog.querySelector<HTMLInputElement>('input[type="search"]');
   if (input) input.value = "";

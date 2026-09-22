@@ -43,6 +43,7 @@ from apps.exchange.providers.base import (
     FxProviderUnavailable,
     FxProviderUnsupportedPair,
 )
+from apps.exchange.queries import search_currency_options
 from apps.exchange.series_presentation import (
     build_rate_series_component,
     build_then_now_component,
@@ -397,62 +398,55 @@ def picker_options(request: HttpRequest) -> HttpResponse:
         except ValueError:
             selected_date = None
 
-    currency_filter = (
-        Currency.objects.all() if historical_mode else Currency.objects.filter(is_active=True)
+    preferred_country_code = request.GET.get(f"{side}_country", "").upper().strip()
+    preferred_currency_code = request.GET.get(f"{side}_currency", "").upper().strip()
+    search_options = search_currency_options(
+        query=query,
+        historical_mode=historical_mode,
+        selected_date=selected_date,
+        preferred_country_code=preferred_country_code,
+        preferred_currency_code=preferred_currency_code,
     )
-    if historical_mode and selected_date is not None:
-        links = CountryCurrency.objects.on_date(selected_date).select_related("country", "currency")
-    elif historical_mode:
-        links = CountryCurrency.objects.select_related("country", "currency")
-    else:
-        links = CountryCurrency.objects.current().select_related("country", "currency")
-
-    if query:
-        from django.db.models import Q
-
-        currency_filter = currency_filter.filter(
-            Q(code__icontains=query) | Q(name__icontains=query)
+    options: list[dict[str, object]] = []
+    for option in search_options:
+        option_kind = "country" if option.country_context else "currency"
+        option_id = (
+            f"{side}-country-{option.country_code.lower()}-{option.currency_code.lower()}"
+            if option.country_context
+            else f"{side}-currency-{option.currency_code.lower()}"
         )
-        links = links.filter(
-            Q(country__iso2__icontains=query)
-            | Q(country__name__icontains=query)
-            | Q(currency__code__icontains=query)
-            | Q(currency__name__icontains=query)
+        label = (
+            f"{option.country_name} · {option.currency_name}"
+            if option.country_context
+            else f"{option.currency_name} · {option.currency_code}"
         )
+        meta = (
+            f"{option.country_code} · {option.currency_code}"
+            if option.country_context
+            else "Currency only"
+        )
+        current_selection = (
+            option.country_code == preferred_country_code
+            and option.currency_code == preferred_currency_code
+        )
+        if current_selection:
+            meta = f"Current selection · {meta}"
+        if option.historical:
+            meta += " · Historical"
 
-    options: list[dict[str, str]] = []
-    for currency in currency_filter.order_by("code")[:8]:
         options.append(
             {
-                "id": f"{side}-currency-{currency.code.lower()}",
-                "country_code": "",
-                "country_name": "",
-                "currency_code": currency.code,
-                "currency_name": currency.name,
-                "label": f"{currency.name} · {currency.code}",
-                "meta": "Currency only",
+                "id": option_id,
+                "kind": option_kind,
+                "country_code": option.country_code,
+                "country_name": option.country_name,
+                "currency_code": option.currency_code,
+                "currency_name": option.currency_name,
+                "label": label,
+                "meta": meta,
+                "historical": option.historical,
             }
         )
-
-    seen = {(option["country_code"], option["currency_code"]) for option in options}
-    for link in links.order_by("country__name", "currency__code")[:16]:
-        identity = (link.country.iso2, link.currency.code)
-        if identity in seen:
-            continue
-        seen.add(identity)
-        options.append(
-            {
-                "id": (f"{side}-country-{link.country.iso2.lower()}-{link.currency.code.lower()}"),
-                "country_code": link.country.iso2,
-                "country_name": link.country.name,
-                "currency_code": link.currency.code,
-                "currency_name": link.currency.name,
-                "label": f"{link.country.name} · {link.currency.name}",
-                "meta": f"{link.country.iso2} · {link.currency.code}",
-            }
-        )
-        if len(options) >= 20:
-            break
 
     return render(
         request,
@@ -553,6 +547,14 @@ def _build_then_now_enrichment(cleaned, series_result):
 
 
 def _series_error(exc: Exception) -> tuple[int, dict[str, str]]:
+    if isinstance(exc, HistoricalObservationUnavailable):
+        return 422, {
+            "title": "Historical trend cannot confirm the selected observation.",
+            "detail": (
+                "The selected observation falls outside the accepted observation window. "
+                "The original single-date conversion remains intact."
+            ),
+        }
     if isinstance(exc, (RateSeriesRangeError, HistoricalOutOfCoverage)):
         return 422, {
             "title": "Choose a supported historical range.",

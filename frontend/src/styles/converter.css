@@ -502,6 +502,43 @@
   }
 }
 
+@media (max-width: 20rem) {
+  .qa-converter-stage,
+  .qa-component-sample,
+  .qa-result,
+  .qa-workspace__stage,
+  .qa-workspace__context {
+    padding: 16px;
+  }
+
+  .qa-component-section {
+    margin-block-start: 48px;
+  }
+
+  .qa-amount-control {
+    gap: 8px;
+    padding-inline: 12px;
+  }
+
+  .qa-selector-trigger {
+    gap: 8px;
+    padding-inline: 8px;
+  }
+
+  .qa-preview-disclaimer {
+    max-inline-size: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .qa-result__output,
+  .qa-result__input,
+  .qa-rate-meta,
+  .qa-rate-meta dd {
+    overflow-wrap: anywhere;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .qa-swap-button:active,
   .qa-primary-button:active {
@@ -741,7 +778,13 @@
   }
 
   .qa-workspace__context {
+    gap: var(--qa-space-3);
     border-radius: var(--radius-md);
+  }
+
+  .qa-workspace__identity > p:not(.qa-workspace__role),
+  .qa-workspace__context .qa-selector-trigger__country {
+    display: none;
   }
 
   .qa-workspace__identity h3 {

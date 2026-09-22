@@ -714,9 +714,15 @@ Do not announce:
 - every keystroke;
 - all price cards.
 
-Potential result announcement:
+Result announcement contract:
 
 > 100 euros is approximately 17,450 Japanese yen. Reference rate effective 18 September 2026.
+
+Web implementation keeps one persistent live region outside the HTMX-swapped converter fragment.
+A successful `200` converter-panel swap supplies one concise announcement payload.
+Story/chart/context fragment swaps and failed `422/502/503` refreshes do not re-announce the
+preserved previous result. This preserves the invariant of at most one conversion announcement per
+completed successful update.
 
 ---
 

@@ -213,12 +213,17 @@ Do **not** compress the desktop split.
 Use task order:
 
 ```text
-Source country/currency
 Amount
 ↓
-Conversion result
+Source country/currency
 ↓
 Destination country/currency
+↓
+Rate date
+↓
+Convert
+↓
+Conversion result
 ↓
 Trust metadata
 ↓
@@ -227,7 +232,9 @@ Local meaning
 Explore
 ```
 
-The mobile experience preserves bilateral identity without requiring simultaneous two-column presentation.
+Both source and destination remain editable before the result because both are conversion inputs.
+The mobile experience preserves bilateral identity without requiring simultaneous two-column
+presentation or duplicate country/currency labels.
 
 ---
 

@@ -119,8 +119,24 @@ async function assertKeyboardFocus(page, surface) {
   if (surface === "converter" || surface === "current-converter") {
     await page.keyboard.press("Tab");
     const activeId = await page.evaluate(() => document.activeElement?.id ?? "");
-    const expected = surface === "converter" ? "workspace-amount" : "id_rate_mode_0";
+    const expected = surface === "converter" ? "workspace-amount" : "id_amount";
     assert(activeId === expected, `${surface}: unexpected second focus target ${activeId}`);
+
+    if (surface === "current-converter") {
+      for (const expectedId of [
+        "source-picker-trigger",
+        "swap-contexts",
+        "destination-picker-trigger",
+        "id_rate_mode_0",
+      ]) {
+        await page.keyboard.press("Tab");
+        const nextId = await page.evaluate(() => document.activeElement?.id ?? "");
+        assert(
+          nextId === expectedId,
+          `current-converter: expected focus on ${expectedId}, got ${nextId}`,
+        );
+      }
+    }
   }
 }
 
@@ -142,7 +158,30 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   await page.getByText("Enter zero or a positive amount.").waitFor();
 
   await page.locator("#source-picker-trigger").click();
+  const sourceDialog = page.locator('[data-picker-dialog="source"]');
+  const viewport = page.viewportSize();
+  if (viewport && viewport.width <= 480) {
+    const dialogBox = await sourceDialog.boundingBox();
+    assert(
+      dialogBox &&
+        dialogBox.x <= 1 &&
+        dialogBox.y <= 1 &&
+        Math.abs(dialogBox.width - viewport.width) <= 2 &&
+        Math.abs(dialogBox.height - viewport.height) <= 2,
+      "current-converter/mobile: picker must use the full viewport",
+    );
+  }
+
   const search = page.locator("#source-picker-search");
+  await page.locator("#source-picker-listbox").waitFor();
+  await page.waitForFunction(() => {
+    const first = document.querySelector("#source-picker-listbox [data-picker-option]");
+    return (
+      first?.getAttribute("data-country-code") === "FI" &&
+      first?.getAttribute("data-currency-code") === "EUR" &&
+      first.textContent?.includes("Current selection")
+    );
+  });
   await search.fill("JPY");
   await page.locator("#source-picker-listbox").waitFor();
   await page.waitForFunction(() => {
@@ -181,9 +220,25 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     new URL(page.url()).searchParams.get("convert") === "1",
     "current-converter: successful HTMX conversion did not push a bookmarkable URL",
   );
+  await page.waitForFunction(() =>
+    document.getElementById("conversion-announcer")?.textContent?.includes("12 JPY"),
+  );
+  assert(
+    (await page.locator("#conversion-announcer").count()) === 1,
+    "current-converter: expected exactly one persistent conversion announcer",
+  );
+  assert(
+    (await page.locator('[role="status"][aria-live="polite"]').count()) === 1,
+    "current-converter: duplicate polite status live regions would double-announce results",
+  );
 
   await page.getByRole("link", { name: "Everyday value" }).waitFor();
   await page.getByRole("link", { name: "Payment context" }).waitFor();
+  assert(
+    (await page.locator("#money-culture-story-slot[aria-live]").count()) === 0 &&
+      (await page.locator("#historical-trend-slot[aria-live]").count()) === 0,
+    "current-converter: large progressive fragments must not be live regions",
+  );
   await page.getByText("Cup of coffee", { exact: true }).waitFor();
   await page.getByText("Tokyo Metro regular ticket", { exact: true }).waitFor();
   await page.getByRole("heading", { name: "Paying in Japan" }).waitFor();
@@ -249,6 +304,19 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   const previousAmount = await page
     .locator("#current-conversion-result .qa-result__input")
     .innerText();
+  await page.evaluate(() => {
+    const announcer = document.getElementById("conversion-announcer");
+    if (!announcer) throw new Error("Missing conversion announcer");
+    window.__qaAnnouncerMutationCount = 0;
+    window.__qaAnnouncerObserver = new MutationObserver(() => {
+      window.__qaAnnouncerMutationCount += 1;
+    });
+    window.__qaAnnouncerObserver.observe(announcer, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+    });
+  });
   const invalidRefresh = waitForPost();
   await page.locator("#id_amount").fill("-1");
   const invalidRefreshResponse = await invalidRefresh;
@@ -266,6 +334,14 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     "current-converter: failed refresh replaced the previous successful result",
   );
   await page.getByText("Previous result — fix the changed inputs to update it.").waitFor();
+  const failedRefreshAnnouncements = await page.evaluate(() => {
+    window.__qaAnnouncerObserver?.disconnect();
+    return window.__qaAnnouncerMutationCount ?? 0;
+  });
+  assert(
+    failedRefreshAnnouncements === 0,
+    `current-converter: failed refresh mutated the success announcer ${failedRefreshAnnouncements} time(s)`,
+  );
 
   const correctedRefresh = waitForPost();
   await page.locator("#id_amount").fill("12");
@@ -276,8 +352,26 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   );
 
   await Promise.all([waitForPost(), page.locator("#swap-contexts").click()]);
+  await page.waitForFunction(() => document.querySelector(".htmx-request") === null);
   const focused = await page.evaluate(() => document.activeElement?.id ?? "");
   assert(focused === "swap-contexts", `current-converter: swap focus moved to ${focused}`);
+
+  const loadingState = await page.locator("#conversion-loading").evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      requestActive: element.classList.contains("htmx-request"),
+      opacity: style.opacity,
+      visibility: style.visibility,
+      display: style.display,
+    };
+  });
+  assert(
+    !loadingState.requestActive &&
+      (loadingState.opacity === "0" ||
+        loadingState.visibility === "hidden" ||
+        loadingState.display === "none"),
+    `current-converter: loading indicator remained visually active after swap: ${JSON.stringify(loadingState)}`,
+  );
 
   for (const message of consoleErrors.filter(
     (entry) =>
@@ -290,6 +384,11 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
 
 async function assertReducedMotion(page, surface) {
   await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.waitForFunction(
+    () => document.getAnimations().every((animation) => animation.playState !== "running"),
+    null,
+    { timeout: 500 },
+  );
   const state = await page.evaluate(() => ({
     matches: matchMedia("(prefers-reduced-motion: reduce)").matches,
     runningAnimations: document
@@ -311,11 +410,21 @@ async function assertForcedColors(page, surface) {
     `${surface}: forced-colors media emulation did not apply`,
   );
 
+  await page.evaluate(() => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  });
+  // Establish keyboard modality first. Headless Chromium can otherwise treat a direct
+  // programmatic focus after pointer-driven flows as not :focus-visible.
+  await page.keyboard.press("Tab");
   const focusTarget =
-    surface === "converter" ? page.locator("#workspace-amount") : page.locator(".qa-skip-link");
+    surface === "converter"
+      ? page.locator("#workspace-amount")
+      : surface === "current-converter"
+        ? page.locator("#id_amount")
+        : page.locator(".qa-skip-link");
   await focusTarget.focus();
 
-  const focusStyles = await focusTarget.evaluate((element) => {
+  const focusState = await focusTarget.evaluate((element) => {
     const candidates = [
       element,
       element.closest(".qa-amount-control"),
@@ -333,7 +442,7 @@ async function assertForcedColors(page, surface) {
       };
     });
   });
-  const hasVisibleFocus = focusStyles.some(
+  const hasVisibleFocus = focusState.some(
     (style) =>
       (style.outlineStyle !== "none" && style.outlineWidth !== "0px") || style.boxShadow !== "none",
   );
@@ -553,7 +662,11 @@ try {
         await assertConverterTransitionLayout(page);
       }
 
-      if (surface.name === "current-converter" && viewport.name === "wide-1440") {
+      if (
+        surface.name === "current-converter" &&
+        (viewport.name === "wide-1440" ||
+          (BROWSER_SCOPE === "full" && viewport.name === "mobile-390"))
+      ) {
         await assertCurrentConverterFlow(page, consoleErrors);
       }
 

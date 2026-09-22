@@ -8,6 +8,7 @@ from django.urls import reverse
 from apps.countries.models import Country, CountryCurrency, Currency
 from apps.exchange.domain import (
     DEFAULT_SOURCE_POLICY,
+    HistoricalObservationUnavailable,
     ObservationGranularity,
     RateQuote,
     RateSeries,
@@ -693,6 +694,28 @@ def test_historical_series_page_uses_bounded_one_year_range(client, reference_da
     assert gateway.calls[0][3] == date(2026, 9, 18)
     assert gateway.calls[0][4] is RateSeriesGrouping.DAILY
     quote_factory.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_historical_series_observation_gap_is_a_validation_state(client, reference_data):
+    with patch(
+        "apps.exchange.views.get_rate_series",
+        side_effect=HistoricalObservationUnavailable("outside accepted gap"),
+    ):
+        response = client.get(
+            reverse("historical_series"),
+            {
+                "base": "EUR",
+                "quote": "JPY",
+                "selected_date": "2026-09-18",
+                "period": "1y",
+            },
+            HTTP_HX_REQUEST="true",
+        )
+
+    assert response.status_code == 422
+    assert b"cannot confirm the selected observation" in response.content
+    assert b"single-date conversion remains intact" in response.content
 
 
 @pytest.mark.django_db

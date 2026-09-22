@@ -133,6 +133,7 @@
   <section class="qa-result"
            id="{{ component.id }}"
            aria-labelledby="{{ component.id }}-title">
+    <span data-conversion-announcement hidden>{{ component.announcement }}</span>
     <div class="qa-result__header">
       <h2 class="qa-result__title" id="{{ component.id }}-title">Conversion result</h2>
       {% with component=component.status %}

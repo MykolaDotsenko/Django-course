@@ -57,6 +57,15 @@
   margin-block-end: var(--qa-space-2);
 }
 
+.qa-chart-period-row {
+  display: flex;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--qa-space-2);
+}
+
 .qa-chart-period-control {
   display: flex;
   min-inline-size: 0;
@@ -96,6 +105,10 @@
 
 .qa-rate-series__custom {
   min-inline-size: 0;
+}
+
+.qa-rate-series__custom[open] {
+  flex: 1 0 100%;
 }
 
 .qa-rate-series__custom > summary {

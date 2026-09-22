@@ -165,8 +165,21 @@
 
 @media (max-width: 30rem) {
   .qa-picker-dialog {
-    width: calc(100% - 1rem);
-    max-height: calc(100vh - 1rem);
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .qa-picker-dialog__panel {
+    min-height: 100%;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    box-sizing: border-box;
+    padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+      max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
   }
 
   .qa-picker-dialog__header {
@@ -176,6 +189,10 @@
 
   .qa-picker-dialog__close {
     align-self: flex-start;
+  }
+
+  .qa-picker-results {
+    min-height: 0;
   }
 }
 

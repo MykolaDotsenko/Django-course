@@ -1023,28 +1023,36 @@ Avoid:
 
 Do not reproduce the desktop layout at narrow width.
 
-Recommended order:
+Recommended interaction order:
 
 ```text
-FROM
-Finland · EUR
 Amount
 
-↓
+FROM
+Finland · EUR
 
-Converted result
-
-↓
+↓ swap
 
 TO
 Japan · JPY
 
+Rate date
+Convert
+
+Converted result
 Trust metadata
 Everyday value
 Payment context
 Money & culture
 ```
 
-The visual transition may be subtle, but source and destination identity must remain clear.
+Destination selection is an input precondition, so the result must not visually appear before the
+destination control in the editing flow. The visual transition may be subtle, but source and
+destination identity must remain clear.
 
-The mobile page is successful when the user perceives one journey through two contexts without horizontal scrolling or duplicated controls.
+On compact layouts, avoid repeating the same country and currency wording in both the context heading
+and the picker trigger. Keep the country identity in the context heading and let the trigger emphasize
+the selectable currency; its accessible name still states the complete current selection.
+
+The mobile page is successful when the user perceives one journey through two contexts without
+horizontal scrolling or duplicated controls.
