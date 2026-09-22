@@ -1,4 +1,5 @@
 let restoreFocusId: string | null = null;
+let focusValidationSummaryAfterSwap = false;
 
 export function requestFocusRestore(id: string): void {
   restoreFocusId = id;
@@ -18,6 +19,10 @@ function enhanceAutoRefresh(form: HTMLFormElement): void {
   syncHistoricalDateField(form);
   if (form.dataset.autoRefreshWired === "true") return;
   form.dataset.autoRefreshWired = "true";
+
+  form.addEventListener("submit", (event) => {
+    focusValidationSummaryAfterSwap = (event as SubmitEvent).submitter !== null;
+  });
 
   let amountTimer: number | undefined;
 
@@ -131,17 +136,33 @@ document.addEventListener("DOMContentLoaded", enhanceCurrentConverterBehavior);
 document.addEventListener("htmx:afterSwap", (event) => {
   enhanceCurrentConverterBehavior();
   const detail = (event as CustomEvent<{ xhr?: XMLHttpRequest }>).detail;
-  announceConversionResult(event.target, detail.xhr?.status);
+  const status = detail.xhr?.status;
+  announceConversionResult(event.target, status);
 
+  const target = event.target;
+  const errorSummary =
+    target instanceof Element && target.id === "converter-panel"
+      ? target.querySelector<HTMLElement>("#conversion-error-summary")
+      : null;
+  if (status === 422 && focusValidationSummaryAfterSwap && errorSummary) {
+    errorSummary.focus();
+    focusValidationSummaryAfterSwap = false;
+    restoreFocusId = null;
+    return;
+  }
+
+  focusValidationSummaryAfterSwap = false;
   if (!restoreFocusId) return;
   document.getElementById(restoreFocusId)?.focus();
   restoreFocusId = null;
 });
 
 document.addEventListener("htmx:responseError", () => {
+  focusValidationSummaryAfterSwap = false;
   restoreFocusId = null;
 });
 
 document.addEventListener("htmx:sendError", () => {
+  focusValidationSummaryAfterSwap = false;
   restoreFocusId = null;
 });
