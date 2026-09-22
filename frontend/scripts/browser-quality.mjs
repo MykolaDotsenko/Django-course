@@ -272,6 +272,19 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   const previousAmount = await page
     .locator("#current-conversion-result .qa-result__input")
     .innerText();
+  await page.evaluate(() => {
+    const announcer = document.getElementById("conversion-announcer");
+    if (!announcer) throw new Error("Missing conversion announcer");
+    window.__qaAnnouncerMutationCount = 0;
+    window.__qaAnnouncerObserver = new MutationObserver(() => {
+      window.__qaAnnouncerMutationCount += 1;
+    });
+    window.__qaAnnouncerObserver.observe(announcer, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+    });
+  });
   const invalidRefresh = waitForPost();
   await page.locator("#id_amount").fill("-1");
   const invalidRefreshResponse = await invalidRefresh;
@@ -289,6 +302,14 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     "current-converter: failed refresh replaced the previous successful result",
   );
   await page.getByText("Previous result — fix the changed inputs to update it.").waitFor();
+  const failedRefreshAnnouncements = await page.evaluate(() => {
+    window.__qaAnnouncerObserver?.disconnect();
+    return window.__qaAnnouncerMutationCount ?? 0;
+  });
+  assert(
+    failedRefreshAnnouncements === 0,
+    `current-converter: failed refresh mutated the success announcer ${failedRefreshAnnouncements} time(s)`,
+  );
 
   const correctedRefresh = waitForPost();
   await page.locator("#id_amount").fill("12");
