@@ -66,6 +66,21 @@ def test_composer_builds_currency_eras_without_inventing_filler(context_data):
 
 
 @pytest.mark.django_db
+def test_composer_suppresses_credentialed_currency_relationship_source(context_data):
+    fi, _jp, eur, _jpy = context_data
+    link = CountryCurrency.objects.get(country=fi, currency=eur)
+    link.source = "https://user:secret@example.org/finland-euro"
+    link.save(update_fields=("source",))
+
+    story = compose_story(_request())
+
+    source_chapter = next(
+        chapter for chapter in story.chapters if chapter.kind == "source_currency_era"
+    )
+    assert source_chapter.source_refs == ()
+
+
+@pytest.mark.django_db
 def test_composer_adds_reviewed_story_moment(context_data):
     fi, _jp, eur, _jpy = context_data
     moment = StoryMoment.objects.create(

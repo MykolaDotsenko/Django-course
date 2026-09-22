@@ -83,6 +83,43 @@ def test_published_profile_requires_https_provenance():
 
 
 @pytest.mark.django_db
+def test_published_profile_rejects_credentialed_https_provenance():
+    japan = Country.objects.create(iso2="JP", iso3="JPN", name="Japan")
+    profile = CulturalProfile(
+        country=japan,
+        payment_customs="Cards.",
+        source_name="Source",
+        source_url="https://user:secret@example.org/payment",
+        verified_at=timezone.now(),
+        is_published=True,
+    )
+
+    with pytest.raises(ValidationError, match="credential-free HTTPS"):
+        profile.full_clean()
+
+
+@pytest.mark.django_db
+def test_published_typical_price_rejects_credentialed_https_provenance():
+    japan = Country.objects.create(iso2="JP", iso3="JPN", name="Japan")
+    jpy = Currency.objects.create(code="JPY", name="Japanese yen")
+    price = TypicalPrice(
+        country=japan,
+        category=TypicalPriceCategory.COFFEE,
+        label="Coffee",
+        amount_low=Decimal("600"),
+        currency=jpy,
+        source_name="Source",
+        source_url="https://user:secret@example.org/price",
+        observed_at=timezone.localdate(),
+        verified_at=timezone.now(),
+        is_published=True,
+    )
+
+    with pytest.raises(ValidationError, match="credential-free HTTPS"):
+        price.full_clean()
+
+
+@pytest.mark.django_db
 def test_typical_price_rejects_reversed_range():
     japan = Country.objects.create(iso2="JP", iso3="JPN", name="Japan")
     jpy = Currency.objects.create(code="JPY", name="Japanese yen")
@@ -114,6 +151,39 @@ def test_destination_context_preserves_city_scope_and_provenance(japan_context):
     assert len(context.prices) == 1
     assert context.prices[0].scope_label == "Tokyo"
     assert context.prices[0].source_name == "Tokyo Metro"
+
+
+@pytest.mark.django_db
+def test_destination_context_suppresses_invalid_published_provenance(japan_context):
+    japan, jpy, profile, price = japan_context
+    profile.source_url = "https://user:secret@example.org/payment"
+    profile.save(update_fields=("source_url",))
+    price.source_url = "https://user:secret@example.org/fare"
+    price.save(update_fields=("source_url",))
+    fallback = TypicalPrice.objects.create(
+        country=japan,
+        city="Tokyo",
+        category=TypicalPriceCategory.CASUAL_MEAL,
+        label="Simple meal",
+        amount_low=Decimal("900"),
+        currency=jpy,
+        source_name="Valid fallback",
+        source_url="https://example.org/meal",
+        observed_at=timezone.localdate(),
+        verified_at=timezone.now(),
+        display_order=200,
+        is_published=True,
+    )
+
+    context = build_destination_context(
+        country_code="JP",
+        converted_amount=Decimal("17450"),
+        quote_currency="JPY",
+    )
+
+    assert context is not None
+    assert context.payment is None
+    assert [item.label for item in context.prices] == [fallback.label]
 
 
 @pytest.mark.django_db

@@ -7,6 +7,8 @@ from django.core.validators import MaxLengthValidator, MaxValueValidator, MinVal
 from django.db import models
 from django.db.models import Q
 
+from apps.culture.provenance import ProvenanceUrlError, validate_provenance_url
+
 
 class StoryMomentCategory(models.TextChoices):
     CURRENCY_INTRODUCTION = "currency_introduction", "Currency introduction"
@@ -224,8 +226,10 @@ class CulturalProfile(models.Model):
             raise ValidationError(
                 "Published cultural profiles require source name, HTTPS source URL and verification."
             )
-        if not self.source_url.startswith("https://"):
-            raise ValidationError({"source_url": "Published cultural profiles require HTTPS."})
+        try:
+            validate_provenance_url(self.source_url)
+        except ProvenanceUrlError as exc:
+            raise ValidationError({"source_url": str(exc)}) from exc
         if not any(
             value.strip()
             for value in (
@@ -333,8 +337,10 @@ class TypicalPrice(models.Model):
             raise ValidationError(
                 "Published typical prices require source name, HTTPS source URL and verification."
             )
-        if not self.source_url.startswith("https://"):
-            raise ValidationError({"source_url": "Published typical prices require HTTPS."})
+        try:
+            validate_provenance_url(self.source_url)
+        except ProvenanceUrlError as exc:
+            raise ValidationError({"source_url": str(exc)}) from exc
 
     @property
     def scope_label(self) -> str:

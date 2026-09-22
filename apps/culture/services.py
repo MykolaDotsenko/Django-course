@@ -4,7 +4,6 @@ import re
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from urllib.parse import urlsplit
 
 from django.core.exceptions import ValidationError
 from django.db.models import Q
@@ -18,6 +17,11 @@ from apps.culture.models import (
     StoryMomentCategory,
     StoryMomentStatus,
     TypicalPrice,
+)
+from apps.culture.provenance import (
+    ProvenanceUrlError,
+    is_valid_provenance_url,
+    validate_provenance_url,
 )
 
 _CAUSAL_RE = re.compile(
@@ -40,11 +44,12 @@ class StoryPublicationError(ValueError):
 
 
 def _validate_https_url(value: str) -> None:
-    parsed = urlsplit(value)
-    if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
+    try:
+        validate_provenance_url(value)
+    except ProvenanceUrlError as exc:
         raise StoryPublicationError(
             "Story source URL must be an absolute credential-free HTTPS URL."
-        )
+        ) from exc
 
 
 def _validate_publishable(moment: StoryMoment) -> None:
@@ -151,11 +156,18 @@ def select_story_moments(
     queryset = (
         StoryMoment.objects.published()
         .relevant_on(selected_date, historical=historical)
-        .filter(filters)
+        .filter(filters, verified_at__isnull=False)
+        .exclude(source_name="")
+        .exclude(source_url="")
         .prefetch_related("countries", "currencies")
         .distinct()
     )
-    return tuple(queryset[:limit])
+    candidate_limit = min(limit * 2, 16)
+    return tuple(
+        moment
+        for moment in queryset[:candidate_limit]
+        if is_valid_provenance_url(moment.source_url)
+    )[:limit]
 
 
 def currency_era_links(
@@ -298,7 +310,11 @@ def build_destination_context(
         .first()
     )
     payment = None
-    if profile is not None:
+    if (
+        profile is not None
+        and profile.source_name.strip()
+        and is_valid_provenance_url(profile.source_url)
+    ):
         payment = PaymentContext(
             summary=profile.summary,
             payment_customs=profile.payment_customs,
@@ -312,6 +328,7 @@ def build_destination_context(
         )
 
     cutoff = selected_date - PRICE_CONTEXT_MAX_AGE
+    price_candidate_limit = min(price_limit * 2, 12)
     price_rows = (
         TypicalPrice.objects.filter(
             country=country,
@@ -324,7 +341,7 @@ def build_destination_context(
         .exclude(source_name="")
         .exclude(source_url="")
         .select_related("country", "currency")
-        .order_by("display_order", "city", "label", "pk")[:price_limit]
+        .order_by("display_order", "city", "label", "pk")[:price_candidate_limit]
     )
     prices = tuple(
         TypicalPriceContext(
@@ -348,7 +365,8 @@ def build_destination_context(
             ),
         )
         for row in price_rows
-    )
+        if row.source_name.strip() and is_valid_provenance_url(row.source_url)
+    )[:price_limit]
 
     return DestinationContext(
         country_code=country.iso2,

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
-from urllib.parse import urlsplit
 
 from apps.culture.models import StoryMoment
+from apps.culture.provenance import is_valid_provenance_url
 from apps.culture.services import currency_era_links, select_story_moments
 
 
@@ -112,7 +112,7 @@ def _currency_era_chapter(link, *, side: str) -> StoryChapter:
         f"{role_text}{date_text}."
     )
     source_refs: tuple[StorySourceRef, ...] = ()
-    if _is_https(link.source):
+    if is_valid_provenance_url(link.source):
         source_refs = (StorySourceRef(label="Currency relationship source", url=link.source),)
 
     return StoryChapter(
@@ -158,8 +158,3 @@ def _temporal_scope(start: date | None, end: date | None) -> str:
     if end:
         return f"through {end.isoformat()}"
     return "undated sourced context"
-
-
-def _is_https(value: str) -> bool:
-    parsed = urlsplit(value)
-    return parsed.scheme == "https" and bool(parsed.hostname)
