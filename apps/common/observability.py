@@ -13,9 +13,7 @@ _REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 _SERVICE_NAME = "cultural-currency-converter"
 
 _REDACTED = "[REDACTED]"
-_URI_CREDENTIALS_RE = re.compile(
-    r"(?P<scheme>[A-Za-z][A-Za-z0-9+.-]*://)(?P<userinfo>[^\s/@]+)@"
-)
+_URI_CREDENTIALS_RE = re.compile(r"(?P<scheme>[A-Za-z][A-Za-z0-9+.-]*://)(?P<userinfo>[^\s/@]+)@")
 _BEARER_TOKEN_RE = re.compile(r"(?i)\bBearer\s+[^\s,;]+")
 _QUERY_SECRET_RE = re.compile(
     r"(?i)(?P<prefix>[?&](?:api[_-]?key|access[_-]?token|refresh[_-]?token|"
@@ -25,7 +23,7 @@ _QUERY_SECRET_RE = re.compile(
 _NAMED_SECRET_RE = re.compile(
     r"(?i)(?P<prefix>\b(?:(?:[A-Za-z0-9]+_)*api[_-]?key|access[_-]?token|"
     r"refresh[_-]?token|client[_-]?secret|token|wskey|secret|password)"
-    r"\s*[:=]\s*[\"']?)(?P<value>[^\s,;\"']+)"
+    r"\s*[:=]\s*[\"']?)(?P<value>[^\s,;\"'&?#]+)"
 )
 
 _LOG_FIELDS = (
@@ -102,9 +100,7 @@ class JsonFormatter(logging.Formatter):
         for field_name in _LOG_FIELDS:
             value = getattr(record, field_name, None)
             if value is not None:
-                payload[field_name] = (
-                    redact_log_text(value) if isinstance(value, str) else value
-                )
+                payload[field_name] = redact_log_text(value) if isinstance(value, str) else value
 
         if record.exc_info:
             payload["exception"] = redact_log_text(self.formatException(record.exc_info))
