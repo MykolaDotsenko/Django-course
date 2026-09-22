@@ -50,6 +50,7 @@ from apps.exchange.services import (
     get_rate_series,
     quote_conversion,
 )
+from apps.travel.queries import is_user_favourite
 
 logger = logging.getLogger("cultural_currency.exchange")
 
@@ -351,6 +352,16 @@ def converter(request: HttpRequest) -> HttpResponse:
         and result is None
         and response_status in {422, 502, 503}
     )
+    account_favourite_saved = False
+    if result is not None and request.user.is_authenticated:
+        account_favourite_saved = is_user_favourite(
+            request.user,
+            source_currency=form.cleaned_data["source_currency"],
+            destination_currency=form.cleaned_data["destination_currency"],
+            source_country=form.cleaned_data.get("source_country", ""),
+            destination_country=form.cleaned_data.get("destination_country", ""),
+        )
+
     context = build_converter_context(
         form,
         result=result,
@@ -361,6 +372,7 @@ def converter(request: HttpRequest) -> HttpResponse:
         historical_currency_suggestions=historical_suggestions,
         destination_context_component=destination_context_component,
     )
+    context["account_favourite_saved"] = account_favourite_saved
     fragment = _is_htmx(request) and not _is_history_restore(request)
     template = "components/converter/current_panel.html" if fragment else "pages/converter.html"
     response = render(request, template, context, status=response_status)
