@@ -366,6 +366,11 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
 
 async function assertReducedMotion(page, surface) {
   await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.waitForFunction(
+    () => document.getAnimations().every((animation) => animation.playState !== "running"),
+    null,
+    { timeout: 500 },
+  );
   const state = await page.evaluate(() => ({
     matches: matchMedia("(prefers-reduced-motion: reduce)").matches,
     runningAnimations: document
