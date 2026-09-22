@@ -470,15 +470,27 @@ Use a simple conceptual order:
 Tailwind base
 → Quiet Atlas tokens
 → global base defaults
-→ utilities
-→ rare complex custom component CSS
+→ project-owned semantic component CSS
+→ narrow utilities / one-off layout helpers
 ```
 
-Avoid a large handcrafted BEM component framework on top of Tailwind.
+Tailwind is the build, reset, token and utility foundation; it is **not** a requirement to turn
+server-rendered templates into long utility-class strings. Stable product components may use the
+project-owned `.qa-*` semantic class vocabulary when that keeps state, responsive and accessibility
+rules coherent across Django templates and HTMX fragments.
 
-Avoid `@apply` as a default abstraction mechanism.
+The `.qa-*` layer must remain token-driven and capability-oriented rather than becoming a generic
+third-party-style component framework:
 
-If a repeated visual concept is truly a component, prefer a Django template partial.
+- keep selectors shallow and predictable;
+- keep component styles grouped by product surface/responsibility;
+- reuse Quiet Atlas tokens instead of repeating raw colours/radii/spacing;
+- do not recreate generic layout utilities that Tailwind already solves cleanly;
+- do not use `@apply` as a default abstraction mechanism;
+- keep reusable HTML anatomy in Django template partials/components.
+
+A repeated visual concept should therefore have one semantic template/component contract and one
+intentional style owner, rather than duplicated utility recipes or ad-hoc selectors.
 
 ---
 

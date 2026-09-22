@@ -168,6 +168,7 @@ Run the core CI-equivalent quality gates:
 ```bash
 ruff format --check apps config scripts manage.py
 ruff check apps config scripts manage.py
+djlint templates --check
 python manage.py check
 coverage erase
 coverage run -m pytest -q

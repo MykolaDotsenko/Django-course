@@ -43,9 +43,14 @@ Reasons:
 
 Use Tailwind 4 if the documented browser support matches project targets.
 
-Do not introduce a component framework by default.
+Tailwind is the CSS build/reset/token/utility foundation, not a utility-only rendering mandate.
+Quiet Atlas may expose project-owned semantic `.qa-*` component classes for stable Django/HTMX
+surfaces when that keeps responsive, state and accessibility behavior coherent.
 
-Design semantics live in tokens/components, not raw utility duplication.
+Do not introduce a third-party component framework by default, and do not grow a parallel generic
+component framework. Semantic component CSS must stay token-driven, shallow and tied to real product
+components. Design semantics live in tokens/components, not raw utility duplication or repeated raw
+CSS values.
 
 ---
 
@@ -630,6 +635,8 @@ tailwindcss
 rather than an extra PostCSS pipeline.
 
 Quiet Atlas tokens use Tailwind 4 CSS-first `@theme` plus constrained CSS custom properties.
+Project-owned semantic component CSS consumes those tokens and coexists with Tailwind utilities;
+`@apply` is not the default abstraction mechanism.
 
 Browser baseline follows Tailwind 4's modern-browser requirements.
 

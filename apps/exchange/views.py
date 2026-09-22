@@ -208,14 +208,6 @@ def _conversion_error(
                 "observation frequency. Choose another date."
             ),
         }
-    if isinstance(exc, HistoricalObservationUnavailable):
-        return 422, {
-            "title": "Historical trend cannot confirm the selected observation.",
-            "detail": (
-                "The selected normalized quote is outside the accepted observation window. "
-                "The original conversion remains intact."
-            ),
-        }
     if isinstance(exc, FxProviderUnsupportedPair):
         if historical:
             return {
@@ -628,19 +620,13 @@ def historical_series(request: HttpRequest) -> HttpResponse:
         "series_component": component,
         "series_error": error,
     }
-    if _is_htmx(request):
-        return render(
-            request,
-            "components/converter/rate_series.html",
-            context,
-            status=response_status,
-        )
-    return render(
-        request,
-        "pages/historical_series.html",
-        context,
-        status=response_status,
+    fragment = _is_htmx(request)
+    template = (
+        "components/converter/rate_series.html" if fragment else "pages/historical_series.html"
     )
+    response = render(request, template, context, status=response_status)
+    patch_vary_headers(response, ["HX-Request"])
+    return response
 
 
 @require_http_methods(["POST"])
@@ -673,7 +659,7 @@ def conversion_explanation(request: HttpRequest) -> HttpResponse:
         "explanation": explanation,
         "explanation_error": explanation_error,
     }
-    fragment = request.headers.get("HX-Request") == "true"
+    fragment = _is_htmx(request)
     template = (
         "components/converter/explanation.html" if fragment else "pages/conversion_explanation.html"
     )

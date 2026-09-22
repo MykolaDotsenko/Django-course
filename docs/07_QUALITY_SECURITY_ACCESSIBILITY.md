@@ -303,7 +303,7 @@ Selected:
 - Biome 2 for TypeScript/JavaScript/JSON linting and formatting;
 - djLint for Django templates;
 - Vite production build;
-- Playwright;
+- Playwright browser APIs through the repository-owned browser-quality harness;
 - `@axe-core/playwright`.
 
 Do not add ESLint + Prettier on top of Biome unless a concrete unsupported rule/workflow requires them.
@@ -324,16 +324,20 @@ npm run build
 Template gate:
 
 ```text
-djlint --check ...
+djlint templates --check
 ```
 
 Browser gate:
 
 ```text
-playwright test
+npm run browser:quality
 ```
 
-Axe scans run inside representative Playwright states.
+The browser gate is a repository-owned Playwright harness rather than a separate
+`@playwright/test` suite. It launches Chromium/Firefox/WebKit according to the CI matrix,
+runs the documented high-value interaction and accessibility checks, records screenshots and
+performance evidence, and fails on console errors or budget regressions. Axe scans run inside
+representative Playwright states.
 
 ## 19. Vite integration tests
 

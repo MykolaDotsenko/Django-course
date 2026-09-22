@@ -713,6 +713,7 @@ def test_historical_series_htmx_returns_fragment(client, reference_data):
     assert response.status_code == 200
     assert b"<html" not in response.content
     assert b'id="historical-trend"' in response.content
+    assert "HX-Request" in response.get("Vary", "")
     assert b"View data table" in response.content
 
 

@@ -984,7 +984,8 @@ Accessibility text alone is not enough.
 
 ## 50. Release-owned static media integration
 
-The current Quiet Atlas static pack contains 23 release-owned SVG assets.
+The current Quiet Atlas static directory contains **28 release-owned SVG files**: 23 canonical
+semantic illustrations plus 5 responsive/social delivery derivatives.
 
 Implementation rules:
 

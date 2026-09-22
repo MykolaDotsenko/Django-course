@@ -323,7 +323,7 @@ Development/test:
 
 ```text
 @biomejs/biome
-@playwright/test
+playwright
 @axe-core/playwright
 ```
 
