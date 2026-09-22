@@ -13,7 +13,8 @@
       <a class="qa-secondary-button" href="{% url 'converter' %}">Converter</a>
     </div>
 
-    <section class="qa-account-section" aria-labelledby="recent-history-privacy-title">
+    <section class="qa-account-section"
+             aria-labelledby="recent-history-privacy-title">
       <p class="qa-foundation-kicker">Privacy preference</p>
       <h2 id="recent-history-privacy-title">Cross-device recent history</h2>
       {% if recent_history_enabled %}
@@ -42,7 +43,6 @@
         </form>
       {% endif %}
     </section>
-
     <section class="qa-account-danger" aria-labelledby="account-privacy-title">
       <h2 id="account-privacy-title">Delete account</h2>
       <p>
