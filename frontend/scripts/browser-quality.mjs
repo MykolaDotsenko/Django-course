@@ -906,7 +906,10 @@ async function assertNoJavaScriptSavedStateFallback(browser) {
     await page.locator("#current-conversion-result").waitFor();
 
     const saveButton = page.locator("[data-save-pair]");
-    assert((await saveButton.count()) === 1, "no-js converter is missing the save enhancement marker");
+    assert(
+      (await saveButton.count()) === 1,
+      "no-js converter is missing the save enhancement marker",
+    );
     assert(await saveButton.isHidden(), "no-js converter exposed an inert Save pair button");
     assert(
       await page.getByRole("link", { name: "Saved & recent" }).isVisible(),
