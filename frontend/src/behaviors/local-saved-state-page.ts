@@ -232,14 +232,22 @@ function setStorageStatus(page: HTMLElement, read: ReadResult, overrideMessage =
   if (!status) return;
 
   if (overrideMessage) {
+    status.dataset.storageTone = "feedback";
+    status.setAttribute("aria-live", "polite");
     status.textContent = overrideMessage;
   } else if (read.status === "unavailable") {
+    status.dataset.storageTone = "warning";
+    status.setAttribute("aria-live", "polite");
     status.textContent =
       "Browser storage is unavailable. Saved pairs and recent history are disabled; conversion still works.";
   } else if (read.status === "recovered") {
+    status.dataset.storageTone = "warning";
+    status.setAttribute("aria-live", "polite");
     status.textContent =
       "Some local saved data was unreadable or outdated and has been ignored. Nothing was sent to the server.";
   } else {
+    status.dataset.storageTone = "neutral";
+    status.setAttribute("aria-live", "off");
     status.textContent = `Stored locally in this browser · ${read.state.favourites.length} saved · ${read.state.recent.length} recent.`;
   }
 }
@@ -255,8 +263,16 @@ function renderSavedPage(overrideMessage = ""): void {
   const clearFavourites = page.querySelector<HTMLButtonElement>("[data-clear-favourites]");
   const clearRecents = page.querySelector<HTMLButtonElement>("[data-clear-recents]");
   const unavailable = read.status === "unavailable";
-  if (clearFavourites) clearFavourites.disabled = unavailable || read.state.favourites.length === 0;
-  if (clearRecents) clearRecents.disabled = unavailable || read.state.recent.length === 0;
+  if (clearFavourites) {
+    const canClearFavourites = !unavailable && read.state.favourites.length > 0;
+    clearFavourites.hidden = !canClearFavourites;
+    clearFavourites.disabled = !canClearFavourites;
+  }
+  if (clearRecents) {
+    const canClearRecents = !unavailable && read.state.recent.length > 0;
+    clearRecents.hidden = !canClearRecents;
+    clearRecents.disabled = !canClearRecents;
+  }
 
   renderFavourites(page, read.state, converterUrl);
   renderRecents(page, read.state, converterUrl);

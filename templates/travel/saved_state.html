@@ -20,12 +20,10 @@
   <div class="qa-saved-state"
        data-local-saved-state-page
        data-converter-url="{% url 'converter' %}">
-    <div class="qa-inline-alert qa-saved-state__storage-note"
-         data-local-storage-status
-         role="status"
-         aria-live="polite">
-      <p>Checking browser storage…</p>
-    </div>
+    <p class="qa-saved-state__storage-note"
+       data-local-storage-status
+       data-storage-tone="neutral"
+       aria-live="off">Checking browser storage…</p>
     <section class="qa-saved-section" aria-labelledby="saved-pairs-title">
       <div class="qa-saved-section__heading">
         <div>
@@ -35,7 +33,8 @@
         </div>
         <button class="qa-secondary-button"
                 type="button"
-                data-clear-favourites>Clear saved pairs</button>
+                data-clear-favourites
+                hidden>Clear saved pairs</button>
       </div>
       <p class="qa-saved-empty"
          data-favourites-empty>No saved pairs yet. Save a pair after a conversion for quicker access.</p>
@@ -50,7 +49,8 @@
         </div>
         <button class="qa-secondary-button"
                 type="button"
-                data-clear-recents>Clear recent history</button>
+                data-clear-recents
+                hidden>Clear recent history</button>
       </div>
       <p class="qa-saved-empty" data-recents-empty>No recent conversions in this browser yet.</p>
       <div class="qa-saved-list" data-recents-list></div>

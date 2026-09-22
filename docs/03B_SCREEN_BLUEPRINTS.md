@@ -709,6 +709,12 @@ Rows/cards contain:
 - quick Convert
 - remove
 
+Bulk clear actions appear only when their corresponding collection contains data. Empty state should
+not be visually dominated by disabled destructive controls.
+
+Normal local-storage metadata is quiet secondary text. Recovery or unavailable-storage states may
+use a stronger inline status surface because user action or data recovery is affected.
+
 No dashboard charts by default.
 
 ---
