@@ -820,6 +820,14 @@ def test_historical_conversion_exposes_trend_entry_for_actual_observation(client
     assert b"selected_date=1998-06-12" in response.content
     assert b"requested_date=1998-06-14" in response.content
 
+    content = response.content
+    result_index = content.index(b'id="current-conversion-result"')
+    context_index = content.index(b'class="qa-destination-context"')
+    story_index = content.index(b'class="qa-story-entry"')
+    historical_index = content.index(b'class="qa-historical-trend-entry"')
+    save_index = content.index(b'class="qa-local-save-control"')
+    assert result_index < context_index < story_index < historical_index < save_index
+
 
 @pytest.mark.django_db
 def test_same_currency_historical_result_does_not_offer_redundant_trend(client, reference_data):

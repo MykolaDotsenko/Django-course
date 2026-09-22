@@ -279,6 +279,46 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
 
   await page.getByRole("link", { name: "Everyday value" }).waitFor();
   await page.getByRole("link", { name: "Payment context" }).waitFor();
+
+  const exploreLabels = (await page.locator(".qa-explore-nav a").allTextContents()).map((label) =>
+    label.trim(),
+  );
+  assert(
+    JSON.stringify(exploreLabels) ===
+      JSON.stringify(["Everyday value", "Payment context", "Money & culture"]),
+    `current-converter: Explore must expose exactly the three contextual paths, got ${JSON.stringify(exploreLabels)}`,
+  );
+
+  const postResultHierarchy = await page.evaluate(() => {
+    const result = document.querySelector("#current-conversion-result");
+    const destinationContext = document.querySelector(".qa-destination-context");
+    const story = document.querySelector(".qa-story-entry");
+    const historical = document.querySelector(".qa-historical-trend-entry");
+    const save = document.querySelector(".qa-local-save-control");
+    const precedes = (first, second) =>
+      Boolean(
+        first &&
+          second &&
+          (first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0,
+      );
+
+    return {
+      complete: Boolean(result && destinationContext && save),
+      resultBeforeContext: precedes(result, destinationContext),
+      contextBeforeSave: precedes(destinationContext, save),
+      storyBeforeSave: story ? precedes(story, save) : true,
+      historicalBeforeSave: historical ? precedes(historical, save) : true,
+    };
+  });
+  assert(
+    postResultHierarchy.complete &&
+      postResultHierarchy.resultBeforeContext &&
+      postResultHierarchy.contextBeforeSave &&
+      postResultHierarchy.storyBeforeSave &&
+      postResultHierarchy.historicalBeforeSave,
+    `current-converter: post-result hierarchy drifted: ${JSON.stringify(postResultHierarchy)}`,
+  );
+
   assert(
     (await page.locator("#money-culture-story-slot[aria-live]").count()) === 0 &&
       (await page.locator("#historical-trend-slot[aria-live]").count()) === 0,

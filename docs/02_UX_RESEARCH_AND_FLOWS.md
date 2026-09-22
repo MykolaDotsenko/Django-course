@@ -333,7 +333,9 @@ P0 mobile may intentionally contain fewer tabs.
 8. Save/share actions
 ```
 
-The order is based on decision value, not on content richness.
+The order is based on decision value, not on content richness. Result-local save/share controls must
+not interrupt the practical/contextual interpretation path; they belong after available contextual
+and historical interpretation in document order.
 
 ---
 
@@ -1408,13 +1410,17 @@ Do not use culture to alter controls, validation, focus order or component anato
 
 ### 30.3 Compact Explore layer
 
-After successful conversion, expose at most three first-level deeper paths:
+After successful conversion, expose at most three first-level contextual Explore paths:
 
 ```text
 Everyday value
 Payment context
 Money & culture
 ```
+
+This cap applies to the contextual Explore navigation. Recovery actions, Save/return utilities,
+historical analysis and the optional bounded explanation capability remain separate product actions;
+they must not be styled or labelled as additional Explore categories.
 
 Do not show a dense cultural dashboard before the user has understood the conversion.
 
