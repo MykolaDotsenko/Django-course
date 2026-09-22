@@ -72,6 +72,9 @@ jobs:
       - name: Ruff lint
         run: ruff check apps config scripts manage.py
 
+      - name: Django template lint
+        run: djlint templates --check
+
       - name: Django system check
         run: python manage.py check
 
