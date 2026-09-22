@@ -408,8 +408,10 @@ Automated CI now uses:
 - WebKit — high-value converter/rate-series smoke flow plus axe/overflow/reduced-motion checks.
 
 This split verifies cross-engine behavior without tripling the most expensive visual/performance
-lane. Manual release review still includes current Chromium, Firefox and WebKit/Safari
-representation.
+lane. Browser-quality measurements wait for loaded document fonts and a settled animation-frame
+layout before overflow/reflow assertions; this removes font-swap timing noise without widening the
+accepted reflow threshold. Manual release review still includes current Chromium, Firefox and
+WebKit/Safari representation.
 
 Product baseline follows Tailwind 4:
 
