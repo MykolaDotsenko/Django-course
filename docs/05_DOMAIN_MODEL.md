@@ -1,891 +1,130 @@
 # Domain Model
 
-## 1. Domain principles
-
-The model must distinguish:
-
-- currency from country;
-- rate from converted amount;
-- authoritative facts from approximate context;
-- current currency relationships from historical ones;
-- anonymous browser state from user-owned durable data.
-
-## 2. Country
-
-Suggested fields:
-
-```text
-Country
-- iso2: char(2), unique
-- iso3: char(3), unique
-- name
-- official_name
-- capital
-- region
-- subregion
-- flag_asset / flag_reference
-- is_active
-- metadata_source
-- metadata_verified_at
-```
-
-Avoid storing every field offered by a third-party countries API.
-
-## 3. Currency
-
-```text
-Currency
-- code: ISO-style code, unique
-- name
-- symbol
-- minor_units
-- is_active
-```
-
-Currency code is the stable public identifier.
-
-## 4. CountryCurrency
-
-A many-to-many relationship is required because:
-
-- one currency can be shared by multiple countries;
-- countries may have historic currencies;
-- some jurisdictions use multiple currencies.
-
-```text
-CountryCurrency
-- country
-- currency
-- is_primary
-- valid_from
-- valid_to
-- source
-```
-
-Constraint goals:
-
-- prevent duplicate active relationships;
-- support historical relationships without overwriting history.
-
-## 5. RateQuote value object
-
-A fetched rate is conceptually:
-
-```text
-RateQuote
-- base_currency
-- quote_currency
-- rate: Decimal
-- effective_date/time
-- fetched_at
-- provider
-- provider_sources[]
-- stale: bool
-```
-
-P0 does not need to persist every quote in the database.
-
-Cache normalized quotes; persist only when a durable audit/history requirement is introduced.
-
-## 6. Conversion result
-
-```text
-Conversion
-- input amount
-- base
-- quote
-- rate
-- output amount
-- rate effective timestamp/date
-- provider attribution
-```
-
-Conversion is a domain calculation, not necessarily a database row.
-
-## 7. CulturalProfile
-
-```text
-CulturalProfile
-- country: one-to-one
-- summary
-- payment_customs
-- cash_usage
-- tipping
-- atm_notes
-- dcc_warning
-- source_name
-- source_url
-- source_notes
-- verified_at
-- is_published
-```
-
-Large free-text blobs should remain structured enough that the UI can render sections independently.
-
-## 8. CulturalFact
-
-```text
-CulturalFact
-- country
-- category
-- title
-- body
-- source_url
-- source_name
-- verified_at
-- display_order
-- is_published
-```
-
-Suggested categories:
-
-- currency_history;
-- language;
-- food;
-- tradition;
-- landmark;
-- practical_travel.
-
-## 9. TypicalPrice
-
-```text
-TypicalPrice
-- country
-- city: nullable
-- category
-- label
-- amount_low: Decimal
-- amount_high: Decimal, nullable
-- currency
-- source_url
-- source_name
-- observed_at
-- source_class: authoritative | curated_factual | approximate_contextual
-- confidence
-- is_published
-```
-
-### Critical rule
-A city-specific observation must never be presented as a universal national price.
-
-## 10. FavouritePair
-
-```text
-FavouritePair
-- user
-- source_country
-- source_currency
-- destination_country
-- destination_currency
-- created_at
-```
-
-Unique constraint across owner + pair.
-
-Anonymous favourites may initially remain client-local.
-
-## 11. ConversionHistory
-
-For signed-in durable history:
-
-```text
-ConversionHistory
-- user
-- amount
-- base_currency
-- quote_currency
-- result
-- rate
-- rate_effective_at
-- provider
-- created_at
-```
-
-Do not store history automatically before privacy behaviour is explicit.
-
-## 12. Trip
-
-Later phase:
-
-```text
-Trip
-- user
-- destination_country
-- start_date
-- end_date
-- home_currency
-- budget_amount
-- notes
-- created_at
-- updated_at
-```
-
-Constraints:
-
-- end date >= start date;
-- non-negative budget.
-
-## 13. TripBudgetItem
-
-```text
-TripBudgetItem
-- trip
-- category
-- planned_amount
-- actual_amount: nullable
-- currency
-```
-
-## 14. Data provenance
-
-Every external datum that affects trust should support:
-
-- source;
-- effective/observed date;
-- fetched/verified date;
-- confidence/quality class where applicable.
-
-## 15. Money rules
-
-- use `Decimal`;
-- no float conversion;
-- normalize currency codes to uppercase;
-- reject unknown currencies at boundaries;
-- respect minor-unit metadata for final display;
-- rate precision may exceed display precision;
-- do not silently convert between country and currency concepts.
-
-## 16. Domain invariants to test
-
-- source and destination codes exist;
-- country/currency combinations are valid for the selected context;
-- rate > 0;
-- amount obeys configured limits;
-- result is deterministic for same amount/rate/rounding;
-- stale rate retains original effective timestamp;
-- historical country/currency relationships remain queryable;
-- approximate prices cannot be published without source metadata.
-
-
-## 17. Historical rate semantics
+This document describes the meaning of the main concepts. Field-level details live in Django models and migrations.
 
-Historical queries require two separate temporal concepts.
+## Country
 
-### Requested date
+A geographic/political country identity used for travel context.
 
-The date the user asked about.
-
-### Effective date
-
-The actual provider observation used.
-
-These can differ because:
-
-- weekend;
-- holiday;
-- missing observation;
-- low-frequency historical series.
-
-The domain must never overwrite one with the other.
-
-Concept:
-
-```text
-HistoricalRateQuery
-- amount
-- base_currency
-- quote_currency
-- requested_date
-- provider_scope?
-```
-
-The normalized `RateQuote` contains the actual effective observation.
-
-## 18. Observation granularity
-
-Historical/provider data may be:
-
-- daily;
-- monthly;
-- other/unknown.
-
-Granularity affects what the UI is allowed to claim.
-
-A monthly observation must not be represented as exact daily market/reference data.
-
-The provider adapter owns raw provider interpretation and exposes normalized granularity where reliable.
-
-## 19. Currency lifecycle
-
-Currency availability is temporal.
-
-Extend currency/domain metadata conceptually with:
-
-```text
-Currency
-- code
-- name
-- symbol
-- minor_units
-- active_from?
-- active_to?
-- is_active
-- coverage_from?
-- coverage_to?
-```
-
-Important distinction:
-
-- currency lifecycle;
-- provider data coverage.
-
-A currency can historically exist before the provider's available dataset.
-
-Do not infer one from the other.
-
-## 20. CountryCurrency historical relationship
-
-The existing relationship becomes critical for historical UX.
-
-```text
-CountryCurrency
-- country
-- currency
-- is_primary
-- valid_from
-- valid_to
-- usage_role?
-- source
-```
-
-The minimum implementation should support:
-
-- current primary currency;
-- historical primary currency;
-- sourced date range.
-
-If euro-transition nuance requires accounting/legal/cash milestones, use explicit transition metadata instead of forcing every milestone into `valid_from`.
-
-## 21. CurrencyTransition candidate
-
-Only introduce this model when stories require more than CountryCurrency date ranges.
-
-```text
-CurrencyTransition
-- country
-- from_currency
-- to_currency
-- transition_type
-- announced_date?
-- accounting_start?
-- legal_tender_start?
-- cash_changeover_date?
-- legacy_end_date?
-- fixed_conversion_rate?
-- source_name
-- source_url
-- verified_at
-```
-
-Do not populate speculative or unavailable milestones.
-
-## 22. StoryMoment
-
-A story uses structured facts rather than free-generated narrative.
-
-```text
-StoryMoment
-- countries: many-to-many
-- currencies: many-to-many
-- category
-- title
-- summary
-- start_date: nullable
-- end_date: nullable
-- date_precision
-- source_kind
-- source_name
-- source_url
-- external_id: optional upstream identity
-- source_published_at: nullable
-- source_retrieved_at: nullable
-- verified_at
-- relevance_weight
-- supports_causality
-- causal_support_note
-- status: candidate | needs_review | approved | published | retired | rejected
-- reviewed_at
-- published_at
-```
-
-Suggested categories:
-
-- currency_introduction;
-- currency_retirement;
-- redenomination;
-- monetary_union;
-- cash_changeover;
-- central_bank;
-- cultural_money_fact;
-- sourced_economic_context.
-
-A StoryMoment does not claim that an event caused a rate movement unless its source explicitly supports that causal relationship.
-
-## 23. StoryChapter value object
-
-Story output is assembled, not stored as opaque generated prose.
-
-Concept:
-
-```text
-StoryChapter
-- kind
-- label
-- title
-- body
-- source_refs[]
-- temporal_scope
-- relevance
-```
-
-Potential kinds:
-
-- conversion;
-- currency_era;
-- transition;
-- then_now;
-- historical_moment;
-- explore.
-
-The story composer may return fewer chapters when data is incomplete.
-
-## 24. Historical conversion result
-
-Concept:
-
-```text
-HistoricalConversion
-- input_amount
-- base
-- quote
-- requested_date
-- effective_date
-- observation_granularity
-- rate
-- output_amount
-- provider
-- provider_sources[]
-- used_previous_observation
-```
-
-It is a domain result/value object, not necessarily a database row.
-
-## 25. Historical purchasing power boundary
-
-Historical FX and historical domestic purchasing power are separate domains.
-
-Do not add inflation-adjusted values to HistoricalConversion.
-
-A future purchasing-power model would require explicit inputs such as:
+Important distinction: a country is not a currency.
 
-```text
-PurchasingPowerObservation
-- country
-- indicator/source
-- period
-- index/value
-- base_period
-- methodology
-```
-
-The model is intentionally not implemented until source/methodology research is complete.
+Typical identity fields include ISO codes and display name.
 
-## 26. Additional historical invariants
+## Currency
 
-- requested date <= today;
-- effective date <= requested date when using previous-observation fallback;
-- historical result preserves requested date even when observation differs;
-- no historical rate can exist outside normalized provider/pair coverage;
-- observation granularity is exposed when it affects precision;
-- archived/current status does not determine provider coverage automatically;
-- country/date suggestions are sourced;
-- archived currency cannot receive a fabricated current market quote;
-- story facts must be published, temporally relevant and sourced;
-- current TypicalPrice rows are not reused as historical purchasing-power observations.
+A monetary unit identified by a currency code plus metadata such as name, symbol and decimal behaviour.
 
+Historical/archived currencies remain valid domain entities.
 
-## 27. Backend value objects
+## CountryCurrency
 
-Critical cross-interface concepts should use explicit immutable value objects rather than loose dictionaries.
+Represents a country ↔ currency relationship over a period of time.
 
-Recommended concepts:
+This supports:
 
-- CurrencyCode
-- CountryCode
-- MoneyAmount
-- ProviderPolicy
-- RateQuote
-- RateSeries
-- ConversionResult
-- HistoricalConversionResult
-- QuoteFreshness
-- ObservationGranularity
-- DestinationContext
-- PurchaseEquivalent
-- ThenNowComparison
-- StoryChapter
+- shared currencies;
+- historical currency transitions;
+- country-first selection for a requested date.
 
-These objects are transport-agnostic.
+Temporal boundaries are part of the relationship, not inferred from current data.
 
-Django forms, DRF serializers and React Native contracts map to/from them.
+## FX quote / conversion result
 
-## 28. Conversion status
+A normalized quote/result should carry enough information to explain its financial meaning:
 
-Use an enum/result state rather than several independent booleans.
+- base/quote currency;
+- rate;
+- requested date/mode;
+- effective observation date when applicable;
+- provider/provenance;
+- stale/reference/exact semantics where relevant.
 
-Candidate values:
+Money and rate arithmetic uses `Decimal`.
 
-- fresh_success
-- stale_success
-- same_currency
-- historical_exact
-- historical_previous_observation
+## Historical series
 
-Failure states remain typed application errors.
+A time series represents normalized FX observations for a pair and interval.
 
-This avoids impossible combinations such as success=true and unavailable=true.
+Chart presentation should not invent observations or imply trading-quality market data.
 
-## 29. Trip optimistic concurrency
+## CulturalProfile / destination context
 
-When cross-device Trip editing becomes production scope, Trip may add:
+Curated current destination guidance such as:
 
-- version: positive integer
+- cash/card usage;
+- ATM guidance;
+- tipping/customs.
 
-Mutating commands include the version they read.
+It is current context unless an explicit historical dataset says otherwise.
 
-A successful update increments it.
+## TypicalPrice
 
-A stale version produces a conflict rather than silent overwrite.
+A scoped price observation used to give rough everyday-value intuition.
 
-Do not add version fields to unrelated models without a concurrency need.
+Important meaning includes:
 
-## 30. Favourite uniqueness
+- city/national scope;
+- range/value;
+- observation date;
+- provenance;
+- confidence/trust class.
 
-Authenticated FavouritePair should have a database uniqueness guarantee covering the canonical identity required by product semantics.
+A typical price is an example, not a universal price for a country.
 
-Candidate dimensions:
+## Story/cultural facts
 
-- user;
-- base currency;
-- quote currency;
-- optional source country;
-- optional destination country.
+Published story facts/moments are reviewed factual content with provenance and temporal scope where needed.
 
-Normalize nullable/context semantics carefully so duplicate logical favourites cannot appear under concurrent requests.
-
-## 31. TypicalPrice durable constraints
-
-Database/model validation should guarantee:
-
-- amount_low > 0;
-- amount_high is null or >= amount_low;
-- currency required;
-- geography scope explicit;
-- source required for publishable records;
-- observed period/date required for publishable records.
-
-Publication policy may be stricter than the database check.
-
-## 32. StoryMoment publication constraints
-
-A published StoryMoment must have, at minimum:
-
-- category;
-- temporal scope;
-- source identity/URL;
-- verified_at according to policy;
-- relevant country and/or currency association.
-
-Some rules are cross-relation and therefore enforced through application/admin validation rather than a single SQL check.
-
-## 33. Imported source metadata
-
-Imported canonical/reference rows should preserve enough source metadata to debug or refresh them without copying the entire raw payload.
-
-Useful fields can include:
-
-- source identifier;
-- source external ID;
-- fetched_at;
-- source_updated_at/version where available;
-- verified_at;
-- import/source class.
-
-The domain owns normalized values, not the provider schema.
-
-## 34. ImportRun candidate
-
-Introduce ImportRun only when recurring scheduled jobs need durable run history beyond structured logs.
-
-Candidate fields:
-
-- source;
-- job_name;
-- started_at;
-- finished_at;
-- status;
-- source_version;
-- counts;
-- normalized error_code;
-- small metadata JSON.
-
-Do not create this table before it adds operational value.
-
-## 35. Domain model concurrency rule
-
-Durable correctness is protected at the lowest sensible layer:
-
-- database constraint for uniqueness/range;
-- transaction for multi-write invariant;
-- optimistic version for multi-device aggregate conflict;
-- application validation for cross-entity/domain rules.
-
-Do not rely only on a pre-save "does this exist?" query where a concurrent request can race it.
-
-
-## 36. MediaAsset
-
-Candidate normalized media model:
-
-```text
-MediaAsset
-- id
-- kind
-- source_kind
-- role
-- country nullable
-- currency nullable
-- city nullable
-- valid_from nullable
-- valid_to nullable
-- date_precision
-- title
-- alt_text
-- caption
-- storage_file
-- width
-- height
-- aspect_ratio
-- focal_x nullable
-- focal_y nullable
-- content_hash
-- source_name
-- source_url
-- external_id nullable
-- creator nullable
-- licence_id nullable
-- licence_url nullable
-- rights_statement nullable
-- attribution_text nullable
-- generated_by_ai
-- ai_label nullable
-- generation_provider nullable
-- generation_model nullable
-- prompt_version nullable
-- prompt_hash nullable
-- generated_at nullable
-- reviewed_at nullable
-- published_at nullable
-- status
-```
-
-Database stores metadata/storage key; image bytes remain in file/object storage.
-
-## 37. Media kinds
-
-Candidate semantic kinds:
-
-- contemporary_photo
-- archival_photo
-- artwork
-- heritage_object
-- map
-- generated_illustration
-- decorative_pattern
-- brand_asset
-
-Source is separate.
-
-Example:
-
-```text
-kind = archival_photo
-source_kind = wikimedia_commons
-```
-
-## 38. Media temporal precision
-
-Historical media must represent dating precision honestly.
-
-Candidate values:
-
-- exact_day
-- month
-- year
-- decade
-- range
-- era
-- unknown
-
-Do not normalize "circa 1950s" into an invented exact year.
-
-## 39. Publishable sourced media invariant
+A deterministic composer can create user-facing stories from those facts.
 
-A sourced media asset is publishable only when required fields for its class are present, including where applicable:
-
-- canonical source URL;
-- rights/licence statement;
-- creator/institution;
-- temporal scope;
-- attribution;
-- verified/reviewed state.
-
-## 40. Publishable AI media invariant
+## MediaAsset
 
-Generated historical/editorial illustration is publishable only when it contains:
+Managed media represents a reviewed media candidate/asset with:
 
-- generated_by_ai=true;
-- provider/model metadata;
-- prompt version/hash;
-- review status;
-- visible authenticity label policy;
-- no claim of archival provenance.
+- role;
+- source/creator/licence/provenance;
+- optional country/currency/time association;
+- stored file/derivatives;
+- publication state.
 
-## 41. Media selector result
+Release-owned Quiet Atlas assets are separate deterministic static fallbacks.
 
-Media selection should return a structured result rather than a URL string.
+## FavouritePair
 
-Concept:
+A saved semantic source/destination pair owned either by local browser state or a signed-in account, depending on the persistence mode.
 
-```text
-SelectedMedia
-- asset
-- selection_reason
-- temporal_match_quality
-- authenticity_class
-- fallback_level
-```
+Account-owned records should be scoped to the authenticated owner.
 
-This makes it possible to explain/test why a particular image appears for a country/year.
+## RecentConversion
 
+A bounded record of a successful conversion used for repeat convenience.
 
-## 42. StorySourcePacket
+Browser-local recents and account recents are intentionally distinct privacy surfaces.
 
-AI narrative generation accepts a structured source packet rather than database rows or arbitrary text.
+Account recent history is only recorded after explicit opt-in and does not silently import existing local browser history.
 
-Candidate:
+## Account preferences
 
-```text
-StorySourcePacket
-- version
-- country
-- currencies[]
-- requested_date
-- effective_date
-- rate_facts[]
-- currency_era_facts[]
-- story_facts[]
-- source_refs[]
-- style_constraints[]
-- forbidden_inferences[]
-- content_hash
-```
+Privacy-affecting persistence preferences belong to the account and should have explicit defaults.
 
-Each factual item has a stable fact ID.
+## Data provenance
 
-## 43. NarrativeDraftCandidate
+For externally sourced or editorial factual data, provenance is part of the product meaning rather than optional metadata.
 
-Candidate:
+The exact schema can evolve, but the UI should be able to communicate enough source/time context to avoid misleading precision.
 
-```text
-NarrativeDraftCandidate
-- title
-- summary
-- chapters[]
-  - heading
-  - body
-  - used_fact_ids[]
-- caveats[]
-- unsupported_claims[]
-- provider
-- model
-- prompt_version
-- packet_hash
-- generation_metadata
-- review_status
-```
+## Domain invariants worth protecting
 
-A draft is not published content.
+Examples of durable invariants:
 
-## 44. AI fact-support invariant
+- country and currency identity remain separate;
+- temporal country/currency relationships are explicit;
+- financial arithmetic uses Decimal semantics;
+- historical requested date and effective observation date are not silently conflated;
+- current context is not silently backdated;
+- user-owned data is ownership scoped;
+- account recent history requires explicit opt-in;
+- sourced factual enrichment keeps provenance;
+- optional enrichment cannot invalidate a valid conversion.
 
-Every factual claim in AI-derived historical prose must be supportable by the supplied source packet.
-
-Unknown fact IDs invalidate the candidate.
-
-Model knowledge does not create a source.
-
-## 45. AI model metadata
-
-Published AI-derived editorial/media content should retain enough metadata to identify:
-
-- provider;
-- model/snapshot where known;
-- prompt version;
-- source packet/input hash;
-- generated_at;
-- reviewed_at.
-
-Do not expose secrets or raw private provider metadata.
-
-## 46. AI candidate review state
-
-Candidate states may include:
-
-- generated;
-- validation_failed;
-- needs_review;
-- rejected;
-- approved;
-- superseded.
-
-Publication remains a separate domain/editorial state.
-
-## 47. AI generation cost metadata
-
-Operational generation metadata may record:
-
-- input tokens;
-- output tokens;
-- image count;
-- estimated provider cost;
-- latency.
-
-Cost metadata is operational, not domain truth.
-
-## 48. Runtime AI explanation result — future
-
-If user-facing explanation later ships:
-
-```text
-ExplanationResult
-- headline
-- bullets[]
-  - text
-  - supporting_fact_ids[]
-- caveat
-- generated
-- model_version class/internal metadata
-```
-
-The explanation does not replace ConversionResult or DestinationContext.
+These invariants deserve tests. Other implementation details can evolve more freely.

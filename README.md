@@ -1,8 +1,8 @@
 # Cultural Currency Converter
 
-> **Convert money. Understand local value. Discover culture.**
+> Convert money. Understand local value. Discover culture.
 
-Cultural Currency Converter is a Django-first travel-money intelligence product that explains not only **how much** money converts to, but **what that amount means locally**.
+Cultural Currency Converter is a Django-first travel-money product. It combines trustworthy currency conversion with practical destination context: what an amount can roughly buy, how people tend to pay, and relevant money/culture stories.
 
 <p align="center">
   <img src="docs/assets/cultural-currency-converter-overview.webp"
@@ -10,123 +10,98 @@ Cultural Currency Converter is a Django-first travel-money intelligence product 
        width="500">
 </p>
 
-<p align="center"><em>Current desktop converter surface captured by the Chromium browser-quality pipeline.</em></p>
+## What works today
 
-The repository is being rebuilt from an early Django course project into a production-minded portfolio case study.
+The web product currently includes:
 
-## Product thesis
+- current and historical FX conversion with source/effective-date semantics;
+- bilateral country/currency context;
+- historical charts and Then & Now comparison;
+- sourced everyday-value and payment context;
+- deterministic Money & culture stories;
+- managed media with Quiet Atlas fallbacks;
+- an optional, explicit AI explanation with deterministic fallback;
+- anonymous browser-local favourites/recent conversions;
+- signed-in favourite ownership and opt-in cross-device recent history.
 
-A conventional FX calculator answers:
+The product remains useful when optional enrichment, media or AI is unavailable.
 
-> 100 EUR = X JPY
-
-Cultural Currency Converter goes further:
-
-- converts money using attributable exchange-rate data;
-- explains local purchasing context;
-- surfaces payment customs, cash/card usage and tipping norms;
-- adds curated cultural and currency-history context;
-- supports saved pairs, recent conversions and later trip budgets;
-- exposes the same backend domain to a React Native mobile client.
-
-The primary product loop is:
+## Current architecture
 
 ```text
-Convert → Understand → Explore → Save → Return
+Browser
+  ↓
+Django templates + HTMX + small TypeScript enhancements
+  ↓
+Application/use-case layer
+  ↓
+Domain rules
+  ↓
+Django ORM / cache / provider adapters
+  ↓
+PostgreSQL or SQLite (local) + external data providers
 ```
 
-## Target architecture
+Current web stack:
 
-```text
-                           Official / curated data
-                     ┌──────────────┴──────────────┐
-                     │                             │
-              Frankfurter v2              Country/culture data
-                     │                             │
-                     └──────────────┬──────────────┘
-                                    ▼
-                         Django modular monolith
-                    presentation → use cases → domain
-                 ┌──────────────────┼──────────────────┐
-                 │                  │                  │
-             PostgreSQL        Django cache       JSON API v1
-                 │                  │                  │
-                 └──────────────┬───┘                  │
-                                │                      │
-                       Django Templates          React Native
-                         + HTMX 2.x              + Expo 57*
-                         + Tailwind 4             + Expo Router
-                         + TypeScript             + TanStack Query
-                         + Vite 8                 + Expo SQLite
-                                                  + TypeScript
+- Python 3.13/3.14, Django 5.2;
+- Django templates, HTMX 2, TypeScript, Vite 8, Tailwind 4;
+- PostgreSQL in production-oriented environments, SQLite for lightweight local work;
+- Frankfurter for runtime FX;
+- optional Gemini explanation behind server-side configuration;
+- Playwright/axe browser quality checks.
 
-                    * stable compatibility matrix re-checked
-                      immediately before mobile implementation
-```
-
-## Engineering principles
-
-1. **Django first.** Web UI is server rendered. React is reserved for the mobile client.
-2. **HTML over JSON for the web.** HTMX exchanges HTML fragments with Django views.
-3. **JSON only at explicit API boundaries.** The mobile client uses a versioned API.
-4. **Financial correctness.** Money and FX calculations use `Decimal`, explicit rounding and currency metadata.
-5. **Source attribution.** Exchange rates, purchasing-power data and cultural facts must have provenance.
-6. **Progressive enhancement.** Core conversion remains usable without client-side application state; Vite/TypeScript enhance HTML rather than create a SPA.
-7. **Accessibility by default.** WCAG 2.2 AA is the baseline.
-8. **Proportional architecture.** No microservices, event buses or repository layers without a concrete problem.
-9. **Explicit stale-data semantics.** Cached/offline rates are labelled with their source time.
-10. **Documentation is executable intent.** Non-trivial PRs must reference the relevant product/architecture documents.
-11. **Explicit backend ownership.** Views/forms/serializers handle transport; application use cases coordinate; pure domain code owns financial semantics; provider adapters own external JSON.
-12. **Short transactions.** Network I/O never runs while PostgreSQL transactions/row locks are intentionally held; durable invariants use constraints and explicit transaction boundaries.
-13. **Media authenticity before spectacle.** Real sourced archival media is preferred for historical evidence; AI imagery is reviewed, stored and visibly labelled as illustration rather than generated on every country/year change.
-14. **AI synthesizes; it does not establish truth.** The public demo uses Gemini 3.1 Flash-Lite's free tier for one bounded live explanation feature; paid AI and runtime image generation are disabled by default. FX, historical observations, provenance and published facts remain deterministic and sourced.
+Implementation details are allowed to evolve when a better solution is justified. The code, tests and CI are the authoritative record of what is implemented now.
 
 ## Documentation
 
 Start with [docs/00_INDEX.md](docs/00_INDEX.md).
 
-The handbook covers:
+For AI-assisted development, read [docs/AI_DEVELOPMENT_GUIDE.md](docs/AI_DEVELOPMENT_GUIDE.md) before making a non-trivial change.
 
-- product scope and success criteria;
-- user journeys and UX states;
-- design-system principles;
-- Django/HTMX/Tailwind/Vite/TypeScript web architecture;
-- domain models and financial rules;
-- React Native/Expo/API/offline architecture;
-- explicit frontend technology decisions and rejected alternatives;
-- backend system design, request/data flows and application-service boundaries;
-- PostgreSQL transactions, constraints, cache/concurrency policy;
-- API/security/observability/operations and 148 backend scenarios;
-- scheduled imports, maintenance and failure behavior;
-- sourced historical media, object-storage strategy and controlled AI illustration pipeline;
-- zero-cost Gemini free-tier explanation, structured outputs, persistent cache, deterministic fallback, evals and privacy/quota governance;
-- quality, security and accessibility;
-- implementation sequencing and ADRs;
-- developer workflow, Definition of Ready/Done and PR review contract;
-- requirement-to-test traceability and fixture strategy;
-- environment/configuration/secrets boundaries;
-- migration, seeding, release and rollback runbooks;
-- content/i18n terminology and performance budgets;
-- official references.
+The documentation is intentionally compact. It captures product intent, important invariants, current architecture and active direction. Historical PR plans and duplicate specification layers are deliberately not kept as competing sources of truth.
 
-## Delivery strategy
+## Local development
 
-The rebuild is intentionally incremental. PR2 established the locked Django/Vite/TypeScript/Quiet Atlas web foundation and browser-quality gates. PR3 introduced canonical country/currency identity. PR4–PR7.3 delivered trusted current/historical FX, bounded series, the accessible chart and Then & Now. PR7A added provenance-safe managed media. PR7B added the bounded Gemini Explain this capability without putting AI on the financial truth path. PR8 added reviewed currency-era facts and deterministic Money & culture storytelling. PR9–PR10 complete the P0 Explore triad with sourced payment context and scoped everyday-value observations. PR11 adds anonymous browser-local favourites and bounded recent conversions without creating hidden server history. PR12A adds account identity and durable favourite ownership; PR12B adds explicit opt-in cross-device recent history without silently importing browser-local recents.
+Python:
 
-See [docs/08_IMPLEMENTATION_ROADMAP.md](docs/08_IMPLEMENTATION_ROADMAP.md).
+```bash
+python -m pip install -e ".[dev]"
+python manage.py migrate
+python manage.py seed_reference_data
+python manage.py seed_story_data
+python manage.py seed_destination_context
+python manage.py runserver
+```
 
-## Current status
+Frontend:
 
-**Phase:** PR12B opt-in authenticated recent history implemented → PR13 versioned mobile API next.
+```bash
+cd frontend
+npm ci
+npm run dev
+```
 
-The executable web product now covers current/historical conversion, scoped sourced everyday-value
-context, payment/cash/tipping guidance, Money & culture storytelling, historical charts/Then & Now,
-managed media, the bounded optional Gemini explanation, account-backed saved pairs and bounded
-recent conversion history. Anonymous saved state remains versioned localStorage only. Signed-in
-favourites are user-owned PostgreSQL rows with ownership-scoped mutations and bounded local→account
-merge. Cross-device recent history is separately opt-in, defaults off, stores only future successful
-conversions, is capped at 50 account rows and never silently imports existing browser-local recents.
-Destination context remains local at request time, carries provenance/trust
-metadata and cannot invalidate the conversion. Browser QA runs a full Chromium gate plus
-Firefox/WebKit smoke coverage, including the Saved & recent surface. Wikidata remains a
-management-command candidate source, never a web-request dependency.
+Useful checks:
+
+```bash
+ruff format --check apps config scripts manage.py
+ruff check apps config scripts manage.py
+djlint templates --check
+python manage.py check
+python manage.py makemigrations --check --dry-run
+coverage run -m pytest -q
+coverage report
+```
+
+```bash
+cd frontend
+npm run quality
+npm run browser:quality
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the practical development workflow.
+
+## Product direction
+
+The immediate focus is to keep improving the web product and its architecture based on real product value. A versioned mobile API and native mobile client are candidates for later development, but their exact framework/library choices should be re-evaluated when implementation starts rather than treated as permanent commitments today.
