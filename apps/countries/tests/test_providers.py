@@ -125,7 +125,10 @@ def test_rest_countries_v5_client_sends_bearer_fields_and_paginates():
     ("payload", "message"),
     [
         (b"[]", "response shape is invalid"),
-        (b'{"data":{"objects":[],"meta":{"more":true,"count":"bad"}}}', "pagination count is invalid"),
+        (
+            b'{"data":{"objects":[],"meta":{"more":true,"count":"bad"}}}',
+            "pagination count is invalid",
+        ),
         (b'{"data":{"objects":[],"meta":{"more":true,"count":0}}}', "pagination made no progress"),
     ],
 )
