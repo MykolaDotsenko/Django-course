@@ -4,8 +4,6 @@ import re
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from urllib.parse import urlsplit
-
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils import timezone
@@ -18,6 +16,11 @@ from apps.culture.models import (
     StoryMomentCategory,
     StoryMomentStatus,
     TypicalPrice,
+)
+from apps.culture.provenance import (
+    ProvenanceUrlError,
+    is_valid_provenance_url,
+    validate_provenance_url,
 )
 
 _CAUSAL_RE = re.compile(
@@ -40,11 +43,12 @@ class StoryPublicationError(ValueError):
 
 
 def _validate_https_url(value: str) -> None:
-    parsed = urlsplit(value)
-    if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
+    try:
+        validate_provenance_url(value)
+    except ProvenanceUrlError as exc:
         raise StoryPublicationError(
             "Story source URL must be an absolute credential-free HTTPS URL."
-        )
+        ) from exc
 
 
 def _validate_publishable(moment: StoryMoment) -> None:
@@ -298,7 +302,11 @@ def build_destination_context(
         .first()
     )
     payment = None
-    if profile is not None:
+    if (
+        profile is not None
+        and profile.source_name.strip()
+        and is_valid_provenance_url(profile.source_url)
+    ):
         payment = PaymentContext(
             summary=profile.summary,
             payment_customs=profile.payment_customs,
@@ -348,6 +356,7 @@ def build_destination_context(
             ),
         )
         for row in price_rows
+        if row.source_name.strip() and is_valid_provenance_url(row.source_url)
     )
 
     return DestinationContext(
