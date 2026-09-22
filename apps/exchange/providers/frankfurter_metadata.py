@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import socket
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from http.client import HTTPException
@@ -137,7 +136,7 @@ class FrankfurterMetadataClient:
             raise FrankfurterMetadataError(
                 f"Frankfurter metadata returned HTTP {exc.code}."
             ) from exc
-        except (URLError, HTTPException, TimeoutError, socket.timeout) as exc:
+        except (URLError, HTTPException, OSError) as exc:
             raise FrankfurterMetadataError("Frankfurter metadata request failed.") from exc
 
         if len(raw) > MAX_METADATA_RESPONSE_BYTES:
