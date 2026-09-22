@@ -962,11 +962,16 @@ A dedicated preview surface now exists at:
 /_design/media/
 ```
 
-It is registered only when:
+The URL remains in the root URL configuration so reverse lookups and QA tooling stay stable, but
+the preview view is renderable only when:
 
 ```text
 DEBUG = True
 ```
+
+With `DEBUG = False`, the view raises `Http404` before rendering any preview content. This is the
+implemented DEBUG guard; the route's existence in the URL resolver is not treated as a public
+product surface.
 
 Purpose:
 

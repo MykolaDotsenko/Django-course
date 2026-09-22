@@ -169,6 +169,34 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   );
   await page.getByText("Enter zero or a positive amount.").waitFor();
 
+  await page.locator("#id_source_currency").evaluate((element) => {
+    if (!(element instanceof HTMLSelectElement)) {
+      throw new Error("Expected source currency control to be a select");
+    }
+    element.value = "";
+  });
+  await page.locator("#id_destination_currency").evaluate((element) => {
+    if (!(element instanceof HTMLSelectElement)) {
+      throw new Error("Expected destination currency control to be a select");
+    }
+    element.value = "";
+  });
+  const multipleInvalidSubmit = waitForPost();
+  await page.locator(".qa-primary-button").click();
+  const multipleInvalidSubmitResponse = await multipleInvalidSubmit;
+  assert(
+    multipleInvalidSubmitResponse.status() === 422,
+    `current-converter: multiple-error submit returned ${multipleInvalidSubmitResponse.status()} instead of 422`,
+  );
+  await page.locator("#conversion-error-summary").waitFor();
+  const validationFocusId = await page.evaluate(() => document.activeElement?.id ?? "");
+  assert(
+    validationFocusId === "conversion-error-summary",
+    `current-converter: expected focus on validation summary, got ${validationFocusId}`,
+  );
+
+  await page.goto(`${BASE_URL}/`, { waitUntil: "networkidle" });
+
   await page.locator("#source-picker-trigger").click();
   const sourceDialog = page.locator('[data-picker-dialog="source"]');
   const viewport = page.viewportSize();
