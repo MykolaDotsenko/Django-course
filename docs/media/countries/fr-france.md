@@ -10,6 +10,27 @@ Read [Country Media Production System](../00_COUNTRY_MEDIA_SYSTEM.md) before usi
 
 Understated Parisian elegance: stone, zinc, café culture, typography and lived urban rhythm should create refinement without Eiffel Tower dependence or romantic-tourism excess.
 
+### Premium material palette
+
+- Paris limestone
+- zinc and marble
+- dark timber
+- restrained brass
+
+### Premium mood keywords
+
+- understated elegance
+- cultured restraint
+- soft urban romance
+- quiet sophistication
+
+### Premium image goals
+
+- premium first, authentic second, iconic only third;
+- communicate the country through atmosphere, material, light, rhythm and everyday behaviour before relying on landmarks;
+- make every image feel editorial and useful enough to sit inside an expensive real product, not a tourism campaign;
+- preserve one clear visual story per frame and enough compositional calm for interface use where relevant.
+
 ### Preferred local cues
 
 - Parisian Haussmann or contemporary streets used subtly
@@ -29,6 +50,8 @@ Understated Parisian elegance: stone, zinc, café culture, typography and lived 
 
 **Target:** `static/images/country-media/fr/hero/fr-hero-v01.webp`
 
+**Premium execution:** Use a believable 35–50 mm full-frame-equivalent editorial perspective, eye level or only slightly elevated, with realistic architectural geometry and medium depth rather than extreme bokeh. Grade around Paris limestone, zinc and marble, dark timber and aim for understated elegance + cultured restraint. Make the environment carry identity; keep roughly 25–35% of the frame visually calm enough to coexist with product UI.
+
 Photograph an elegant Paris street or corner café at soft morning or golden late-afternoon light: pale stone façades, zinc/metal details, restrained awnings, a few locals moving naturally and subtle street depth. Use a 40–50 mm editorial perspective with nuanced cream, charcoal and muted green/burgundy notes. Keep a quiet side of the frame for UI.
 
 Composition: one coherent contemporary scene, not a collage. Keep the main visual interest away from at least one outer third so product UI can coexist with the crop. Preserve architectural lines and realistic scale. People, if present, should feel incidental and unposed.
@@ -36,6 +59,8 @@ Composition: one coherent contemporary scene, not a collage. Keep the main visua
 ## P02 — Everyday Value
 
 **Target:** `static/images/country-media/fr/everyday-value/fr-everyday-value-v01.webp`
+
+**Premium execution:** Treat this as a 50–70 mm observational editorial frame, not food advertising. Let tactile local materials—Paris limestone, zinc and marble, dark timber—carry perceived quality. Use one believable spending ritual, one clear focal point, natural imperfections and restrained depth of field. The result should express understated elegance without looking staged or aspirational.
 
 Create a sophisticated everyday Paris purchase: espresso or café crème with one croissant/pastry or a small boulangerie item on a simple marble, zinc or wooden surface. Let the environment imply a real café or bakery, with natural crumbs, paper bag or saucer, not luxury tabletop staging. No fabricated menu price.
 
@@ -45,6 +70,8 @@ Frame at table/counter/hand level rather than as a product advertisement. Do not
 
 **Target:** `static/images/country-media/fr/payment-culture/fr-payment-culture-v01.webp`
 
+**Premium execution:** The payment gesture should occupy only about 20–30% of the visual story; the environment should communicate the country. Use a natural 40–60 mm documentary perspective, anatomically correct hands, plausible device proportions and Paris limestone / zinc and marble as environmental anchors. Make the moment routine, discreet and trustworthy rather than fintech advertising.
+
 Show a subtle contactless card/phone payment at a contemporary Paris boulangerie or café counter. Include warm bread/pastry textures, stone/metal counter and understated urban depth, while keeping the terminal neutral and the interaction natural.
 
 Show the transaction naturally inside a real-feeling setting. Keep hands anatomically correct, device geometry plausible and the payment terminal/phone secondary to the human context. No visible bank/app logos unless they are incidental and accurate; preferably use neutral interfaces.
@@ -52,6 +79,8 @@ Show the transaction naturally inside a real-feeling setting. Keep hands anatomi
 ## P04 — Local Detail
 
 **Target:** `static/images/country-media/fr/local-detail/fr-local-detail-v01.webp`
+
+**Premium execution:** Use a close observational 65–85 mm feel with two to four carefully chosen elements, tactile side-light and real material texture. Build around Paris limestone, zinc and marble, dark timber and soft urban romance. Leave breathing room; avoid decorative flat-lays, souvenir arrangements and perfect AI symmetry.
 
 Create a close editorial study of Parisian daily texture: café saucer, folded bakery paper, zinc/brass edge, metro/street tile or stone texture, and softly reflected city light. Keep it tactile and restrained, not a souvenir flat-lay.
 
@@ -61,11 +90,15 @@ Treat this as a premium editorial insert: tactile materials, quiet composition, 
 
 **Target:** `docs/assets/country-interface-concepts/fr/desktop/fr-interface-desktop-v01.webp`
 
+**Premium execution:** Make this look like a shippable high-end product concept, not a fantasy Dribbble shot. Use one dominant monetary result, one bilateral conversion area, one restrained country photograph occupying roughly 20–30% of the composition, and very little copy. Express understated elegance + cultured restraint through spacing, type scale, material tone and image crop—not flags, ornamental motifs or fake widgets. Omit uncertain text rather than invent it.
+
 Create a 16:10 premium desktop design concept for Cultural Currency Converter focused on France. Use the sample conversion **100 GBP → EUR**. Use warm limestone/ivory, charcoal, deep forest and a very muted brass/burgundy accent. The EUR result should dominate; Paris appears as one elegant photographic panel, not decorative landmark wallpaper. The screen should communicate: source amount → destination amount → local context. Make the numeric result the largest element. Use only minimal readable text: “Cultural Currency”, country name, currency codes, amount and result. Integrate the P01 visual language as one restrained destination image area. Do not turn the interface into a travel booking site or analytics dashboard.
 
 ## P06 — Mobile Interface Concept
 
 **Target:** `docs/assets/country-interface-concepts/fr/mobile/fr-interface-mobile-v01.webp`
+
+**Premium execution:** Use a realistic modern mobile viewport with safe margins, believable control sizes and a single-column reading order. Let the monetary result occupy the strongest visual position, with one country image taking roughly 20–25% of the screen and no decorative phone frame. Express understated elegance + cultured restraint through spacing, palette and crop. Prefer quiet space over invented microcopy, tiny cards or fake OS details.
 
 Create a 9:16 premium mobile design concept for Cultural Currency Converter focused on France, using **100 GBP → EUR**. Translate the desktop hierarchy into a believable single-column mobile flow: compact source/destination selector, large conversion result, one editorial country image, then concise local-value/payment context. Use a refined Paris crop with soft stone tones beneath or beside the large EUR result; typography and whitespace should carry most of the luxury feeling. Keep tap targets believable, spacing generous and visible copy minimal. No tiny dashboard cards, fake phone chrome, floating glass panels or crowded widgets.
 
