@@ -88,11 +88,11 @@ AI may synthesize trusted facts into bounded explanatory output. It does not est
 
 **Status:** active
 
-Use sourced managed media for evidence and Quiet Atlas/static/generated illustration for atmosphere where appropriate.
+Use curated managed photography for premium destination imagery and authentic sourced archival media for historical evidence. Country hero/teaser surfaces do not fall back to cartoon or decorative illustrations; if suitable photography is unavailable, the layout remains image-free.
 
-**Why:** imagery can easily imply false historical authenticity.
+**Why:** weak or synthetic-looking imagery lowers trust and perceived product quality, while historical imagery can easily imply false authenticity.
 
-**Revisit when:** new media sources/workflows improve authenticity and rights handling.
+**Revisit when:** a new visual medium can match the same premium, provenance and authenticity bar.
 
 ## ADR-010 — Current context is not automatically historical
 

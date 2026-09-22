@@ -3,41 +3,43 @@ from __future__ import annotations
 from django.template.loader import render_to_string
 from django.test import SimpleTestCase
 
-from apps.common.presentation.media_assets import get_static_media_asset
-from apps.common.presentation.media_view_models import (
-    MediaCardViewModel,
-    build_static_image_view_model,
-)
+from apps.common.presentation.media_view_models import ImageViewModel
 
 
 class ImageFrameTemplateTests(SimpleTestCase):
-    def test_decorative_image_defaults_to_lazy_async_loading(self):
-        image = build_static_image_view_model(
-            get_static_media_asset("country_finland"),
-        )
+    def _image(self, **overrides):
+        values = {
+            "src": "/media/sourced/destination.webp",
+            "ratio": "4 / 3",
+            "alt": "Evening street scene in Helsinki",
+            "decorative": False,
+            "kind": "contemporary_photo",
+            "label": "Helsinki destination photograph",
+            "width": 1600,
+            "height": 1200,
+        }
+        values.update(overrides)
+        return ImageViewModel(**values)
 
+    def test_managed_image_defaults_to_lazy_async_loading(self):
         html = render_to_string(
             "components/media/image_frame.html",
-            {"image": image},
+            {"image": self._image()},
         )
 
         self.assertIn('loading="lazy"', html)
         self.assertIn('decoding="async"', html)
-        self.assertIn('aria-hidden="true"', html)
-        self.assertIn('alt=""', html)
-        self.assertIn('width="1200"', html)
-        self.assertIn('height="900"', html)
+        self.assertIn('alt="Evening street scene in Helsinki"', html)
+        self.assertIn('width="1600"', html)
+        self.assertIn('height="1200"', html)
+        self.assertNotIn('aria-hidden="true"', html)
         self.assertNotIn("fetchpriority=", html)
 
     def test_hero_can_be_eager_and_high_priority(self):
-        image = build_static_image_view_model(
-            get_static_media_asset("hero_home_global_value"),
-        )
-
         html = render_to_string(
             "components/media/image_frame.html",
             {
-                "image": image,
+                "image": self._image(ratio="16 / 9", width=1920, height=1080),
                 "loading": "eager",
                 "fetchpriority": "high",
             },
@@ -45,87 +47,31 @@ class ImageFrameTemplateTests(SimpleTestCase):
 
         self.assertIn('loading="eager"', html)
         self.assertIn('fetchpriority="high"', html)
-        self.assertIn('width="1600"', html)
-        self.assertIn('height="900"', html)
+        self.assertIn('width="1920"', html)
+        self.assertIn('height="1080"', html)
 
-    def test_meaningful_image_is_not_hidden_from_accessibility_tree(self):
-        image = build_static_image_view_model(
-            get_static_media_asset("history_then_now"),
-            meaningful_alt="Illustration comparing past and present money context.",
-        )
-
+    def test_decorative_managed_image_is_hidden_from_accessibility_tree(self):
         html = render_to_string(
             "components/media/image_frame.html",
-            {"image": image},
+            {"image": self._image(alt="", decorative=True)},
         )
 
-        self.assertIn(
-            'alt="Illustration comparing past and present money context."',
-            html,
-        )
-        self.assertNotIn('aria-hidden="true"', html)
+        self.assertIn('alt=""', html)
+        self.assertIn('aria-hidden="true"', html)
 
-    def test_caption_is_optional_and_rendered_semantically(self):
-        image = build_static_image_view_model(
-            get_static_media_asset("history_then_now"),
-        )
-
+    def test_caption_and_attribution_render_semantically(self):
         html = render_to_string(
             "components/media/image_frame.html",
             {
-                "image": image,
-                "caption": "Illustrative visual — not an archival photograph.",
+                "image": self._image(
+                    caption="Helsinki city centre at dusk.",
+                    attribution_text="Example Photographer · CC BY 4.0",
+                    source_url="https://example.com/photo",
+                ),
             },
         )
 
         self.assertIn("<figcaption", html)
-        self.assertIn(
-            "Illustrative visual — not an archival photograph.",
-            html,
-        )
-
-
-class MediaCardTemplateTests(SimpleTestCase):
-    def setUp(self):
-        self.image = build_static_image_view_model(
-            get_static_media_asset("country_japan"),
-        )
-
-    def test_card_renders_optional_content_and_link(self):
-        html = render_to_string(
-            "components/media/media_card.html",
-            {
-                "card": MediaCardViewModel(
-                    image=self.image,
-                    eyebrow="Local value",
-                    title="Japan",
-                    summary="See what everyday spending feels like locally.",
-                    href="/countries/jp/",
-                    badge="Featured",
-                ),
-            },
-        )
-
-        self.assertIn("Local value", html)
-        self.assertIn('href="/countries/jp/"', html)
-        self.assertIn(">Japan</a>", html)
-        self.assertIn(
-            "See what everyday spending feels like locally.",
-            html,
-        )
-        self.assertIn("Featured", html)
-        self.assertIn('loading="lazy"', html)
-
-    def test_card_renders_title_without_link_when_href_is_missing(self):
-        html = render_to_string(
-            "components/media/media_card.html",
-            {
-                "card": MediaCardViewModel(
-                    image=self.image,
-                    title="Japan",
-                ),
-            },
-        )
-
-        self.assertIn("Japan", html)
-        self.assertNotIn("<a ", html)
+        self.assertIn("Helsinki city centre at dusk.", html)
+        self.assertIn("Example Photographer · CC BY 4.0", html)
+        self.assertIn('href="https://example.com/photo"', html)
