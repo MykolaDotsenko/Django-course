@@ -1058,7 +1058,23 @@ Properties:
 
 The deterministic portfolio slice can be seeded after country/currency reference data:
 
+~~~text
 python manage.py seed_reference_data
 python manage.py seed_story_data
+python manage.py seed_destination_context
+~~~
 
-The reviewed demo story seed uses official European Commission and Bank of Japan sources. Seeded rows pass the same approve/publish service gates as editor-created content rather than bypassing the lifecycle.
+The reviewed demo story seed uses official European Commission and Bank of Japan sources. Seeded rows
+pass the same approve/publish service gates as editor-created content rather than bypassing the
+lifecycle.
+
+`seed_destination_context` requires the canonical Japan/JPY reference rows first and creates the
+small sourced demo context used by browser QA:
+
+- one published Japan CulturalProfile using JNTO provenance;
+- coffee and casual-meal TypicalPrice examples from JNTO;
+- one Tokyo Metro regular-ticket TypicalPrice example with JPY currency/provenance;
+- deterministic update-or-create identities, so rerunning the command reports existing rows rather
+  than multiplying data.
+
+CI exercises the command prerequisite guard, sourced values/provenance and idempotent second run.
