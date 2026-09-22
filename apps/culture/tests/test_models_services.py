@@ -208,6 +208,26 @@ def test_historical_selection_excludes_unpublished_and_out_of_range(finland, eur
 
 
 @pytest.mark.django_db
+def test_story_selection_suppresses_invalid_published_provenance(finland):
+    moment = _moment(title="Corrupted published source")
+    moment.countries.add(finland)
+    approve_story_moment(moment)
+    publish_story_moment(moment)
+    StoryMoment.objects.filter(pk=moment.pk).update(
+        source_url="https://user:secret@example.org/story"
+    )
+
+    selected = select_story_moments(
+        country_codes=("FI",),
+        currency_codes=(),
+        selected_date=date(2026, 9, 21),
+        historical=False,
+    )
+
+    assert selected == ()
+
+
+@pytest.mark.django_db
 def test_current_story_can_include_reviewed_past_money_history(finland):
     moment = _moment(title="Past transition")
     moment.countries.add(finland)
