@@ -244,7 +244,11 @@ The roadmap PR7A media milestone is implemented through the dedicated `apps.medi
 
 PR7B is implemented as a provider-isolated, explicitly user-triggered AI explanation capability. PR8 is implemented as a separate apps.culture boundary with review-gated StoryMoment facts, deterministic StoryChapter composition, targeted candidate-only Wikidata ingestion and progressive Money & culture disclosure.
 
-The next bounded roadmap milestone is PR9: current destination payment context. It must remain independently sourced and must not backdate present-day payment customs merely because the user selected a historical FX date.
+PR9 and PR10 are implemented: current destination payment context and scoped everyday-value
+observations remain independently sourced and are never silently backdated to a historical FX date.
+PR11 Phase A is also implemented with versioned browser-local favourites and bounded recent
+conversions; anonymous history is not persisted by Django. The next bounded roadmap milestone is
+PR12: accounts and ownership for explicit cross-device saved-state sync.
 
 ---
 
