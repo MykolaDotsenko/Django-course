@@ -405,7 +405,7 @@ def picker_options(request: HttpRequest) -> HttpResponse:
         preferred_country_code=request.GET.get(f"{side}_country", ""),
         preferred_currency_code=request.GET.get(f"{side}_currency", ""),
     )
-    options = []
+    options: list[dict[str, object]] = []
     for option in search_options:
         option_kind = "country" if option.country_context else "currency"
         option_id = (
