@@ -40,10 +40,6 @@
            hx-sync="#historical-trend:replace"
            hx-indicator="#historical-trend-loading">{{ period.label }}</a>
       {% endfor %}
-    </nav>
-    <span id="historical-trend-loading"
-          class="qa-loading-indicator htmx-indicator"
-          aria-live="polite">Updating historical trend…</span>
     <details id="historical-custom-range"
              class="qa-rate-series__custom"
              {% if series_component.period == 'custom' %}open{% endif %}>
@@ -95,6 +91,10 @@
         <button class="qa-secondary-button" type="submit">Apply custom range</button>
       </form>
     </details>
+    </nav>
+    <span id="historical-trend-loading"
+          class="qa-loading-indicator htmx-indicator"
+          aria-live="polite">Updating historical trend…</span>
     {% if series_component.points %}
       <section class="qa-rate-chart" aria-labelledby="historical-rate-chart-title">
         <div class="qa-rate-chart__heading">
