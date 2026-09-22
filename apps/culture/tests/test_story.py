@@ -74,7 +74,9 @@ def test_composer_suppresses_credentialed_currency_relationship_source(context_d
 
     story = compose_story(_request())
 
-    source_chapter = next(chapter for chapter in story.chapters if chapter.kind == "source_currency_era")
+    source_chapter = next(
+        chapter for chapter in story.chapters if chapter.kind == "source_currency_era"
+    )
     assert source_chapter.source_refs == ()
 
 
