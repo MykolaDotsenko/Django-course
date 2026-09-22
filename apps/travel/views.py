@@ -10,7 +10,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
-from apps.travel.models import FavouritePair
+from apps.accounts.preferences import recent_history_enabled
+from apps.travel.models import FavouritePair, RecentConversion
 from apps.travel.services import FavouriteSyncError, serialize_favourite, sync_user_favourites
 
 MAX_SYNC_BODY_BYTES = 16_384
@@ -37,6 +38,31 @@ def _pair_url(favourite: FavouritePair, *, swap: bool = False) -> str:
     return f"{reverse('converter')}?{urlencode(params)}"
 
 
+def _recent_url(recent: RecentConversion, *, swap: bool = False) -> str:
+    source_currency = (
+        recent.destination_currency.code if swap else recent.source_currency.code
+    )
+    destination_currency = (
+        recent.source_currency.code if swap else recent.destination_currency.code
+    )
+    source_country = recent.destination_country if swap else recent.source_country
+    destination_country = recent.source_country if swap else recent.destination_country
+    params = {
+        "convert": "1",
+        "amount": recent.input_amount,
+        "source_currency": source_currency,
+        "destination_currency": destination_currency,
+    }
+    if source_country is not None:
+        params["source_country"] = source_country.iso2
+    if destination_country is not None:
+        params["destination_country"] = destination_country.iso2
+    if recent.rate_mode == RecentConversion.RateMode.HISTORICAL and recent.requested_date:
+        params["rate_mode"] = RecentConversion.RateMode.HISTORICAL
+        params["requested_date"] = recent.requested_date.isoformat()
+    return f"{reverse('converter')}?{urlencode(params)}"
+
+
 def _favourite_rows(user) -> list[dict[str, object]]:
     favourites = (
         FavouritePair.objects.filter(user=user)
@@ -58,6 +84,27 @@ def _favourite_rows(user) -> list[dict[str, object]]:
     ]
 
 
+def _recent_rows(user) -> list[dict[str, object]]:
+    recents = (
+        RecentConversion.objects.filter(user=user)
+        .select_related(
+            "source_currency",
+            "destination_currency",
+            "source_country",
+            "destination_country",
+        )
+        .order_by("-converted_at", "-id")
+    )
+    return [
+        {
+            "recent": recent,
+            "repeat_url": _recent_url(recent),
+            "swap_url": _recent_url(recent, swap=True),
+        }
+        for recent in recents
+    ]
+
+
 @require_GET
 def saved_state(request: HttpRequest) -> HttpResponse:
     return render(
@@ -66,7 +113,13 @@ def saved_state(request: HttpRequest) -> HttpResponse:
         {
             "account_favourite_rows": (
                 _favourite_rows(request.user) if request.user.is_authenticated else []
-            )
+            ),
+            "account_recent_rows": (
+                _recent_rows(request.user) if request.user.is_authenticated else []
+            ),
+            "account_recent_history_enabled": (
+                recent_history_enabled(request.user) if request.user.is_authenticated else False
+            ),
         },
     )
 
@@ -147,4 +200,28 @@ def clear_favourites(request: HttpRequest) -> HttpResponse:
         messages.success(request, "All account-saved pairs were removed.")
     else:
         messages.info(request, "There were no account-saved pairs to remove.")
+    return redirect("saved_state")
+
+
+@login_required
+@require_POST
+def delete_recent_conversion(request: HttpRequest, recent_id: int) -> HttpResponse:
+    recent = get_object_or_404(
+        RecentConversion,
+        pk=recent_id,
+        user=request.user,
+    )
+    recent.delete()
+    messages.success(request, "Recent conversion removed from your account.")
+    return redirect("saved_state")
+
+
+@login_required
+@require_POST
+def clear_recent_conversions(request: HttpRequest) -> HttpResponse:
+    deleted, _ = RecentConversion.objects.filter(user=request.user).delete()
+    if deleted:
+        messages.success(request, "All account recent history was removed.")
+    else:
+        messages.info(request, "There was no account recent history to remove.")
     return redirect("saved_state")
