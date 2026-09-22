@@ -158,4 +158,3 @@ def _temporal_scope(start: date | None, end: date | None) -> str:
     if end:
         return f"through {end.isoformat()}"
     return "undated sourced context"
-
