@@ -82,10 +82,7 @@ function setAccountFavouriteButtonState(snapshot: HTMLElement, saved: boolean): 
   if (!button || !label) return;
 
   button.setAttribute("aria-pressed", saved ? "true" : "false");
-  button.setAttribute(
-    "aria-label",
-    saved ? "Pair saved to account" : "Save pair to account",
-  );
+  button.setAttribute("aria-label", saved ? "Pair saved to account" : "Save pair to account");
   button.dataset.saved = saved ? "true" : "false";
   delete button.dataset.storageUnavailable;
   label.textContent = saved ? "Saved to account" : "Save to account";
@@ -109,9 +106,7 @@ async function saveAccountFavourite(snapshot: HTMLElement): Promise<void> {
     setAccountFavouriteButtonState(snapshot, true);
     saveStatus(
       snapshot,
-      created
-        ? "Saved to your account."
-        : "This pair is already saved to your account.",
+      created ? "Saved to your account." : "This pair is already saved to your account.",
     );
   } catch {
     saveStatus(
@@ -211,7 +206,9 @@ function syncLocalAccountFavourites(): void {
     .then((mergedCount) => {
       if (
         mergedCount > 0 &&
-        document.querySelector<HTMLElement>('[data-local-saved-state-page][data-account-mode="true"]')
+        document.querySelector<HTMLElement>(
+          '[data-local-saved-state-page][data-account-mode="true"]',
+        )
       ) {
         window.location.reload();
       }
