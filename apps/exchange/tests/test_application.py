@@ -118,6 +118,8 @@ def test_current_submission_coordinates_quote_and_destination_context(reference_
             context_as_of=date(2026, 9, 22),
         )
 
+    assert outcome.error is None
+    assert outcome.conversion is not None
     assert outcome.conversion.output_amount == Decimal("17450")
     assert outcome.destination_context == destination_context
     assert outcome.historical_suggestions == ()
@@ -154,6 +156,8 @@ def test_historical_submission_returns_currency_era_suggestion(reference_data):
             context_as_of=date(2026, 9, 22),
         )
 
+    assert outcome.error is None
+    assert outcome.conversion is not None
     assert outcome.conversion.quote.historical is True
     assert outcome.conversion.quote.requested_date == requested
     assert len(outcome.historical_suggestions) == 1
@@ -186,6 +190,8 @@ def test_destination_context_failure_never_invalidates_conversion(reference_data
             context_as_of=date(2026, 9, 22),
         )
 
+    assert outcome.error is None
+    assert outcome.conversion is not None
     assert outcome.conversion.output_amount == Decimal("17450")
     assert outcome.destination_context is None
 
