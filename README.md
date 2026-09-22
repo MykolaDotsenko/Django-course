@@ -103,21 +103,22 @@ The handbook covers:
 
 ## Delivery strategy
 
-The rebuild is intentionally incremental. PR2 established the locked Django/Vite/TypeScript/Quiet Atlas web foundation and browser-quality gates. PR3 introduced canonical country/currency identity. PR4–PR7.3 delivered trusted current/historical FX, bounded series, the accessible chart and Then & Now. PR7A added provenance-safe managed media. PR7B added the bounded Gemini Explain this capability without putting AI on the financial truth path. PR8 added reviewed currency-era facts and deterministic Money & culture storytelling. PR9–PR10 complete the P0 Explore triad with sourced payment context and scoped everyday-value observations. PR11 adds anonymous browser-local favourites and bounded recent conversions without creating hidden server history.
+The rebuild is intentionally incremental. PR2 established the locked Django/Vite/TypeScript/Quiet Atlas web foundation and browser-quality gates. PR3 introduced canonical country/currency identity. PR4–PR7.3 delivered trusted current/historical FX, bounded series, the accessible chart and Then & Now. PR7A added provenance-safe managed media. PR7B added the bounded Gemini Explain this capability without putting AI on the financial truth path. PR8 added reviewed currency-era facts and deterministic Money & culture storytelling. PR9–PR10 complete the P0 Explore triad with sourced payment context and scoped everyday-value observations. PR11 adds anonymous browser-local favourites and bounded recent conversions without creating hidden server history. PR12A adds account identity and durable favourite ownership; PR12B adds explicit opt-in cross-device recent history without silently importing browser-local recents.
 
 See [docs/08_IMPLEMENTATION_ROADMAP.md](docs/08_IMPLEMENTATION_ROADMAP.md).
 
 ## Current status
 
-**Phase:** PR12A account identity + durable favourite ownership implemented → PR12B authenticated recent-history policy next.
+**Phase:** PR12B opt-in authenticated recent history implemented → PR13 versioned mobile API next.
 
 The executable web product now covers current/historical conversion, scoped sourced everyday-value
 context, payment/cash/tipping guidance, Money & culture storytelling, historical charts/Then & Now,
 managed media, the bounded optional Gemini explanation, account-backed saved pairs and bounded
-browser-local recent conversion history. Anonymous saved state remains versioned localStorage only.
-Signed-in favourites are user-owned PostgreSQL rows with ownership-scoped mutations, bounded
-local-to-account union/deduplication and explicit deletion controls; local recent history is not
-silently uploaded. Destination context remains local at request time, carries provenance/trust
+recent conversion history. Anonymous saved state remains versioned localStorage only. Signed-in
+favourites are user-owned PostgreSQL rows with ownership-scoped mutations and bounded local→account
+merge. Cross-device recent history is separately opt-in, defaults off, stores only future successful
+conversions, is capped at 50 account rows and never silently imports existing browser-local recents.
+Destination context remains local at request time, carries provenance/trust
 metadata and cannot invalidate the conversion. Browser QA runs a full Chromium gate plus
 Firefox/WebKit smoke coverage, including the Saved & recent surface. Wikidata remains a
 management-command candidate source, never a web-request dependency.
