@@ -11,7 +11,6 @@ from django.core.management.base import CommandError
 from django.test import override_settings
 from PIL import Image
 
-from apps.countries.models import Country
 from apps.media.admin import MediaAssetAdmin
 from apps.media.models import (
     MediaAsset,
