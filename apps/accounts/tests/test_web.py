@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from apps.countries.models import Country, CountryCurrency, Currency
@@ -11,6 +11,7 @@ User = get_user_model()
 PASSWORD = "StrongPass-482!"
 
 
+@override_settings(VITE_DEV_SERVER_ENABLED=True)
 class AccountWebTests(TestCase):
     def test_signup_authenticates_and_redirects_to_saved_state(self):
         response = self.client.post(
