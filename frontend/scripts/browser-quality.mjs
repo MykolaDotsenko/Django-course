@@ -1070,7 +1070,7 @@ const evidence = {
   surfaces: {},
   budgets: {
     coreJavaScriptGzipBytes: 100 * 1024,
-    source: "docs/36_PERFORMANCE_BUDGETS_AND_PROFILING.md",
+    source: "docs/07_QUALITY_SECURITY_ACCESSIBILITY.md",
   },
 };
 

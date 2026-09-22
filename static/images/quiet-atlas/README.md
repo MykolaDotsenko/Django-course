@@ -1,18 +1,10 @@
 # Quiet Atlas Static Image Pack
 
-This directory contains release-owned static illustrations for Cultural Currency Converter.
+This directory contains release-owned illustrations used as deterministic visual fallbacks.
 
-## Rules
+They are product assets, not factual evidence. Sourced managed media can replace or supplement them where authenticity matters.
 
-- SVG only for the initial pack.
-- No runtime AI generation.
-- No external image dependencies.
-- No text embedded in the artwork.
-- Country visuals are atmospheric, not evidence.
-- Historical visuals are editorial illustrations, not archival photographs.
-- Use real sourced media through the MediaAsset pipeline when factual visual evidence matters.
-
-## Files
+## Current asset inventory
 
 ### Hero
 
@@ -34,23 +26,20 @@ This directory contains release-owned static illustrations for Cultural Currency
 - `countries-italy-local-value-v1.svg`
 - `countries-thailand-local-value-v1.svg`
 - `countries-turkey-local-value-v1.svg`
+- `countries-germany-local-value-v1.svg`
+- `countries-spain-local-value-v1.svg`
 
-### Historical editorial illustrations
+### Historical/editorial illustration
 
 - `history-euro-transition-2002-v1.svg`
 - `history-finland-markka-1998-v1.svg`
+- `history-then-now-comparison-v1.svg`
 
-### P1 expansion
+### Story / utility
 
-- `countries-germany-local-value-v1.svg`
-- `countries-spain-local-value-v1.svg`
 - `story-market-basket-value-v1.svg`
 - `story-cafe-affordability-v1.svg`
 - `story-street-food-affordability-v1.svg`
-
-### UI coverage expansion
-
-- `history-then-now-comparison-v1.svg`
 - `story-transit-affordability-v1.svg`
 - `story-budget-hotel-affordability-v1.svg`
 - `trust-rate-provenance-v1.svg`
@@ -65,17 +54,14 @@ This directory contains release-owned static illustrations for Cultural Currency
 
 Total current pack: **28 SVG assets**.
 
-Full prompt, usage and authenticity documentation:
+## Usage
 
-- `docs/27_STATIC_IMAGE_GENERATION_PLAN.md`
+Prefer the existing media registry/selectors rather than repeating file paths through page templates.
 
+The current assets are SVG because that works well for this release-owned illustration style. This is a current implementation choice, not a permanent format restriction.
 
-## Selection architecture
+Country images provide atmosphere. Historical illustrations should not be presented as archival evidence.
 
-Do not hardcode these file paths directly across page templates.
+For media selection, managed sourced media and AI/image policy, see:
 
-Use the presentation registry/selectors documented in:
-
-- `docs/28_STATIC_MEDIA_UI_INTEGRATION.md`
-
-The original 23-asset content pack remains capped. The 5 additional files are responsive/social derivatives added only after real desktop/mobile screenshot QA identified concrete delivery surfaces.
+- `docs/INTEGRATIONS_AI_MEDIA.md`
