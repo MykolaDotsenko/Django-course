@@ -2,7 +2,7 @@
 {% block title %}Saved & recent · Cultural Currency Converter{% endblock %}
 {% block head_meta %}
   <meta name="description"
-        content="Review saved currency pairs and browser-local recent conversions.">
+        content="Review account-saved currency pairs and recent conversion history.">
 {% endblock %}
 {% block header_actions %}
   <a class="qa-header-link" href="{% url 'converter' %}">Converter</a>
@@ -14,8 +14,8 @@
     <h1 id="saved-page-title">Saved &amp; recent</h1>
     {% if user.is_authenticated %}
       <p class="qa-foundation-lede">
-        Saved pairs belong to your account and can follow you across signed-in devices. Recent
-        conversions remain only in this browser and are not uploaded.
+        Saved pairs belong to your account. Cross-device recent history is separate and stays off
+        until you explicitly enable it; browser-only history is never uploaded automatically.
       </p>
     {% else %}
       <p class="qa-foundation-lede">
@@ -24,9 +24,11 @@
       </p>
     {% endif %}
   </section>
+
   <div class="qa-saved-state"
        data-local-saved-state-page
        data-account-mode="{% if user.is_authenticated %}true{% else %}false{% endif %}"
+       data-account-history-enabled="{% if account_recent_history_enabled %}true{% else %}false{% endif %}"
        data-converter-url="{% url 'converter' %}">
     <p class="qa-saved-state__storage-note"
        data-local-storage-status
@@ -36,14 +38,15 @@
     <noscript>
       <p class="qa-saved-state__storage-note" data-storage-tone="warning">
         {% if user.is_authenticated %}
-          Account-saved pairs remain available, but JavaScript is required to read browser-local
-          recent history.
+          Account-saved pairs and account recent history remain available. JavaScript is required
+          only to read browser-only recent history on this device.
         {% else %}
           JavaScript is required to read browser-local saved pairs and recent history. The converter
           still works without JavaScript.
         {% endif %}
       </p>
     </noscript>
+
     <section class="qa-saved-section" aria-labelledby="saved-pairs-title">
       <div class="qa-saved-section__heading">
         <div>
@@ -72,6 +75,7 @@
                   hidden>Clear saved pairs</button>
         {% endif %}
       </div>
+
       {% if user.is_authenticated %}
         {% if account_favourite_rows %}
           <div class="qa-saved-list" data-account-favourites-list>
@@ -120,29 +124,129 @@
         <div class="qa-saved-list" data-favourites-list></div>
       {% endif %}
     </section>
-    <section class="qa-saved-section" aria-labelledby="recent-conversions-title">
-      <div class="qa-saved-section__heading">
-        <div>
-          <p class="qa-foundation-kicker">Recent</p>
-          <h2 id="recent-conversions-title">Recent conversions</h2>
-          <p>
-            Up to 10 recent conversions stay on this device so you can repeat or reverse them.
-            {% if user.is_authenticated %}They are not synced to your account.{% endif %}
-          </p>
+
+    {% if user.is_authenticated %}
+      <section class="qa-saved-section" aria-labelledby="account-history-title">
+        <div class="qa-saved-section__heading">
+          <div>
+            <p class="qa-foundation-kicker">Cross-device</p>
+            <h2 id="account-history-title">Account recent history</h2>
+            {% if account_recent_history_enabled %}
+              <p>
+                On. Future successful conversions are stored in your account, up to 50 entries.
+                Older browser-only history is not imported automatically.
+              </p>
+            {% else %}
+              <p>
+                Off. No future conversions are added to your account. Existing account history,
+                if any, stays available until you remove it.
+              </p>
+              <a class="qa-secondary-button" href="{% url 'profile' %}">Manage history privacy</a>
+            {% endif %}
+          </div>
+          {% if account_recent_rows %}
+            <form method="post" action="{% url 'clear_recent_conversions' %}">
+              {% csrf_token %}
+              <button class="qa-secondary-button" type="submit">Clear account history</button>
+            </form>
+          {% endif %}
         </div>
-        <button class="qa-secondary-button"
-                type="button"
-                data-clear-recents
-                hidden>Clear recent history</button>
-      </div>
-      <p class="qa-saved-empty" data-recents-empty>No recent conversions in this browser yet.</p>
-      <div class="qa-saved-list" data-recents-list></div>
-    </section>
+
+        {% if account_recent_rows %}
+          <div class="qa-saved-list" data-account-recents-list>
+            {% for row in account_recent_rows %}
+              {% with recent=row.recent %}
+                <article class="qa-saved-row" data-account-recent-id="{{ recent.pk }}">
+                  <div class="qa-saved-row__copy">
+                    <h3>
+                      {{ recent.input_amount }} {{ recent.source_currency.code }}
+                      →
+                      {{ recent.output_amount }} {{ recent.destination_currency.code }}
+                    </h3>
+                    <p>
+                      {% if recent.source_country %}
+                        {{ recent.source_country.name }}
+                      {% else %}
+                        No country context
+                      {% endif %}
+                      →
+                      {% if recent.destination_country %}
+                        {{ recent.destination_country.name }}
+                      {% else %}
+                        No country context
+                      {% endif %}
+                    </p>
+                    <p class="qa-saved-row__meta">
+                      {% if recent.rate_mode == "historical" %}
+                        Historical · requested {{ recent.requested_date|date:"j M Y" }} · observation
+                        {{ recent.effective_date|date:"j M Y" }}
+                      {% else %}
+                        Latest available · effective {{ recent.effective_date|date:"j M Y" }}
+                      {% endif %}
+                      · {{ recent.converted_at|date:"j M Y, H:i" }}
+                    </p>
+                  </div>
+                  <div class="qa-saved-row__actions">
+                    <a class="qa-secondary-button" href="{{ row.repeat_url }}">Repeat</a>
+                    <a class="qa-secondary-button" href="{{ row.swap_url }}">Swap</a>
+                    <form method="post"
+                          action="{% url 'delete_recent_conversion' recent.pk %}">
+                      {% csrf_token %}
+                      <button class="qa-secondary-button" type="submit">Remove</button>
+                    </form>
+                  </div>
+                </article>
+              {% endwith %}
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="qa-saved-empty">
+            No account recent history. Browser-only history below stays on this device.
+          </p>
+        {% endif %}
+      </section>
+
+      <section class="qa-saved-section" aria-labelledby="browser-history-title">
+        <div class="qa-saved-section__heading">
+          <div>
+            <p class="qa-foundation-kicker">This device</p>
+            <h2 id="browser-history-title">Browser-only history</h2>
+            <p>
+              Older local recents stay on this browser and are never uploaded automatically,
+              including after account history is enabled.
+            </p>
+          </div>
+          <button class="qa-secondary-button"
+                  type="button"
+                  data-clear-recents
+                  hidden>Clear browser history</button>
+        </div>
+        <p class="qa-saved-empty" data-recents-empty>No browser-only recent conversions here.</p>
+        <div class="qa-saved-list" data-recents-list></div>
+      </section>
+    {% else %}
+      <section class="qa-saved-section" aria-labelledby="recent-conversions-title">
+        <div class="qa-saved-section__heading">
+          <div>
+            <p class="qa-foundation-kicker">Recent</p>
+            <h2 id="recent-conversions-title">Recent conversions</h2>
+            <p>Up to 10 recent conversions stay on this device so you can repeat or reverse them.</p>
+          </div>
+          <button class="qa-secondary-button"
+                  type="button"
+                  data-clear-recents
+                  hidden>Clear recent history</button>
+        </div>
+        <p class="qa-saved-empty" data-recents-empty>No recent conversions in this browser yet.</p>
+        <div class="qa-saved-list" data-recents-list></div>
+      </section>
+    {% endif %}
+
     <p class="qa-saved-state__privacy">
       {% if user.is_authenticated %}
-        Account favourites can be removed individually or cleared above. Account deletion removes
-        all account-owned favourites. Clearing browser site data separately removes local recent
-        history.
+        Browser-only history is never uploaded automatically. Turning account history off stops
+        future server recording but keeps existing rows until you remove or clear them. Deleting
+        your account removes all account-owned favourites and recent history.
       {% else %}
         Clearing browser site data also removes these items. Sign in only if you want saved pairs
         to sync across devices.
