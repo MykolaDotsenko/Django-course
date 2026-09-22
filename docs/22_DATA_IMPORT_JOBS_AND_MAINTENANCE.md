@@ -124,6 +124,9 @@ manage.py sync_fx_currency_coverage [--dry-run] [--base-url ...]
 Purpose:
 
 - fetch Frankfurter v2 active + `scope=all` currency metadata outside any write transaction;
+- use JSON-only requests with a 512 KiB response cap per metadata endpoint;
+- normalize HTTP, URL/network, timeout, socket-read and malformed JSON/Unicode failures into the
+  provider boundary error type;
 - validate the bounded coverage snapshot;
 - update provider coverage bounds/provenance only;
 - preserve Currency lifecycle/current-vs-archived ownership;
