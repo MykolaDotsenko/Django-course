@@ -501,7 +501,10 @@ Import frequency reflects source quota/update cadence.
 REST Countries:
 
 - slow-changing;
-- weekly/manual likely enough.
+- weekly/manual likely enough;
+- each page is bounded to a 2 MiB body before JSON parsing;
+- malformed payload/schema and invalid canonical codes fail the import rather than entering canonical state;
+- pagination that does not make positive progress fails closed.
 
 HICP:
 
