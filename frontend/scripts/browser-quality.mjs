@@ -416,6 +416,24 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
 }
 
 async function assertSavedStateFlow(page) {
+  const neutralStatus = page.locator("[data-local-storage-status]");
+  await page.waitForFunction(() => {
+    const status = document.querySelector("[data-local-storage-status]");
+    return status?.getAttribute("data-storage-tone") === "neutral";
+  });
+  assert(
+    await page.getByRole("button", { name: "Clear saved pairs" }).isHidden(),
+    "saved-state/empty: clear-saved action should not compete with the empty state",
+  );
+  assert(
+    await page.getByRole("button", { name: "Clear recent history" }).isHidden(),
+    "saved-state/empty: clear-recents action should not compete with the empty state",
+  );
+  assert(
+    (await neutralStatus.getAttribute("data-storage-tone")) === "neutral",
+    "saved-state/empty: ordinary local-storage metadata should remain visually neutral",
+  );
+
   const sampleState = {
     version: 1,
     favourites: [
@@ -518,10 +536,18 @@ async function assertSavedStateFlow(page) {
   await page.getByRole("button", { name: "Clear recent history" }).click();
   await page.getByText("Recent history cleared from this browser.", { exact: true }).waitFor();
   await page.getByText("No recent conversions in this browser yet.", { exact: true }).waitFor();
+  assert(
+    await page.getByRole("button", { name: "Clear recent history" }).isHidden(),
+    "saved-state: clear-recents action remained visible after the list became empty",
+  );
 
   await page.getByRole("button", { name: "Clear saved pairs" }).click();
   await page.getByText("Saved pairs cleared from this browser.", { exact: true }).waitFor();
   await page.getByText("No saved pairs yet.", { exact: false }).waitFor();
+  assert(
+    await page.getByRole("button", { name: "Clear saved pairs" }).isHidden(),
+    "saved-state: clear-saved action remained visible after the list became empty",
+  );
 
   await page.evaluate((key) => localStorage.setItem(key, "{broken"), LOCAL_STATE_KEY);
   await page.reload({ waitUntil: "networkidle" });
@@ -530,6 +556,11 @@ async function assertSavedStateFlow(page) {
       exact: false,
     })
     .waitFor();
+  assert(
+    (await page.locator("[data-local-storage-status]").getAttribute("data-storage-tone")) ===
+      "warning",
+    "saved-state: corrupt local data did not elevate recovery status",
+  );
 
   await page.evaluate(({ key, state }) => localStorage.setItem(key, JSON.stringify(state)), {
     key: LOCAL_STATE_KEY,
