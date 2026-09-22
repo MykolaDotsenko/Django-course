@@ -12,7 +12,13 @@ from apps.countries.models import Currency
 from apps.countries.services import HistoricalCurrencySuggestion, historical_currency_suggestion
 from apps.culture.services import DestinationContext, build_destination_context
 from apps.exchange.cache import HistoricalQuoteGateway, LatestQuoteGateway
-from apps.exchange.domain import ConversionResult, HistoricalCurrencyMetadata
+from apps.exchange.domain import (
+    ConversionResult,
+    HistoricalCurrencyMetadata,
+    HistoricalObservationUnavailable,
+    HistoricalOutOfCoverage,
+)
+from apps.exchange.providers.base import FxProviderError
 from apps.exchange.services import quote_conversion, quote_historical_conversion
 
 logger = logging.getLogger("cultural_currency.exchange")
@@ -37,9 +43,13 @@ class HistoricalSuggestion:
     suggestion: HistoricalCurrencySuggestion
 
 
+ConverterSubmissionError = FxProviderError | HistoricalObservationUnavailable | HistoricalOutOfCoverage
+
+
 @dataclass(frozen=True, slots=True)
 class ConverterSubmissionResult:
-    conversion: ConversionResult
+    conversion: ConversionResult | None
+    error: ConverterSubmissionError | None
     historical_suggestions: tuple[HistoricalSuggestion, ...]
     destination_context: DestinationContext | None
 
@@ -99,27 +109,36 @@ def run_converter_submission(
     """Execute one validated converter use case without depending on HTTP or templates."""
 
     source_currency, destination_currency = _currency_pair(command)
+    historical_suggestions = _historical_suggestions(command)
 
-    if command.historical:
-        if command.requested_date is None:
-            raise ValueError("Historical conversion requires requested_date.")
-        conversion = quote_historical_conversion(
-            amount=command.amount,
-            base_currency=source_currency.code,
-            quote_currency=destination_currency.code,
-            quote_minor_units=destination_currency.minor_units,
-            requested_date=command.requested_date,
-            gateway=historical_gateway_factory,
-            base_metadata=_historical_currency_metadata(source_currency),
-            quote_metadata=_historical_currency_metadata(destination_currency),
-        )
-    else:
-        conversion = quote_conversion(
-            amount=command.amount,
-            base_currency=source_currency.code,
-            quote_currency=destination_currency.code,
-            quote_minor_units=destination_currency.minor_units,
-            gateway=latest_gateway_factory(),
+    try:
+        if command.historical:
+            if command.requested_date is None:
+                raise ValueError("Historical conversion requires requested_date.")
+            conversion = quote_historical_conversion(
+                amount=command.amount,
+                base_currency=source_currency.code,
+                quote_currency=destination_currency.code,
+                quote_minor_units=destination_currency.minor_units,
+                requested_date=command.requested_date,
+                gateway=historical_gateway_factory,
+                base_metadata=_historical_currency_metadata(source_currency),
+                quote_metadata=_historical_currency_metadata(destination_currency),
+            )
+        else:
+            conversion = quote_conversion(
+                amount=command.amount,
+                base_currency=source_currency.code,
+                quote_currency=destination_currency.code,
+                quote_minor_units=destination_currency.minor_units,
+                gateway=latest_gateway_factory(),
+            )
+    except (FxProviderError, HistoricalObservationUnavailable, HistoricalOutOfCoverage) as exc:
+        return ConverterSubmissionResult(
+            conversion=None,
+            error=exc,
+            historical_suggestions=historical_suggestions,
+            destination_context=None,
         )
 
     destination_context = None
@@ -141,6 +160,7 @@ def run_converter_submission(
 
     return ConverterSubmissionResult(
         conversion=conversion,
-        historical_suggestions=_historical_suggestions(command),
+        error=None,
+        historical_suggestions=historical_suggestions,
         destination_context=destination_context,
     )
