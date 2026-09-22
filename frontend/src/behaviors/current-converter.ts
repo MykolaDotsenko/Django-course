@@ -80,7 +80,7 @@ function enhanceAutoRefresh(form: HTMLFormElement): void {
       if (!historical?.checked || !target.value) return;
     }
 
-    form.requestSubmit();
+    requestProgressiveSubmit(form);
   });
 }
 
