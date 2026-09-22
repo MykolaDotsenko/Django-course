@@ -107,6 +107,34 @@ It does not:
 - load cultural context;
 - call mobile-specific code.
 
+## 4.1 Converter submission orchestration
+
+The implemented web converter calls one request-independent page-level use case:
+
+~~~text
+ConverterSubmissionCommand
+→ run_converter_submission(...)
+→ ConverterSubmissionResult
+~~~
+
+This orchestration layer coordinates:
+
+- canonical currency metadata needed for minor units and historical lifecycle checks;
+- current vs historical quote service selection;
+- historical currency-era suggestions;
+- optional destination context after a successful conversion.
+
+It returns domain/application objects only. It does **not** know about `HttpRequest`, response
+status codes, templates, HTMX headers or user-facing error copy.
+
+Destination context is deliberately non-fatal: a context-composition failure is logged and returns
+`destination_context=None` while the trusted conversion remains successful. This preserves the
+product invariant that cultural enrichment can never invalidate arithmetic.
+
+The Django view remains the composition/transport boundary: it parses form/request state, supplies
+gateway factories, calls this one use case, maps known FX errors to HTTP/presentation states and
+renders the result.
+
 ---
 
 # 5. Quote historical conversion
