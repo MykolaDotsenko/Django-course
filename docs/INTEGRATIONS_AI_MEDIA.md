@@ -113,7 +113,7 @@ The configured provider/model is an implementation choice and may change after q
 
 Runtime image generation is disabled.
 
-Generated imagery is not the default visual strategy. If used in the future, it should be an explicitly reviewed supporting asset where factual authenticity is not implied. It should not replace real destination photography or masquerade as archival evidence.
+Generated imagery may be used as an explicitly reviewed atmospheric/supporting asset when factual authenticity is not implied. The curated country generation workflow lives in `media/00_COUNTRY_MEDIA_SYSTEM.md`. Generated assets remain classified as synthetic in media metadata and must not masquerade as archival evidence, a source for prices, or proof of payment behaviour. Authentic sourced photography remains preferable where equivalent quality and rights are available.
 
 ## AI availability and cost
 

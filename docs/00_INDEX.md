@@ -16,6 +16,7 @@ For most non-trivial work, use this order:
    - [Architecture](04_ARCHITECTURE.md)
    - [Domain model](05_DOMAIN_MODEL.md)
    - [Integrations, AI and media](INTEGRATIONS_AI_MEDIA.md)
+   - [Country media production system](media/00_COUNTRY_MEDIA_SYSTEM.md)
    - [Quality, security and accessibility](07_QUALITY_SECURITY_ACCESSIBILITY.md)
 4. [Roadmap](08_IMPLEMENTATION_ROADMAP.md) when planning what to do next
 5. [Decision log](09_ADR_LOG.md) when changing a durable architectural choice
