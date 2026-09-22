@@ -156,6 +156,9 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     `current-converter: invalid submit returned ${invalidSubmitResponse.status()} instead of 422`,
   );
   await page.getByText("Enter zero or a positive amount.").waitFor();
+  await page.waitForFunction(
+    () => document.activeElement?.id === "conversion-error-summary",
+  );
 
   await page.locator("#source-picker-trigger").click();
   const sourceDialog = page.locator('[data-picker-dialog="source"]');
@@ -179,6 +182,7 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     return (
       first?.getAttribute("data-country-code") === "FI" &&
       first?.getAttribute("data-currency-code") === "EUR" &&
+      first?.getAttribute("aria-selected") === "true" &&
       first.textContent?.includes("Current selection")
     );
   });
@@ -248,9 +252,22 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     (response) =>
       response.request().method() === "GET" && new URL(response.url()).pathname === "/story/",
   );
+  const previousResultNote = page.locator("[data-previous-result-note]");
+  assert(
+    await previousResultNote.isHidden(),
+    "current-converter: previous-result note should be hidden before story expansion",
+  );
   await page.getByRole("link", { name: "Explore money & culture" }).click();
   await waitForStory;
   await page.locator(".qa-story-surface").waitFor();
+  assert(
+    await previousResultNote.isHidden(),
+    "current-converter: story request incorrectly marked the conversion result as updating",
+  );
+  assert(
+    (await page.locator("#conversion-result-region").getAttribute("aria-busy")) === null,
+    "current-converter: story request incorrectly marked the conversion result as busy",
+  );
   const storyText = await page.locator(".qa-story-surface").innerText();
   assert(
     storyText.includes("The sourced story behind this currency context"),
@@ -325,6 +342,11 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     `current-converter: invalid progressive refresh returned ${invalidRefreshResponse.status()} instead of 422`,
   );
   await page.getByText("Enter zero or a positive amount.").waitFor();
+  const invalidRefreshFocus = await page.evaluate(() => document.activeElement?.id ?? "");
+  assert(
+    invalidRefreshFocus === "id_amount",
+    `current-converter: progressive validation moved focus away from amount to ${invalidRefreshFocus}`,
+  );
 
   const preservedAmount = await page
     .locator("#current-conversion-result .qa-result__input")
