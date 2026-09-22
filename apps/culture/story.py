@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
+
 from apps.culture.models import StoryMoment
 from apps.culture.provenance import is_valid_provenance_url
 from apps.culture.services import currency_era_links, select_story_moments
