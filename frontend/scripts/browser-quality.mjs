@@ -181,6 +181,13 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     new URL(page.url()).searchParams.get("convert") === "1",
     "current-converter: successful HTMX conversion did not push a bookmarkable URL",
   );
+  await page.waitForFunction(() =>
+    document.getElementById("conversion-announcer")?.textContent?.includes("12 JPY"),
+  );
+  assert(
+    (await page.locator("#conversion-announcer").count()) === 1,
+    "current-converter: expected exactly one persistent conversion announcer",
+  );
 
   await page.getByRole("link", { name: "Everyday value" }).waitFor();
   await page.getByRole("link", { name: "Payment context" }).waitFor();
@@ -553,7 +560,11 @@ try {
         await assertConverterTransitionLayout(page);
       }
 
-      if (surface.name === "current-converter" && viewport.name === "wide-1440") {
+      if (
+        surface.name === "current-converter" &&
+        (viewport.name === "wide-1440" ||
+          (BROWSER_SCOPE === "full" && viewport.name === "mobile-390"))
+      ) {
         await assertCurrentConverterFlow(page, consoleErrors);
       }
 
