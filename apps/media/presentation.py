@@ -3,18 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
-from apps.common.presentation.media_selectors import (
-    select_country_media,
-    select_history_og_media,
-    select_home_og_media,
-    select_story_media,
-)
-from apps.common.presentation.media_view_models import (
-    ImageViewModel,
-    build_static_image_view_model,
-)
+from apps.common.presentation.media_view_models import ImageViewModel
 from apps.countries.models import Country, Currency
-from apps.media.models import MediaAsset, MediaRole
+from apps.media.models import MediaAsset
 from apps.media.services import select_published_media
 
 
@@ -24,7 +15,7 @@ class DisplayMediaSelection:
     selection_reason: str
     temporal_match_quality: str
     authenticity_class: str
-    fallback_level: int
+    fallback_level: int = 0
 
 
 def build_media_asset_image_view_model(asset: MediaAsset) -> ImageViewModel:
@@ -47,18 +38,6 @@ def build_media_asset_image_view_model(asset: MediaAsset) -> ImageViewModel:
     )
 
 
-def _static_fallback(role: str, country: Country | None):
-    if role in {MediaRole.COUNTRY_HERO, MediaRole.COUNTRY_TEASER}:
-        return select_country_media(country.iso2 if country else None)
-    if role in {MediaRole.COMPARISON_THEN, MediaRole.COMPARISON_NOW}:
-        return select_story_media("then_now")
-    if role in {MediaRole.STORY_COVER, MediaRole.STORY_CHAPTER, MediaRole.HISTORICAL_TIMELINE}:
-        return select_story_media(None)
-    if role == MediaRole.SOCIAL_PREVIEW:
-        return select_history_og_media() if country else select_home_og_media()
-    return select_country_media(country.iso2 if country else None)
-
-
 def select_media_for_display(
     *,
     role: str,
@@ -66,7 +45,9 @@ def select_media_for_display(
     currency: Currency | None = None,
     target_date: date | None = None,
     aspect_ratio: str | None = None,
-) -> DisplayMediaSelection:
+) -> DisplayMediaSelection | None:
+    """Return reviewed managed media, or no image when nothing meets the bar."""
+
     stored = select_published_media(
         role=role,
         country=country,
@@ -74,20 +55,13 @@ def select_media_for_display(
         target_date=target_date,
         aspect_ratio=aspect_ratio,
     )
-    if stored is not None:
-        return DisplayMediaSelection(
-            image=build_media_asset_image_view_model(stored.asset),
-            selection_reason=stored.selection_reason,
-            temporal_match_quality=stored.temporal_match_quality,
-            authenticity_class=stored.authenticity_class,
-            fallback_level=stored.fallback_level,
-        )
+    if stored is None:
+        return None
 
-    fallback = _static_fallback(role, country)
     return DisplayMediaSelection(
-        image=build_static_image_view_model(fallback),
-        selection_reason="quiet_atlas_static_fallback",
-        temporal_match_quality="fallback",
-        authenticity_class="release_owned_illustration",
-        fallback_level=1,
+        image=build_media_asset_image_view_model(stored.asset),
+        selection_reason=stored.selection_reason,
+        temporal_match_quality=stored.temporal_match_quality,
+        authenticity_class=stored.authenticity_class,
+        fallback_level=stored.fallback_level,
     )

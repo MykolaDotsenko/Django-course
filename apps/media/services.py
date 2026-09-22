@@ -58,6 +58,10 @@ _HISTORICAL_ROLES = {
     MediaRole.COMPARISON_THEN,
     MediaRole.HISTORICAL_TIMELINE,
 }
+_PHOTOGRAPHIC_ROLES = {
+    MediaRole.COUNTRY_HERO,
+    MediaRole.COUNTRY_TEASER,
+}
 _TEMPORAL_SCORE = {
     DatePrecision.EXACT_DAY: 1000,
     DatePrecision.MONTH: 900,
@@ -475,6 +479,11 @@ def select_published_media(
         raise ValueError("Unknown media role.")
 
     queryset = MediaAsset.objects.filter(status=MediaStatus.PUBLISHED, role=role)
+    if role in _PHOTOGRAPHIC_ROLES:
+        queryset = queryset.filter(
+            kind=MediaKind.CONTEMPORARY_PHOTO,
+            generated_by_ai=False,
+        )
     if country is None:
         queryset = queryset.filter(country__isnull=True)
     else:

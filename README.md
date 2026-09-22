@@ -19,7 +19,7 @@ The web product currently includes:
 - historical charts and Then & Now comparison;
 - sourced everyday-value and payment context;
 - deterministic Money & culture stories;
-- managed media with Quiet Atlas fallbacks;
+- managed, provenance-aware photographic media (no cartoon country-image fallback);
 - an optional, explicit AI explanation with deterministic fallback;
 - anonymous browser-local favourites/recent conversions;
 - signed-in favourite ownership and opt-in cross-device recent history.
