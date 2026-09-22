@@ -4,7 +4,10 @@ from unittest.mock import Mock, patch
 import pytest
 from django.core.management import CommandError, call_command
 
-from apps.exchange.metadata import CurrencyCoverageSyncSummary
+from apps.exchange.metadata import (
+    CurrencyCoverageSnapshotValidationError,
+    CurrencyCoverageSyncSummary,
+)
 from apps.exchange.providers.frankfurter_metadata import FrankfurterMetadataError
 
 
@@ -72,6 +75,7 @@ def test_sync_fx_currency_coverage_command_propagates_dry_run_to_service():
     "error",
     [
         FrankfurterMetadataError("provider unavailable"),
+        CurrencyCoverageSnapshotValidationError("snapshot incomplete"),
         ValueError("invalid configuration"),
     ],
 )
