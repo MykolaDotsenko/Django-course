@@ -1141,6 +1141,10 @@ try {
         viewport.name === "wide-1440"
       ) {
         await assertAuthenticatedRecentHistoryFlow(page);
+        assert(
+          consoleErrors.length === 0,
+          `account-history/e2e: console errors: ${consoleErrors.join(" | ")}`,
+        );
       }
 
       await context.close();
