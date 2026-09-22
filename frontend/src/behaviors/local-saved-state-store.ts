@@ -1,0 +1,286 @@
+const STORAGE_VERSION = 1 as const;
+const MAX_FAVOURITES = 12;
+const MAX_RECENTS = 10;
+const STORAGE_PROBE_KEY = "cultural-currency:storage-probe";
+
+export const STORAGE_KEY = "cultural-currency:local-preferences:v1";
+
+export type RateMode = "latest" | "historical";
+export type ReadStatus = "ok" | "recovered" | "unavailable";
+
+export interface PairContext {
+  sourceCurrency: string;
+  destinationCurrency: string;
+  sourceCountry: string;
+  destinationCountry: string;
+  sourceCountryName: string;
+  destinationCountryName: string;
+}
+
+export interface FavouritePair extends PairContext {
+  id: string;
+  savedAt: string;
+}
+
+export interface RecentConversion extends PairContext {
+  id: string;
+  amount: string;
+  outputAmount: string;
+  rateMode: RateMode;
+  requestedDate: string;
+  effectiveDate: string;
+  convertedAt: string;
+}
+
+export interface LocalPreferencesV1 {
+  version: typeof STORAGE_VERSION;
+  favourites: FavouritePair[];
+  recent: RecentConversion[];
+}
+
+export interface ReadResult {
+  state: LocalPreferencesV1;
+  status: ReadStatus;
+}
+
+let cachedStorage: Storage | null | undefined;
+
+function emptyState(): LocalPreferencesV1 {
+  return { version: STORAGE_VERSION, favourites: [], recent: [] };
+}
+
+function localStorageOrNull(): Storage | null {
+  if (cachedStorage !== undefined) return cachedStorage;
+  try {
+    const storage = window.localStorage;
+    storage.setItem(STORAGE_PROBE_KEY, "1");
+    storage.removeItem(STORAGE_PROBE_KEY);
+    cachedStorage = storage;
+  } catch {
+    cachedStorage = null;
+  }
+  return cachedStorage;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function normalizedString(value: unknown, maxLength: number): string | null {
+  return typeof value === "string" && value.length <= maxLength ? value : null;
+}
+
+function normalizedCurrencyCode(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const code = value.toUpperCase();
+  return /^[A-Z]{3}$/.test(code) ? code : null;
+}
+
+function normalizedCountryCode(value: unknown): string | null {
+  if (value === "") return "";
+  if (typeof value !== "string") return null;
+  const code = value.toUpperCase();
+  return /^[A-Z]{2}$/.test(code) ? code : null;
+}
+
+function normalizedIsoDate(value: unknown, allowEmpty = false): string | null {
+  if (allowEmpty && value === "") return "";
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  return Number.isNaN(Date.parse(`${value}T00:00:00Z`)) ? null : value;
+}
+
+function normalizedTimestamp(value: unknown): string | null {
+  return typeof value === "string" && !Number.isNaN(Date.parse(value)) ? value : null;
+}
+
+function normalizedAmount(value: unknown): string | null {
+  if (typeof value !== "string" || value.length > 64) return null;
+  return /^\d+(?:\.\d+)?$/.test(value) ? value : null;
+}
+
+export function normalizePair(value: Record<string, unknown>): PairContext | null {
+  const sourceCurrency = normalizedCurrencyCode(value.sourceCurrency);
+  const destinationCurrency = normalizedCurrencyCode(value.destinationCurrency);
+  const sourceCountry = normalizedCountryCode(value.sourceCountry);
+  const destinationCountry = normalizedCountryCode(value.destinationCountry);
+  const sourceCountryName = normalizedString(value.sourceCountryName, 120);
+  const destinationCountryName = normalizedString(value.destinationCountryName, 120);
+
+  if (
+    sourceCurrency === null ||
+    destinationCurrency === null ||
+    sourceCountry === null ||
+    destinationCountry === null ||
+    sourceCountryName === null ||
+    destinationCountryName === null
+  ) {
+    return null;
+  }
+
+  return {
+    sourceCurrency,
+    destinationCurrency,
+    sourceCountry,
+    destinationCountry,
+    sourceCountryName,
+    destinationCountryName,
+  };
+}
+
+export function pairId(pair: PairContext): string {
+  return [
+    pair.sourceCountry || "_",
+    pair.sourceCurrency,
+    ">",
+    pair.destinationCountry || "_",
+    pair.destinationCurrency,
+  ].join(":");
+}
+
+function normalizeFavourite(value: unknown): FavouritePair | null {
+  if (!isRecord(value)) return null;
+  const pair = normalizePair(value);
+  const savedAt = normalizedTimestamp(value.savedAt);
+  if (!pair || savedAt === null) return null;
+  return { ...pair, id: pairId(pair), savedAt };
+}
+
+function recentId(
+  pair: PairContext,
+  amount: string,
+  rateMode: RateMode,
+  requestedDate: string,
+): string {
+  return `${pairId(pair)}|${rateMode}|${requestedDate || "latest"}|${amount}`;
+}
+
+export function normalizeRecent(value: unknown): RecentConversion | null {
+  if (!isRecord(value)) return null;
+  const pair = normalizePair(value);
+  const amount = normalizedAmount(value.amount);
+  const outputAmount = normalizedAmount(value.outputAmount);
+  const rateMode =
+    value.rateMode === "historical" ? "historical" : value.rateMode === "latest" ? "latest" : null;
+  const requestedDate = normalizedIsoDate(value.requestedDate, true);
+  const effectiveDate = normalizedIsoDate(value.effectiveDate);
+  const convertedAt = normalizedTimestamp(value.convertedAt);
+
+  if (
+    !pair ||
+    amount === null ||
+    outputAmount === null ||
+    rateMode === null ||
+    requestedDate === null ||
+    effectiveDate === null ||
+    convertedAt === null ||
+    (rateMode === "historical" && requestedDate === "")
+  ) {
+    return null;
+  }
+
+  return {
+    ...pair,
+    id: recentId(pair, amount, rateMode, requestedDate),
+    amount,
+    outputAmount,
+    rateMode,
+    requestedDate,
+    effectiveDate,
+    convertedAt,
+  };
+}
+
+function dedupeById<T extends { id: string }>(items: T[], limit: number): T[] {
+  const seen = new Set<string>();
+  const result: T[] = [];
+  for (const item of items) {
+    if (seen.has(item.id)) continue;
+    seen.add(item.id);
+    result.push(item);
+    if (result.length >= limit) break;
+  }
+  return result;
+}
+
+export function readState(): ReadResult {
+  const storage = localStorageOrNull();
+  if (!storage) return { state: emptyState(), status: "unavailable" };
+
+  const raw = storage.getItem(STORAGE_KEY);
+  if (raw === null) return { state: emptyState(), status: "ok" };
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!isRecord(parsed) || parsed.version !== STORAGE_VERSION) {
+      return { state: emptyState(), status: "recovered" };
+    }
+
+    const rawFavourites = Array.isArray(parsed.favourites) ? parsed.favourites : [];
+    const rawRecent = Array.isArray(parsed.recent) ? parsed.recent : [];
+    const favourites = dedupeById(
+      rawFavourites.map(normalizeFavourite).filter((item): item is FavouritePair => item !== null),
+      MAX_FAVOURITES,
+    );
+    const recent = dedupeById(
+      rawRecent.map(normalizeRecent).filter((item): item is RecentConversion => item !== null),
+      MAX_RECENTS,
+    );
+    const recovered =
+      !Array.isArray(parsed.favourites) ||
+      !Array.isArray(parsed.recent) ||
+      favourites.length !== Math.min(rawFavourites.length, MAX_FAVOURITES) ||
+      recent.length !== Math.min(rawRecent.length, MAX_RECENTS);
+
+    return {
+      state: { version: STORAGE_VERSION, favourites, recent },
+      status: recovered ? "recovered" : "ok",
+    };
+  } catch {
+    return { state: emptyState(), status: "recovered" };
+  }
+}
+
+export function writeState(state: LocalPreferencesV1): boolean {
+  const storage = localStorageOrNull();
+  if (!storage) return false;
+  try {
+    storage.setItem(STORAGE_KEY, JSON.stringify(state));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function isFavourite(pair: PairContext, state: LocalPreferencesV1): boolean {
+  return state.favourites.some((item) => item.id === pairId(pair));
+}
+
+export function toggleFavouriteInState(
+  state: LocalPreferencesV1,
+  pair: PairContext,
+  savedAt = new Date().toISOString(),
+): { state: LocalPreferencesV1; saved: boolean } {
+  const id = pairId(pair);
+  const existed = state.favourites.some((item) => item.id === id);
+  const favourites = existed
+    ? state.favourites.filter((item) => item.id !== id)
+    : [{ ...pair, id, savedAt }, ...state.favourites.filter((item) => item.id !== id)].slice(
+        0,
+        MAX_FAVOURITES,
+      );
+
+  return {
+    state: { ...state, favourites },
+    saved: !existed,
+  };
+}
+
+export function upsertRecent(
+  state: LocalPreferencesV1,
+  recent: RecentConversion,
+): LocalPreferencesV1 {
+  return {
+    ...state,
+    recent: [recent, ...state.recent.filter((item) => item.id !== recent.id)].slice(0, MAX_RECENTS),
+  };
+}

@@ -76,24 +76,28 @@ This line should stay obvious when reading the repository.
 
 ---
 
-# 3. Proposed repository layout
+# 3. Current repository layout
 
 ```text
 /
 ├── apps/
+│   ├── common/
 │   ├── countries/
-│   ├── exchange/
 │   ├── culture/
-│   └── ...
+│   ├── exchange/
+│   ├── media/
+│   └── travel/
 │
 ├── templates/
 │   ├── base.html
 │   ├── components/
-│   │   ├── app_header.html
-│   │   ├── button.html
-│   │   ├── inline_alert.html
-│   │   └── ...
-│   └── pages/
+│   │   ├── converter/
+│   │   ├── culture/
+│   │   ├── icons/
+│   │   └── media/
+│   ├── design/
+│   ├── pages/
+│   └── travel/
 │
 ├── frontend/
 │   ├── src/
@@ -102,38 +106,37 @@ This line should stay obvious when reading the repository.
 │   │   │   ├── app.css
 │   │   │   ├── tokens.css
 │   │   │   ├── base.css
-│   │   │   └── utilities.css
-│   │   ├── behaviors/
-│   │   │   ├── htmx.ts
-│   │   │   ├── dialog.ts
-│   │   │   ├── combobox.ts
-│   │   │   ├── clipboard.ts
-│   │   │   ├── local-storage.ts
-│   │   │   └── chart.ts
-│   │   ├── charts/
-│   │   │   ├── rate-chart.ts
-│   │   │   └── rate-chart-types.ts
-│   │   ├── storage/
-│   │   │   ├── schema.ts
-│   │   │   └── preferences.ts
-│   │   └── types/
-│   │       └── dom.ts
+│   │   │   ├── shell.css
+│   │   │   ├── converter.css
+│   │   │   ├── current-converter.css
+│   │   │   ├── rate-series.css
+│   │   │   └── saved-state.css
+│   │   └── behaviors/
+│   │       ├── current-converter.ts
+│   │       ├── picker.ts
+│   │       ├── rate-chart-loader.ts
+│   │       ├── rate-chart.ts
+│   │       ├── local-saved-state.ts
+│   │       ├── local-saved-state-store.ts
+│   │       └── local-saved-state-page.ts
 │   │
+│   ├── scripts/
+│   │   └── browser-quality.mjs
 │   ├── package.json
 │   ├── package-lock.json
 │   ├── tsconfig.json
 │   ├── biome.json
 │   └── vite.config.ts
 │
-├── static/
-│   ├── icons/
-│   └── build/             # production build output, generated
-│
-└── tests/
-    └── e2e/
+└── static/
+    └── build/             # production build output, generated
 ```
 
-Exact placement can vary if Django app-local templates improve cohesion, but responsibilities remain the same.
+The layout is capability-oriented rather than framework-layer-heavy. A feature may use more than one
+small TypeScript module when ownership is genuinely different. PR11 is the reference example:
+browser storage/schema logic lives in `local-saved-state-store.ts`, Saved-page rendering in
+`local-saved-state-page.ts`, and converter/HTMX integration in `local-saved-state.ts`.
+
 
 ---
 
@@ -545,6 +548,10 @@ misc.ts
 ```
 
 unless a genuinely cohesive shared concept emerges.
+
+A single behavior file should not become the storage schema, persistence adapter, page renderer and
+event-orchestration layer at once. Split by capability boundary when each part has an independent
+reason to change, while keeping trivial one-off helpers local to the owning module.
 
 ---
 
