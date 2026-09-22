@@ -11,6 +11,7 @@ from apps.common.observability import (
     bind_request_id,
     get_request_id,
     normalize_request_id,
+    redact_log_text,
     reset_request_id,
 )
 
@@ -82,6 +83,67 @@ class RequestIdHelperTests(SimpleTestCase):
 
 
 class JsonFormatterTests(SimpleTestCase):
+    def test_redactor_removes_common_secret_forms_without_destroying_safe_urls(self) -> None:
+        value = (
+            "GET https://user:db-pass@example.test/data?"
+            "wskey=europeana-key&api_key=gemini-key "
+            "Authorization: Bearer bearer-secret token=session-secret "
+            "safe=https://example.test/public"
+        )
+
+        redacted = redact_log_text(value)
+
+        for secret in (
+            "user",
+            "db-pass",
+            "europeana-key",
+            "gemini-key",
+            "bearer-secret",
+            "session-secret",
+        ):
+            self.assertNotIn(secret, redacted)
+        self.assertIn("https://[REDACTED]@example.test/data", redacted)
+        self.assertIn("wskey=[REDACTED]", redacted)
+        self.assertIn("api_key=[REDACTED]", redacted)
+        self.assertIn("Bearer [REDACTED]", redacted)
+        self.assertIn("token=[REDACTED]", redacted)
+        self.assertIn("safe=https://example.test/public", redacted)
+
+    def test_formatter_redacts_event_and_exception_text(self) -> None:
+        try:
+            raise RuntimeError(
+                "provider failed at "
+                "https://user:password@example.test/v1?api_key=top-secret "
+                "Authorization: Bearer access-secret"
+            )
+        except RuntimeError:
+            exc_info = __import__("sys").exc_info()
+
+        record = logging.LogRecord(
+            name="cultural_currency.exchange",
+            level=logging.ERROR,
+            pathname=__file__,
+            lineno=1,
+            msg="request token=event-secret failed",
+            args=(),
+            exc_info=exc_info,
+        )
+        record.path = "/conversion/explain/"
+
+        payload = json.loads(JsonFormatter().format(record))
+        serialized = json.dumps(payload)
+
+        for secret in (
+            "password",
+            "top-secret",
+            "access-secret",
+            "event-secret",
+        ):
+            self.assertNotIn(secret, serialized)
+        self.assertEqual(payload["event"], "request token=[REDACTED] failed")
+        self.assertEqual(payload["path"], "/conversion/explain/")
+        self.assertIn("[REDACTED]", payload["exception"])
+
     def test_formatter_emits_stable_machine_readable_fields(self) -> None:
         token = bind_request_id("request-42")
         try:
