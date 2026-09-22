@@ -178,11 +178,8 @@
     min-height: 100%;
     grid-template-rows: auto auto minmax(0, 1fr);
     box-sizing: border-box;
-    padding:
-      max(1rem, env(safe-area-inset-top))
-      max(1rem, env(safe-area-inset-right))
-      max(1rem, env(safe-area-inset-bottom))
-      max(1rem, env(safe-area-inset-left));
+    padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+      max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
   }
 
   .qa-picker-dialog__header {
