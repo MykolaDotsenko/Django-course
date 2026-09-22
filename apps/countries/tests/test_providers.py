@@ -6,6 +6,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 
 from apps.countries.providers import (
+    MAX_RESPONSE_BYTES,
     CountrySourceError,
     RestCountriesV5Client,
     parse_country_object,
@@ -37,6 +38,23 @@ def test_rest_countries_v5_object_normalizes_owned_fields_only():
 def test_rest_countries_v5_object_rejects_missing_identity():
     with pytest.raises(CountrySourceError):
         parse_country_object({}, fetched_at=datetime(2026, 9, 20, tzinfo=UTC))
+
+
+@pytest.mark.parametrize(
+    ("iso2", "iso3"),
+    [
+        ("F1", "FIN"),
+        ("FÍ", "FIN"),
+        ("FI", "F1N"),
+        ("FI", "FÍN"),
+    ],
+)
+def test_rest_countries_v5_object_rejects_noncanonical_identity(iso2, iso3):
+    payload = _finland_payload()
+    payload["codes"] = {"alpha_2": iso2, "alpha_3": iso3}
+
+    with pytest.raises(CountrySourceError, match="canonical country identity"):
+        parse_country_object(payload, fetched_at=datetime(2026, 9, 20, tzinfo=UTC))
 
 
 class FakeResponse(BytesIO):
@@ -71,6 +89,8 @@ def _finland_payload():
         "currencies": [
             {"code": "EUR", "name": "Euro", "symbol": "€", "minor_units": 2},
             {"code": "TOOLONG", "name": "Invalid"},
+            {"code": "U1D", "name": "Invalid alphanumeric"},
+            {"code": "ÅAA", "name": "Invalid unicode"},
             {"code": "JPY", "name": "Japanese yen", "minor_units": 99},
         ],
         "flag": {"url_svg": "https://example.test/fi.svg"},
@@ -161,15 +181,27 @@ def test_rest_countries_v5_client_normalizes_http_and_transport_failures():
         client.fetch_all()
 
 
-def test_rest_countries_v5_client_rejects_malformed_json():
+@pytest.mark.parametrize("payload", [b"{not-json", b"\xff"])
+def test_rest_countries_v5_client_rejects_malformed_json(payload):
     client = RestCountriesV5Client(api_key="secret")
 
     with (
         patch(
             "apps.countries.providers.urlopen",
-            return_value=FakeResponse(b"{not-json"),
+            return_value=FakeResponse(payload),
         ),
-        pytest.raises(CountrySourceError, match="request failed"),
+        pytest.raises(CountrySourceError, match="malformed JSON"),
+    ):
+        client.fetch_all()
+
+
+def test_rest_countries_v5_client_rejects_oversized_response_before_json_parsing():
+    client = RestCountriesV5Client(api_key="secret")
+    response = FakeResponse(b"x" * (MAX_RESPONSE_BYTES + 1))
+
+    with (
+        patch("apps.countries.providers.urlopen", return_value=response),
+        pytest.raises(CountrySourceError, match="size limit"),
     ):
         client.fetch_all()
 
@@ -192,3 +224,9 @@ def test_rest_countries_v5_client_bounds_runaway_pagination():
 def test_rest_countries_v5_client_requires_api_key():
     with pytest.raises(ValueError, match="API key is required"):
         RestCountriesV5Client(api_key="")
+
+
+@pytest.mark.parametrize("timeout_seconds", [0, -1])
+def test_rest_countries_v5_client_requires_positive_timeout(timeout_seconds):
+    with pytest.raises(ValueError, match="timeout must be positive"):
+        RestCountriesV5Client(api_key="secret", timeout_seconds=timeout_seconds)
