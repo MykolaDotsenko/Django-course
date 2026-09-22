@@ -8,6 +8,7 @@ from django.urls import reverse
 from apps.countries.models import Country, CountryCurrency, Currency
 from apps.exchange.domain import (
     DEFAULT_SOURCE_POLICY,
+    HistoricalObservationUnavailable,
     ObservationGranularity,
     RateQuote,
     RateSeries,
