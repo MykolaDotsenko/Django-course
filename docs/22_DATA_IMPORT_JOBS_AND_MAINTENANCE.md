@@ -506,6 +506,8 @@ REST Countries:
 - slow-changing;
 - weekly/manual likely enough;
 - fetched in bounded pages of 100;
+- each page is capped at 2 MiB before JSON parsing;
+- country/currency codes must satisfy canonical ASCII alphabetic shape before entering snapshots;
 - pagination must make positive numeric progress;
 - one run is capped at 10 pages so a malformed `more=true` loop fails closed.
 
