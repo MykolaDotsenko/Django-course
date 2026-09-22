@@ -106,7 +106,7 @@ Create a 9:16 premium mobile design concept for Cultural Currency Converter focu
 
 | Prompt | Version | Date | Generator/model | Repository path | Status | Review note |
 | --- | --- | --- | --- | --- | --- | --- |
-| P01 | — | — | — | — | planned | — |
+| P01 | v01 | 2026-09-23 | OpenAI image generation (ChatGPT) | `static/images/country-media/fi/hero/fi-hero-v01.webp` | ✅ trial-approved | First end-to-end proof of flow. Synthetic 16:9 Helsinki hero; repository copy is an optimized 640×360 WebP preview. Keep as generated media; replace with a full-resolution v02 before production publication. |
 | P02 | — | — | — | — | planned | — |
 | P03 | — | — | — | — | planned | — |
 | P04 | — | — | — | — | planned | — |
