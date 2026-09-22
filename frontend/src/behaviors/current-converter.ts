@@ -1,4 +1,41 @@
 let restoreFocusId: string | null = null;
+let focusFeedbackAfterSwap = false;
+
+type HtmxRequestDetail = {
+  elt?: Element;
+  target?: Element;
+  xhr?: XMLHttpRequest;
+  shouldSwap?: boolean;
+  isError?: boolean;
+};
+
+function htmxDetail(event: Event): HtmxRequestDetail {
+  return (event as CustomEvent<HtmxRequestDetail>).detail ?? {};
+}
+
+function targetsConverterPanel(event: Event): boolean {
+  const detail = htmxDetail(event);
+  if (detail.target instanceof Element) return detail.target.id === "converter-panel";
+
+  const requester =
+    detail.elt instanceof Element
+      ? detail.elt
+      : event.target instanceof Element
+        ? event.target
+        : null;
+  const targetOwner = requester?.closest<HTMLElement>("[hx-target]");
+  return targetOwner?.getAttribute("hx-target") === "#converter-panel";
+}
+
+function setConversionBusy(busy: boolean): void {
+  const region = document.getElementById("conversion-result-region");
+  if (!region) return;
+  if (busy) {
+    region.setAttribute("aria-busy", "true");
+  } else {
+    region.removeAttribute("aria-busy");
+  }
+}
 
 export function requestFocusRestore(id: string): void {
   restoreFocusId = id;
@@ -20,6 +57,12 @@ function enhanceAutoRefresh(form: HTMLFormElement): void {
   form.dataset.autoRefreshWired = "true";
 
   let amountTimer: number | undefined;
+
+  form.addEventListener("submit", (event) => {
+    const submitter = (event as SubmitEvent).submitter;
+    focusFeedbackAfterSwap =
+      submitter instanceof HTMLButtonElement && submitter.classList.contains("qa-primary-button");
+  });
 
   form.addEventListener("input", (event) => {
     if (form.dataset.hasResult !== "true") return;
@@ -91,9 +134,9 @@ document.addEventListener("click", (event) => {
 });
 
 document.addEventListener("htmx:beforeRequest", (event) => {
-  const target = event.target;
-  if (!(target instanceof Element) || !target.closest("[data-current-conversion-form]")) return;
+  if (!targetsConverterPanel(event)) return;
 
+  setConversionBusy(true);
   const note = document.querySelector<HTMLElement>("[data-previous-result-note]");
   if (note) {
     note.hidden = false;
@@ -102,25 +145,21 @@ document.addEventListener("htmx:beforeRequest", (event) => {
 });
 
 document.addEventListener("htmx:beforeSwap", (event) => {
-  const detail = (
-    event as CustomEvent<{
-      xhr: XMLHttpRequest;
-      shouldSwap: boolean;
-      isError: boolean;
-    }>
-  ).detail;
+  const detail = htmxDetail(event);
+  const status = detail.xhr?.status;
+  if (status === undefined || ![422, 502, 503].includes(status)) return;
 
-  if (![422, 502, 503].includes(detail.xhr.status)) return;
-
-  const note = document
-    .getElementById("conversion-result-region")
-    ?.querySelector<HTMLElement>("[data-previous-result-note]");
-  if (note) {
-    note.hidden = false;
-    note.textContent =
-      detail.xhr.status === 422
-        ? "Previous result — fix the changed inputs to update it."
-        : "Previous result — the new rate could not be loaded.";
+  if (targetsConverterPanel(event)) {
+    const note = document
+      .getElementById("conversion-result-region")
+      ?.querySelector<HTMLElement>("[data-previous-result-note]");
+    if (note) {
+      note.hidden = false;
+      note.textContent =
+        status === 422
+          ? "Previous result — fix the changed inputs to update it."
+          : "Previous result — the new rate could not be loaded.";
+    }
   }
 
   detail.shouldSwap = true;
@@ -130,18 +169,32 @@ document.addEventListener("htmx:beforeSwap", (event) => {
 document.addEventListener("DOMContentLoaded", enhanceCurrentConverterBehavior);
 document.addEventListener("htmx:afterSwap", (event) => {
   enhanceCurrentConverterBehavior();
-  const detail = (event as CustomEvent<{ xhr?: XMLHttpRequest }>).detail;
-  announceConversionResult(event.target, detail.xhr?.status);
+  const detail = htmxDetail(event);
+  const converterSwap = targetsConverterPanel(event);
+
+  if (converterSwap) {
+    setConversionBusy(false);
+    announceConversionResult(event.target, detail.xhr?.status);
+
+    if (focusFeedbackAfterSwap && [422, 502, 503].includes(detail.xhr?.status ?? 0)) {
+      const feedback =
+        document.getElementById("conversion-error-summary") ??
+        document.getElementById("conversion-error-alert");
+      feedback?.focus();
+    }
+    focusFeedbackAfterSwap = false;
+  }
 
   if (!restoreFocusId) return;
   document.getElementById(restoreFocusId)?.focus();
   restoreFocusId = null;
 });
 
-document.addEventListener("htmx:responseError", () => {
+function resetRequestUiState(): void {
+  setConversionBusy(false);
+  focusFeedbackAfterSwap = false;
   restoreFocusId = null;
-});
+}
 
-document.addEventListener("htmx:sendError", () => {
-  restoreFocusId = null;
-});
+document.addEventListener("htmx:responseError", resetRequestUiState);
+document.addEventListener("htmx:sendError", resetRequestUiState);
