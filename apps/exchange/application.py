@@ -43,7 +43,9 @@ class HistoricalSuggestion:
     suggestion: HistoricalCurrencySuggestion
 
 
-ConverterSubmissionError = FxProviderError | HistoricalObservationUnavailable | HistoricalOutOfCoverage
+ConverterSubmissionError = (
+    FxProviderError | HistoricalObservationUnavailable | HistoricalOutOfCoverage
+)
 
 
 @dataclass(frozen=True, slots=True)
