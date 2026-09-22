@@ -119,7 +119,20 @@ async function assertAxe(page, label) {
   }
 }
 
-async function assertKeyboardFocus(page, surface) {
+async function assertKeyboardFocus(page, surfaceName) {
+  const focusBaseline = await page.evaluate(() => {
+    const autofocus = document.querySelector("[autofocus]");
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    return {
+      autofocusTag: autofocus?.tagName ?? "",
+      autofocusId: autofocus?.id ?? "",
+    };
+  });
+  assert(
+    focusBaseline.autofocusTag === "",
+    `${surfaceName}: unexpected autofocus target: ${JSON.stringify(focusBaseline)}`,
+  );
+
   await page.keyboard.press("Tab");
   const first = await page.evaluate(() => ({
     className: document.activeElement?.className ?? "",
@@ -127,29 +140,53 @@ async function assertKeyboardFocus(page, surface) {
   }));
   assert(
     String(first.className).includes("qa-skip-link"),
-    `${surface}: skip link is not the first keyboard target: ${JSON.stringify(first)}`,
+    `${surfaceName}: skip link is not the first keyboard target: ${JSON.stringify(first)}`,
   );
 
-  if (surface === "converter" || surface === "current-converter") {
+  if (surfaceName === "converter") {
+    await page.keyboard.press("Tab");
+    const second = await page.evaluate(() => ({
+      tagName: document.activeElement?.tagName ?? "",
+      text: document.activeElement?.textContent?.trim() ?? "",
+    }));
+    assert(
+      second.tagName === "A" && second.text === "Sign in",
+      `converter: expected Sign in as second focus target, got ${JSON.stringify(second)}`,
+    );
     await page.keyboard.press("Tab");
     const activeId = await page.evaluate(() => document.activeElement?.id ?? "");
-    const expected = surface === "converter" ? "workspace-amount" : "id_amount";
-    assert(activeId === expected, `${surface}: unexpected second focus target ${activeId}`);
+    assert(activeId === "workspace-amount", `converter: unexpected amount focus target ${activeId}`);
+  }
 
-    if (surface === "current-converter") {
-      for (const expectedId of [
-        "source-picker-trigger",
-        "swap-contexts",
-        "destination-picker-trigger",
-        "id_rate_mode_0",
-      ]) {
-        await page.keyboard.press("Tab");
-        const nextId = await page.evaluate(() => document.activeElement?.id ?? "");
-        assert(
-          nextId === expectedId,
-          `current-converter: expected focus on ${expectedId}, got ${nextId}`,
-        );
-      }
+  if (surfaceName === "current-converter") {
+    for (const expectedText of ["Saved & recent", "Sign in"]) {
+      await page.keyboard.press("Tab");
+      const focused = await page.evaluate(() => ({
+        tagName: document.activeElement?.tagName ?? "",
+        text: document.activeElement?.textContent?.trim() ?? "",
+      }));
+      assert(
+        focused.tagName === "A" && focused.text === expectedText,
+        `current-converter: expected ${expectedText} header focus, got ${JSON.stringify(focused)}`,
+      );
+    }
+
+    await page.keyboard.press("Tab");
+    const amountId = await page.evaluate(() => document.activeElement?.id ?? "");
+    assert(amountId === "id_amount", `current-converter: expected amount focus, got ${amountId}`);
+
+    for (const expectedId of [
+      "source-picker-trigger",
+      "swap-contexts",
+      "destination-picker-trigger",
+      "id_rate_mode_0",
+    ]) {
+      await page.keyboard.press("Tab");
+      const nextId = await page.evaluate(() => document.activeElement?.id ?? "");
+      assert(
+        nextId === expectedId,
+        `current-converter: expected focus on ${expectedId}, got ${nextId}`,
+      );
     }
   }
 }
@@ -945,7 +982,7 @@ try {
 
       await openSurface(page, surface);
       await assertNoHorizontalOverflow(page, `${surface.name}/${viewport.name}`);
-      await assertKeyboardFocus(page, surface);
+      await assertKeyboardFocus(page, surface.name);
 
       if (viewport.name === "wide-1440" || viewport.name === "mobile-390") {
         await assertAxe(page, `${surface.name}/${viewport.name}`);
