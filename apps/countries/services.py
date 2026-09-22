@@ -93,9 +93,7 @@ def _snapshot_reconciliation_drift(
     source_versions = {snapshot.source_version for snapshot in snapshots}
     expected_country_codes = {snapshot.iso2 for snapshot in snapshots}
     expected_relationships = {
-        (snapshot.iso2, currency.code)
-        for snapshot in snapshots
-        for currency in snapshot.currencies
+        (snapshot.iso2, currency.code) for snapshot in snapshots for currency in snapshot.currencies
     }
 
     missing_source_countries = tuple(
