@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from datetime import UTC, date, datetime
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from apps.accounts.models import AccountPreferences
 from apps.countries.models import Country, CountryCurrency, Currency
-from apps.travel.models import FavouritePair
+from apps.travel.models import FavouritePair, RecentConversion
 
 User = get_user_model()
 PASSWORD = "StrongPass-482!"
@@ -57,6 +60,51 @@ class AccountWebTests(TestCase):
 
         self.assertRedirects(response, reverse("saved_state"))
 
+    def test_recent_history_preference_defaults_off_and_toggles_explicitly(self):
+        user = User.objects.create_user(username="privacy-member", password=PASSWORD)
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("profile"))
+        self.assertContains(response, "Off by default.")
+        self.assertFalse(AccountPreferences.objects.filter(user=user).exists())
+
+        response = self.client.post(
+            reverse("update_recent_history_preference"),
+            {"action": "enable"},
+        )
+        self.assertRedirects(response, reverse("profile"))
+        preferences = AccountPreferences.objects.get(user=user)
+        self.assertTrue(preferences.sync_recent_history)
+
+        response = self.client.post(
+            reverse("update_recent_history_preference"),
+            {"action": "disable"},
+        )
+        self.assertRedirects(response, reverse("profile"))
+        preferences.refresh_from_db()
+        self.assertFalse(preferences.sync_recent_history)
+
+    def test_recent_history_preference_is_post_only(self):
+        user = User.objects.create_user(username="privacy-post-only", password=PASSWORD)
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("update_recent_history_preference"))
+
+        self.assertEqual(response.status_code, 405)
+        self.assertFalse(AccountPreferences.objects.filter(user=user).exists())
+
+    def test_recent_history_preference_rejects_unknown_action(self):
+        user = User.objects.create_user(username="privacy-safe", password=PASSWORD)
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse("update_recent_history_preference"),
+            {"action": "unexpected"},
+        )
+
+        self.assertRedirects(response, reverse("profile"))
+        self.assertFalse(AccountPreferences.objects.filter(user=user).exists())
+
     def test_profile_requires_authentication(self):
         response = self.client.get(reverse("profile"))
 
@@ -106,6 +154,21 @@ class AccountWebTests(TestCase):
             source_country=fi,
             destination_country=jp,
         )
+        AccountPreferences.objects.create(user=user, sync_recent_history=True)
+        RecentConversion.objects.create(
+            user=user,
+            fingerprint="a" * 64,
+            source_currency=eur,
+            destination_currency=jpy,
+            source_country=fi,
+            destination_country=jp,
+            input_amount="10",
+            output_amount="1745",
+            rate_mode=RecentConversion.RateMode.LATEST,
+            requested_date=None,
+            effective_date=date(2026, 9, 22),
+            converted_at=datetime(2026, 9, 22, 12, tzinfo=UTC),
+        )
         self.client.force_login(user)
 
         response = self.client.post(reverse("delete_account"), {"password": PASSWORD})
@@ -113,4 +176,6 @@ class AccountWebTests(TestCase):
         self.assertRedirects(response, reverse("converter"))
         self.assertFalse(User.objects.filter(pk=user.pk).exists())
         self.assertEqual(FavouritePair.objects.count(), 0)
+        self.assertEqual(RecentConversion.objects.count(), 0)
+        self.assertEqual(AccountPreferences.objects.count(), 0)
         self.assertNotIn("_auth_user_id", self.client.session)

@@ -81,6 +81,7 @@ This line should stay obvious when reading the repository.
 ```text
 /
 ├── apps/
+│   ├── accounts/
 │   ├── common/
 │   ├── countries/
 │   ├── culture/
@@ -90,6 +91,7 @@ This line should stay obvious when reading the repository.
 │
 ├── templates/
 │   ├── base.html
+│   ├── accounts/
 │   ├── components/
 │   │   ├── converter/
 │   │   ├── culture/
@@ -1177,6 +1179,12 @@ Rules:
 - localStorage/quota failure does not break conversion;
 - failed conversion/HTMX refresh does not create a recent item;
 - anonymous history is never posted to Django;
+- signing in does not upload browser-local recent history;
+- authenticated cross-device recent history is a separate default-off account preference;
+- enabling it stores only future successful conversions and does not import older local recents;
+- when account persistence succeeds, that conversion is not duplicated into local recent history;
+- older browser-only recents remain separately visible/clearable on that device;
+- account history is capped at 50 semantic entries; duplicate intent updates one account row;
 - no authentication token;
 - no sensitive trip details;
 - browser/site-data clearing removes the anonymous state.

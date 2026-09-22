@@ -1402,3 +1402,53 @@ Priority: P0 security regression
 
 Expected:
 - no action tool/authority exists; publication remains deterministic application action.
+
+
+---
+
+# V. Authenticated recent-history privacy and ownership
+
+## BE-201 — Sign in with browser-local recent history
+Priority: P0 privacy
+
+Expected:
+- no recent-history upload occurs merely because authentication succeeded;
+- browser-local recents remain local.
+
+## BE-202 — Enable account recent history
+Priority: P0 privacy
+
+Expected:
+- preference is off by default;
+- explicit authenticated POST enables future account recording;
+- pre-existing browser-local recents are not imported automatically.
+
+## BE-203 — Duplicate/concurrent recent conversion
+Priority: P0 regression
+
+Expected:
+- semantic duplicate intent resolves to one account row;
+- concurrent writes cannot create duplicate rows;
+- newest result metadata wins.
+
+## BE-204 — Account recent-history retention bound
+Priority: P1 privacy/operations
+
+Expected:
+- at most 50 account-owned recent conversions remain;
+- oldest rows are trimmed deterministically.
+
+## BE-205 — User deletes another user's recent conversion ID
+Priority: P0 security
+
+Expected:
+- 404/forbidden policy without existence leakage;
+- target row remains unchanged.
+
+## BE-206 — Account-history persistence failure
+Priority: P0 reliability/privacy
+
+Expected:
+- successful FX conversion remains valid;
+- persistence failure is logged without sensitive payload;
+- web recent state falls back to browser-local storage rather than losing the result.

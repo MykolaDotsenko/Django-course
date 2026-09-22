@@ -10,6 +10,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods
 
 from apps.accounts.forms import DeleteAccountForm, SignUpForm
+from apps.accounts.preferences import recent_history_enabled, set_recent_history_enabled
 
 
 def _safe_next(request: HttpRequest) -> str:
@@ -54,7 +55,34 @@ def signup(request: HttpRequest) -> HttpResponse:
 @login_required
 @require_http_methods(["GET"])
 def profile(request: HttpRequest) -> HttpResponse:
-    return render(request, "accounts/profile.html")
+    return render(
+        request,
+        "accounts/profile.html",
+        {"recent_history_enabled": recent_history_enabled(request.user)},
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def update_recent_history_preference(request: HttpRequest) -> HttpResponse:
+    action = request.POST.get("action", "")
+    if action not in {"enable", "disable"}:
+        messages.error(request, "Recent-history preference was not changed.")
+        return redirect("profile")
+
+    enabled = action == "enable"
+    set_recent_history_enabled(request.user, enabled=enabled)
+    if enabled:
+        messages.success(
+            request,
+            "Cross-device recent history is on. Only future successful conversions are stored.",
+        )
+    else:
+        messages.success(
+            request,
+            "Cross-device recent history is off. Existing account history was kept.",
+        )
+    return redirect("profile")
 
 
 @login_required

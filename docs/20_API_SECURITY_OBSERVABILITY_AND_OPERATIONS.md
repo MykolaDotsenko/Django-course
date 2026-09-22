@@ -287,9 +287,14 @@ Do not invent custom crypto/auth protocol.
 
 # 14. Session vs token boundary
 
-Web uses normal Django session auth for PR12A account features. Mutating web requests remain
-CSRF-protected, logout is POST-only, account-owned favourite queries are always scoped by
-`request.user`, and cross-user delete attempts resolve without exposing another user's object.
+Web uses normal Django session auth for PR12 account features. Mutating web requests remain
+CSRF-protected, logout is POST-only, and every account-owned favourite/recent-history mutation is
+scoped by `request.user`. Cross-user delete attempts resolve without exposing another user's
+object.
+
+Cross-device recent history is privacy-by-default: the preference is false until an authenticated
+user explicitly enables it. Sign-in does not imply history consent; browser-local recents are never
+silently imported. Disabling collection and deleting previously stored history are separate actions.
 
 Native app will use an explicit API auth method.
 

@@ -249,8 +249,10 @@ observations remain independently sourced and are never silently backdated to a 
 PR11 Phase A is also implemented with versioned browser-local favourites and bounded recent
 conversions; anonymous history is not persisted by Django. PR12A adds Django-session account
 identity, account-owned FavouritePair persistence, bounded local→account merge, ownership-scoped
-deletion and account-deletion lifecycle coverage. PR12B is the next bounded slice and must define
-the authenticated recent-history persistence/consent policy before adding server history.
+deletion and account-deletion lifecycle coverage. PR12B is implemented with a default-off
+cross-device history preference, bounded owner-scoped RecentConversion persistence, explicit
+remove/clear controls, no automatic browser-history import and conversion-safe persistence failure.
+The next bounded roadmap milestone is PR13: the versioned mobile API.
 
 ---
 

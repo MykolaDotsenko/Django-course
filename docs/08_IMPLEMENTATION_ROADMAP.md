@@ -498,12 +498,14 @@ Phase A:
 - anonymous browser-local recent/favourites;
 - clear local persistence controls.
 
-Phase B — delivered by PR12A for favourites:
+Phase B — delivered by PR12A/PR12B:
 
 - durable signed-in favourite sync;
 - authenticated FavouritePair database uniqueness guarantee;
 - PostgreSQL concurrent duplicate-save test;
-- browser-local recent history remains separate until PR12B defines its explicit account policy.
+- default-off cross-device recent-history preference;
+- bounded account-owned RecentConversion persistence with a 50-row cap;
+- browser-local recent history is never silently imported.
 
 ---
 
@@ -515,11 +517,16 @@ Phase B — delivered by PR12A for favourites:
    account-owned FavouritePair persistence, bounded local→account union/deduplication, strict
    ownership-scoped deletion, account deletion cascade and concurrent duplicate-save protection.
    **Implemented.**
-2. **PR12B — authenticated recent-history policy:** define the explicit persistence/merge/consent
-   policy for signed-in recent conversions, then implement durable history only to that contract.
+2. **PR12B — authenticated recent-history policy:** explicit default-off privacy preference,
+   bounded account-owned RecentConversion persistence, no automatic local-history merge,
+   owner-scoped remove/clear controls, account-deletion cascade and concurrency/retention tests.
+   **Implemented.**
 
-PR12A deliberately keeps current/historical conversion anonymous and keeps recent conversion history
-browser-local. Signing in never uploads recents silently.
+PR12 is complete. Basic current/historical conversion remains anonymous. Signing in never uploads
+recent history silently. Enabling cross-device history starts storing only future successful
+conversions; existing browser-local recents remain local and separately clearable. Account history
+is capped at 50 semantic entries, duplicate intent updates one row, and disabling the preference
+stops future recording without deleting existing account rows.
 
 **Goal:** support cross-device saved state.
 

@@ -53,6 +53,7 @@
   gap: var(--qa-space-3);
 }
 
+.qa-account-section,
 .qa-account-danger {
   display: grid;
   gap: var(--qa-space-3);
@@ -61,7 +62,10 @@
   border-block-start: 1px solid var(--color-border-subtle);
 }
 
+.qa-account-section h2,
+.qa-account-section p,
 .qa-account-danger h2,
+.qa-account-section p,
 .qa-account-danger p {
   margin: 0;
 }
@@ -70,6 +74,7 @@
   color: var(--color-muted);
 }
 
+.qa-account-section .qa-secondary-button,
 .qa-account-danger .qa-secondary-button {
   justify-self: start;
 }
@@ -84,6 +89,7 @@
 
 @media (forced-colors: active) {
   .qa-text-input,
+  .qa-account-section,
   .qa-account-danger {
     border-color: CanvasText;
   }

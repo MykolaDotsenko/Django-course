@@ -119,7 +119,20 @@ async function assertAxe(page, label) {
   }
 }
 
-async function assertKeyboardFocus(page, surface) {
+async function assertKeyboardFocus(page, surfaceName) {
+  const focusBaseline = await page.evaluate(() => {
+    const autofocus = document.querySelector("[autofocus]");
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    return {
+      autofocusTag: autofocus?.tagName ?? "",
+      autofocusId: autofocus?.id ?? "",
+    };
+  });
+  assert(
+    focusBaseline.autofocusTag === "",
+    `${surfaceName}: unexpected autofocus target: ${JSON.stringify(focusBaseline)}`,
+  );
+
   await page.keyboard.press("Tab");
   const first = await page.evaluate(() => ({
     className: document.activeElement?.className ?? "",
@@ -127,29 +140,56 @@ async function assertKeyboardFocus(page, surface) {
   }));
   assert(
     String(first.className).includes("qa-skip-link"),
-    `${surface}: skip link is not the first keyboard target: ${JSON.stringify(first)}`,
+    `${surfaceName}: skip link is not the first keyboard target: ${JSON.stringify(first)}`,
   );
 
-  if (surface === "converter" || surface === "current-converter") {
+  if (surfaceName === "converter") {
+    await page.keyboard.press("Tab");
+    const second = await page.evaluate(() => ({
+      tagName: document.activeElement?.tagName ?? "",
+      text: document.activeElement?.textContent?.trim() ?? "",
+    }));
+    assert(
+      second.tagName === "A" && second.text === "Sign in",
+      `converter: expected Sign in as second focus target, got ${JSON.stringify(second)}`,
+    );
     await page.keyboard.press("Tab");
     const activeId = await page.evaluate(() => document.activeElement?.id ?? "");
-    const expected = surface === "converter" ? "workspace-amount" : "id_amount";
-    assert(activeId === expected, `${surface}: unexpected second focus target ${activeId}`);
+    assert(
+      activeId === "workspace-amount",
+      `converter: unexpected amount focus target ${activeId}`,
+    );
+  }
 
-    if (surface === "current-converter") {
-      for (const expectedId of [
-        "source-picker-trigger",
-        "swap-contexts",
-        "destination-picker-trigger",
-        "id_rate_mode_0",
-      ]) {
-        await page.keyboard.press("Tab");
-        const nextId = await page.evaluate(() => document.activeElement?.id ?? "");
-        assert(
-          nextId === expectedId,
-          `current-converter: expected focus on ${expectedId}, got ${nextId}`,
-        );
-      }
+  if (surfaceName === "current-converter") {
+    for (const expectedText of ["Saved & recent", "Sign in"]) {
+      await page.keyboard.press("Tab");
+      const focused = await page.evaluate(() => ({
+        tagName: document.activeElement?.tagName ?? "",
+        text: document.activeElement?.textContent?.trim() ?? "",
+      }));
+      assert(
+        focused.tagName === "A" && focused.text === expectedText,
+        `current-converter: expected ${expectedText} header focus, got ${JSON.stringify(focused)}`,
+      );
+    }
+
+    await page.keyboard.press("Tab");
+    const amountId = await page.evaluate(() => document.activeElement?.id ?? "");
+    assert(amountId === "id_amount", `current-converter: expected amount focus, got ${amountId}`);
+
+    for (const expectedId of [
+      "source-picker-trigger",
+      "swap-contexts",
+      "destination-picker-trigger",
+      "id_rate_mode_0",
+    ]) {
+      await page.keyboard.press("Tab");
+      const nextId = await page.evaluate(() => document.activeElement?.id ?? "");
+      assert(
+        nextId === expectedId,
+        `current-converter: expected focus on ${expectedId}, got ${nextId}`,
+      );
     }
   }
 }
@@ -675,6 +715,112 @@ async function assertSavedStateFlow(page) {
   await assertAxe(page, "saved-state/populated");
 }
 
+async function assertAuthenticatedRecentHistoryFlow(page) {
+  const localOnlyRecent = {
+    version: 1,
+    favourites: [],
+    recent: [
+      {
+        id: "FI:EUR:>:JP:JPY|latest|latest|100",
+        sourceCurrency: "EUR",
+        destinationCurrency: "JPY",
+        sourceCountry: "FI",
+        destinationCountry: "JP",
+        sourceCountryName: "Finland",
+        destinationCountryName: "Japan",
+        amount: "100",
+        outputAmount: "17450",
+        rateMode: "latest",
+        requestedDate: "",
+        effectiveDate: "2026-09-18",
+        convertedAt: "2026-09-21T12:00:00.000Z",
+      },
+    ],
+  };
+  await page.evaluate(({ key, state }) => localStorage.setItem(key, JSON.stringify(state)), {
+    key: LOCAL_STATE_KEY,
+    state: localOnlyRecent,
+  });
+
+  const username = `qa-history-${crypto.randomUUID().slice(0, 12)}`;
+  const testCredential = `QA-${crypto.randomUUID()}`;
+  await page.locator("#id_username").fill(username);
+  await page.locator("#id_password1").fill(testCredential);
+  await page.locator("#id_password2").fill(testCredential);
+  await Promise.all([
+    page.waitForURL((url) => url.pathname === "/saved/"),
+    page.getByRole("button", { name: "Create account" }).click(),
+  ]);
+
+  await page.getByRole("heading", { name: "Account recent history" }).waitFor();
+  await page
+    .getByText("No account recent history. Browser-only history below stays on this device.", {
+      exact: true,
+    })
+    .waitFor();
+  await page.getByText("100 EUR → 17450 JPY", { exact: true }).waitFor();
+  assert(
+    (await page.locator("[data-account-recent-id]").count()) === 0,
+    "account-history: sign-up silently imported browser-local recent history",
+  );
+  await assertAxe(page, "account-history/post-signup");
+
+  await page.getByRole("link", { name: "Account" }).click();
+  await page.getByText("Off by default.", { exact: false }).waitFor();
+  await Promise.all([
+    page.waitForURL((url) => url.pathname === "/accounts/profile/"),
+    page.getByRole("button", { name: "Turn on account history" }).click(),
+  ]);
+  await page.getByText("Cross-device recent history is on.", { exact: false }).waitFor();
+
+  const conversionUrl = new URL("/", BASE_URL);
+  conversionUrl.searchParams.set("convert", "1");
+  conversionUrl.searchParams.set("amount", "10.00");
+  conversionUrl.searchParams.set("source_country", "FI");
+  conversionUrl.searchParams.set("source_currency", "EUR");
+  conversionUrl.searchParams.set("destination_country", "FI");
+  conversionUrl.searchParams.set("destination_currency", "EUR");
+  conversionUrl.searchParams.set("rate_mode", "latest");
+  await page.goto(conversionUrl.toString(), { waitUntil: "networkidle" });
+  await page.locator('[data-account-recent-recorded="true"]').waitFor();
+
+  const localRecentCount = await page.evaluate((key) => {
+    const state = JSON.parse(localStorage.getItem(key) ?? "{}");
+    return Array.isArray(state.recent) ? state.recent.length : 0;
+  }, LOCAL_STATE_KEY);
+  assert(
+    localRecentCount === 1,
+    `account-history: account-backed conversion duplicated local history; count=${localRecentCount}`,
+  );
+
+  await page
+    .locator("#conversion-result-region")
+    .getByRole("link", { name: "Saved & recent" })
+    .click();
+  await page.locator("[data-account-recent-id]").first().waitFor();
+  assert(
+    (await page.locator("[data-account-recent-id]").count()) === 1,
+    "account-history: opted-in conversion did not create exactly one account recent row",
+  );
+  await page.getByText("100 EUR → 17450 JPY", { exact: true }).waitFor();
+  await assertAxe(page, "account-history/populated");
+
+  await Promise.all([
+    page.waitForURL((url) => url.pathname === "/saved/"),
+    page.getByRole("button", { name: "Clear account history" }).click(),
+  ]);
+  assert(
+    (await page.locator("[data-account-recent-id]").count()) === 0,
+    "account-history: clear action left account recent rows behind",
+  );
+  await page.getByText("100 EUR → 17450 JPY", { exact: true }).waitFor();
+  await page
+    .getByText("No account recent history. Browser-only history below stays on this device.", {
+      exact: true,
+    })
+    .waitFor();
+}
+
 async function assertReducedMotion(page, surface) {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.waitForFunction(
@@ -945,7 +1091,7 @@ try {
 
       await openSurface(page, surface);
       await assertNoHorizontalOverflow(page, `${surface.name}/${viewport.name}`);
-      await assertKeyboardFocus(page, surface);
+      await assertKeyboardFocus(page, surface.name);
 
       if (viewport.name === "wide-1440" || viewport.name === "mobile-390") {
         await assertAxe(page, `${surface.name}/${viewport.name}`);
@@ -994,6 +1140,19 @@ try {
         path: resolve(OUTPUT_DIR, `${surface.name}-${viewport.name}.png`),
         fullPage: true,
       });
+
+      if (
+        BROWSER_SCOPE === "full" &&
+        surface.name === "account-signup" &&
+        viewport.name === "wide-1440"
+      ) {
+        await assertAuthenticatedRecentHistoryFlow(page);
+        assert(
+          consoleErrors.length === 0,
+          `account-history/e2e: console errors: ${consoleErrors.join(" | ")}`,
+        );
+      }
+
       await context.close();
     }
   }

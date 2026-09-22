@@ -6,6 +6,7 @@ from decimal import Decimal
 from urllib.parse import urlencode
 
 from django.conf import settings
+from django.db import DatabaseError
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -50,6 +51,7 @@ from apps.exchange.services import (
     get_rate_series,
     quote_conversion,
 )
+from apps.travel.history import record_recent_conversion
 from apps.travel.queries import is_user_favourite
 
 logger = logging.getLogger("cultural_currency.exchange")
@@ -343,6 +345,30 @@ def converter(request: HttpRequest) -> HttpResponse:
     if convert_requested and not form_valid and request.method == "POST":
         response_status = 422
 
+    account_recent_history_recorded = False
+    if result is not None and request.user.is_authenticated and not _is_history_restore(request):
+        try:
+            account_recent_history_recorded = (
+                record_recent_conversion(
+                    request.user,
+                    source_currency_code=result.quote.base_currency,
+                    destination_currency_code=result.quote.quote_currency,
+                    source_country_code=form.cleaned_data.get("source_country", ""),
+                    destination_country_code=form.cleaned_data.get("destination_country", ""),
+                    input_amount=result.input_amount,
+                    output_amount=result.output_amount,
+                    historical=result.quote.historical,
+                    requested_date=result.quote.requested_date,
+                    effective_date=result.quote.effective_date,
+                )
+                is not None
+            )
+        except DatabaseError as exc:
+            logger.warning(
+                "Account recent-history write failed",
+                extra={"error_code": exc.__class__.__name__},
+            )
+
     if request.method == "POST" and not _is_htmx(request) and result is not None:
         return redirect(_canonical_conversion_url(form))
 
@@ -373,6 +399,7 @@ def converter(request: HttpRequest) -> HttpResponse:
         destination_context_component=destination_context_component,
     )
     context["account_favourite_saved"] = account_favourite_saved
+    context["account_recent_history_recorded"] = account_recent_history_recorded
     fragment = _is_htmx(request) and not _is_history_restore(request)
     template = "components/converter/current_panel.html" if fragment else "pages/converter.html"
     response = render(request, template, context, status=response_status)
