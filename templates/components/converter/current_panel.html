@@ -431,7 +431,11 @@
                       id="save-pair-control"
                       type="button"
                       data-save-pair
-                      aria-pressed="{% if user.is_authenticated and account_favourite_saved %}true{% else %}false{% endif %}">
+                      {% if user.is_authenticated %}
+                        {% if account_favourite_saved %}disabled{% endif %}
+                      {% else %}
+                        aria-pressed="false"
+                      {% endif %}>
                 {% include "components/icons/bookmark.html" %}
                 <span data-save-pair-label>
                   {% if user.is_authenticated and account_favourite_saved %}
