@@ -158,6 +158,62 @@ def test_corrupted_cached_provider_keys_are_ignored():
     assert provider.calls == 1
 
 
+def test_fresh_semantically_wrong_latest_cache_is_ignored_and_refetched():
+    wrong_pair = RateQuote(
+        base_currency="EUR",
+        quote_currency="USD",
+        rate=Decimal("1.1"),
+        requested_date=None,
+        effective_date=date(2026, 9, 18),
+        fetched_at=NOW - timedelta(hours=1),
+        provider_policy=DEFAULT_SOURCE_POLICY,
+        provider_keys=("ecb",),
+        historical=False,
+    )
+    key = latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY)
+    cache.set(key, serialize_quote(wrong_pair), 100)
+    provider_quote = make_quote(fetched_at=NOW)
+    provider = FakeProvider(result=provider_quote)
+
+    result, stale = LatestQuoteGateway(provider).get(
+        "EUR",
+        "JPY",
+        DEFAULT_SOURCE_POLICY,
+        now=NOW,
+    )
+
+    assert result == provider_quote
+    assert stale is False
+    assert provider.calls == 1
+
+
+def test_wrong_identity_stale_cache_is_never_used_as_failure_fallback():
+    wrong_pair = RateQuote(
+        base_currency="EUR",
+        quote_currency="USD",
+        rate=Decimal("1.1"),
+        requested_date=None,
+        effective_date=date(2026, 9, 18),
+        fetched_at=NOW - timedelta(days=2),
+        provider_policy=DEFAULT_SOURCE_POLICY,
+        provider_keys=("ecb",),
+        historical=False,
+    )
+    key = latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY)
+    cache.set(key, serialize_quote(wrong_pair), 100)
+    provider = FakeProvider(error=FxProviderUnavailable("down"))
+
+    with pytest.raises(FxProviderUnavailable):
+        LatestQuoteGateway(provider).get(
+            "EUR",
+            "JPY",
+            DEFAULT_SOURCE_POLICY,
+            now=NOW,
+        )
+
+    assert provider.calls == 1
+
+
 def test_provider_quote_identity_is_rechecked_before_caching():
     wrong_pair = RateQuote(
         base_currency="EUR",
@@ -273,6 +329,66 @@ def test_historical_resolution_cache_hit_skips_provider():
 
     assert result == historical
     assert provider.calls == 0
+
+
+def test_historical_resolution_cache_with_wrong_requested_date_is_refetched():
+    requested = date(2026, 9, 20)
+    cached = make_historical_quote(
+        requested_date=date(2026, 9, 19),
+        effective_date=date(2026, 9, 18),
+    )
+    key = historical_resolution_cache_key(
+        "EUR",
+        "JPY",
+        requested,
+        DEFAULT_SOURCE_POLICY,
+    )
+    cache.set(key, serialize_quote(cached), 100)
+    corrected = make_historical_quote(
+        requested_date=requested,
+        effective_date=date(2026, 9, 18),
+    )
+    provider = FakeProvider(result=corrected)
+
+    result = HistoricalQuoteGateway(provider).get(
+        "EUR",
+        "JPY",
+        requested,
+        DEFAULT_SOURCE_POLICY,
+    )
+
+    assert result == corrected
+    assert provider.calls == 1
+
+
+def test_historical_resolution_cache_outside_gap_policy_is_refetched():
+    requested = date(2026, 9, 20)
+    cached = make_historical_quote(
+        requested_date=requested,
+        effective_date=date(2026, 9, 12),
+    )
+    key = historical_resolution_cache_key(
+        "EUR",
+        "JPY",
+        requested,
+        DEFAULT_SOURCE_POLICY,
+    )
+    cache.set(key, serialize_quote(cached), 100)
+    corrected = make_historical_quote(
+        requested_date=requested,
+        effective_date=date(2026, 9, 18),
+    )
+    provider = FakeProvider(result=corrected)
+
+    result = HistoricalQuoteGateway(provider).get(
+        "EUR",
+        "JPY",
+        requested,
+        DEFAULT_SOURCE_POLICY,
+    )
+
+    assert result == corrected
+    assert provider.calls == 1
 
 
 def test_historical_provider_result_populates_resolution_and_observation_cache():
