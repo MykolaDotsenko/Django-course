@@ -912,8 +912,11 @@ async function assertNoJavaScriptSavedStateFallback(browser) {
     );
     assert(await saveButton.isHidden(), "no-js converter exposed an inert Save pair button");
     assert(
-      await page.getByRole("link", { name: "Saved & recent" }).isVisible(),
-      "no-js converter should retain a path to the Saved & recent explanation",
+      await page
+        .locator("#conversion-result-region")
+        .getByRole("link", { name: "Saved & recent" })
+        .isVisible(),
+      "no-js converter should retain a result-local path to the Saved & recent explanation",
     );
 
     const savedResponse = await page.goto(`${BASE_URL}/saved/`, { waitUntil: "networkidle" });
