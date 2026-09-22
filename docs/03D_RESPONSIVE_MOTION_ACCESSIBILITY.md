@@ -141,6 +141,10 @@ Layout survives browser font scaling/zoom.
 
 Do not lock component height so increased text clips.
 
+Headings and narrow intro/body copy permit emergency word wrapping when a single long token would
+otherwise force horizontal scrolling at narrow reflow widths. Normal-width typography remains
+unchanged.
+
 Buttons can grow vertically.
 
 ---

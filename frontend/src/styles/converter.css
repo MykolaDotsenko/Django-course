@@ -1,5 +1,6 @@
 .qa-preview-disclaimer {
   display: inline-flex;
+  max-inline-size: 100%;
   align-items: center;
   min-height: 2rem;
   margin: var(--qa-space-6) 0 0;
@@ -10,6 +11,8 @@
   color: var(--color-muted);
   font-size: var(--text-body-sm);
   font-weight: 600;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .qa-component-section {

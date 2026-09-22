@@ -103,6 +103,11 @@
   margin-block-end: var(--qa-space-12);
 }
 
+.qa-foundation-intro > * {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
 .qa-foundation-kicker {
   margin-block-end: var(--qa-space-3);
   color: var(--color-brand);
@@ -121,6 +126,7 @@
   color: var(--color-muted);
   font-size: var(--text-body-lg);
   line-height: 1.65;
+  overflow-wrap: anywhere;
 }
 
 .qa-bilateral {

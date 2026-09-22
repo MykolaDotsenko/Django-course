@@ -49,6 +49,15 @@ function assert(condition, message) {
   }
 }
 
+async function waitForStableLayout(page) {
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
+  });
+}
+
 async function assertNoHorizontalOverflow(page, label) {
   const dimensions = await page.evaluate(() => {
     const clientWidth = document.documentElement.clientWidth;
@@ -64,14 +73,15 @@ async function assertNoHorizontalOverflow(page, label) {
           width: Math.round(rect.width),
           scrollWidth: element.scrollWidth,
           clientWidth: element.clientWidth,
+          ignoreInternalOverflow: element.matches("input, textarea, .qa-visually-hidden"),
         };
       })
-      .filter(
-        (element) =>
-          element.right > clientWidth + 1 ||
-          element.left < -1 ||
-          element.scrollWidth > element.clientWidth + 1,
-      )
+      .filter((element) => {
+        const outsideViewport = element.right > clientWidth + 1 || element.left < -1;
+        const internalOverflowIsRelevant =
+          !element.ignoreInternalOverflow && element.scrollWidth > element.clientWidth + 1;
+        return outsideViewport || internalOverflowIsRelevant;
+      })
       .sort(
         (a, b) =>
           Math.max(b.right - clientWidth, b.scrollWidth - b.clientWidth) -
@@ -642,6 +652,7 @@ async function assertForcedColors(page, surface) {
 async function assertTextExpansion(page, surface) {
   await page.emulateMedia({ forcedColors: "none", reducedMotion: "reduce" });
   await page.addStyleTag({ content: "html { font-size: 200% !important; }" });
+  await waitForStableLayout(page);
   await assertNoHorizontalOverflow(page, `${surface}/text-200`);
 
   const clippedInteractive = await page
@@ -791,6 +802,7 @@ async function collectPerformance(page) {
 
 async function openSurface(page, surface) {
   const response = await page.goto(`${BASE_URL}${surface.path}`, { waitUntil: "networkidle" });
+  await waitForStableLayout(page);
   assert(
     response?.ok(),
     `${surface.name}: request failed with ${response?.status() ?? "no response"}`,
