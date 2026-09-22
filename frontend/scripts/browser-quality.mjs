@@ -178,7 +178,8 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     const first = document.querySelector("#source-picker-listbox [data-picker-option]");
     return (
       first?.getAttribute("data-country-code") === "FI" &&
-      first?.getAttribute("data-currency-code") === "EUR"
+      first?.getAttribute("data-currency-code") === "EUR" &&
+      first.textContent?.includes("Current selection")
     );
   });
   await search.fill("JPY");
