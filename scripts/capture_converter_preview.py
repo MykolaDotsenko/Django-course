@@ -110,9 +110,7 @@ def _assert_preview_integrity(page: Page, *, viewport_width: int) -> None:
         })"""
     )
     if second_focus != {"tagName": "A", "text": "Sign in"}:
-        raise RuntimeError(
-            f"Sign-in link is not second in keyboard order: {second_focus!r}"
-        )
+        raise RuntimeError(f"Sign-in link is not second in keyboard order: {second_focus!r}")
 
     page.keyboard.press("Tab")
     active_id = page.evaluate("document.activeElement?.id ?? ''")
