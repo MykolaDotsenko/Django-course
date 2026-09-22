@@ -426,10 +426,7 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   await historicalPost;
   const historicalResult = page.locator("#current-conversion-result");
   await historicalResult.waitFor();
-  await historicalResult
-    .getByText("15 Jun 1998", { exact: true })
-    .first()
-    .waitFor();
+  await historicalResult.getByText("15 Jun 1998", { exact: true }).first().waitFor();
 
   const historicalText = await historicalResult.innerText();
   assert(
