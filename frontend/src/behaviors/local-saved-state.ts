@@ -81,9 +81,10 @@ function setAccountFavouriteButtonState(snapshot: HTMLElement, saved: boolean): 
   const label = snapshot.querySelector<HTMLElement>("[data-save-pair-label]");
   if (!button || !label) return;
 
-  button.setAttribute("aria-pressed", saved ? "true" : "false");
+  button.removeAttribute("aria-pressed");
   button.setAttribute("aria-label", saved ? "Pair saved to account" : "Save pair to account");
   button.dataset.saved = saved ? "true" : "false";
+  button.disabled = saved;
   delete button.dataset.storageUnavailable;
   label.textContent = saved ? "Saved to account" : "Save to account";
 }
@@ -114,7 +115,7 @@ async function saveAccountFavourite(snapshot: HTMLElement): Promise<void> {
       "The pair could not be saved to your account. Your conversion is unchanged.",
     );
   } finally {
-    button.disabled = false;
+    button.disabled = snapshot.dataset.accountSaved === "true";
   }
 }
 
