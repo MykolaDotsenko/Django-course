@@ -12,7 +12,7 @@
 
   --color-ink: #171b19;
   --color-muted: #666861;
-  --color-tertiary: #797a73;
+  --color-tertiary: #666961;
   --color-inverse: #ffffff;
 
   --color-border-subtle: #dcd6cb;
@@ -85,5 +85,5 @@
   --qa-context-soft: var(--color-surface-soft);
   --qa-hairline: color-mix(in srgb, var(--color-ink) 14%, transparent);
   --qa-shadow-premium: 0 1px 0 rgb(23 27 25 / 0.04), 0 2rem 5rem rgb(23 27 25 / 0.07);
-  --qa-accent-metal: #8a7248;
+  --qa-accent-metal: #7a623d;
 }
