@@ -23,6 +23,18 @@
   gap: var(--qa-space-4);
 }
 
+.qa-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--qa-space-2);
+}
+
+.qa-header-actions form {
+  margin: 0;
+}
+
 .qa-brand {
   display: inline-flex;
   align-items: center;
@@ -350,6 +362,16 @@
     overflow-wrap: anywhere;
   }
 
+  .qa-header-actions {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .qa-header-actions form {
+    width: 100%;
+  }
+
   .qa-header-link {
     width: 100%;
     max-width: 100%;
@@ -419,13 +441,34 @@
   font-weight: 650;
 }
 
+.qa-header-button {
+  cursor: pointer;
+  font: inherit;
+}
+
+.qa-flash-stack {
+  display: grid;
+  gap: var(--qa-space-2);
+  margin-block-end: var(--qa-space-6);
+}
+
+.qa-flash-message {
+  margin: 0;
+  padding: var(--qa-space-3) var(--qa-space-4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+  color: var(--color-ink);
+}
+
 .qa-header-link:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
 
 @media (forced-colors: active) {
-  .qa-header-link {
+  .qa-header-link,
+  .qa-flash-message {
     border-color: CanvasText;
   }
 }
