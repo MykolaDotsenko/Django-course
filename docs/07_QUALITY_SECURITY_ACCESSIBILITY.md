@@ -401,8 +401,9 @@ Any significant growth requires explanation in the PR.
 
 Automated CI now uses:
 
-- Chromium — full browser-quality gate: P0 flow, axe, reflow, reduced motion, forced colors,
-  responsive transition checks and bundle/performance evidence;
+- Chromium — full browser-quality gate: complete current-converter flow on wide and 390px mobile
+  viewports, axe, reflow, reduced motion, forced colors, responsive transition checks and
+  bundle/performance evidence;
 - Firefox — high-value converter/rate-series smoke flow plus axe/overflow/reduced-motion checks;
 - WebKit — high-value converter/rate-series smoke flow plus axe/overflow/reduced-motion checks.
 
