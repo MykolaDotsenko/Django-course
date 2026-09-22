@@ -618,8 +618,12 @@ A record cannot be published without:
 
 - geography;
 - currency;
-- source;
-- observation date/period.
+- source name plus an absolute credential-free HTTPS source URL;
+- observation date/period;
+- explicit verification metadata where the model requires it.
+
+Presentation queries fail closed on invalid provenance even if a row entered the database through a
+programmatic write that bypassed model-form/`full_clean()` validation.
 
 ---
 
