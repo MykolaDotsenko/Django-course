@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 from django import forms
 from django.utils import timezone
 
@@ -62,3 +64,31 @@ class StoryRequestForm(forms.Form):
             selected_date=self.cleaned_data["selected_date"],
             historical=self.cleaned_data["historical"] == "1",
         )
+
+
+class CurrentDestinationContextForm(forms.Form):
+    country = forms.CharField(max_length=2)
+    currency = forms.CharField(max_length=3)
+    amount = forms.DecimalField(
+        min_value=Decimal("0"),
+        max_digits=40,
+        decimal_places=12,
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        if self.errors:
+            return cleaned
+
+        country_code = str(cleaned.get("country") or "").upper()
+        currency_code = str(cleaned.get("currency") or "").upper()
+        cleaned["country"] = country_code
+        cleaned["currency"] = currency_code
+
+        if not Country.objects.filter(iso2=country_code, is_active=True).exists():
+            self.add_error("country", "Unknown or inactive destination country.")
+        if not Currency.objects.filter(code=currency_code).exists():
+            self.add_error("currency", "Unknown destination currency.")
+
+        return cleaned
+
