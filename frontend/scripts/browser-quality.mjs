@@ -952,7 +952,11 @@ try {
 
     assert(
       requestedDynamicAssets("current-converter").size === 0,
-      "current converter unexpectedly loaded a dynamic historical-chart JavaScript chunk",
+      "current converter unexpectedly loaded route-only dynamic JavaScript",
+    );
+    assert(
+      requestedDynamicAssets("saved-state").size > 0,
+      "saved-state surface did not load its route-specific renderer chunk",
     );
     assert(
       requestedDynamicAssets("rate-series").size > 0,
