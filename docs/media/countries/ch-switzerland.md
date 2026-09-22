@@ -10,6 +10,27 @@ Read [Country Media Production System](../00_COUNTRY_MEDIA_SYSTEM.md) before usi
 
 Swiss premium should feel materially precise, calm and discreet: Zurich or Geneva urban life, transport, lakeside light and high-quality everyday environments without turning into watch/bank/luxury clichés.
 
+### Premium material palette
+
+- precise pale stone
+- brushed metal
+- clear glass
+- dark timber
+
+### Premium mood keywords
+
+- discreet luxury
+- quiet precision
+- calm confidence
+- understated wealth without signalling
+
+### Premium image goals
+
+- premium first, authentic second, iconic only third;
+- communicate the country through atmosphere, material, light, rhythm and everyday behaviour before relying on landmarks;
+- make every image feel editorial and useful enough to sit inside an expensive real product, not a tourism campaign;
+- preserve one clear visual story per frame and enough compositional calm for interface use where relevant.
+
 ### Preferred local cues
 
 - Zurich or Geneva stone/glass urban architecture
@@ -29,6 +50,8 @@ Swiss premium should feel materially precise, calm and discreet: Zurich or Genev
 
 **Target:** `static/images/country-media/ch/hero/ch-hero-v01.webp`
 
+**Premium execution:** Use a believable 35–50 mm full-frame-equivalent editorial perspective, eye level or only slightly elevated, with realistic architectural geometry and medium depth rather than extreme bokeh. Grade around precise pale stone, brushed metal, clear glass and aim for discreet luxury + quiet precision. Make the environment carry identity; keep roughly 25–35% of the frame visually calm enough to coexist with product UI.
+
 Photograph Zurich or Geneva in crisp soft daylight or blue hour: elegant stone/glass architecture, a subtle tram or pedestrian rhythm, a glimpse of lake/river light if compositionally natural, and restrained human activity. Use cool stone, warm interior light, deep forest and charcoal, with a calm outer third for UI. The feeling should be exact, discreet and expensive rather than flashy.
 
 Composition: one coherent contemporary scene, not a collage. Keep the main visual interest away from at least one outer third so product UI can coexist with the crop. Preserve architectural lines and realistic scale. People, if present, should feel incidental and unposed.
@@ -36,6 +59,8 @@ Composition: one coherent contemporary scene, not a collage. Keep the main visua
 ## P02 — Everyday Value
 
 **Target:** `static/images/country-media/ch/everyday-value/ch-everyday-value-v01.webp`
+
+**Premium execution:** Treat this as a 50–70 mm observational editorial frame, not food advertising. Let tactile local materials—precise pale stone, brushed metal, clear glass—carry perceived quality. Use one believable spending ritual, one clear focal point, natural imperfections and restrained depth of field. The result should express discreet luxury without looking staged or aspirational.
 
 Show a believable Swiss café or bakery purchase: coffee, pastry or simple lunch element on stone/timber, natural paper packaging and high-quality everyday materials. Keep the image ordinary but impeccably observed; no watches, luxury logos or invented pricing.
 
@@ -45,6 +70,8 @@ Frame at table/counter/hand level rather than as a product advertisement. Do not
 
 **Target:** `static/images/country-media/ch/payment-culture/ch-payment-culture-v01.webp`
 
+**Premium execution:** The payment gesture should occupy only about 20–30% of the visual story; the environment should communicate the country. Use a natural 40–60 mm documentary perspective, anatomically correct hands, plausible device proportions and precise pale stone / brushed metal as environmental anchors. Make the moment routine, discreet and trustworthy rather than fintech advertising.
+
 Show a natural contactless card/phone payment at a contemporary Swiss café, bakery or food hall. Terminal/device should be understated, with refined materials and a hint of tram/street/lake context beyond the counter.
 
 Show the transaction naturally inside a real-feeling setting. Keep hands anatomically correct, device geometry plausible and the payment terminal/phone secondary to the human context. No visible bank/app logos unless they are incidental and accurate; preferably use neutral interfaces.
@@ -52,6 +79,8 @@ Show the transaction naturally inside a real-feeling setting. Keep hands anatomi
 ## P04 — Local Detail
 
 **Target:** `static/images/country-media/ch/local-detail/ch-local-detail-v01.webp`
+
+**Premium execution:** Use a close observational 65–85 mm feel with two to four carefully chosen elements, tactile side-light and real material texture. Build around precise pale stone, brushed metal, clear glass and calm confidence. Leave breathing room; avoid decorative flat-lays, souvenir arrangements and perfect AI symmetry.
 
 Create a quiet Swiss detail image with brushed metal, pale stone, tram/rail geometry, ceramic cup and soft lake/city reflection. Use precise lines and restrained luxury; avoid obvious flag, watch or mountain souvenir motifs.
 
@@ -61,11 +90,15 @@ Treat this as a premium editorial insert: tactile materials, quiet composition, 
 
 **Target:** `docs/assets/country-interface-concepts/ch/desktop/ch-interface-desktop-v01.webp`
 
+**Premium execution:** Make this look like a shippable high-end product concept, not a fantasy Dribbble shot. Use one dominant monetary result, one bilateral conversion area, one restrained country photograph occupying roughly 20–30% of the composition, and very little copy. Express discreet luxury + quiet precision through spacing, type scale, material tone and image crop—not flags, ornamental motifs or fake widgets. Omit uncertain text rather than invent it.
+
 Create a 16:10 premium desktop design concept for Cultural Currency Converter focused on Switzerland. Use the sample conversion **100 EUR → CHF**. Use warm ivory, charcoal, deep forest and a cool stone/bronze accent. Make the CHF result feel exact and understated; a single Zurich/Geneva image should communicate refinement without luxury-brand clichés. The screen should communicate: source amount → destination amount → local context. Make the numeric result the largest element. Use only minimal readable text: “Cultural Currency”, country name, currency codes, amount and result. Integrate the P01 visual language as one restrained destination image area. Do not turn the interface into a travel booking site or analytics dashboard.
 
 ## P06 — Mobile Interface Concept
 
 **Target:** `docs/assets/country-interface-concepts/ch/mobile/ch-interface-mobile-v01.webp`
+
+**Premium execution:** Use a realistic modern mobile viewport with safe margins, believable control sizes and a single-column reading order. Let the monetary result occupy the strongest visual position, with one country image taking roughly 20–25% of the screen and no decorative phone frame. Express discreet luxury + quiet precision through spacing, palette and crop. Prefer quiet space over invented microcopy, tiny cards or fake OS details.
 
 Create a 9:16 premium mobile design concept for Cultural Currency Converter focused on Switzerland, using **100 EUR → CHF**. Translate the desktop hierarchy into a believable single-column mobile flow: compact source/destination selector, large conversion result, one editorial country image, then concise local-value/payment context. Keep the mobile surface extremely disciplined: large CHF numerals, generous whitespace, one crisp city crop and minimal metadata. Keep tap targets believable, spacing generous and visible copy minimal. No tiny dashboard cards, fake phone chrome, floating glass panels or crowded widgets.
 
