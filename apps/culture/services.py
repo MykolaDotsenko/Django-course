@@ -328,6 +328,7 @@ def build_destination_context(
         )
 
     cutoff = selected_date - PRICE_CONTEXT_MAX_AGE
+    price_candidate_limit = min(price_limit * 2, 12)
     price_rows = (
         TypicalPrice.objects.filter(
             country=country,
@@ -340,7 +341,7 @@ def build_destination_context(
         .exclude(source_name="")
         .exclude(source_url="")
         .select_related("country", "currency")
-        .order_by("display_order", "city", "label", "pk")[:price_limit]
+        .order_by("display_order", "city", "label", "pk")[:price_candidate_limit]
     )
     prices = tuple(
         TypicalPriceContext(
@@ -365,7 +366,7 @@ def build_destination_context(
         )
         for row in price_rows
         if row.source_name.strip() and is_valid_provenance_url(row.source_url)
-    )
+    )[:price_limit]
 
     return DestinationContext(
         country_code=country.iso2,
