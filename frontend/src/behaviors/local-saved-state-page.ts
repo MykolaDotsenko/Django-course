@@ -273,7 +273,10 @@ export function wireSavedPage(): void {
       ?.addEventListener("click", () => {
         const read = readState();
         if (read.status === "unavailable") return renderSavedPage();
-        persistAndRender({ ...read.state, favourites: [] }, "Saved pairs cleared from this browser.");
+        persistAndRender(
+          { ...read.state, favourites: [] },
+          "Saved pairs cleared from this browser.",
+        );
       });
     page.querySelector<HTMLButtonElement>("[data-clear-recents]")?.addEventListener("click", () => {
       const read = readState();
