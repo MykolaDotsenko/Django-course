@@ -435,8 +435,9 @@ Acceptance:
 ## Implementation PR 9 — Cultural payment context
 
 **Execution status:** implemented. The culture domain now includes a provenance-backed
-`CulturalProfile`, admin editing, locally composed payment/cash/ATM/tipping guidance, explicit
-empty states and historical-mode copy that prevents current customs from being backdated.
+`CulturalProfile`, admin editing, locally composed payment/cash/ATM/tipping guidance and explicit
+empty states. Historical conversion does not compose current payment/price context by default; a
+separate current-context action can load today's reviewed travel context without backdating it.
 
 **Goal:** add practical current destination intelligence.
 
