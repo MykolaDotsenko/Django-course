@@ -16,11 +16,13 @@ const BUILD_ASSET_DIR = resolve(process.cwd(), "../static/build/assets");
 const BUILD_MANIFEST_PATH = resolve(process.cwd(), "../static/build/.vite/manifest.json");
 const VITE_ENTRY = "frontend/src/app.ts";
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
+const LOCAL_STATE_KEY = "cultural-currency:local-preferences:v1";
 
 const SURFACES = [
   { name: "shell", path: "/_design/shell/" },
   { name: "converter", path: "/_design/converter/" },
   { name: "current-converter", path: "/" },
+  { name: "saved-state", path: "/saved/" },
   { name: "rate-series", path: "/_design/rate-series/" },
 ];
 
@@ -228,8 +230,12 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     "current-converter: expected exactly one persistent conversion announcer",
   );
   assert(
-    (await page.locator('[role="status"][aria-live="polite"]').count()) === 1,
-    "current-converter: duplicate polite status live regions would double-announce results",
+    (await page.locator('#conversion-announcer[role="status"][aria-live="polite"]').count()) === 1,
+    "current-converter: expected one persistent conversion result live region",
+  );
+  assert(
+    (await page.locator('#conversion-result-region .qa-visually-hidden[role="status"]').count()) === 0,
+    "current-converter: swapped result markup contains a duplicate hidden result announcer",
   );
 
   await page.getByRole("link", { name: "Everyday value" }).waitFor();
@@ -242,6 +248,32 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   await page.getByText("Cup of coffee", { exact: true }).waitFor();
   await page.getByText("Tokyo Metro regular ticket", { exact: true }).waitFor();
   await page.getByRole("heading", { name: "Paying in Japan" }).waitFor();
+
+  await page.waitForFunction((key) => {
+    const raw = localStorage.getItem(key);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    return parsed.version === 1 && parsed.recent?.length === 1;
+  }, LOCAL_STATE_KEY);
+  await page.getByRole("button", { name: "Save pair" }).click();
+  await page.getByRole("button", { name: "Remove saved pair" }).waitFor();
+  const savedState = await page.evaluate(
+    (key) => JSON.parse(localStorage.getItem(key) ?? "{}"),
+    LOCAL_STATE_KEY,
+  );
+  assert(
+    savedState.favourites?.length === 1,
+    "current-converter: favourite was not stored locally",
+  );
+  assert(
+    savedState.recent?.length === 1,
+    "current-converter: successful conversion was not recorded once",
+  );
+  assert(savedState.recent[0]?.amount === "12", "current-converter: recent amount is incorrect");
+  assert(
+    savedState.recent[0]?.sourceCountry === "JP",
+    "current-converter: recent source context is incorrect",
+  );
   await assertAxe(page, "current-converter/result");
 
   const waitForStory = page.waitForResponse(
@@ -380,6 +412,122 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   )) {
     consoleErrors.splice(consoleErrors.indexOf(message), 1);
   }
+}
+
+async function assertSavedStateFlow(page) {
+  const sampleState = {
+    version: 1,
+    favourites: [
+      {
+        id: "FI:EUR:>:JP:JPY",
+        sourceCurrency: "EUR",
+        destinationCurrency: "JPY",
+        sourceCountry: "FI",
+        destinationCountry: "JP",
+        sourceCountryName: "Finland",
+        destinationCountryName: "Japan",
+        savedAt: "2026-09-21T12:00:00.000Z",
+      },
+    ],
+    recent: [
+      {
+        id: "FI:EUR:>:JP:JPY|latest|latest|100",
+        sourceCurrency: "EUR",
+        destinationCurrency: "JPY",
+        sourceCountry: "FI",
+        destinationCountry: "JP",
+        sourceCountryName: "Finland",
+        destinationCountryName: "Japan",
+        amount: "100",
+        outputAmount: "17450",
+        rateMode: "latest",
+        requestedDate: "",
+        effectiveDate: "2026-09-18",
+        convertedAt: "2026-09-21T12:00:00.000Z",
+      },
+      {
+        id: "FI:FIM:>:US:USD|historical|1998-06-15|100",
+        sourceCurrency: "FIM",
+        destinationCurrency: "USD",
+        sourceCountry: "FI",
+        destinationCountry: "US",
+        sourceCountryName: "Finland",
+        destinationCountryName: "United States",
+        amount: "100",
+        outputAmount: "21.35",
+        rateMode: "historical",
+        requestedDate: "1998-06-15",
+        effectiveDate: "1998-06-15",
+        convertedAt: "2026-09-20T12:00:00.000Z",
+      },
+    ],
+  };
+
+  await page.evaluate(({ key, state }) => localStorage.setItem(key, JSON.stringify(state)), {
+    key: LOCAL_STATE_KEY,
+    state: sampleState,
+  });
+  await page.reload({ waitUntil: "networkidle" });
+
+  await page.getByRole("heading", { name: "EUR → JPY" }).waitFor();
+  await page.getByText("100 EUR → 17450 JPY", { exact: true }).waitFor();
+  await page.getByText("100 FIM → 21.35 USD", { exact: true }).waitFor();
+
+  const savedRow = page.locator("[data-saved-pair-id]").first();
+  const usePairHref = await savedRow.getByRole("link", { name: "Use pair" }).getAttribute("href");
+  assert(usePairHref, "saved-state: favourite is missing its Use pair URL");
+  const usePair = new URL(usePairHref, BASE_URL);
+  assert(usePair.searchParams.get("load") === "1", "saved-state: favourite does not use pair-load mode");
+  assert(usePair.searchParams.get("amount") === null, "saved-state: favourite unexpectedly stores amount");
+  assert(
+    usePair.searchParams.get("source_country") === "FI",
+    "saved-state: favourite source country missing",
+  );
+
+  const latestRecent = page.locator("[data-recent-conversion-id]").first();
+  const repeatHref = await latestRecent.getByRole("link", { name: "Repeat" }).getAttribute("href");
+  assert(repeatHref, "saved-state: recent conversion is missing Repeat URL");
+  const repeat = new URL(repeatHref, BASE_URL);
+  assert(repeat.searchParams.get("convert") === "1", "saved-state: repeat does not request conversion");
+  assert(repeat.searchParams.get("amount") === "100", "saved-state: repeat amount missing");
+
+  const swapHref = await latestRecent.getByRole("link", { name: "Swap" }).getAttribute("href");
+  assert(swapHref, "saved-state: recent conversion is missing Swap URL");
+  const swap = new URL(swapHref, BASE_URL);
+  assert(
+    swap.searchParams.get("source_currency") === "JPY" &&
+      swap.searchParams.get("destination_currency") === "EUR",
+    "saved-state: swap URL did not reverse the pair",
+  );
+
+  await latestRecent.getByRole("button", { name: "Remove" }).click();
+  await page.waitForFunction(
+    (key) => JSON.parse(localStorage.getItem(key) ?? "{}").recent?.length === 1,
+    LOCAL_STATE_KEY,
+  );
+  await page.getByRole("button", { name: "Clear recent history" }).click();
+  await page.getByText("Recent history cleared from this browser.", { exact: true }).waitFor();
+  await page.getByText("No recent conversions in this browser yet.", { exact: true }).waitFor();
+
+  await page.getByRole("button", { name: "Clear saved pairs" }).click();
+  await page.getByText("Saved pairs cleared from this browser.", { exact: true }).waitFor();
+  await page.getByText("No saved pairs yet.", { exact: false }).waitFor();
+
+  await page.evaluate((key) => localStorage.setItem(key, "{broken"), LOCAL_STATE_KEY);
+  await page.reload({ waitUntil: "networkidle" });
+  await page
+    .getByText("Some local saved data was unreadable or outdated and has been ignored.", {
+      exact: false,
+    })
+    .waitFor();
+
+  await page.evaluate(({ key, state }) => localStorage.setItem(key, JSON.stringify(state)), {
+    key: LOCAL_STATE_KEY,
+    state: sampleState,
+  });
+  await page.reload({ waitUntil: "networkidle" });
+  await page.getByRole("heading", { name: "EUR → JPY" }).waitFor();
+  await assertAxe(page, "saved-state/populated");
 }
 
 async function assertReducedMotion(page, surface) {
@@ -615,7 +763,7 @@ const browser = await browserType.launch();
 const activeSurfaces =
   BROWSER_SCOPE === "full"
     ? SURFACES
-    : SURFACES.filter((surface) => ["current-converter", "rate-series"].includes(surface.name));
+    : SURFACES.filter((surface) => ["current-converter", "saved-state", "rate-series"].includes(surface.name));
 const activeViewports =
   BROWSER_SCOPE === "full"
     ? VIEWPORTS
@@ -668,6 +816,10 @@ try {
           (BROWSER_SCOPE === "full" && viewport.name === "mobile-390"))
       ) {
         await assertCurrentConverterFlow(page, consoleErrors);
+      }
+
+      if (surface.name === "saved-state" && viewport.name === "wide-1440") {
+        await assertSavedStateFlow(page);
       }
 
       if (viewport.name === "mobile-390") {
