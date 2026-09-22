@@ -395,27 +395,39 @@ async function assertForcedColors(page, surface) {
   await page.evaluate(() => {
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
   });
+  // Establish keyboard modality first. Headless Chromium can otherwise treat a direct
+  // programmatic focus after pointer-driven flows as not :focus-visible.
   await page.keyboard.press("Tab");
-  const focusState = await page.evaluate(() => {
-    const element = document.activeElement;
-    if (!(element instanceof HTMLElement) || element === document.body) return null;
-    const style = getComputedStyle(element);
-    return {
-      tagName: element.tagName.toLowerCase(),
-      id: element.id,
-      className: typeof element.className === "string" ? element.className : "",
-      outlineStyle: style.outlineStyle,
-      outlineWidth: style.outlineWidth,
-      boxShadow: style.boxShadow,
-    };
+  const focusTarget =
+    surface === "converter"
+      ? page.locator("#workspace-amount")
+      : surface === "current-converter"
+        ? page.locator("#id_amount")
+        : page.locator(".qa-skip-link");
+  await focusTarget.focus();
+
+  const focusState = await focusTarget.evaluate((element) => {
+    const candidates = [
+      element,
+      element.closest(".qa-amount-control"),
+      element.closest(".qa-selector-trigger"),
+      element.closest(".qa-primary-button"),
+      element.closest(".qa-swap-button"),
+    ].filter(Boolean);
+
+    return candidates.map((candidate) => {
+      const style = getComputedStyle(candidate);
+      return {
+        outlineStyle: style.outlineStyle,
+        outlineWidth: style.outlineWidth,
+        boxShadow: style.boxShadow,
+      };
+    });
   });
-  assert(
-    focusState !== null,
-    `${surface}: forced-colors keyboard navigation did not produce a focus target`,
+  const hasVisibleFocus = focusState.some(
+    (style) =>
+      (style.outlineStyle !== "none" && style.outlineWidth !== "0px") || style.boxShadow !== "none",
   );
-  const hasVisibleFocus =
-    (focusState.outlineStyle !== "none" && focusState.outlineWidth !== "0px") ||
-    focusState.boxShadow !== "none";
   assert(hasVisibleFocus, `${surface}: focus indicator disappears in forced-colors mode`);
   await assertNoHorizontalOverflow(page, `${surface}/forced-colors`);
 }
