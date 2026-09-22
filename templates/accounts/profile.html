@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Account · Cultural Currency Converter{% endblock %}
+{% block content %}
+  <section class="qa-account-panel" aria-labelledby="account-profile-title">
+    <p class="qa-foundation-kicker">Account</p>
+    <h1 id="account-profile-title">{{ user.get_username }}</h1>
+    <p class="qa-account-panel__lede">
+      Signed-in favourites are account-owned and available across devices. Recent conversion
+      history remains browser-local in this phase.
+    </p>
+    <div class="qa-account-actions">
+      <a class="qa-primary-button" href="{% url 'saved_state' %}">Saved &amp; recent</a>
+      <a class="qa-secondary-button" href="{% url 'converter' %}">Converter</a>
+    </div>
+    <section class="qa-account-danger" aria-labelledby="account-privacy-title">
+      <h2 id="account-privacy-title">Privacy controls</h2>
+      <p>
+        You can remove individual saved pairs on the Saved page, clear all account favourites, or
+        permanently delete this account and its account-owned data.
+      </p>
+      <a class="qa-secondary-button" href="{% url 'delete_account' %}">Delete account</a>
+    </section>
+  </section>
+{% endblock %}
