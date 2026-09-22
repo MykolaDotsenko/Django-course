@@ -422,16 +422,25 @@
                data-destination-country-name="{{ local.destination_country_name }}"
                data-rate-mode="{{ local.rate_mode }}"
                data-requested-date="{{ local.requested_date }}"
-               data-effective-date="{{ local.effective_date }}">
+               data-effective-date="{{ local.effective_date }}"
+               {% if user.is_authenticated %}
+                 data-account-saved="{% if account_favourite_saved %}true{% else %}false{% endif %}"
+               {% endif %}>
             <div class="qa-local-save-control__actions">
               <button class="qa-secondary-button qa-favourite-button"
                       id="save-pair-control"
                       type="button"
                       data-save-pair
-                      aria-pressed="false">
+                      aria-pressed="{% if user.is_authenticated and account_favourite_saved %}true{% else %}false{% endif %}">
                 {% include "components/icons/bookmark.html" %}
                 <span data-save-pair-label>
-                  {% if user.is_authenticated %}Save to account{% else %}Save pair{% endif %}
+                  {% if user.is_authenticated and account_favourite_saved %}
+                    Saved to account
+                  {% elif user.is_authenticated %}
+                    Save to account
+                  {% else %}
+                    Save pair
+                  {% endif %}
                 </span>
               </button>
               <a class="qa-secondary-button" href="{% url 'saved_state' %}">Saved &amp; recent</a>
