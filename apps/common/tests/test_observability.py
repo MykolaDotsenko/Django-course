@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import sys
 from uuid import UUID
 
 from django.test import SimpleTestCase
@@ -131,7 +132,7 @@ class JsonFormatterTests(SimpleTestCase):
                 "Authorization: Bearer access-secret"
             )
         except RuntimeError:
-            exc_info = __import__("sys").exc_info()
+            exc_info = sys.exc_info()
 
         record = logging.LogRecord(
             name="cultural_currency.exchange",
