@@ -118,8 +118,8 @@ class RecentConversion(models.Model):
             ),
             models.CheckConstraint(
                 condition=(
-                    Q(rate_mode=RateMode.HISTORICAL, requested_date__isnull=False)
-                    | Q(rate_mode=RateMode.LATEST, requested_date__isnull=True)
+                    Q(rate_mode="historical", requested_date__isnull=False)
+                    | Q(rate_mode="latest", requested_date__isnull=True)
                 ),
                 name="recent_requested_date_matches_mode",
             ),
