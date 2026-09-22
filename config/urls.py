@@ -3,7 +3,7 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
 
 from apps.common.health import health_live, health_ready
 from apps.common.views import converter_preview, media_preview, rate_series_preview, shell_preview
@@ -14,7 +14,7 @@ from apps.exchange.views import (
     historical_series,
     picker_options,
 )
-from apps.travel.views import saved_state
+from apps.travel.views import clear_favourites, delete_favourite, saved_state, sync_favourites
 
 urlpatterns = [
     path("", converter, name="converter"),
@@ -28,6 +28,14 @@ urlpatterns = [
     ),
     path("historical/series/", historical_series, name="historical_series"),
     path("saved/", saved_state, name="saved_state"),
+    path("saved/favourites/sync/", sync_favourites, name="sync_favourites"),
+    path(
+        "saved/favourites/<int:favourite_id>/delete/",
+        delete_favourite,
+        name="delete_favourite",
+    ),
+    path("saved/favourites/clear/", clear_favourites, name="clear_favourites"),
+    path("accounts/", include("apps.accounts.urls")),
     path("health/live/", health_live, name="health_live"),
     path("health/ready/", health_ready, name="health_ready"),
     path("admin/", admin.site.urls),

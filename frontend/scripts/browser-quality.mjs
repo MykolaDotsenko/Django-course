@@ -23,6 +23,8 @@ const SURFACES = [
   { name: "converter", path: "/_design/converter/" },
   { name: "current-converter", path: "/" },
   { name: "saved-state", path: "/saved/" },
+  { name: "account-login", path: "/accounts/login/" },
+  { name: "account-signup", path: "/accounts/signup/" },
   { name: "rate-series", path: "/_design/rate-series/" },
 ];
 

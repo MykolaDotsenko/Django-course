@@ -108,6 +108,7 @@ function renderFavourites(
   state: LocalPreferencesV1,
   converterUrl: string,
 ): void {
+  if (page.dataset.accountMode === "true") return;
   const list = page.querySelector<HTMLElement>("[data-favourites-list]");
   const empty = page.querySelector<HTMLElement>("[data-favourites-empty]");
   if (!list || !empty) return;
@@ -231,6 +232,7 @@ function setStorageStatus(page: HTMLElement, read: ReadResult, overrideMessage =
   const status = page.querySelector<HTMLElement>("[data-local-storage-status]");
   if (!status) return;
 
+  const accountMode = page.dataset.accountMode === "true";
   if (overrideMessage) {
     status.dataset.storageTone = "feedback";
     status.setAttribute("aria-live", "polite");
@@ -238,17 +240,21 @@ function setStorageStatus(page: HTMLElement, read: ReadResult, overrideMessage =
   } else if (read.status === "unavailable") {
     status.dataset.storageTone = "warning";
     status.setAttribute("aria-live", "polite");
-    status.textContent =
-      "Browser storage is unavailable. Saved pairs and recent history are disabled; conversion still works.";
+    status.textContent = accountMode
+      ? "Account favourites remain available. Browser storage is unavailable, so recent history is disabled."
+      : "Browser storage is unavailable. Saved pairs and recent history are disabled; conversion still works.";
   } else if (read.status === "recovered") {
     status.dataset.storageTone = "warning";
     status.setAttribute("aria-live", "polite");
-    status.textContent =
-      "Some local saved data was unreadable or outdated and has been ignored. Nothing was sent to the server.";
+    status.textContent = accountMode
+      ? "Account favourites remain available. Some browser-local recent history was unreadable and has been ignored."
+      : "Some local saved data was unreadable or outdated and has been ignored. Nothing was sent to the server.";
   } else {
     status.dataset.storageTone = "neutral";
     status.setAttribute("aria-live", "off");
-    status.textContent = `Stored locally in this browser · ${read.state.favourites.length} saved · ${read.state.recent.length} recent.`;
+    status.textContent = accountMode
+      ? `Saved pairs sync to your account · ${read.state.recent.length} recent stays in this browser.`
+      : `Stored locally in this browser · ${read.state.favourites.length} saved · ${read.state.recent.length} recent.`;
   }
 }
 

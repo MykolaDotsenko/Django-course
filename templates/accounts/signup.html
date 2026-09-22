@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Create account · Cultural Currency Converter{% endblock %}
+{% block content %}
+  <section class="qa-account-panel" aria-labelledby="account-signup-title">
+    <p class="qa-foundation-kicker">Account</p>
+    <h1 id="account-signup-title">Create an account</h1>
+    <p class="qa-account-panel__lede">
+      Saved pairs can sync across signed-in devices. Existing browser-local saved pairs are merged
+      by pair identity after sign-in; recent conversion history stays on this browser.
+    </p>
+    <form class="qa-account-form" method="post">
+      {% csrf_token %}
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+      {% if form.non_field_errors %}
+        <div class="qa-inline-alert qa-inline-alert--error" role="alert">
+          <p>{{ form.non_field_errors.0 }}</p>
+        </div>
+      {% endif %}
+      {% for field in form %}
+        <div class="qa-field{% if field.errors %} qa-field--error{% endif %}">
+          <label class="qa-field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}
+            <div class="qa-field__message">{{ field.help_text|safe }}</div>
+          {% endif %}
+          {% if field.errors %}
+            <p class="qa-field__message qa-field__message--error">{{ field.errors.0 }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+      <button class="qa-primary-button" type="submit">Create account</button>
+    </form>
+    <p class="qa-account-panel__alternate">
+      Already have an account? <a href="{% url 'login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Sign in</a>.
+    </p>
+  </section>
+{% endblock %}

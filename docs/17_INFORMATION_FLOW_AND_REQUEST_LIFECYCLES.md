@@ -757,7 +757,8 @@ database unique constraint
 canonical saved state
 ~~~
 
-Repeated requests do not create duplicates.
+Repeated requests do not create duplicates. The persisted row is always selected and mutated
+through the authenticated owner; a resource ID alone is never authorization.
 
 ---
 
@@ -779,7 +780,12 @@ commit
 return union
 ~~~
 
-Recent history can have a separate consent/merge policy.
+PR12A implements this as a bounded JSON web mutation: lexical validation and canonical
+country/currency validation complete before the short write transaction, the user row is locked to
+serialize competing merges, and the database unique constraint is the final duplicate barrier.
+
+After a successful merge the browser removes only the merged local favourites. Recent history is
+not included in this request and remains browser-local until PR12B defines an explicit policy.
 
 ---
 

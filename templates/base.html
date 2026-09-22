@@ -10,7 +10,10 @@
     {% block head_meta %}{% endblock %}
     {% vite_asset "frontend/src/app.ts" %}
   </head>
-  <body class="qa-shell">
+  <body class="qa-shell"
+        data-account-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}"
+        data-account-favourite-sync-url="{% url 'sync_favourites' %}"
+        data-account-csrf-token="{{ csrf_token }}">
     <a class="qa-skip-link" href="#main-content">Skip to content</a>
     <header class="qa-shell__header">
       <div class="qa-shell__frame qa-shell__header-inner">
@@ -20,10 +23,29 @@
           </span>
           <span>Cultural Currency</span>
         </div>
-        {% block header_actions %}{% endblock %}
+        <div class="qa-header-actions">
+          {% block header_actions %}{% endblock %}
+          {% if user.is_authenticated %}
+            <a class="qa-header-link" href="{% url 'profile' %}">Account</a>
+            <form method="post" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button class="qa-header-link qa-header-button" type="submit">Sign out</button>
+            </form>
+          {% else %}
+            <a class="qa-header-link"
+               href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}">Sign in</a>
+          {% endif %}
+        </div>
       </div>
     </header>
     <main id="main-content" class="qa-shell__main" tabindex="-1">
+      {% if messages %}
+        <div class="qa-flash-stack" aria-live="polite">
+          {% for message in messages %}
+            <p class="qa-flash-message">{{ message }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
       {% block content %}{% endblock %}
     </main>
     <footer class="qa-shell__footer">

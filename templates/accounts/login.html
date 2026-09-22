@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Sign in · Cultural Currency Converter{% endblock %}
+{% block content %}
+  <section class="qa-account-panel" aria-labelledby="account-login-title">
+    <p class="qa-foundation-kicker">Account</p>
+    <h1 id="account-login-title">Sign in</h1>
+    <p class="qa-account-panel__lede">
+      Sign in to keep saved pairs across devices. Existing browser-local favourites are merged
+      by pair identity after sign-in; browser-local recent history is not uploaded.
+    </p>
+    <form class="qa-account-form" method="post">
+      {% csrf_token %}
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+      {% if form.non_field_errors %}
+        <div class="qa-inline-alert qa-inline-alert--error" role="alert">
+          <p>{{ form.non_field_errors.0 }}</p>
+        </div>
+      {% endif %}
+      {% for field in form %}
+        <div class="qa-field{% if field.errors %} qa-field--error{% endif %}">
+          <label class="qa-field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <p class="qa-field__message qa-field__message--error">{{ field.errors.0 }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+      <button class="qa-primary-button" type="submit">Sign in</button>
+    </form>
+    <p class="qa-account-panel__alternate">
+      New here? <a href="{% url 'signup' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Create an account</a>.
+    </p>
+  </section>
+{% endblock %}

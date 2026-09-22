@@ -287,7 +287,9 @@ Do not invent custom crypto/auth protocol.
 
 # 14. Session vs token boundary
 
-Web can use normal Django session auth.
+Web uses normal Django session auth for PR12A account features. Mutating web requests remain
+CSRF-protected, logout is POST-only, account-owned favourite queries are always scoped by
+`request.user`, and cross-user delete attempts resolve without exposing another user's object.
 
 Native app will use an explicit API auth method.
 

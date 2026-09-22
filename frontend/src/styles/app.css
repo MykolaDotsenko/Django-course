@@ -6,6 +6,7 @@
 @import "./current-converter.css";
 @import "./rate-series.css";
 @import "./saved-state.css";
+@import "./account.css";
 
 @source "../../../templates";
 

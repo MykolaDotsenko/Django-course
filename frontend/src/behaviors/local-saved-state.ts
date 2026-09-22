@@ -1,4 +1,9 @@
 import {
+  accountFavouriteSyncAvailable,
+  saveFavouriteToAccount,
+  syncLocalFavouritesToAccount,
+} from "./account-favourites";
+import {
   isFavourite,
   type LocalPreferencesV1,
   normalizePair,
@@ -51,7 +56,7 @@ function addRecent(snapshot: HTMLElement): void {
   writeState(upsertRecent(read.state, recent));
 }
 
-function setFavouriteButtonState(
+function setAnonymousFavouriteButtonState(
   snapshot: HTMLElement,
   state: LocalPreferencesV1,
   storageStatus: ReadStatus,
@@ -71,12 +76,50 @@ function setFavouriteButtonState(
   else delete button.dataset.storageUnavailable;
 }
 
+function setAccountFavouriteButtonState(snapshot: HTMLElement, saved: boolean): void {
+  const button = snapshot.querySelector<HTMLButtonElement>("[data-save-pair]");
+  const label = snapshot.querySelector<HTMLElement>("[data-save-pair-label]");
+  if (!button || !label) return;
+
+  button.removeAttribute("aria-pressed");
+  button.setAttribute("aria-label", saved ? "Pair saved to account" : "Save pair to account");
+  button.dataset.saved = saved ? "true" : "false";
+  button.disabled = saved;
+  delete button.dataset.storageUnavailable;
+  label.textContent = saved ? "Saved to account" : "Save to account";
+}
+
 function saveStatus(snapshot: HTMLElement, message: string): void {
   const status = snapshot.querySelector<HTMLElement>("[data-save-pair-status]");
   if (status) status.textContent = message;
 }
 
-function toggleFavourite(snapshot: HTMLElement): void {
+async function saveAccountFavourite(snapshot: HTMLElement): Promise<void> {
+  const pair = pairFromSnapshot(snapshot);
+  const button = snapshot.querySelector<HTMLButtonElement>("[data-save-pair]");
+  if (!pair || !button) return;
+
+  button.disabled = true;
+  saveStatus(snapshot, "Saving pair to your account…");
+  try {
+    const created = await saveFavouriteToAccount(pair);
+    snapshot.dataset.accountSaved = "true";
+    setAccountFavouriteButtonState(snapshot, true);
+    saveStatus(
+      snapshot,
+      created ? "Saved to your account." : "This pair is already saved to your account.",
+    );
+  } catch {
+    saveStatus(
+      snapshot,
+      "The pair could not be saved to your account. Your conversion is unchanged.",
+    );
+  } finally {
+    button.disabled = snapshot.dataset.accountSaved === "true";
+  }
+}
+
+function toggleAnonymousFavourite(snapshot: HTMLElement): void {
   const pair = pairFromSnapshot(snapshot);
   if (!pair) return;
 
@@ -86,7 +129,7 @@ function toggleFavourite(snapshot: HTMLElement): void {
       snapshot,
       "Saved pairs are unavailable because browser storage is blocked. Conversion still works.",
     );
-    setFavouriteButtonState(snapshot, read.state, read.status);
+    setAnonymousFavouriteButtonState(snapshot, read.state, read.status);
     return;
   }
 
@@ -96,23 +139,30 @@ function toggleFavourite(snapshot: HTMLElement): void {
     return;
   }
 
-  setFavouriteButtonState(snapshot, toggled.state, "ok");
+  setAnonymousFavouriteButtonState(snapshot, toggled.state, "ok");
   saveStatus(snapshot, toggled.saved ? "Saved in this browser." : "Removed from saved.");
 }
 
 function enhanceConversionSnapshots(): void {
   const read = readState();
+  const accountMode = accountFavouriteSyncAvailable();
+
   for (const snapshot of document.querySelectorAll<HTMLElement>(
     "[data-local-conversion-snapshot]",
   )) {
-    setFavouriteButtonState(snapshot, read.state, read.status);
+    if (accountMode) {
+      setAccountFavouriteButtonState(snapshot, snapshot.dataset.accountSaved === "true");
+    } else {
+      setAnonymousFavouriteButtonState(snapshot, read.state, read.status);
+    }
 
     if (snapshot.dataset.localStateWired !== "true") {
       snapshot.dataset.localStateWired = "true";
       snapshot
         .querySelector<HTMLButtonElement>("[data-save-pair]")
         ?.addEventListener("click", () => {
-          toggleFavourite(snapshot);
+          if (accountMode) void saveAccountFavourite(snapshot);
+          else toggleAnonymousFavourite(snapshot);
         });
     }
 
@@ -150,9 +200,37 @@ function enhanceSavedPage(): void {
     });
 }
 
+function syncLocalAccountFavourites(): void {
+  if (!accountFavouriteSyncAvailable()) return;
+
+  void syncLocalFavouritesToAccount()
+    .then((mergedCount) => {
+      if (
+        mergedCount > 0 &&
+        document.querySelector<HTMLElement>(
+          '[data-local-saved-state-page][data-account-mode="true"]',
+        )
+      ) {
+        window.location.reload();
+      }
+    })
+    .catch((error: unknown) => {
+      console.error("Local favourites could not be merged into the account.", error);
+      const status = document.querySelector<HTMLElement>("[data-local-storage-status]");
+      if (status) {
+        status.hidden = false;
+        status.dataset.storageTone = "warning";
+        status.setAttribute("aria-live", "polite");
+        status.textContent =
+          "Your browser-local saved pairs could not be synced. They remain on this device.";
+      }
+    });
+}
+
 function enhanceLocalSavedState(): void {
   enhanceConversionSnapshots();
   enhanceSavedPage();
+  syncLocalAccountFavourites();
 }
 
 document.addEventListener("DOMContentLoaded", enhanceLocalSavedState);

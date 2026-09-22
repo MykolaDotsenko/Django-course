@@ -422,16 +422,30 @@
                data-destination-country-name="{{ local.destination_country_name }}"
                data-rate-mode="{{ local.rate_mode }}"
                data-requested-date="{{ local.requested_date }}"
-               data-effective-date="{{ local.effective_date }}">
+               data-effective-date="{{ local.effective_date }}"
+               data-account-saved="{% if user.is_authenticated and account_favourite_saved %}true{% else %}false{% endif %}">
             <div class="qa-local-save-control__actions">
-              <button class="qa-secondary-button qa-favourite-button"
-                      id="save-pair-control"
-                      type="button"
-                      data-save-pair
-                      aria-pressed="false">
-                {% include "components/icons/bookmark.html" %}
-                <span data-save-pair-label>Save pair</span>
-              </button>
+              {% if user.is_authenticated %}
+                <button class="qa-secondary-button qa-favourite-button"
+                        id="save-pair-control"
+                        type="button"
+                        data-save-pair
+                        {% if account_favourite_saved %}disabled{% endif %}>
+                  {% include "components/icons/bookmark.html" %}
+                  <span data-save-pair-label>
+                    {% if account_favourite_saved %}Saved to account{% else %}Save to account{% endif %}
+                  </span>
+                </button>
+              {% else %}
+                <button class="qa-secondary-button qa-favourite-button"
+                        id="save-pair-control"
+                        type="button"
+                        data-save-pair
+                        aria-pressed="false">
+                  {% include "components/icons/bookmark.html" %}
+                  <span data-save-pair-label>Save pair</span>
+                </button>
+              {% endif %}
               <a class="qa-secondary-button" href="{% url 'saved_state' %}">Saved &amp; recent</a>
             </div>
             <p class="qa-local-save-control__status"

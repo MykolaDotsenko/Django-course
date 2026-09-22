@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Delete account · Cultural Currency Converter{% endblock %}
+{% block content %}
+  <section class="qa-account-panel" aria-labelledby="delete-account-title">
+    <p class="qa-foundation-kicker">Privacy</p>
+    <h1 id="delete-account-title">Delete account</h1>
+    <p class="qa-account-panel__lede">
+      This permanently deletes your account and account-owned saved pairs. Browser-local data on
+      this device is separate and can still be cleared from Saved &amp; recent.
+    </p>
+    <form class="qa-account-form" method="post">
+      {% csrf_token %}
+      <div class="qa-field{% if form.password.errors %} qa-field--error{% endif %}">
+        <label class="qa-field__label" for="{{ form.password.id_for_label }}">
+          {{ form.password.label }}
+        </label>
+        {{ form.password }}
+        {% if form.password.errors %}
+          <p class="qa-field__message qa-field__message--error">{{ form.password.errors.0 }}</p>
+        {% endif %}
+      </div>
+      <div class="qa-account-actions">
+        <button class="qa-primary-button" type="submit">Delete my account</button>
+        <a class="qa-secondary-button" href="{% url 'profile' %}">Cancel</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}
