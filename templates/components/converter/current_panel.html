@@ -362,7 +362,7 @@
                hx-swap="innerHTML"
                hx-sync="#money-culture-story-slot:replace">Explore money &amp; culture</a>
           </section>
-          <div id="money-culture-story-slot" aria-live="polite"></div>
+          <div id="money-culture-story-slot"></div>
         {% endif %}
         {% if result_component.historical_trend %}
           {% with trend=result_component.historical_trend %}
@@ -380,7 +380,7 @@
                  hx-swap="innerHTML"
                  hx-sync="#historical-trend-slot:replace">View historical trend</a>
             </section>
-            <div id="historical-trend-slot" aria-live="polite"></div>
+            <div id="historical-trend-slot"></div>
           {% endwith %}
         {% endif %}
       {% else %}
