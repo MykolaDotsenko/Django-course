@@ -87,10 +87,7 @@ function announceConversionResult(target: EventTarget | null, status: number | u
   }, 0);
 }
 
-function focusValidationSummary(
-  target: EventTarget | null,
-  status: number | undefined,
-): boolean {
+function focusValidationSummary(target: EventTarget | null, status: number | undefined): boolean {
   if (
     !focusValidationSummaryAfterRequest ||
     status !== 422 ||
