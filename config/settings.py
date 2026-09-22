@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "django_htmx",
     "template_partials",
     "apps.common",
+    "apps.accounts",
     "apps.countries",
     "apps.culture",
     "apps.exchange",
@@ -85,6 +86,10 @@ AI_FALLBACK_MODE = AI_CONFIG.fallback_mode
 AI_TIMEOUT_SECONDS = AI_CONFIG.timeout_seconds
 AI_MAX_ATTEMPTS = AI_CONFIG.max_attempts
 GEMINI_API_KEY = AI_CONFIG.gemini_api_key
+
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "profile"
+LOGOUT_REDIRECT_URL = "converter"
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
