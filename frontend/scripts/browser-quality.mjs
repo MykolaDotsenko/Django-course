@@ -352,8 +352,26 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   );
 
   await Promise.all([waitForPost(), page.locator("#swap-contexts").click()]);
+  await page.waitForFunction(() => document.querySelector(".htmx-request") === null);
   const focused = await page.evaluate(() => document.activeElement?.id ?? "");
   assert(focused === "swap-contexts", `current-converter: swap focus moved to ${focused}`);
+
+  const loadingState = await page.locator("#conversion-loading").evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      requestActive: element.classList.contains("htmx-request"),
+      opacity: style.opacity,
+      visibility: style.visibility,
+      display: style.display,
+    };
+  });
+  assert(
+    !loadingState.requestActive &&
+      (loadingState.opacity === "0" ||
+        loadingState.visibility === "hidden" ||
+        loadingState.display === "none"),
+    `current-converter: loading indicator remained visually active after swap: ${JSON.stringify(loadingState)}`,
+  );
 
   for (const message of consoleErrors.filter(
     (entry) =>
