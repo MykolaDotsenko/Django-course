@@ -47,6 +47,78 @@ def test_sync_is_idempotent_and_does_not_delete_unmentioned_rows():
 
 
 @pytest.mark.django_db
+def test_sync_reports_source_owned_country_missing_from_full_snapshot_without_deleting_it():
+    missing = Country.objects.create(
+        iso2="SE",
+        iso3="SWE",
+        name="Sweden",
+        metadata_source="rest-countries-v5",
+    )
+
+    summary = sync_country_metadata((snapshot(),), minimum_countries=1)
+
+    assert summary.requires_reconciliation_review is True
+    assert summary.missing_source_countries == ("SE",)
+    assert summary.stale_source_relationships == ()
+    assert Country.objects.filter(pk=missing.pk, is_active=True).exists()
+
+
+@pytest.mark.django_db
+def test_sync_reports_stale_source_owned_current_relationship_without_closing_it():
+    finland = Country.objects.create(
+        iso2="FI",
+        iso3="FIN",
+        name="Finland",
+        metadata_source="rest-countries-v5",
+    )
+    eur = Currency.objects.create(code="EUR", name="Euro")
+    usd = Currency.objects.create(code="USD", name="US dollar")
+    stale = CountryCurrency.objects.create(
+        country=finland,
+        currency=usd,
+        is_primary=False,
+        source="rest-countries-v5",
+    )
+    CountryCurrency.objects.create(
+        country=finland,
+        currency=eur,
+        is_primary=True,
+        source="rest-countries-v5",
+    )
+
+    summary = sync_country_metadata((snapshot(),), minimum_countries=1)
+
+    assert summary.requires_reconciliation_review is True
+    assert summary.missing_source_countries == ()
+    assert summary.stale_source_relationships == ("FI:USD",)
+    stale.refresh_from_db()
+    assert stale.valid_to is None
+
+
+@pytest.mark.django_db
+def test_sync_does_not_report_rows_owned_by_other_sources_as_snapshot_drift():
+    country = Country.objects.create(
+        iso2="SE",
+        iso3="SWE",
+        name="Sweden",
+        metadata_source="curated-manual",
+    )
+    sek = Currency.objects.create(code="SEK", name="Swedish krona")
+    CountryCurrency.objects.create(
+        country=country,
+        currency=sek,
+        is_primary=True,
+        source="curated-history-v1",
+    )
+
+    summary = sync_country_metadata((snapshot(),), minimum_countries=1)
+
+    assert summary.requires_reconciliation_review is False
+    assert summary.missing_source_countries == ()
+    assert summary.stale_source_relationships == ()
+
+
+@pytest.mark.django_db
 def test_dry_run_reports_changes_without_persisting_them():
     summary = sync_country_metadata((snapshot(),), dry_run=True, minimum_countries=1)
 
