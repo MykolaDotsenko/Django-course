@@ -66,9 +66,30 @@ def _provider_keys(payload: dict[str, Any], policy: FxSourcePolicy) -> tuple[str
             )
     if not isinstance(raw_providers, list):
         raise FxProviderInvalidPayload("Frankfurter provider attribution must be an array.")
-    provider_keys = tuple(str(key).lower().strip() for key in raw_providers if str(key).strip())
-    if policy.mode is ProviderPolicyMode.PINNED and not provider_keys:
-        provider_keys = (policy.provider_key or "",)
+
+    normalized: list[str] = []
+    for raw_key in raw_providers:
+        if not isinstance(raw_key, str):
+            raise FxProviderInvalidPayload(
+                "Frankfurter provider attribution must contain string identifiers."
+            )
+        key = raw_key.lower().strip()
+        if key:
+            normalized.append(key)
+
+    provider_keys = tuple(normalized)
+    if policy.mode is ProviderPolicyMode.PINNED:
+        requested_provider = (policy.provider_key or "").lower().strip()
+        if policy.include_attribution and not provider_keys:
+            raise FxProviderInvalidPayload(
+                "Frankfurter omitted attribution for a pinned-provider quote."
+            )
+        if provider_keys and requested_provider not in provider_keys:
+            raise FxProviderInvalidPayload(
+                "Frankfurter returned attribution for a different pinned provider."
+            )
+        if not provider_keys:
+            provider_keys = (requested_provider,)
     return provider_keys
 
 
@@ -339,7 +360,7 @@ class FrankfurterProvider:
                 last_transient_error = exc
                 if attempt + 1 == self.max_attempts:
                     raise FxProviderUnavailable("Frankfurter request failed.") from exc
-            except HTTPException as exc:
+            except (HTTPException, OSError) as exc:
                 last_transient_error = exc
                 if attempt + 1 == self.max_attempts:
                     raise FxProviderUnavailable("Frankfurter request failed.") from exc
