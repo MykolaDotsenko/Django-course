@@ -921,11 +921,13 @@ async function assertNoJavaScriptSavedStateFallback(browser) {
 
     const savedResponse = await page.goto(`${BASE_URL}/saved/`, { waitUntil: "networkidle" });
     assert(savedResponse?.ok(), "no-js Saved & recent page failed");
-    await page
-      .getByText("JavaScript is required to read browser-local saved pairs and recent history.", {
-        exact: false,
-      })
-      .waitFor();
+    const savedPageText = await page.locator("body").innerText();
+    assert(
+      savedPageText.includes(
+        "JavaScript is required to read browser-local saved pairs and recent history.",
+      ),
+      "no-js Saved page did not expose the browser-local storage explanation in rendered text",
+    );
     assert(
       await page.locator("[data-favourites-empty]").isHidden(),
       "no-js Saved page falsely claimed that favourites were empty",
