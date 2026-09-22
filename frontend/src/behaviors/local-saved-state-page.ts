@@ -137,11 +137,7 @@ function renderFavourites(
     actions.className = "qa-saved-row__actions";
     const pairActionName = `${favourite.sourceCurrency} to ${favourite.destinationCurrency}`;
     actions.append(
-      actionLink(
-        "Use pair",
-        linkForPair(converterUrl, favourite),
-        `Use pair: ${pairActionName}`,
-      ),
+      actionLink("Use pair", linkForPair(converterUrl, favourite), `Use pair: ${pairActionName}`),
       actionLink(
         "Reverse pair",
         linkForPair(converterUrl, favourite, { swap: true }),
@@ -210,8 +206,7 @@ function renderRecents(page: HTMLElement, state: LocalPreferencesV1, converterUr
 
     const actions = document.createElement("div");
     actions.className = "qa-saved-row__actions";
-    const conversionActionName =
-      `${recent.amount} ${recent.sourceCurrency} to ${recent.destinationCurrency}`;
+    const conversionActionName = `${recent.amount} ${recent.sourceCurrency} to ${recent.destinationCurrency}`;
     actions.append(
       actionLink(
         "Repeat",
