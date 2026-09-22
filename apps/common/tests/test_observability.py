@@ -88,6 +88,10 @@ class JsonFormatterTests(SimpleTestCase):
             "GET https://user:db-pass@example.test/data?"
             "wskey=europeana-key&api_key=gemini-key "
             "Authorization: Bearer bearer-secret token=session-secret "
+            "GEMINI_API_KEY=gemini-env-secret "
+            "EUROPEANA_API_KEY=europeana-env-secret "
+            "REST_COUNTRIES_API_KEY=countries-env-secret "
+            "refresh_token=refresh-secret client_secret=client-secret "
             "safe=https://example.test/public"
         )
 
@@ -100,6 +104,11 @@ class JsonFormatterTests(SimpleTestCase):
             "gemini-key",
             "bearer-secret",
             "session-secret",
+            "gemini-env-secret",
+            "europeana-env-secret",
+            "countries-env-secret",
+            "refresh-secret",
+            "client-secret",
         ):
             self.assertNotIn(secret, redacted)
         self.assertIn("https://[REDACTED]@example.test/data", redacted)
@@ -107,6 +116,11 @@ class JsonFormatterTests(SimpleTestCase):
         self.assertIn("api_key=[REDACTED]", redacted)
         self.assertIn("Bearer [REDACTED]", redacted)
         self.assertIn("token=[REDACTED]", redacted)
+        self.assertIn("GEMINI_API_KEY=[REDACTED]", redacted)
+        self.assertIn("EUROPEANA_API_KEY=[REDACTED]", redacted)
+        self.assertIn("REST_COUNTRIES_API_KEY=[REDACTED]", redacted)
+        self.assertIn("refresh_token=[REDACTED]", redacted)
+        self.assertIn("client_secret=[REDACTED]", redacted)
         self.assertIn("safe=https://example.test/public", redacted)
 
     def test_formatter_redacts_event_and_exception_text(self) -> None:
