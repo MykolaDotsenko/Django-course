@@ -135,7 +135,9 @@ This line should stay obvious when reading the repository.
 The layout is capability-oriented rather than framework-layer-heavy. A feature may use more than one
 small TypeScript module when ownership is genuinely different. PR11 is the reference example:
 browser storage/schema logic lives in `local-saved-state-store.ts`, Saved-page rendering in
-`local-saved-state-page.ts`, and converter/HTMX integration in `local-saved-state.ts`.
+`local-saved-state-page.ts`, and converter/HTMX integration in `local-saved-state.ts`. The
+Saved-page renderer is dynamically imported only when the Saved-page capability marker exists, so
+the primary converter bundle does not pay for route-only rendering code.
 
 
 ---
@@ -1168,6 +1170,10 @@ Rules:
 - explicit schema version;
 - every persisted record is parsed and validated before use;
 - malformed/outdated storage is ignored with a visible recovery message on the Saved page;
+- the Saved-page renderer is a route-only dynamic chunk and a load failure degrades to explicit
+  non-fatal status copy;
+- with JavaScript disabled, the Saved page explicitly explains that browser-local state cannot be
+  read while the converter remains usable;
 - localStorage/quota failure does not break conversion;
 - failed conversion/HTMX refresh does not create a recent item;
 - anonymous history is never posted to Django;
