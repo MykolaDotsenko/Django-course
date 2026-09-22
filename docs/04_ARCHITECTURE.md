@@ -66,7 +66,9 @@ must not become a generic utility dumping ground.
 Country/currency metadata and temporal relationships.
 
 ### exchange
-FX provider integration, conversion rules, rate metadata and historical series.
+FX provider integration, conversion rules, rate metadata and historical series. The converter page
+uses a request-independent application orchestrator (`apps.exchange.application`) so Django views
+remain transport/presentation adapters rather than cross-domain workflow owners.
 
 ### culture
 Curated payment/cash/tipping context, TypicalPrice observations, StoryMoment facts and deterministic

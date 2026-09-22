@@ -109,7 +109,11 @@ Django Form
   ↓
 syntax validation
   ↓
-QuoteConversionCommand
+ConverterSubmissionCommand
+  ↓
+run_converter_submission(...)
+  ↓
+currency metadata + current/historical quote use case
   ↓
 application/domain validation
   ↓
