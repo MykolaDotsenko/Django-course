@@ -119,7 +119,21 @@ async function assertAxe(page, label) {
   }
 }
 
-async function assertKeyboardFocus(page, surface) {
+async function assertKeyboardFocus(page, surfaceName) {
+  const focusBaseline = await page.evaluate(() => {
+    const autofocus = document.querySelector("[autofocus]");
+    const active = document.activeElement;
+    if (active instanceof HTMLElement) active.blur();
+    return {
+      autofocusTag: autofocus?.tagName ?? "",
+      autofocusId: autofocus?.id ?? "",
+    };
+  });
+  assert(
+    focusBaseline.autofocusTag === "",
+    `${surfaceName}: unexpected autofocus target: ${JSON.stringify(focusBaseline)}`,
+  );
+
   await page.keyboard.press("Tab");
   const first = await page.evaluate(() => ({
     className: document.activeElement?.className ?? "",
@@ -127,16 +141,16 @@ async function assertKeyboardFocus(page, surface) {
   }));
   assert(
     String(first.className).includes("qa-skip-link"),
-    `${surface}: skip link is not the first keyboard target: ${JSON.stringify(first)}`,
+    `${surfaceName}: skip link is not the first keyboard target: ${JSON.stringify(first)}`,
   );
 
-  if (surface === "converter" || surface === "current-converter") {
+  if (surfaceName === "converter" || surfaceName === "current-converter") {
     await page.keyboard.press("Tab");
     const activeId = await page.evaluate(() => document.activeElement?.id ?? "");
-    const expected = surface === "converter" ? "workspace-amount" : "id_amount";
-    assert(activeId === expected, `${surface}: unexpected second focus target ${activeId}`);
+    const expected = surfaceName === "converter" ? "workspace-amount" : "id_amount";
+    assert(activeId === expected, `${surfaceName}: unexpected second focus target ${activeId}`);
 
-    if (surface === "current-converter") {
+    if (surfaceName === "current-converter") {
       for (const expectedId of [
         "source-picker-trigger",
         "swap-contexts",
@@ -945,7 +959,7 @@ try {
 
       await openSurface(page, surface);
       await assertNoHorizontalOverflow(page, `${surface.name}/${viewport.name}`);
-      await assertKeyboardFocus(page, surface);
+      await assertKeyboardFocus(page, surface.name);
 
       if (viewport.name === "wide-1440" || viewport.name === "mobile-390") {
         await assertAxe(page, `${surface.name}/${viewport.name}`);
