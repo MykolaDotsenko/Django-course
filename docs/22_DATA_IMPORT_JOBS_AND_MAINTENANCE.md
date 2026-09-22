@@ -501,7 +501,10 @@ Import frequency reflects source quota/update cadence.
 REST Countries:
 
 - slow-changing;
-- weekly/manual likely enough.
+- weekly/manual likely enough;
+- fetched in bounded pages of 100;
+- pagination must make positive numeric progress;
+- one run is capped at 10 pages so a malformed `more=true` loop fails closed.
 
 HICP:
 

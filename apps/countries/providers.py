@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 REST_COUNTRIES_V5_BASE_URL = "https://api.restcountries.com/countries/v5"
+MAX_PAGES = 10
 RESPONSE_FIELDS = (
     "names.common",
     "names.official",
@@ -135,7 +136,11 @@ class RestCountriesV5Client:
         offset = 0
         snapshots: list[CountryMetadataSnapshot] = []
 
+        page_number = 0
         while True:
+            page_number += 1
+            if page_number > MAX_PAGES:
+                raise CountrySourceError("REST Countries pagination exceeded the safety limit")
             query = urlencode(
                 {
                     "limit": 100,
@@ -174,7 +179,11 @@ class RestCountriesV5Client:
             )
             if not meta.get("more"):
                 break
-            count = int(meta.get("count") or len(objects))
+            raw_count = meta.get("count")
+            try:
+                count = int(raw_count if raw_count is not None else len(objects))
+            except (TypeError, ValueError) as exc:
+                raise CountrySourceError("REST Countries pagination count is invalid") from exc
             if count <= 0:
                 raise CountrySourceError("REST Countries pagination made no progress")
             offset += count

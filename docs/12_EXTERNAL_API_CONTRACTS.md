@@ -356,14 +356,18 @@ CountryMetadataSnapshot
 - capital?
 - region?
 - subregion?
-- languages[]
-- currency_codes[]
+- currencies[]
+  - code
+  - name
+  - symbol?
+  - minor_units
 - flag_url?
 - source_version
 - fetched_at
 ```
 
-Only map fields we intentionally own.
+Only map fields we intentionally own. Languages and other source fields that are not represented by
+the canonical Country/Currency model are intentionally excluded.
 
 Do not persist the entire 90+ field response “just in case”.
 
@@ -387,6 +391,11 @@ Properties:
 - no destructive removal without explicit policy.
 
 A source outage must not delete existing countries.
+
+The provider boundary also normalizes transport/shape failures into `CountrySourceError`, validates
+pagination progress/count metadata and caps one import fetch at 10 pages. This limit is a safety
+guard against a provider that continuously advertises `more=true`; it is comfortably above the
+expected REST Countries dataset size at 100 records/page and fails closed rather than looping.
 
 ---
 
