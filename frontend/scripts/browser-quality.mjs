@@ -155,7 +155,10 @@ async function assertKeyboardFocus(page, surfaceName) {
     );
     await page.keyboard.press("Tab");
     const activeId = await page.evaluate(() => document.activeElement?.id ?? "");
-    assert(activeId === "workspace-amount", `converter: unexpected amount focus target ${activeId}`);
+    assert(
+      activeId === "workspace-amount",
+      `converter: unexpected amount focus target ${activeId}`,
+    );
   }
 
   if (surfaceName === "current-converter") {
@@ -734,10 +737,10 @@ async function assertAuthenticatedRecentHistoryFlow(page) {
       },
     ],
   };
-  await page.evaluate(
-    ({ key, state }) => localStorage.setItem(key, JSON.stringify(state)),
-    { key: LOCAL_STATE_KEY, state: localOnlyRecent },
-  );
+  await page.evaluate(({ key, state }) => localStorage.setItem(key, JSON.stringify(state)), {
+    key: LOCAL_STATE_KEY,
+    state: localOnlyRecent,
+  });
 
   const username = `qa-history-${crypto.randomUUID().slice(0, 12)}`;
   const testCredential = `QA-${crypto.randomUUID()}`;
