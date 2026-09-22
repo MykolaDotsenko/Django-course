@@ -233,17 +233,21 @@ function setStorageStatus(page: HTMLElement, read: ReadResult, overrideMessage =
 
   if (overrideMessage) {
     status.dataset.storageTone = "feedback";
+    status.setAttribute("aria-live", "polite");
     status.textContent = overrideMessage;
   } else if (read.status === "unavailable") {
     status.dataset.storageTone = "warning";
+    status.setAttribute("aria-live", "polite");
     status.textContent =
       "Browser storage is unavailable. Saved pairs and recent history are disabled; conversion still works.";
   } else if (read.status === "recovered") {
     status.dataset.storageTone = "warning";
+    status.setAttribute("aria-live", "polite");
     status.textContent =
       "Some local saved data was unreadable or outdated and has been ignored. Nothing was sent to the server.";
   } else {
     status.dataset.storageTone = "neutral";
+    status.setAttribute("aria-live", "off");
     status.textContent = `Stored locally in this browser · ${read.state.favourites.length} saved · ${read.state.recent.length} recent.`;
   }
 }
