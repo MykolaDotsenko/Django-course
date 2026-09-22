@@ -160,6 +160,7 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     );
 
   await page.locator("#id_amount").fill("-1");
+  await page.locator('input[name="rate_mode"][value="historical"]').check();
   const invalidSubmit = waitForPost();
   await page.locator(".qa-primary-button").click();
   const invalidSubmitResponse = await invalidSubmit;
@@ -168,6 +169,12 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     `current-converter: invalid submit returned ${invalidSubmitResponse.status()} instead of 422`,
   );
   await page.getByText("Enter zero or a positive amount.").waitFor();
+  await page.locator("#conversion-error-summary").waitFor();
+  assert(
+    (await page.evaluate(() => document.activeElement?.id ?? "")) === "conversion-error-summary",
+    "current-converter: full-submit validation summary did not receive focus",
+  );
+  await page.locator('input[name="rate_mode"][value="latest"]').check();
 
   await page.locator("#source-picker-trigger").click();
   const sourceDialog = page.locator('[data-picker-dialog="source"]');
@@ -503,7 +510,9 @@ async function assertSavedStateFlow(page) {
   await page.getByText("100 FIM → 21.35 USD", { exact: true }).waitFor();
 
   const savedRow = page.locator("[data-saved-pair-id]").first();
-  const usePairHref = await savedRow.getByRole("link", { name: "Use pair" }).getAttribute("href");
+  const usePairHref = await savedRow
+    .getByRole("link", { name: "Use pair: EUR to JPY", exact: true })
+    .getAttribute("href");
   assert(usePairHref, "saved-state: favourite is missing its Use pair URL");
   const usePair = new URL(usePairHref, BASE_URL);
   assert(
@@ -520,7 +529,9 @@ async function assertSavedStateFlow(page) {
   );
 
   const latestRecent = page.locator("[data-recent-conversion-id]").first();
-  const repeatHref = await latestRecent.getByRole("link", { name: "Repeat" }).getAttribute("href");
+  const repeatHref = await latestRecent
+    .getByRole("link", { name: "Repeat conversion: 100 EUR to JPY", exact: true })
+    .getAttribute("href");
   assert(repeatHref, "saved-state: recent conversion is missing Repeat URL");
   const repeat = new URL(repeatHref, BASE_URL);
   assert(
@@ -529,7 +540,9 @@ async function assertSavedStateFlow(page) {
   );
   assert(repeat.searchParams.get("amount") === "100", "saved-state: repeat amount missing");
 
-  const swapHref = await latestRecent.getByRole("link", { name: "Swap" }).getAttribute("href");
+  const swapHref = await latestRecent
+    .getByRole("link", { name: "Swap conversion: 100 EUR to JPY", exact: true })
+    .getAttribute("href");
   assert(swapHref, "saved-state: recent conversion is missing Swap URL");
   const swap = new URL(swapHref, BASE_URL);
   assert(
@@ -538,11 +551,26 @@ async function assertSavedStateFlow(page) {
     "saved-state: swap URL did not reverse the pair",
   );
 
-  await latestRecent.getByRole("button", { name: "Remove" }).click();
+  assert(
+    (await savedRow.getByRole("button", { name: "Remove saved pair: EUR to JPY", exact: true }).count()) === 1,
+    "saved-state: favourite remove action is missing row-specific accessible context",
+  );
+  await latestRecent
+    .getByRole("button", { name: "Remove recent conversion: 100 EUR to JPY", exact: true })
+    .click();
   await page.waitForFunction(
     (key) => JSON.parse(localStorage.getItem(key) ?? "{}").recent?.length === 1,
     LOCAL_STATE_KEY,
   );
+  for (const label of ["Clear saved pairs", "Clear recent history"]) {
+    assert(
+      await page.getByRole("button", { name: label }).evaluate((element) =>
+        element.classList.contains("qa-destructive-button"),
+      ),
+      `saved-state: ${label} is missing destructive-action styling`,
+    );
+  }
+
   await page.getByRole("button", { name: "Clear recent history" }).click();
   await page.getByText("Recent history cleared from this browser.", { exact: true }).waitFor();
   await page.getByText("No recent conversions in this browser yet.", { exact: true }).waitFor();
