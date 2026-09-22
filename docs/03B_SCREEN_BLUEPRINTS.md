@@ -81,7 +81,7 @@ Recommended structure:
      Reference rate · Effective 18 Sep 2026
               ECB via Frankfurter
 
-         [ source details ] [ save pair ]
+              [ source details ]
 
 ──────────────────────────────────────────────────────────────
 
@@ -99,6 +99,10 @@ Tipping ...
 ──────────────────────────────────────────────────────────────
 
 Explore money & culture →
+
+Historical context →
+
+[ save pair ] [ Saved & recent ]
 ```
 
 ---
