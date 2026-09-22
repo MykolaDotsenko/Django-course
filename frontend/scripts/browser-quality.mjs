@@ -552,7 +552,9 @@ async function assertSavedStateFlow(page) {
   );
 
   assert(
-    (await savedRow.getByRole("button", { name: "Remove saved pair: EUR to JPY", exact: true }).count()) === 1,
+    (await savedRow
+      .getByRole("button", { name: "Remove saved pair: EUR to JPY", exact: true })
+      .count()) === 1,
     "saved-state: favourite remove action is missing row-specific accessible context",
   );
   await latestRecent
@@ -564,9 +566,9 @@ async function assertSavedStateFlow(page) {
   );
   for (const label of ["Clear saved pairs", "Clear recent history"]) {
     assert(
-      await page.getByRole("button", { name: label }).evaluate((element) =>
-        element.classList.contains("qa-destructive-button"),
-      ),
+      await page
+        .getByRole("button", { name: label })
+        .evaluate((element) => element.classList.contains("qa-destructive-button")),
       `saved-state: ${label} is missing destructive-action styling`,
     );
   }
