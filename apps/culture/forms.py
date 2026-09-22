@@ -91,4 +91,3 @@ class CurrentDestinationContextForm(forms.Form):
             self.add_error("currency", "Unknown destination currency.")
 
         return cleaned
-
