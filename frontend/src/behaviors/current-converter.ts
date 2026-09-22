@@ -64,8 +64,8 @@ function enhanceAutoRefresh(form: HTMLFormElement): void {
   });
 }
 
-function announceConversionResult(target: EventTarget | null): void {
-  if (!(target instanceof Element) || target.id !== "converter-panel") return;
+function announceConversionResult(target: EventTarget | null, status: number | undefined): void {
+  if (status !== 200 || !(target instanceof Element) || target.id !== "converter-panel") return;
 
   const announcer = document.getElementById("conversion-announcer");
   const payload = target.querySelector<HTMLElement>("[data-conversion-announcement]");
@@ -130,7 +130,8 @@ document.addEventListener("htmx:beforeSwap", (event) => {
 document.addEventListener("DOMContentLoaded", enhanceCurrentConverterBehavior);
 document.addEventListener("htmx:afterSwap", (event) => {
   enhanceCurrentConverterBehavior();
-  announceConversionResult(event.target);
+  const detail = (event as CustomEvent<{ xhr?: XMLHttpRequest }>).detail;
+  announceConversionResult(event.target, detail.xhr?.status);
 
   if (!restoreFocusId) return;
   document.getElementById(restoreFocusId)?.focus();
