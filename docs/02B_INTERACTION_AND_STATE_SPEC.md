@@ -622,6 +622,10 @@ Core conversion unaffected.
 Saved control explains inability only when user attempts it. The Saved & recent page may show the
 storage-unavailable state immediately because persistence is the purpose of that page.
 
+If JavaScript is unavailable, the Saved & recent page must not remain in a fake loading/checking
+state. It explicitly explains that browser-local state requires JavaScript while keeping a working
+path back to the converter.
+
 ### Amount policy
 
 Anonymous favourites store pair/context only. They do not remember the last amount. Reopening a
