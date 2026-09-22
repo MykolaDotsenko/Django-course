@@ -1,5 +1,6 @@
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from http.client import HTTPException
 from unittest.mock import patch
 from urllib.error import HTTPError, URLError
 
@@ -443,3 +444,284 @@ def test_series_keeps_requested_grouping_separate_from_provider_cadence():
     assert result.grouping is RateSeriesGrouping.MONTH
     assert result.observation_granularity is ObservationGranularity.MONTHLY
     assert result.points[0].provider_keys == ("hmrc",)
+
+
+def test_frankfurter_provider_requires_bounded_constructor_settings():
+    with pytest.raises(ValueError, match="timeout must be positive"):
+        FrankfurterProvider(timeout_seconds=0)
+
+    with pytest.raises(ValueError, match="max_attempts must be 1 or 2"):
+        FrankfurterProvider(max_attempts=3)
+
+
+@pytest.mark.parametrize(
+    "providers",
+    [
+        [],
+        ["boe"],
+    ],
+)
+def test_pinned_quote_rejects_missing_or_mismatched_expanded_attribution(providers):
+    policy = FxSourcePolicy(
+        mode=ProviderPolicyMode.PINNED,
+        provider_key="ecb",
+        include_attribution=True,
+    )
+
+    with pytest.raises(FxProviderInvalidPayload, match="attribution"):
+        parse_rate_payload(
+            {
+                "date": "2026-09-18",
+                "base": "EUR",
+                "quote": "JPY",
+                "rate": Decimal("174.5"),
+                "providers": providers,
+            },
+            expected_base="EUR",
+            expected_quote="JPY",
+            requested_date=None,
+            policy=policy,
+            fetched_at=datetime(2026, 9, 20, tzinfo=UTC),
+        )
+
+
+def test_provider_attribution_rejects_non_string_identifiers():
+    with pytest.raises(FxProviderInvalidPayload, match="string identifiers"):
+        parse_rate_payload(
+            {
+                "date": "2026-09-18",
+                "base": "EUR",
+                "quote": "JPY",
+                "rate": Decimal("174.5"),
+                "providers": ["ECB", 123],
+            },
+            expected_base="EUR",
+            expected_quote="JPY",
+            requested_date=None,
+            policy=DEFAULT_SOURCE_POLICY,
+            fetched_at=datetime(2026, 9, 20, tzinfo=UTC),
+        )
+
+
+@pytest.mark.parametrize("status", [400, 404, 422])
+def test_unsupported_query_http_statuses_are_not_retried(status):
+    error = HTTPError(
+        url="https://api.frankfurter.dev/v2/rate/EUR/JPY",
+        code=status,
+        msg="unsupported",
+        hdrs=None,
+        fp=None,
+    )
+    provider = FrankfurterProvider(max_attempts=2)
+
+    with patch("apps.exchange.providers.frankfurter.urlopen", side_effect=error) as mocked:
+        with pytest.raises(FxProviderUnsupportedPair):
+            provider.latest_quote("EUR", "JPY", DEFAULT_SOURCE_POLICY)
+
+    assert mocked.call_count == 1
+
+
+@pytest.mark.parametrize("status", [408, 500, 502, 503, 504])
+def test_retryable_http_failure_retries_once_then_raises_unavailable(status):
+    error = HTTPError(
+        url="https://api.frankfurter.dev/v2/rate/EUR/JPY",
+        code=status,
+        msg="temporary",
+        hdrs=None,
+        fp=None,
+    )
+    provider = FrankfurterProvider(max_attempts=2)
+
+    with patch("apps.exchange.providers.frankfurter.urlopen", side_effect=error) as mocked:
+        with pytest.raises(FxProviderUnavailable, match=f"HTTP {status}"):
+            provider.latest_quote("EUR", "JPY", DEFAULT_SOURCE_POLICY)
+
+    assert mocked.call_count == 2
+
+
+def test_retryable_http_failure_can_recover_on_second_attempt():
+    error = HTTPError(
+        url="https://api.frankfurter.dev/v2/rate/EUR/JPY",
+        code=503,
+        msg="temporary",
+        hdrs=None,
+        fp=None,
+    )
+    payload = b'{"date":"2026-09-18","base":"EUR","quote":"JPY","rate":174.5,"providers":["ECB"]}'
+    provider = FrankfurterProvider(max_attempts=2)
+
+    with patch(
+        "apps.exchange.providers.frankfurter.urlopen",
+        side_effect=[error, FakeResponse(payload)],
+    ) as mocked:
+        result = provider.latest_quote("EUR", "JPY", DEFAULT_SOURCE_POLICY)
+
+    assert mocked.call_count == 2
+    assert result.rate == Decimal("174.5")
+
+
+def test_urlerror_timeout_reason_is_normalized_as_timeout():
+    provider = FrankfurterProvider(max_attempts=2)
+
+    with patch(
+        "apps.exchange.providers.frankfurter.urlopen",
+        side_effect=URLError(TimeoutError("slow")),
+    ) as mocked:
+        with pytest.raises(FxProviderTimeout):
+            provider.latest_quote("EUR", "JPY", DEFAULT_SOURCE_POLICY)
+
+    assert mocked.call_count == 2
+
+
+def test_non_timeout_urlerror_is_normalized_as_unavailable():
+    provider = FrankfurterProvider(max_attempts=2)
+
+    with patch(
+        "apps.exchange.providers.frankfurter.urlopen",
+        side_effect=URLError("dns"),
+    ) as mocked:
+        with pytest.raises(FxProviderUnavailable, match="request failed"):
+            provider.latest_quote("EUR", "JPY", DEFAULT_SOURCE_POLICY)
+
+    assert mocked.call_count == 2
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        HTTPException("truncated response"),
+        ConnectionResetError("reset by peer"),
+    ],
+)
+def test_read_transport_failure_retries_then_normalizes_unavailable(error):
+    class FailingReadResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self, size=-1):
+            raise error
+
+    provider = FrankfurterProvider(max_attempts=2)
+
+    with patch(
+        "apps.exchange.providers.frankfurter.urlopen",
+        side_effect=lambda *args, **kwargs: FailingReadResponse(),
+    ) as mocked:
+        with pytest.raises(FxProviderUnavailable, match="request failed"):
+            provider.latest_quote("EUR", "JPY", DEFAULT_SOURCE_POLICY)
+
+    assert mocked.call_count == 2
+
+
+@pytest.mark.parametrize("payload", [b"{not-json", b"\xff"])
+def test_runtime_provider_rejects_malformed_json_and_unicode(payload):
+    provider = FrankfurterProvider(max_attempts=1)
+
+    with patch(
+        "apps.exchange.providers.frankfurter.urlopen",
+        return_value=FakeResponse(payload),
+    ):
+        with pytest.raises(FxProviderInvalidPayload, match="malformed JSON"):
+            provider.latest_quote("EUR", "JPY", DEFAULT_SOURCE_POLICY)
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        [],
+        {"date": "2026-09-18", "base": "EU", "quote": "JPY", "rate": 174.5},
+        {"date": "2026-09-18", "base": "EUR", "quote": "JP1", "rate": 174.5},
+        {"date": "2026-09-18", "base": "EUR", "quote": "JPY", "rate": "not-a-number"},
+    ],
+)
+def test_rate_payload_rejects_additional_structural_failures(payload):
+    with pytest.raises(FxProviderInvalidPayload):
+        parse_rate_payload(
+            payload,
+            expected_base="EUR",
+            expected_quote="JPY",
+            requested_date=None,
+            policy=DEFAULT_SOURCE_POLICY,
+            fetched_at=datetime(2026, 9, 20, tzinfo=UTC),
+        )
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {},
+        [None],
+        [{"date": "2026-01-02", "base": "EU", "quote": "JPY", "rate": 180}],
+        [
+            {
+                "date": "2026-01-02",
+                "base": "EUR",
+                "quote": "JPY",
+                "rate": 180,
+                "providers": "ECB",
+            }
+        ],
+    ],
+)
+def test_series_payload_rejects_additional_structural_failures(payload):
+    with pytest.raises(FxProviderInvalidPayload):
+        parse_series_payload(
+            payload,
+            expected_base="EUR",
+            expected_quote="JPY",
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 1, 7),
+            grouping=RateSeriesGrouping.DAILY,
+            policy=DEFAULT_SOURCE_POLICY,
+            fetched_at=datetime(2026, 1, 8, tzinfo=UTC),
+        )
+
+
+def test_rate_series_rejects_invalid_currency_before_network_call():
+    provider = FrankfurterProvider()
+
+    with patch("apps.exchange.providers.frankfurter.urlopen") as mocked:
+        with pytest.raises(FxProviderUnsupportedPair):
+            provider.rate_series(
+                "EUR/USD",
+                "JPY",
+                date(2026, 1, 1),
+                date(2026, 1, 7),
+                RateSeriesGrouping.DAILY,
+                DEFAULT_SOURCE_POLICY,
+            )
+
+    mocked.assert_not_called()
+
+
+def test_historical_pinned_quote_builds_date_provider_and_attribution_query():
+    payload = b'{"date":"2026-01-02","base":"EUR","quote":"GBP","rate":0.84,"providers":["HMRC"]}'
+    provider = FrankfurterProvider(base_url="https://example.test/v2/", max_attempts=1)
+    policy = FxSourcePolicy(
+        mode=ProviderPolicyMode.PINNED,
+        provider_key="hmrc",
+        include_attribution=True,
+    )
+
+    with patch(
+        "apps.exchange.providers.frankfurter.urlopen",
+        return_value=FakeResponse(payload),
+    ) as mocked:
+        result = provider.historical_quote(
+            "EUR",
+            "GBP",
+            date(2026, 1, 2),
+            policy,
+        )
+
+    request = mocked.call_args.args[0]
+    assert request.full_url.startswith("https://example.test/v2/rate/EUR/GBP?")
+    assert "date=2026-01-02" in request.full_url
+    assert "providers=hmrc" in request.full_url
+    assert "expand=providers" in request.full_url
+    assert request.get_header("Accept") == "application/json"
+    assert request.get_header("User-agent") == "cultural-currency-converter/0.1"
+    assert result.provider_keys == ("hmrc",)
