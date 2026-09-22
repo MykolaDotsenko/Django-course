@@ -741,7 +741,13 @@
   }
 
   .qa-workspace__context {
+    gap: var(--qa-space-3);
     border-radius: var(--radius-md);
+  }
+
+  .qa-workspace__identity > p:not(.qa-workspace__role),
+  .qa-workspace__context .qa-selector-trigger__country {
+    display: none;
   }
 
   .qa-workspace__identity h3 {
