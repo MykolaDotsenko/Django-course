@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Today’s destination context · Cultural Currency Converter{% endblock %}
+{% block head_meta %}
+  <meta name="robots" content="noindex">
+  <meta name="description"
+        content="Current destination payment and everyday-value context, kept separate from historical FX results.">
+{% endblock %}
+{% block content %}
+  <section class="qa-foundation-intro" aria-labelledby="current-context-page-title">
+    <p class="qa-foundation-kicker">Today’s travel context</p>
+    <h1 id="current-context-page-title">Current context, separate from historical FX.</h1>
+    <p class="qa-foundation-lede">
+      These observations describe current destination context. They do not reconstruct historical
+      purchasing power or historical payment customs.
+    </p>
+  </section>
+  {% include "components/culture/current_destination_context.html" %}
+  <p><a class="qa-secondary-button" href="{% url 'converter' %}">Back to converter</a></p>
+{% endblock %}
