@@ -41,7 +41,7 @@ _LOG_FIELDS = (
 
 
 def redact_log_text(value: object) -> str:
-    """Return bounded diagnostic text with common credential forms removed."""
+    """Return diagnostic text with common credential forms removed."""
 
     text = str(value)
     text = _URI_CREDENTIALS_RE.sub(
