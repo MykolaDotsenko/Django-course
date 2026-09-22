@@ -25,14 +25,28 @@ function enhanceAutoRefresh(form: HTMLFormElement): void {
   });
 
   let amountTimer: number | undefined;
+  let dateTimer: number | undefined;
 
   form.addEventListener("input", (event) => {
     if (form.dataset.hasResult !== "true") return;
     const target = event.target;
-    if (!(target instanceof HTMLInputElement) || target.id !== "id_amount") return;
+    if (!(target instanceof HTMLInputElement)) return;
 
-    window.clearTimeout(amountTimer);
-    amountTimer = window.setTimeout(() => form.requestSubmit(), 400);
+    if (target.id === "id_amount") {
+      window.clearTimeout(amountTimer);
+      amountTimer = window.setTimeout(() => form.requestSubmit(), 400);
+      return;
+    }
+
+    if (target.id === "id_requested_date") {
+      const historical = form.querySelector<HTMLInputElement>(
+        'input[name="rate_mode"][value="historical"]',
+      );
+      if (!historical?.checked || !target.value) return;
+
+      window.clearTimeout(dateTimer);
+      dateTimer = window.setTimeout(() => form.requestSubmit(), 80);
+    }
   });
 
   form.addEventListener("change", (event) => {
@@ -63,6 +77,8 @@ function enhanceAutoRefresh(form: HTMLFormElement): void {
         'input[name="rate_mode"][value="historical"]',
       );
       if (!historical?.checked || !target.value) return;
+
+      window.clearTimeout(dateTimer);
     }
 
     form.requestSubmit();

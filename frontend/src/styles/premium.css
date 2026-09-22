@@ -287,7 +287,8 @@ h3 {
 
 .qa-primary-button {
   min-height: 3.25rem;
-  min-width: 10rem;
+  min-width: min(10rem, 100%);
+  max-width: 100%;
   padding-inline: 1.75rem;
   border-color: var(--color-brand);
   border-radius: var(--radius-sm);
