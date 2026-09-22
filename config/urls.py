@@ -7,7 +7,7 @@ from django.urls import path
 
 from apps.common.health import health_live, health_ready
 from apps.common.views import converter_preview, media_preview, rate_series_preview, shell_preview
-from apps.culture.views import money_culture_story
+from apps.culture.views import current_destination_context, money_culture_story
 from apps.exchange.views import (
     conversion_explanation,
     converter,
@@ -21,6 +21,11 @@ urlpatterns = [
     path("picker/options/", picker_options, name="picker_options"),
     path("conversion/explain/", conversion_explanation, name="conversion_explanation"),
     path("story/", money_culture_story, name="money_culture_story"),
+    path(
+        "destination/current-context/",
+        current_destination_context,
+        name="current_destination_context",
+    ),
     path("historical/series/", historical_series, name="historical_series"),
     path("saved/", saved_state, name="saved_state"),
     path("health/live/", health_live, name="health_live"),
