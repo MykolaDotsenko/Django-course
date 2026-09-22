@@ -430,7 +430,9 @@
                       data-save-pair
                       aria-pressed="false">
                 {% include "components/icons/bookmark.html" %}
-                <span data-save-pair-label>Save pair</span>
+                <span data-save-pair-label>
+                  {% if user.is_authenticated %}Save to account{% else %}Save pair{% endif %}
+                </span>
               </button>
               <a class="qa-secondary-button" href="{% url 'saved_state' %}">Saved &amp; recent</a>
             </div>
