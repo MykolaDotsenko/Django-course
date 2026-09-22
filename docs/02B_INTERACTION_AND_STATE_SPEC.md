@@ -622,9 +622,15 @@ Core conversion unaffected.
 Saved control explains inability only when user attempts it. The Saved & recent page may show the
 storage-unavailable state immediately because persistence is the purpose of that page.
 
-If JavaScript is unavailable, the Saved & recent page must not remain in a fake loading/checking
-state. It explicitly explains that browser-local state requires JavaScript while keeping a working
-path back to the converter.
+If JavaScript is unavailable, result-local browser-storage controls must not remain visible as
+inert controls. The Save pair enhancement stays hidden, while the Saved & recent navigation path may
+remain available because that page can explain the limitation.
+
+The Saved & recent page must not remain in a fake loading/checking state and must not claim that
+favourites or recent history are empty before browser storage has actually been read. It explicitly
+explains that browser-local state requires JavaScript while keeping a working path back to the
+converter. Empty-collection messages become visible only after successful client-side state
+inspection establishes that the relevant collection is empty.
 
 ### Amount policy
 
