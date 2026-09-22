@@ -255,8 +255,8 @@ function setStorageStatus(page: HTMLElement, read: ReadResult, overrideMessage =
     status.setAttribute("aria-live", "off");
     status.textContent = accountMode
       ? accountHistoryEnabled
-        ? `Account history is on · ${read.state.recent.length} browser-only recent stays on this device.`
-        : `Account history is off · ${read.state.recent.length} browser-only recent stays on this device.`
+        ? `Account history is on · Browser-only recent entries on this device: ${read.state.recent.length}.`
+        : `Account history is off · Browser-only recent entries on this device: ${read.state.recent.length}.`
       : `Stored locally in this browser · ${read.state.favourites.length} saved · ${read.state.recent.length} recent.`;
   }
 }
