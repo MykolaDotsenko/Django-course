@@ -113,6 +113,28 @@ fetch
 
 Never delete all missing rows merely because source response is incomplete.
 
+## 6.1 FX provider currency-coverage sync
+
+Command:
+
+~~~text
+manage.py sync_fx_currency_coverage [--dry-run] [--base-url ...]
+~~~
+
+Purpose:
+
+- fetch Frankfurter v2 active + `scope=all` currency metadata outside any write transaction;
+- validate the bounded coverage snapshot;
+- update provider coverage bounds/provenance only;
+- preserve Currency lifecycle/current-vs-archived ownership;
+- create provider-only currencies as inactive/historical-only references;
+- report created/updated/unchanged counts;
+- roll back all writes in dry-run mode.
+
+The management command remains a thin CLI adapter around `sync_currency_coverage(...)`. CI tests
+the command's success summary, dry-run propagation and expected failure-to-`CommandError` mapping
+without making live provider calls.
+
 ---
 
 # 7. Completeness guard
