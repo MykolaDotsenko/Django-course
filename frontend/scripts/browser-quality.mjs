@@ -712,6 +712,109 @@ async function assertSavedStateFlow(page) {
   await assertAxe(page, "saved-state/populated");
 }
 
+async function assertAuthenticatedRecentHistoryFlow(page) {
+  const localOnlyRecent = {
+    version: 1,
+    favourites: [],
+    recent: [
+      {
+        id: "FI:EUR:>:JP:JPY|latest|latest|100",
+        sourceCurrency: "EUR",
+        destinationCurrency: "JPY",
+        sourceCountry: "FI",
+        destinationCountry: "JP",
+        sourceCountryName: "Finland",
+        destinationCountryName: "Japan",
+        amount: "100",
+        outputAmount: "17450",
+        rateMode: "latest",
+        requestedDate: "",
+        effectiveDate: "2026-09-18",
+        convertedAt: "2026-09-21T12:00:00.000Z",
+      },
+    ],
+  };
+  await page.evaluate(
+    ({ key, state }) => localStorage.setItem(key, JSON.stringify(state)),
+    { key: LOCAL_STATE_KEY, state: localOnlyRecent },
+  );
+
+  const username = `qa-history-${crypto.randomUUID().slice(0, 12)}`;
+  const testCredential = `QA-${crypto.randomUUID()}`;
+  await page.locator("#id_username").fill(username);
+  await page.locator("#id_password1").fill(testCredential);
+  await page.locator("#id_password2").fill(testCredential);
+  await Promise.all([
+    page.waitForURL((url) => url.pathname === "/saved/"),
+    page.getByRole("button", { name: "Create account" }).click(),
+  ]);
+
+  await page.getByRole("heading", { name: "Account recent history" }).waitFor();
+  await page
+    .getByText("No account recent history. Browser-only history below stays on this device.", {
+      exact: true,
+    })
+    .waitFor();
+  await page.getByText("100 EUR → 17450 JPY", { exact: true }).waitFor();
+  assert(
+    (await page.locator("[data-account-recent-id]").count()) === 0,
+    "account-history: sign-up silently imported browser-local recent history",
+  );
+  await assertAxe(page, "account-history/post-signup");
+
+  await page.getByRole("link", { name: "Account" }).click();
+  await page.getByText("Off by default.", { exact: false }).waitFor();
+  await Promise.all([
+    page.waitForURL((url) => url.pathname === "/accounts/profile/"),
+    page.getByRole("button", { name: "Turn on account history" }).click(),
+  ]);
+  await page.getByText("Cross-device recent history is on.", { exact: false }).waitFor();
+
+  const conversionUrl = new URL("/", BASE_URL);
+  conversionUrl.searchParams.set("convert", "1");
+  conversionUrl.searchParams.set("amount", "10.00");
+  conversionUrl.searchParams.set("source_country", "FI");
+  conversionUrl.searchParams.set("source_currency", "EUR");
+  conversionUrl.searchParams.set("destination_country", "FI");
+  conversionUrl.searchParams.set("destination_currency", "EUR");
+  conversionUrl.searchParams.set("rate_mode", "latest");
+  await page.goto(conversionUrl.toString(), { waitUntil: "networkidle" });
+  await page.locator('[data-account-recent-recorded="true"]').waitFor();
+
+  const localRecentCount = await page.evaluate((key) => {
+    const state = JSON.parse(localStorage.getItem(key) ?? "{}");
+    return Array.isArray(state.recent) ? state.recent.length : 0;
+  }, LOCAL_STATE_KEY);
+  assert(
+    localRecentCount === 1,
+    `account-history: account-backed conversion duplicated local history; count=${localRecentCount}`,
+  );
+
+  await page.getByRole("link", { name: "Saved & recent" }).click();
+  await page.locator("[data-account-recent-id]").first().waitFor();
+  assert(
+    (await page.locator("[data-account-recent-id]").count()) === 1,
+    "account-history: opted-in conversion did not create exactly one account recent row",
+  );
+  await page.getByText("100 EUR → 17450 JPY", { exact: true }).waitFor();
+  await assertAxe(page, "account-history/populated");
+
+  await Promise.all([
+    page.waitForURL((url) => url.pathname === "/saved/"),
+    page.getByRole("button", { name: "Clear account history" }).click(),
+  ]);
+  assert(
+    (await page.locator("[data-account-recent-id]").count()) === 0,
+    "account-history: clear action left account recent rows behind",
+  );
+  await page.getByText("100 EUR → 17450 JPY", { exact: true }).waitFor();
+  await page
+    .getByText("No account recent history. Browser-only history below stays on this device.", {
+      exact: true,
+    })
+    .waitFor();
+}
+
 async function assertReducedMotion(page, surface) {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.waitForFunction(
@@ -1031,6 +1134,15 @@ try {
         path: resolve(OUTPUT_DIR, `${surface.name}-${viewport.name}.png`),
         fullPage: true,
       });
+
+      if (
+        BROWSER_SCOPE === "full" &&
+        surface.name === "account-signup" &&
+        viewport.name === "wide-1440"
+      ) {
+        await assertAuthenticatedRecentHistoryFlow(page);
+      }
+
       await context.close();
     }
   }
