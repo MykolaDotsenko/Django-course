@@ -63,7 +63,13 @@ class CountrySyncSummary:
     currencies_updated: int
     relationships_created: int
     relationships_updated: int
+    missing_source_countries: tuple[str, ...]
+    stale_source_relationships: tuple[str, ...]
     dry_run: bool
+
+    @property
+    def requires_reconciliation_review(self) -> bool:
+        return bool(self.missing_source_countries or self.stale_source_relationships)
 
 
 def validate_full_snapshot(
@@ -79,6 +85,43 @@ def validate_full_snapshot(
     iso3_codes = [snapshot.iso3 for snapshot in snapshots]
     if len(set(iso2_codes)) != len(iso2_codes) or len(set(iso3_codes)) != len(iso3_codes):
         raise CountrySnapshotValidationError("Country snapshot contains duplicate canonical codes")
+
+
+def _snapshot_reconciliation_drift(
+    snapshots: tuple[CountryMetadataSnapshot, ...],
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    source_versions = {snapshot.source_version for snapshot in snapshots}
+    expected_country_codes = {snapshot.iso2 for snapshot in snapshots}
+    expected_relationships = {
+        (snapshot.iso2, currency.code)
+        for snapshot in snapshots
+        for currency in snapshot.currencies
+    }
+
+    missing_source_countries = tuple(
+        Country.objects.filter(
+            is_active=True,
+            metadata_source__in=source_versions,
+        )
+        .exclude(iso2__in=expected_country_codes)
+        .order_by("iso2")
+        .values_list("iso2", flat=True)
+    )
+
+    stale_source_relationships = tuple(
+        f"{country_code}:{currency_code}"
+        for country_code, currency_code in (
+            CountryCurrency.objects.filter(
+                valid_to__isnull=True,
+                source__in=source_versions,
+            )
+            .order_by("country__iso2", "currency__code")
+            .values_list("country__iso2", "currency__code")
+        )
+        if (country_code, currency_code) not in expected_relationships
+    )
+
+    return missing_source_countries, stale_source_relationships
 
 
 def sync_country_metadata(
@@ -141,7 +184,16 @@ def sync_country_metadata(
                     "relationships_created" if relationship_created else "relationships_updated"
                 ] += 1
 
+        missing_source_countries, stale_source_relationships = _snapshot_reconciliation_drift(
+            snapshots
+        )
+
         if dry_run:
             transaction.set_rollback(True)
 
-    return CountrySyncSummary(**counts, dry_run=dry_run)
+    return CountrySyncSummary(
+        **counts,
+        missing_source_countries=missing_source_countries,
+        stale_source_relationships=stale_source_relationships,
+        dry_run=dry_run,
+    )
