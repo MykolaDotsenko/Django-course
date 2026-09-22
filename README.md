@@ -4,6 +4,14 @@
 
 Cultural Currency Converter is a Django-first travel-money intelligence product that explains not only **how much** money converts to, but **what that amount means locally**.
 
+<p align="center">
+  <img src="docs/assets/cultural-currency-converter-overview.webp"
+       alt="Cultural Currency Converter desktop interface showing a conversion result and local context"
+       width="500">
+</p>
+
+<p align="center"><em>Current desktop converter surface captured by the Chromium browser-quality pipeline.</em></p>
+
 The repository is being rebuilt from an early Django course project into a production-minded portfolio case study.
 
 ## Product thesis
