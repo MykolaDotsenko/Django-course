@@ -201,7 +201,11 @@ def build_result_component(
                     f"{reverse('current_destination_context')}?"
                     f"{urlencode(current_context_params)}"
                 ),
-                "country_name": destination_country.name if destination_country else destination_country_code,
+                "country_name": (
+                    destination_country.name
+                    if destination_country
+                    else destination_country_code
+                ),
                 "currency_code": result.quote.quote_currency,
             }
             if historical and destination_country_code
