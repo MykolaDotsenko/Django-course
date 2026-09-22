@@ -152,7 +152,6 @@ def _canonical_conversion_url(form: CurrentConversionForm) -> str:
     return f"{reverse('converter')}?{urlencode(params)}"
 
 
-
 def _converter_submission_command(form: CurrentConversionForm) -> ConverterSubmissionCommand:
     cleaned = form.cleaned_data
     return ConverterSubmissionCommand(
