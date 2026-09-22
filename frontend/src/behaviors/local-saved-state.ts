@@ -135,7 +135,11 @@ function showSavedPageEnhancementFailure(error: unknown): void {
 }
 
 function enhanceSavedPage(): void {
-  if (!document.querySelector<HTMLElement>("[data-local-saved-state-page]")) return;
+  const page = document.querySelector<HTMLElement>("[data-local-saved-state-page]");
+  if (!page) return;
+
+  const status = page.querySelector<HTMLElement>("[data-local-storage-status]");
+  if (status) status.hidden = false;
 
   savedPageModulePromise ??= import("./local-saved-state-page");
   void savedPageModulePromise
