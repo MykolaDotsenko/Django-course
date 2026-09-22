@@ -45,12 +45,15 @@ def _option_rank(
         ):
             match_rank = 0
         else:
-            match_rank = min(
-                _text_rank(option.currency_code, query),
-                _text_rank(option.currency_name, query),
-                _text_rank(option.country_code, query) if option.country_context else 3,
-                _text_rank(option.country_name, query) if option.country_context else 3,
-            ) + 1
+            match_rank = (
+                min(
+                    _text_rank(option.currency_code, query),
+                    _text_rank(option.currency_name, query),
+                    _text_rank(option.country_code, query) if option.country_context else 3,
+                    _text_rank(option.country_name, query) if option.country_context else 3,
+                )
+                + 1
+            )
         context_rank = 1 if option.country_context else 0
         return (
             match_rank,
@@ -108,7 +111,9 @@ def search_currency_options(
     preferred_country = preferred_country_code.upper().strip()
     preferred_currency = preferred_currency_code.upper().strip()
 
-    currency_qs = Currency.objects.all() if historical_mode else Currency.objects.filter(is_active=True)
+    currency_qs = (
+        Currency.objects.all() if historical_mode else Currency.objects.filter(is_active=True)
+    )
     if historical_mode and selected_date is not None:
         link_qs = CountryCurrency.objects.on_date(selected_date)
     elif historical_mode:
@@ -169,7 +174,8 @@ def search_currency_options(
                 currency_name=link.currency.name,
                 country_context=True,
                 primary=link.is_primary,
-                historical=historical_mode and (not link.currency.is_active or link.valid_to is not None),
+                historical=historical_mode
+                and (not link.currency.is_active or link.valid_to is not None),
             )
         )
 
