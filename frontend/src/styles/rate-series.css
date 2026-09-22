@@ -98,6 +98,10 @@
   min-inline-size: 0;
 }
 
+.qa-rate-series__custom[open] {
+  flex: 1 0 100%;
+}
+
 .qa-rate-series__custom > summary {
   width: fit-content;
   max-width: 100%;
