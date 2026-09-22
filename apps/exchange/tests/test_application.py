@@ -8,6 +8,7 @@ from apps.countries.models import Country, CountryCurrency, Currency
 from apps.culture.services import DestinationContext
 from apps.exchange.application import ConverterSubmissionCommand, run_converter_submission
 from apps.exchange.domain import DEFAULT_SOURCE_POLICY, RateQuote
+from apps.exchange.providers.base import FxProviderUnavailable
 
 
 class FakeLatestGateway:
@@ -30,6 +31,11 @@ class FakeLatestGateway:
             ),
             False,
         )
+
+
+class UnavailableHistoricalGateway:
+    def get(self, *args, **kwargs):
+        raise FxProviderUnavailable("down")
 
 
 class FakeHistoricalGateway:
@@ -165,6 +171,36 @@ def test_historical_submission_returns_currency_era_suggestion(reference_data):
     assert placement.side == "source"
     assert placement.suggestion.country_code == "FI"
     assert placement.suggestion.suggested_currency_code == "FIM"
+    latest_factory.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_historical_provider_failure_preserves_currency_era_suggestion(reference_data):
+    latest_factory = Mock()
+    requested = date(1998, 6, 15)
+    command = ConverterSubmissionCommand(
+        amount=Decimal("100"),
+        source_country="FI",
+        source_currency="EUR",
+        destination_country="JP",
+        destination_currency="JPY",
+        historical=True,
+        requested_date=requested,
+    )
+
+    outcome = run_converter_submission(
+        command,
+        latest_gateway_factory=latest_factory,
+        historical_gateway_factory=UnavailableHistoricalGateway,
+        context_as_of=date(2026, 9, 22),
+    )
+
+    assert outcome.conversion is None
+    assert isinstance(outcome.error, FxProviderUnavailable)
+    assert outcome.destination_context is None
+    assert len(outcome.historical_suggestions) == 1
+    assert outcome.historical_suggestions[0].side == "source"
+    assert outcome.historical_suggestions[0].suggestion.suggested_currency_code == "FIM"
     latest_factory.assert_not_called()
 
 
