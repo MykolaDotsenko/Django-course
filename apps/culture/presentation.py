@@ -31,6 +31,7 @@ def build_destination_context_component(
     context: DestinationContext,
     *,
     historical: bool,
+    show_explore_nav: bool = True,
 ) -> dict[str, object]:
     prices = [
         {
@@ -80,9 +81,11 @@ def build_destination_context_component(
         "prices": prices,
         "payment": payment,
         "historical_notice": (
-            "These local-price and payment notes are current destination context. "
-            "They are not backdated to the historical exchange-rate date."
+            "Current destination context — not historical purchasing power. "
+            "These local-price and payment notes use current reviewed data and are not "
+            "backdated to the historical exchange-rate date."
             if historical
             else None
         ),
+        "show_explore_nav": show_explore_nav,
     }

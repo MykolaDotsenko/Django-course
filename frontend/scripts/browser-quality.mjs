@@ -404,7 +404,31 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     "current-converter: historical conversion did not push a stable deep link",
   );
 
-  await assertAxe(page, "current-converter/historical-result");
+  assert(
+    (await page.locator(".qa-destination-context").count()) === 0,
+    "current-converter: historical result exposed current destination context before opt-in",
+  );
+  await page.getByRole("link", { name: "See today’s travel context" }).waitFor();
+
+  const waitForCurrentContext = page.waitForResponse(
+    (response) =>
+      response.request().method() === "GET" &&
+      new URL(response.url()).pathname === "/destination/current-context/",
+  );
+  await page.getByRole("link", { name: "See today’s travel context" }).click();
+  await waitForCurrentContext;
+  await page
+    .getByText("Current destination context — not historical purchasing power.", {
+      exact: false,
+    })
+    .waitFor();
+  await page.getByText("Cup of coffee", { exact: true }).waitFor();
+  assert(
+    (await page.locator("#current-destination-context-slot .qa-explore-nav").count()) === 0,
+    "current-converter: opt-in current context duplicated the primary Explore navigation",
+  );
+
+  await assertAxe(page, "current-converter/historical-current-context");
 
   const latestPost = waitForPost();
   await page.locator("#id_rate_mode_0").check();

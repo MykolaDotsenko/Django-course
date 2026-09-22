@@ -127,9 +127,11 @@ This orchestration layer coordinates:
 It returns domain/application objects only. It does **not** know about `HttpRequest`, response
 status codes, templates, HTMX headers or user-facing error copy.
 
-Destination context is deliberately non-fatal: a context-composition failure is logged and returns
-`destination_context=None` while the trusted conversion remains successful. This preserves the
-product invariant that cultural enrichment can never invalidate arithmetic.
+Current destination context is deliberately non-fatal: on current conversions, a
+context-composition failure is logged and returns `destination_context=None` while the trusted
+conversion remains successful. Historical conversion does not compose current destination context
+automatically; today's travel context is a separate validated culture query/action. This preserves
+both the arithmetic invariant and the historical/current temporal boundary.
 
 The Django view remains the composition/transport boundary: it parses form/request state, supplies
 gateway factories, calls this one use case, maps known FX errors to HTTP/presentation states and

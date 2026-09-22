@@ -8,7 +8,9 @@ from django.utils.cache import patch_vary_headers
 from django.views.decorators.http import require_GET
 
 from apps.countries.models import Country, Currency
-from apps.culture.forms import StoryRequestForm
+from apps.culture.forms import CurrentDestinationContextForm, StoryRequestForm
+from apps.culture.presentation import build_destination_context_component
+from apps.culture.services import build_destination_context
 from apps.culture.story import compose_story
 from apps.media.models import MediaRole
 from apps.media.presentation import select_media_for_display
@@ -64,6 +66,67 @@ def money_culture_story(request: HttpRequest) -> HttpResponse:
     }
     fragment = bool(request.htmx)
     template = "components/culture/story.html" if fragment else "pages/money_culture_story.html"
+    response = render(request, template, context, status=response_status)
+    patch_vary_headers(response, ["HX-Request"])
+    return response
+
+
+@require_GET
+def current_destination_context(request: HttpRequest) -> HttpResponse:
+    form = CurrentDestinationContextForm(request.GET)
+    destination_context_component = None
+    current_context_error = None
+    response_status = 200
+
+    if not form.is_valid():
+        response_status = 400
+        current_context_error = {
+            "title": "Today's destination context request is not valid.",
+            "detail": "Run the historical conversion again, then open today's travel context.",
+        }
+    else:
+        try:
+            destination_context = build_destination_context(
+                country_code=form.cleaned_data["country"],
+                converted_amount=form.cleaned_data["amount"],
+                quote_currency=form.cleaned_data["currency"],
+            )
+        except Exception:
+            logger.exception(
+                "Current destination context composition failed",
+                extra={
+                    "culture.status": "unavailable",
+                    "culture.country": form.cleaned_data["country"],
+                    "culture.currency": form.cleaned_data["currency"],
+                },
+            )
+            current_context_error = {
+                "title": "Today's destination context is temporarily unavailable.",
+                "detail": "The historical conversion remains valid. Try this context again later.",
+            }
+        else:
+            if destination_context is None:
+                current_context_error = {
+                    "title": "Today's destination context is not available.",
+                    "detail": "The historical conversion remains valid.",
+                }
+            else:
+                destination_context_component = build_destination_context_component(
+                    destination_context,
+                    historical=True,
+                    show_explore_nav=False,
+                )
+
+    context = {
+        "destination_context_component": destination_context_component,
+        "current_context_error": current_context_error,
+    }
+    fragment = bool(request.htmx)
+    template = (
+        "components/culture/current_destination_context.html"
+        if fragment
+        else "pages/current_destination_context.html"
+    )
     response = render(request, template, context, status=response_status)
     patch_vary_headers(response, ["HX-Request"])
     return response

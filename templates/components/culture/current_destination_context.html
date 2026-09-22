@@ -1,0 +1,8 @@
+{% if current_context_error %}
+  <section class="qa-inline-alert qa-inline-alert--error" role="status">
+    <h3>{{ current_context_error.title }}</h3>
+    <p>{{ current_context_error.detail }}</p>
+  </section>
+{% elif destination_context_component %}
+  {% include "components/culture/destination_context.html" with component=destination_context_component %}
+{% endif %}

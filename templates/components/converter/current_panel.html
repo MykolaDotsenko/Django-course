@@ -286,28 +286,30 @@
         {% with component=result_component %}
           {% include "components/converter/primitives.html#conversion-result" %}
         {% endwith %}
-        {% if destination_context_component %}
-          {% include "components/culture/destination_context.html" with component=destination_context_component %}
-        {% elif destination.country_code %}
-          <section class="qa-destination-context"
-                   aria-labelledby="destination-context-title">
-            <p class="qa-foundation-kicker">Explore</p>
-            <h3 id="destination-context-title">Destination context is still being curated.</h3>
-            <p class="qa-context-empty">
-              The conversion remains valid. Sourced everyday-value and payment guidance are not
-              available for {{ destination.country_name }} yet.
-            </p>
-          </section>
-        {% else %}
-          <section class="qa-destination-context"
-                   aria-labelledby="destination-context-title">
-            <p class="qa-foundation-kicker">Explore</p>
-            <h3 id="destination-context-title">Add a destination country for local context.</h3>
-            <p class="qa-context-empty">
-              Currency-only conversion is complete. Choose a destination country to see local
-              prices and money customs.
-            </p>
-          </section>
+        {% if not result_component.historical %}
+          {% if destination_context_component %}
+            {% include "components/culture/destination_context.html" with component=destination_context_component %}
+          {% elif destination.country_code %}
+            <section class="qa-destination-context"
+                     aria-labelledby="destination-context-title">
+              <p class="qa-foundation-kicker">Explore</p>
+              <h3 id="destination-context-title">Destination context is still being curated.</h3>
+              <p class="qa-context-empty">
+                The conversion remains valid. Sourced everyday-value and payment guidance are not
+                available for {{ destination.country_name }} yet.
+              </p>
+            </section>
+          {% else %}
+            <section class="qa-destination-context"
+                     aria-labelledby="destination-context-title">
+              <p class="qa-foundation-kicker">Explore</p>
+              <h3 id="destination-context-title">Add a destination country for local context.</h3>
+              <p class="qa-context-empty">
+                Currency-only conversion is complete. Choose a destination country to see local
+                prices and money customs.
+              </p>
+            </section>
+          {% endif %}
         {% endif %}
         {% if result_component.ai_explanation %}
           <div class="qa-ai-explanation-entry">
@@ -381,6 +383,30 @@
                  hx-sync="#historical-trend-slot:replace">View historical trend</a>
             </section>
             <div id="historical-trend-slot"></div>
+          {% endwith %}
+        {% endif %}
+        {% if result_component.current_destination_context %}
+          {% with current_context=result_component.current_destination_context %}
+            <section class="qa-current-context-entry"
+                     aria-labelledby="current-destination-context-entry-title">
+              <div>
+                <p class="qa-foundation-kicker">Today’s travel context</p>
+                <h3 id="current-destination-context-entry-title">
+                  See current local context for {{ current_context.country_name }}
+                </h3>
+                <p>
+                  Current payment guidance and same-currency price observations are separate from
+                  this historical FX result. They are not historical purchasing power.
+                </p>
+              </div>
+              <a class="qa-secondary-button"
+                 href="{{ current_context.href }}"
+                 hx-get="{{ current_context.href }}"
+                 hx-target="#current-destination-context-slot"
+                 hx-swap="innerHTML"
+                 hx-sync="#current-destination-context-slot:replace">See today’s travel context</a>
+            </section>
+            <div id="current-destination-context-slot"></div>
           {% endwith %}
         {% endif %}
         {% with local=result_component.local_state %}

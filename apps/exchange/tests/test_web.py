@@ -821,12 +821,14 @@ def test_historical_conversion_exposes_trend_entry_for_actual_observation(client
     assert b"requested_date=1998-06-14" in response.content
 
     content = response.content
+    assert b'class="qa-destination-context"' not in content
+    assert b"current local context for Japan" in content
     result_index = content.index(b'id="current-conversion-result"')
-    context_index = content.index(b'class="qa-destination-context"')
     story_index = content.index(b'class="qa-story-entry"')
     historical_index = content.index(b'class="qa-historical-trend-entry"')
+    current_context_index = content.index(b'class="qa-current-context-entry"')
     save_index = content.index(b'class="qa-local-save-control"')
-    assert result_index < context_index < story_index < historical_index < save_index
+    assert result_index < story_index < historical_index < current_context_index < save_index
 
 
 @pytest.mark.django_db

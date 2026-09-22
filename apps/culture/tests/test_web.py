@@ -10,11 +10,14 @@ from django.utils import timezone
 
 from apps.countries.models import Country, CountryCurrency, Currency
 from apps.culture.models import (
+    CulturalProfile,
     StoryDatePrecision,
     StoryMoment,
     StoryMomentCategory,
     StoryMomentStatus,
     StorySourceKind,
+    TypicalPrice,
+    TypicalPriceCategory,
 )
 from apps.culture.services import approve_story_moment, publish_story_moment
 from apps.exchange.domain import DEFAULT_SOURCE_POLICY, RateQuote
@@ -63,6 +66,34 @@ def reference_data(db):
         source="https://example.org/jp-jpy",
     )
     return fi, jp, eur, jpy
+
+
+def _seed_current_destination_context(reference_data):
+    _fi, jp, _eur, jpy = reference_data
+    CulturalProfile.objects.create(
+        country=jp,
+        summary="Current reviewed payment context.",
+        payment_customs="Cards are commonly accepted.",
+        cash_usage="Cash remains useful.",
+        source_name="JNTO",
+        source_url="https://example.org/payment",
+        verified_at=timezone.now(),
+        is_published=True,
+    )
+    TypicalPrice.objects.create(
+        country=jp,
+        city="Tokyo",
+        category=TypicalPriceCategory.COFFEE,
+        label="Cup of coffee",
+        amount_low=Decimal("500"),
+        amount_high=Decimal("650"),
+        currency=jpy,
+        source_name="Current price source",
+        source_url="https://example.org/coffee",
+        observed_at=timezone.localdate(),
+        verified_at=timezone.now(),
+        is_published=True,
+    )
 
 
 def _story_query(**overrides):
@@ -126,6 +157,74 @@ def test_no_javascript_story_returns_full_page(client, reference_data):
     assert b"<html" in response.content
     assert b"The story behind the currency context" in response.content
     assert b"Back to converter" in response.content
+
+
+@pytest.mark.django_db
+def test_current_destination_context_htmx_is_explicitly_current(client, reference_data):
+    _seed_current_destination_context(reference_data)
+
+    response = client.get(
+        reverse("current_destination_context"),
+        {"country": "JP", "currency": "JPY", "amount": "17450"},
+        HTTP_HX_REQUEST="true",
+    )
+
+    assert response.status_code == 200
+    assert b"<html" not in response.content
+    assert b"Current destination context" in response.content
+    assert b"not historical purchasing power" in response.content
+    assert b"Cup of coffee" in response.content
+    assert b'aria-label="Explore conversion context"' not in response.content
+    assert "HX-Request" in response.get("Vary", "")
+
+
+@pytest.mark.django_db
+def test_current_destination_context_without_javascript_is_full_page(client, reference_data):
+    _seed_current_destination_context(reference_data)
+
+    response = client.get(
+        reverse("current_destination_context"),
+        {"country": "JP", "currency": "JPY", "amount": "17450"},
+    )
+
+    assert response.status_code == 200
+    assert b"<html" in response.content
+    assert b"Current context, separate from historical FX" in response.content
+    assert b"Back to converter" in response.content
+
+
+@pytest.mark.django_db
+def test_invalid_current_destination_context_query_is_400_without_composition(
+    client,
+    reference_data,
+):
+    with patch("apps.culture.views.build_destination_context") as builder:
+        response = client.get(
+            reverse("current_destination_context"),
+            {"country": "ZZ", "currency": "JPY", "amount": "not-a-number"},
+            HTTP_HX_REQUEST="true",
+        )
+
+    assert response.status_code == 400
+    assert b"request is not valid" in response.content
+    builder.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_current_destination_context_failure_is_local_and_htmx_visible(client, reference_data):
+    with patch(
+        "apps.culture.views.build_destination_context",
+        side_effect=RuntimeError("context unavailable"),
+    ):
+        response = client.get(
+            reverse("current_destination_context"),
+            {"country": "JP", "currency": "JPY", "amount": "17450"},
+            HTTP_HX_REQUEST="true",
+        )
+
+    assert response.status_code == 200
+    assert b"temporarily unavailable" in response.content
+    assert b"The historical conversion remains valid" in response.content
 
 
 @pytest.mark.django_db

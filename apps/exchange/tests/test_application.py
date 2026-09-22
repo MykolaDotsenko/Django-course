@@ -154,7 +154,7 @@ def test_historical_submission_returns_currency_era_suggestion(reference_data):
         requested_date=requested,
     )
 
-    with patch("apps.exchange.application.build_destination_context", return_value=None):
+    with patch("apps.exchange.application.build_destination_context") as context_builder:
         outcome = run_converter_submission(
             command,
             latest_gateway_factory=latest_factory,
@@ -166,6 +166,8 @@ def test_historical_submission_returns_currency_era_suggestion(reference_data):
     assert outcome.conversion is not None
     assert outcome.conversion.quote.historical is True
     assert outcome.conversion.quote.requested_date == requested
+    assert outcome.destination_context is None
+    context_builder.assert_not_called()
     assert len(outcome.historical_suggestions) == 1
     placement = outcome.historical_suggestions[0]
     assert placement.side == "source"
