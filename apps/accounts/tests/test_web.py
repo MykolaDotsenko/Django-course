@@ -84,6 +84,15 @@ class AccountWebTests(TestCase):
         preferences.refresh_from_db()
         self.assertFalse(preferences.sync_recent_history)
 
+    def test_recent_history_preference_is_post_only(self):
+        user = User.objects.create_user(username="privacy-post-only", password=PASSWORD)
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("update_recent_history_preference"))
+
+        self.assertEqual(response.status_code, 405)
+        self.assertFalse(AccountPreferences.objects.filter(user=user).exists())
+
     def test_recent_history_preference_rejects_unknown_action(self):
         user = User.objects.create_user(username="privacy-safe", password=PASSWORD)
         self.client.force_login(user)
