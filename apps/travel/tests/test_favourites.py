@@ -162,7 +162,7 @@ class FavouriteSyncWebTests(TestCase):
         content = response.content.decode()
         self.assertIn(f'data-account-favourite-id="{own.pk}"', content)
         self.assertNotIn(f'data-account-favourite-id="{hidden.pk}"', content)
-        self.assertIn("Recent conversions remain only in this browser", content)
+        self.assertIn("They are not synced to your account.", content)
 
 
 class FavouriteConcurrentSyncTests(TransactionTestCase):
