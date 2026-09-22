@@ -2,7 +2,7 @@
 {% block title %}Saved & recent · Cultural Currency Converter{% endblock %}
 {% block head_meta %}
   <meta name="description"
-        content="Review browser-local saved currency pairs and recent conversions.">
+        content="Review saved currency pairs and browser-local recent conversions.">
 {% endblock %}
 {% block header_actions %}
   <a class="qa-header-link" href="{% url 'converter' %}">Converter</a>
@@ -12,13 +12,21 @@
            aria-labelledby="saved-page-title">
     <p class="qa-foundation-kicker">Return faster</p>
     <h1 id="saved-page-title">Saved &amp; recent</h1>
-    <p class="qa-foundation-lede">
-      These favourites and recent conversions are stored only in this browser. They are not
-      uploaded to an account or copied to the server.
-    </p>
+    {% if user.is_authenticated %}
+      <p class="qa-foundation-lede">
+        Saved pairs belong to your account and can follow you across signed-in devices. Recent
+        conversions remain only in this browser and are not uploaded.
+      </p>
+    {% else %}
+      <p class="qa-foundation-lede">
+        These favourites and recent conversions are stored only in this browser. They are not
+        uploaded to an account or copied to the server.
+      </p>
+    {% endif %}
   </section>
   <div class="qa-saved-state"
        data-local-saved-state-page
+       data-account-mode="{% if user.is_authenticated %}true{% else %}false{% endif %}"
        data-converter-url="{% url 'converter' %}">
     <p class="qa-saved-state__storage-note"
        data-local-storage-status
@@ -27,32 +35,106 @@
        hidden>Checking browser storage…</p>
     <noscript>
       <p class="qa-saved-state__storage-note" data-storage-tone="warning">
-        JavaScript is required to read browser-local saved pairs and recent history. The converter
-        still works without JavaScript.
+        {% if user.is_authenticated %}
+          Account-saved pairs remain available, but JavaScript is required to read browser-local
+          recent history.
+        {% else %}
+          JavaScript is required to read browser-local saved pairs and recent history. The converter
+          still works without JavaScript.
+        {% endif %}
       </p>
     </noscript>
+
     <section class="qa-saved-section" aria-labelledby="saved-pairs-title">
       <div class="qa-saved-section__heading">
         <div>
           <p class="qa-foundation-kicker">Favourites</p>
           <h2 id="saved-pairs-title">Saved pairs</h2>
-          <p>Pairs restore country and currency context only. Amount is intentionally left blank.</p>
+          {% if user.is_authenticated %}
+            <p>
+              Account-saved pairs keep country and currency context only. Amount is intentionally
+              not stored.
+            </p>
+          {% else %}
+            <p>Pairs restore country and currency context only. Amount is intentionally left blank.</p>
+          {% endif %}
         </div>
-        <button class="qa-secondary-button"
-                type="button"
-                data-clear-favourites
-                hidden>Clear saved pairs</button>
+        {% if user.is_authenticated %}
+          {% if account_favourite_rows %}
+            <form method="post" action="{% url 'clear_favourites' %}">
+              {% csrf_token %}
+              <button class="qa-secondary-button" type="submit">Clear account favourites</button>
+            </form>
+          {% endif %}
+        {% else %}
+          <button class="qa-secondary-button"
+                  type="button"
+                  data-clear-favourites
+                  hidden>Clear saved pairs</button>
+        {% endif %}
       </div>
-      <p class="qa-saved-empty"
-         data-favourites-empty>No saved pairs yet. Save a pair after a conversion for quicker access.</p>
-      <div class="qa-saved-list" data-favourites-list></div>
+
+      {% if user.is_authenticated %}
+        {% if account_favourite_rows %}
+          <div class="qa-saved-list" data-account-favourites-list>
+            {% for row in account_favourite_rows %}
+              {% with favourite=row.favourite %}
+                <article class="qa-saved-row" data-account-favourite-id="{{ favourite.pk }}">
+                  <div class="qa-saved-row__copy">
+                    <h3>
+                      {{ favourite.source_currency.code }} → {{ favourite.destination_currency.code }}
+                    </h3>
+                    <p>
+                      {% if favourite.source_country %}
+                        {{ favourite.source_country.name }}
+                      {% else %}
+                        No country context
+                      {% endif %}
+                      →
+                      {% if favourite.destination_country %}
+                        {{ favourite.destination_country.name }}
+                      {% else %}
+                        No country context
+                      {% endif %}
+                    </p>
+                    <p class="qa-saved-row__meta">
+                      Saved {{ favourite.created_at|date:"j M Y" }} · amount is not stored
+                    </p>
+                  </div>
+                  <div class="qa-saved-row__actions">
+                    <a class="qa-secondary-button" href="{{ row.use_url }}">Use pair</a>
+                    <a class="qa-secondary-button" href="{{ row.reverse_url }}">Reverse pair</a>
+                    <form method="post"
+                          action="{% url 'delete_favourite' favourite.pk %}">
+                      {% csrf_token %}
+                      <button class="qa-secondary-button" type="submit">Remove</button>
+                    </form>
+                  </div>
+                </article>
+              {% endwith %}
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="qa-saved-empty" data-account-favourites-empty>
+            No account-saved pairs yet. Save a pair after a conversion for quicker access.
+          </p>
+        {% endif %}
+      {% else %}
+        <p class="qa-saved-empty"
+           data-favourites-empty>No saved pairs yet. Save a pair after a conversion for quicker access.</p>
+        <div class="qa-saved-list" data-favourites-list></div>
+      {% endif %}
     </section>
+
     <section class="qa-saved-section" aria-labelledby="recent-conversions-title">
       <div class="qa-saved-section__heading">
         <div>
           <p class="qa-foundation-kicker">Recent</p>
           <h2 id="recent-conversions-title">Recent conversions</h2>
-          <p>Up to 10 recent conversions stay on this device so you can repeat or reverse them.</p>
+          <p>
+            Up to 10 recent conversions stay on this device so you can repeat or reverse them.
+            {% if user.is_authenticated %}They are not synced to your account.{% endif %}
+          </p>
         </div>
         <button class="qa-secondary-button"
                 type="button"
@@ -62,8 +144,16 @@
       <p class="qa-saved-empty" data-recents-empty>No recent conversions in this browser yet.</p>
       <div class="qa-saved-list" data-recents-list></div>
     </section>
+
     <p class="qa-saved-state__privacy">
-      Clearing browser site data also removes these items. Account sync is a later, explicit feature.
+      {% if user.is_authenticated %}
+        Account favourites can be removed individually or cleared above. Account deletion removes
+        all account-owned favourites. Clearing browser site data separately removes local recent
+        history.
+      {% else %}
+        Clearing browser site data also removes these items. Sign in only if you want saved pairs
+        to sync across devices.
+      {% endif %}
     </p>
   </div>
 {% endblock %}
