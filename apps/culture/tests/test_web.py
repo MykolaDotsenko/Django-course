@@ -211,6 +211,23 @@ def test_invalid_current_destination_context_query_is_400_without_composition(
 
 
 @pytest.mark.django_db
+def test_current_destination_context_failure_is_local_and_htmx_visible(client, reference_data):
+    with patch(
+        "apps.culture.views.build_destination_context",
+        side_effect=RuntimeError("context unavailable"),
+    ):
+        response = client.get(
+            reverse("current_destination_context"),
+            {"country": "JP", "currency": "JPY", "amount": "17450"},
+            HTTP_HX_REQUEST="true",
+        )
+
+    assert response.status_code == 200
+    assert b"temporarily unavailable" in response.content
+    assert b"The historical conversion remains valid" in response.content
+
+
+@pytest.mark.django_db
 def test_reviewed_story_fact_appears_with_source_link(client, reference_data):
     fi, _jp, eur, _jpy = reference_data
     moment = StoryMoment.objects.create(
