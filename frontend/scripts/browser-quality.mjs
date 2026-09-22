@@ -234,7 +234,8 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     "current-converter: expected one persistent conversion result live region",
   );
   assert(
-    (await page.locator('#conversion-result-region .qa-visually-hidden[role="status"]').count()) === 0,
+    (await page.locator('#conversion-result-region .qa-visually-hidden[role="status"]').count()) ===
+      0,
     "current-converter: swapped result markup contains a duplicate hidden result announcer",
   );
 
@@ -477,8 +478,14 @@ async function assertSavedStateFlow(page) {
   const usePairHref = await savedRow.getByRole("link", { name: "Use pair" }).getAttribute("href");
   assert(usePairHref, "saved-state: favourite is missing its Use pair URL");
   const usePair = new URL(usePairHref, BASE_URL);
-  assert(usePair.searchParams.get("load") === "1", "saved-state: favourite does not use pair-load mode");
-  assert(usePair.searchParams.get("amount") === null, "saved-state: favourite unexpectedly stores amount");
+  assert(
+    usePair.searchParams.get("load") === "1",
+    "saved-state: favourite does not use pair-load mode",
+  );
+  assert(
+    usePair.searchParams.get("amount") === null,
+    "saved-state: favourite unexpectedly stores amount",
+  );
   assert(
     usePair.searchParams.get("source_country") === "FI",
     "saved-state: favourite source country missing",
@@ -488,7 +495,10 @@ async function assertSavedStateFlow(page) {
   const repeatHref = await latestRecent.getByRole("link", { name: "Repeat" }).getAttribute("href");
   assert(repeatHref, "saved-state: recent conversion is missing Repeat URL");
   const repeat = new URL(repeatHref, BASE_URL);
-  assert(repeat.searchParams.get("convert") === "1", "saved-state: repeat does not request conversion");
+  assert(
+    repeat.searchParams.get("convert") === "1",
+    "saved-state: repeat does not request conversion",
+  );
   assert(repeat.searchParams.get("amount") === "100", "saved-state: repeat amount missing");
 
   const swapHref = await latestRecent.getByRole("link", { name: "Swap" }).getAttribute("href");
@@ -763,7 +773,9 @@ const browser = await browserType.launch();
 const activeSurfaces =
   BROWSER_SCOPE === "full"
     ? SURFACES
-    : SURFACES.filter((surface) => ["current-converter", "saved-state", "rate-series"].includes(surface.name));
+    : SURFACES.filter((surface) =>
+        ["current-converter", "saved-state", "rate-series"].includes(surface.name),
+      );
 const activeViewports =
   BROWSER_SCOPE === "full"
     ? VIEWPORTS
