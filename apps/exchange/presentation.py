@@ -159,6 +159,11 @@ def build_result_component(
         "selected_date": story_date.isoformat(),
         "historical": "1" if historical else "0",
     }
+    current_context_params = {
+        "country": destination_country_code,
+        "currency": result.quote.quote_currency,
+        "amount": format(result.output_amount, "f"),
+    }
 
     return {
         "id": "current-conversion-result",
@@ -168,6 +173,7 @@ def build_result_component(
         "output_currency": result.quote.quote_currency,
         "exact": same_currency,
         "stale": result.stale,
+        "historical": historical,
         "local_state": {
             "input_amount": format(result.input_amount, "f"),
             "output_amount": format(result.output_amount, "f"),
@@ -189,6 +195,18 @@ def build_result_component(
             "href": f"{reverse('money_culture_story')}?{urlencode(story_params)}",
             "historical": historical,
         },
+        "current_destination_context": (
+            {
+                "href": (
+                    f"{reverse('current_destination_context')}?"
+                    f"{urlencode(current_context_params)}"
+                ),
+                "country_name": destination_country.name if destination_country else destination_country_code,
+                "currency_code": result.quote.quote_currency,
+            }
+            if historical and destination_country_code
+            else None
+        ),
         "ai_explanation": (
             {
                 "token": build_conversion_explanation_token(result),
