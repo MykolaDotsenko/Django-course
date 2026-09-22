@@ -103,9 +103,21 @@ def _assert_preview_integrity(page: Page, *, viewport_width: int) -> None:
         raise RuntimeError(f"Skip link is not first in keyboard order: {first_focus!r}")
 
     page.keyboard.press("Tab")
+    second_focus = page.evaluate(
+        """() => ({
+            tagName: document.activeElement?.tagName ?? "",
+            text: document.activeElement?.textContent?.trim() ?? "",
+        })"""
+    )
+    if second_focus != {"tagName": "A", "text": "Sign in"}:
+        raise RuntimeError(
+            f"Sign-in link is not second in keyboard order: {second_focus!r}"
+        )
+
+    page.keyboard.press("Tab")
     active_id = page.evaluate("document.activeElement?.id ?? ''")
     if active_id != "workspace-amount":
-        raise RuntimeError(f"Amount input is not second keyboard target: {active_id!r}")
+        raise RuntimeError(f"Amount input is not third keyboard target: {active_id!r}")
 
     focus_shadow = page.locator(".qa-amount-control").first.evaluate(
         "element => getComputedStyle(element).boxShadow",
