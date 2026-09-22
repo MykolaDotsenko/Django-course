@@ -5,7 +5,8 @@
     <p class="qa-foundation-kicker">Account</p>
     <h1 id="account-login-title">Sign in</h1>
     <p class="qa-account-panel__lede">
-      Sign in to keep saved pairs across devices. Browser-local recent history is not uploaded.
+      Sign in to keep saved pairs across devices. Existing browser-local favourites are merged
+      by pair identity after sign-in; browser-local recent history is not uploaded.
     </p>
     <form class="qa-account-form" method="post">
       {% csrf_token %}
