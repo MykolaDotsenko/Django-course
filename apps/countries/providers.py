@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 REST_COUNTRIES_V5_BASE_URL = "https://api.restcountries.com/countries/v5"
+MAX_RESPONSE_BYTES = 2 * 1024 * 1024
 RESPONSE_FIELDS = (
     "names.common",
     "names.official",
@@ -75,7 +76,7 @@ def _parse_currencies(value: Any) -> tuple[CurrencySnapshot, ...]:
         if not isinstance(raw, dict):
             continue
         code = str(raw.get("code") or raw_code).upper().strip()
-        if len(code) != 3:
+        if len(code) != 3 or not code.isascii() or not code.isalpha():
             continue
         name = str(raw.get("name") or code).strip()
         symbol = str(raw.get("symbol") or "").strip()
@@ -98,7 +99,15 @@ def parse_country_object(raw: dict[str, Any], *, fetched_at: datetime) -> Countr
     iso2 = str(codes.get("alpha_2") or raw.get("cca2") or "").upper().strip()
     iso3 = str(codes.get("alpha_3") or raw.get("cca3") or "").upper().strip()
     name = str(names.get("common") or raw.get("name") or "").strip()
-    if len(iso2) != 2 or len(iso3) != 3 or not name:
+    if (
+        len(iso2) != 2
+        or len(iso3) != 3
+        or not iso2.isascii()
+        or not iso3.isascii()
+        or not iso2.isalpha()
+        or not iso3.isalpha()
+        or not name
+    ):
         raise CountrySourceError("REST Countries object is missing canonical country identity")
 
     return CountryMetadataSnapshot(
@@ -126,6 +135,8 @@ class RestCountriesV5Client:
     ):
         if not api_key:
             raise ValueError("REST Countries API key is required")
+        if timeout_seconds <= 0:
+            raise ValueError("REST Countries timeout must be positive")
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
@@ -155,11 +166,18 @@ class RestCountriesV5Client:
                 with urlopen(request, timeout=self.timeout_seconds) as response:
                     if response.status != 200:
                         raise CountrySourceError(f"REST Countries returned HTTP {response.status}")
-                    payload = json.load(response)
+                    raw = response.read(MAX_RESPONSE_BYTES + 1)
             except CountrySourceError:
                 raise
             except Exception as exc:
                 raise CountrySourceError("REST Countries request failed") from exc
+
+            if len(raw) > MAX_RESPONSE_BYTES:
+                raise CountrySourceError("REST Countries response exceeded the size limit")
+            try:
+                payload = json.loads(raw)
+            except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+                raise CountrySourceError("REST Countries returned malformed JSON") from exc
 
             data = payload.get("data") if isinstance(payload, dict) else None
             objects = data.get("objects") if isinstance(data, dict) else None
@@ -174,7 +192,10 @@ class RestCountriesV5Client:
             )
             if not meta.get("more"):
                 break
-            count = int(meta.get("count") or len(objects))
+            try:
+                count = int(meta.get("count") or len(objects))
+            except (TypeError, ValueError) as exc:
+                raise CountrySourceError("REST Countries pagination metadata is invalid") from exc
             if count <= 0:
                 raise CountrySourceError("REST Countries pagination made no progress")
             offset += count
