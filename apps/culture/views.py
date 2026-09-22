@@ -70,8 +70,6 @@ def money_culture_story(request: HttpRequest) -> HttpResponse:
     patch_vary_headers(response, ["HX-Request"])
     return response
 
-
-
 @require_GET
 def current_destination_context(request: HttpRequest) -> HttpResponse:
     form = CurrentDestinationContextForm(request.GET)
