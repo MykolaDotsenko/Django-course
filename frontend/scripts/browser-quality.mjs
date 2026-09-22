@@ -158,7 +158,29 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   await page.getByText("Enter zero or a positive amount.").waitFor();
 
   await page.locator("#source-picker-trigger").click();
+  const sourceDialog = page.locator('[data-picker-dialog="source"]');
+  const viewport = page.viewportSize();
+  if (viewport && viewport.width <= 480) {
+    const dialogBox = await sourceDialog.boundingBox();
+    assert(
+      dialogBox &&
+        dialogBox.x <= 1 &&
+        dialogBox.y <= 1 &&
+        Math.abs(dialogBox.width - viewport.width) <= 2 &&
+        Math.abs(dialogBox.height - viewport.height) <= 2,
+      "current-converter/mobile: picker must use the full viewport",
+    );
+  }
+
   const search = page.locator("#source-picker-search");
+  await page.locator("#source-picker-listbox").waitFor();
+  await page.waitForFunction(() => {
+    const first = document.querySelector("#source-picker-listbox [data-picker-option]");
+    return (
+      first?.getAttribute("data-country-code") === "FI" &&
+      first?.getAttribute("data-currency-code") === "EUR"
+    );
+  });
   await search.fill("JPY");
   await page.locator("#source-picker-listbox").waitFor();
   await page.waitForFunction(() => {
