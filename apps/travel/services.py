@@ -107,14 +107,10 @@ def _resolve_specs(raw_items: Any) -> list[FavouriteSpec]:
 
     missing_currencies = sorted(currency_codes - set(currencies))
     if missing_currencies:
-        raise FavouriteSyncError(
-            f"Unknown currency code: {', '.join(missing_currencies)}."
-        )
+        raise FavouriteSyncError(f"Unknown currency code: {', '.join(missing_currencies)}.")
     missing_countries = sorted(country_codes - set(countries))
     if missing_countries:
-        raise FavouriteSyncError(
-            f"Unknown country code: {', '.join(missing_countries)}."
-        )
+        raise FavouriteSyncError(f"Unknown country code: {', '.join(missing_countries)}.")
 
     required_associations = {
         (country_code, currency_code)
