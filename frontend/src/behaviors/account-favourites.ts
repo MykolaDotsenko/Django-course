@@ -17,8 +17,11 @@ interface AccountSyncResponse {
 let localMergePromise: Promise<number> | null = null;
 
 function accountSyncConfig(): AccountSyncConfig | null {
-  const { accountAuthenticated, accountFavouriteSyncUrl: url, accountCsrfToken: csrfToken } =
-    document.body.dataset;
+  const {
+    accountAuthenticated,
+    accountFavouriteSyncUrl: url,
+    accountCsrfToken: csrfToken,
+  } = document.body.dataset;
   if (accountAuthenticated !== "true" || !url || !csrfToken) return null;
   return { url, csrfToken };
 }
