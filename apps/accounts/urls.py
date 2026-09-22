@@ -2,7 +2,12 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
 
 from apps.accounts.forms import QuietAuthenticationForm
-from apps.accounts.views import delete_account, profile, signup
+from apps.accounts.views import (
+    delete_account,
+    profile,
+    signup,
+    update_recent_history_preference,
+)
 
 urlpatterns = [
     path(
@@ -17,5 +22,10 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),
     path("signup/", signup, name="signup"),
     path("profile/", profile, name="profile"),
+    path(
+        "recent-history/",
+        update_recent_history_preference,
+        name="update_recent_history_preference",
+    ),
     path("delete/", delete_account, name="delete_account"),
 ]
