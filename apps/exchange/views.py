@@ -9,22 +9,19 @@ from django.conf import settings
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.cache import patch_vary_headers
 from django.views.decorators.http import require_GET, require_http_methods
 
 from apps.countries.models import CountryCurrency, Currency
-from apps.countries.services import historical_currency_suggestion
 from apps.culture.presentation import build_destination_context_component
-from apps.culture.services import build_destination_context
 from apps.exchange.ai.service import build_runtime_explanation_service
+from apps.exchange.application import ConverterSubmissionCommand, run_converter_submission
 from apps.exchange.ai.tokens import ExplanationTokenError, load_conversion_explanation_token
 from apps.exchange.cache import HistoricalQuoteGateway, HistoricalSeriesGateway, LatestQuoteGateway
 from apps.exchange.config import load_fx_runtime_config
 from apps.exchange.domain import (
     ConversionResult,
     HistoricalCoverageReason,
-    HistoricalCurrencyMetadata,
     HistoricalObservationUnavailable,
     HistoricalOutOfCoverage,
     RateQuote,
@@ -52,7 +49,6 @@ from apps.exchange.services import (
     compare_historical_to_latest,
     get_rate_series,
     quote_conversion,
-    quote_historical_conversion,
 )
 
 logger = logging.getLogger("cultural_currency.exchange")
@@ -156,16 +152,17 @@ def _canonical_conversion_url(form: CurrentConversionForm) -> str:
     return f"{reverse('converter')}?{urlencode(params)}"
 
 
-def _historical_currency_metadata(currency: Currency | None) -> HistoricalCurrencyMetadata | None:
-    if currency is None:
-        return None
-    return HistoricalCurrencyMetadata(
-        code=currency.code,
-        active_from=currency.active_from,
-        active_to=currency.active_to,
-        coverage_from=currency.coverage_from,
-        coverage_to=currency.coverage_to,
-        coverage_to_is_terminal=currency.coverage_to_is_terminal,
+
+def _converter_submission_command(form: CurrentConversionForm) -> ConverterSubmissionCommand:
+    cleaned = form.cleaned_data
+    return ConverterSubmissionCommand(
+        amount=cleaned["amount_decimal"],
+        source_country=cleaned.get("source_country", ""),
+        source_currency=cleaned["source_currency"],
+        destination_country=cleaned.get("destination_country", ""),
+        destination_currency=cleaned["destination_currency"],
+        historical=cleaned.get("rate_mode") == RATE_MODE_HISTORICAL,
+        requested_date=cleaned.get("requested_date"),
     )
 
 
@@ -295,41 +292,25 @@ def converter(request: HttpRequest) -> HttpResponse:
     result = None
     error = None
     historical_suggestions = []
+    destination_context_component = None
     response_status = 200
     form_valid = form.is_valid() if convert_requested else False
     if form_valid:
-        cleaned = form.cleaned_data
-        base_currency = form.currency_for_code(cleaned["source_currency"])
-        quote_currency = form.currency_for_code(cleaned["destination_currency"])
-        historical = cleaned.get("rate_mode") == RATE_MODE_HISTORICAL
-        if historical:
-            for side in ("source", "destination"):
-                suggestion = historical_currency_suggestion(
-                    country_code=cleaned.get(f"{side}_country", ""),
-                    selected_currency_code=cleaned[f"{side}_currency"],
-                    selected_date=cleaned["requested_date"],
-                )
-                if suggestion is not None:
-                    historical_suggestions.append((side, suggestion))
+        command = _converter_submission_command(form)
         try:
-            if historical:
-                result = quote_historical_conversion(
-                    amount=cleaned["amount_decimal"],
-                    base_currency=cleaned["source_currency"],
-                    quote_currency=cleaned["destination_currency"],
-                    quote_minor_units=quote_currency.minor_units if quote_currency else 2,
-                    requested_date=cleaned["requested_date"],
-                    gateway=build_historical_quote_gateway,
-                    base_metadata=_historical_currency_metadata(base_currency),
-                    quote_metadata=_historical_currency_metadata(quote_currency),
-                )
-            else:
-                result = quote_conversion(
-                    amount=cleaned["amount_decimal"],
-                    base_currency=cleaned["source_currency"],
-                    quote_currency=cleaned["destination_currency"],
-                    quote_minor_units=quote_currency.minor_units if quote_currency else 2,
-                    gateway=build_latest_quote_gateway(),
+            submission = run_converter_submission(
+                command,
+                latest_gateway_factory=build_latest_quote_gateway,
+                historical_gateway_factory=build_historical_quote_gateway,
+            )
+            result = submission.conversion
+            historical_suggestions = [
+                (item.side, item.suggestion) for item in submission.historical_suggestions
+            ]
+            if submission.destination_context is not None:
+                destination_context_component = build_destination_context_component(
+                    submission.destination_context,
+                    historical=result.quote.historical,
                 )
         except (FxProviderError, HistoricalObservationUnavailable, HistoricalOutOfCoverage) as exc:
             if isinstance(
@@ -353,33 +334,10 @@ def converter(request: HttpRequest) -> HttpResponse:
                     "error_code": exc.__class__.__name__,
                 },
             )
-            error = _conversion_error(exc, historical=historical)
+            error = _conversion_error(exc, historical=command.historical)
 
     if convert_requested and not form_valid and request.method == "POST":
         response_status = 422
-
-    destination_context_component = None
-    if result is not None:
-        try:
-            destination_context = build_destination_context(
-                country_code=cleaned.get("destination_country", ""),
-                converted_amount=result.output_amount,
-                quote_currency=result.quote.quote_currency,
-                as_of=timezone.localdate(),
-            )
-            if destination_context is not None:
-                destination_context_component = build_destination_context_component(
-                    destination_context,
-                    historical=result.quote.historical,
-                )
-        except Exception:
-            logger.exception(
-                "Destination context composition failed",
-                extra={
-                    "destination_country": cleaned.get("destination_country", ""),
-                    "quote_currency": result.quote.quote_currency,
-                },
-            )
 
     if request.method == "POST" and not _is_htmx(request) and result is not None:
         return redirect(_canonical_conversion_url(form))
