@@ -144,21 +144,22 @@ def run_converter_submission(
         )
 
     destination_context = None
-    try:
-        destination_context = build_destination_context(
-            country_code=command.destination_country,
-            converted_amount=conversion.output_amount,
-            quote_currency=conversion.quote.quote_currency,
-            as_of=context_as_of or timezone.localdate(),
-        )
-    except Exception:
-        logger.exception(
-            "Destination context composition failed",
-            extra={
-                "destination_country": command.destination_country,
-                "quote_currency": conversion.quote.quote_currency,
-            },
-        )
+    if not command.historical:
+        try:
+            destination_context = build_destination_context(
+                country_code=command.destination_country,
+                converted_amount=conversion.output_amount,
+                quote_currency=conversion.quote.quote_currency,
+                as_of=context_as_of or timezone.localdate(),
+            )
+        except Exception:
+            logger.exception(
+                "Destination context composition failed",
+                extra={
+                    "destination_country": command.destination_country,
+                    "quote_currency": conversion.quote.quote_currency,
+                },
+            )
 
     return ConverterSubmissionResult(
         conversion=conversion,
