@@ -879,6 +879,67 @@ async function openSurface(page, surface) {
   assert(h1Count === 1, `${surface.name}: expected exactly one H1, found ${h1Count}`);
 }
 
+async function assertNoJavaScriptSavedStateFallback(browser) {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 1,
+    javaScriptEnabled: false,
+  });
+  const page = await context.newPage();
+
+  try {
+    const converterUrl = new URL("/", BASE_URL);
+    converterUrl.search = new URLSearchParams({
+      convert: "1",
+      amount: "12",
+      source_country: "JP",
+      source_currency: "JPY",
+      destination_country: "JP",
+      destination_currency: "JPY",
+      rate_mode: "latest",
+    }).toString();
+
+    const converterResponse = await page.goto(converterUrl.toString(), {
+      waitUntil: "networkidle",
+    });
+    assert(converterResponse?.ok(), "no-js converter deep link failed");
+    await page.locator("#current-conversion-result").waitFor();
+
+    const saveButton = page.locator("[data-save-pair]");
+    assert((await saveButton.count()) === 1, "no-js converter is missing the save enhancement marker");
+    assert(await saveButton.isHidden(), "no-js converter exposed an inert Save pair button");
+    assert(
+      await page.getByRole("link", { name: "Saved & recent" }).isVisible(),
+      "no-js converter should retain a path to the Saved & recent explanation",
+    );
+
+    const savedResponse = await page.goto(`${BASE_URL}/saved/`, { waitUntil: "networkidle" });
+    assert(savedResponse?.ok(), "no-js Saved & recent page failed");
+    await page
+      .getByText("JavaScript is required to read browser-local saved pairs and recent history.", {
+        exact: false,
+      })
+      .waitFor();
+    assert(
+      await page.locator("[data-favourites-empty]").isHidden(),
+      "no-js Saved page falsely claimed that favourites were empty",
+    );
+    assert(
+      await page.locator("[data-recents-empty]").isHidden(),
+      "no-js Saved page falsely claimed that recent history was empty",
+    );
+    await assertNoHorizontalOverflow(page, "saved-state/no-js");
+
+    return {
+      converterResultRendered: true,
+      inertSaveHidden: true,
+      savedPageUnknownStateHonest: true,
+    };
+  } finally {
+    await context.close();
+  }
+}
+
 await mkdir(OUTPUT_DIR, { recursive: true });
 const browser = await browserType.launch();
 const activeSurfaces =
@@ -973,6 +1034,7 @@ try {
   }
 
   if (BROWSER_SCOPE === "full") {
+    evidence.noJavaScript = await assertNoJavaScriptSavedStateFallback(browser);
     evidence.compressedAssets = await collectCompressedAssetEvidence();
     assert(
       evidence.compressedAssets.coreGzipBytes <= evidence.budgets.coreJavaScriptGzipBytes,
