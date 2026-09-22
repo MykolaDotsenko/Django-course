@@ -6,17 +6,48 @@
     <h1 id="account-profile-title">{{ user.get_username }}</h1>
     <p class="qa-account-panel__lede">
       Signed-in favourites are account-owned and available across devices. Recent conversion
-      history remains browser-local in this phase.
+      history is browser-only unless you explicitly enable cross-device history below.
     </p>
     <div class="qa-account-actions">
       <a class="qa-primary-button" href="{% url 'saved_state' %}">Saved &amp; recent</a>
       <a class="qa-secondary-button" href="{% url 'converter' %}">Converter</a>
     </div>
+
+    <section class="qa-account-danger" aria-labelledby="recent-history-privacy-title">
+      <p class="qa-foundation-kicker">Privacy preference</p>
+      <h2 id="recent-history-privacy-title">Cross-device recent history</h2>
+      {% if recent_history_enabled %}
+        <p>
+          On. Future successful conversions are saved to your account, up to 50 recent entries.
+          Browser-only history from before you enabled this setting is not uploaded automatically.
+        </p>
+        <form method="post" action="{% url 'update_recent_history_preference' %}">
+          {% csrf_token %}
+          <button class="qa-secondary-button"
+                  type="submit"
+                  name="action"
+                  value="disable">Turn off account history</button>
+        </form>
+      {% else %}
+        <p>
+          Off by default. Conversions stay in this browser only. Turning this on starts storing
+          future successful conversions to your account; existing browser history is not imported.
+        </p>
+        <form method="post" action="{% url 'update_recent_history_preference' %}">
+          {% csrf_token %}
+          <button class="qa-secondary-button"
+                  type="submit"
+                  name="action"
+                  value="enable">Turn on account history</button>
+        </form>
+      {% endif %}
+    </section>
+
     <section class="qa-account-danger" aria-labelledby="account-privacy-title">
-      <h2 id="account-privacy-title">Privacy controls</h2>
+      <h2 id="account-privacy-title">Delete account</h2>
       <p>
-        You can remove individual saved pairs on the Saved page, clear all account favourites, or
-        permanently delete this account and its account-owned data.
+        You can remove saved pairs and recent account history individually on the Saved page, clear
+        them there, or permanently delete this account and all account-owned data.
       </p>
       <a class="qa-secondary-button" href="{% url 'delete_account' %}">Delete account</a>
     </section>
