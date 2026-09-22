@@ -6,11 +6,13 @@
         <p class="qa-foundation-kicker">Explore</p>
         <h3 id="destination-context-title">What does this amount mean in {{ destination_context.country_name }}?</h3>
       </div>
-      <nav class="qa-explore-nav" aria-label="Explore conversion context">
-        <a href="#everyday-value">Everyday value</a>
-        <a href="#payment-context">Payment context</a>
-        <a href="#money-culture-entry-title">Money &amp; culture</a>
-      </nav>
+      {% if destination_context.show_explore_nav %}
+        <nav class="qa-explore-nav" aria-label="Explore conversion context">
+          <a href="#everyday-value">Everyday value</a>
+          <a href="#payment-context">Payment context</a>
+          <a href="#money-culture-entry-title">Money &amp; culture</a>
+        </nav>
+      {% endif %}
     </div>
     {% if destination_context.historical_notice %}
       <p class="qa-context-freshness-note">{{ destination_context.historical_notice }}</p>
