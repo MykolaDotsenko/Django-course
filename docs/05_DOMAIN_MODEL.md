@@ -87,7 +87,7 @@ Managed media represents a reviewed media candidate/asset with:
 - stored file/derivatives;
 - publication state.
 
-Release-owned Quiet Atlas assets are separate deterministic static fallbacks.
+Large editorial imagery comes from reviewed managed raster assets. Missing media is a valid state; country/editorial surfaces do not require a decorative static-image fallback.
 
 ## FavouritePair
 

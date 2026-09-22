@@ -220,25 +220,17 @@ def test_unpublished_managed_media_cannot_be_rendered():
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    ("role", "with_country", "expected_label"),
+    "role",
     [
-        (MediaRole.COUNTRY_TEASER, True, "Finland local value"),
-        (MediaRole.COMPARISON_THEN, False, "Then and now comparison illustration"),
-        (MediaRole.COMPARISON_NOW, False, "Then and now comparison illustration"),
-        (MediaRole.STORY_COVER, False, "Generic historical fallback"),
-        (MediaRole.STORY_CHAPTER, False, "Generic historical fallback"),
-        (MediaRole.HISTORICAL_TIMELINE, False, "Generic historical fallback"),
-        (MediaRole.SOCIAL_PREVIEW, False, "Home OpenGraph preview"),
-        (MediaRole.SOCIAL_PREVIEW, True, "Then and Now OpenGraph preview"),
-        (MediaRole.DECORATIVE_BACKGROUND, False, "Generic local-value fallback"),
+        MediaRole.COUNTRY_TEASER,
+        MediaRole.COMPARISON_THEN,
+        MediaRole.COMPARISON_NOW,
+        MediaRole.STORY_COVER,
+        MediaRole.STORY_CHAPTER,
+        MediaRole.HISTORICAL_TIMELINE,
+        MediaRole.SOCIAL_PREVIEW,
+        MediaRole.DECORATIVE_BACKGROUND,
     ],
 )
-def test_quiet_atlas_fallback_covers_every_media_role(role, with_country, expected_label):
-    country = (
-        Country.objects.create(iso2="FI", iso3="FIN", name="Finland") if with_country else None
-    )
-
-    selection = select_media_for_display(role=role, country=country)
-
-    assert selection.fallback_level == 1
-    assert selection.image.label == expected_label
+def test_missing_media_returns_none_instead_of_decorative_placeholder(role):
+    assert select_media_for_display(role=role) is None

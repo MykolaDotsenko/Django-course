@@ -2,42 +2,79 @@
 
 ## Design direction
 
-The current visual language is **Quiet Atlas**: calm, editorial and travel-oriented, with restrained use of colour and imagery.
+The visual language is **Quiet Atlas Premium**: calm financial trust combined with high-end editorial travel photography.
 
-The design should support trust and legibility before decoration.
+The product should feel closer to a premium travel magazine and modern financial service than to an illustrated travel app.
 
-## Stable visual ideas
+## Premium visual principles
 
 Prefer:
 
-- a quiet neutral canvas;
-- clear surface hierarchy;
-- strong readable typography;
+- quiet neutral surfaces and restrained country accents;
+- strong typography and deliberate whitespace;
 - one obvious primary action;
-- country atmosphere used as context, not as a control-state mechanism;
-- deliberate whitespace;
-- media that explains or sets atmosphere rather than filling space.
+- realistic, editorial photography with natural light and believable local detail;
+- consistent colour treatment across destinations;
+- imagery with enough negative space to coexist with product UI;
+- subtle depth, borders and materials rather than heavy effects.
 
 Avoid:
 
-- trading-dashboard aesthetics;
-- excessive gradients/glass effects;
-- dense decorative iconography;
-- country stereotypes;
-- layouts whose meaning depends on colour;
-- novelty interactions that make conversion slower.
+- cartoon or flat country illustrations;
+- decorative country SVG scenes;
+- generic tourist-postcard imagery;
+- oversaturated stock photography;
+- staged handshake/credit-card stock clichés;
+- stereotypical visual shorthand for a country;
+- dense dashboards, excessive glass effects and visual noise.
 
 ## Country atmosphere
 
-Source and destination can have independent atmosphere through subtle accents, surfaces, illustration or contextual media.
+Country identity comes primarily from:
 
-The converter’s mechanics, validation and trust semantics should remain consistent across countries.
+1. typography and country/currency naming;
+2. subtle colour/surface atmosphere;
+3. curated realistic photography when a suitable published asset exists.
 
-The existing `data-country-theme` mechanism is one implementation, not a requirement to preserve forever.
+The converter should remain elegant without an image. Missing media is preferable to weak media.
+
+For country hero/teaser roles, production selection uses reviewed contemporary photography rather than illustration fallbacks.
+
+## Photography art direction
+
+Target a consistent editorial look:
+
+- realistic contemporary scenes;
+- natural or cinematic available light;
+- restrained saturation;
+- sophisticated warm-neutral grading;
+- real streets, cafés, transit, markets, architecture and everyday payment moments;
+- people may appear naturally, but avoid posed advertising imagery;
+- composition should feel observed rather than staged.
+
+A photo should communicate place or everyday value without becoming a tourism cliché.
+
+## Historical imagery
+
+Historical surfaces should prefer authentic archival photography, documents, currency objects or museum/heritage material with provenance.
+
+Do not use a photorealistic reconstruction as if it were archival evidence.
+
+If an illustration or generated reconstruction is ever used for a non-factual supporting role, its status should be clear and it should not compete visually with authentic evidence.
+
+## Image formats
+
+Large editorial product imagery is managed raster media:
+
+- JPEG for photographic masters where appropriate;
+- WebP for optimized delivery/derivatives;
+- PNG when lossless/alpha is genuinely useful.
+
+SVG remains appropriate for interface icons and small vector UI marks. It is not the country/editorial photography format.
 
 ## Components
 
-The current UI is composed from reusable Django templates/partials plus CSS and small TypeScript enhancements.
+The current UI uses reusable Django templates/partials plus CSS and focused TypeScript.
 
 Important component families include:
 
@@ -46,12 +83,12 @@ Important component families include:
 - swap action;
 - conversion result/provenance;
 - historical controls/chart;
-- contextual cards;
-- media/image frame;
+- contextual content;
+- managed media/image frame;
 - saved/recent state;
 - account surfaces.
 
-Prefer reusing or simplifying existing patterns before adding another component abstraction.
+Prefer simplifying an existing pattern before adding another component abstraction.
 
 ## Information hierarchy
 
@@ -62,37 +99,27 @@ For conversion surfaces, visual emphasis generally follows:
 3. trust/provenance/date;
 4. practical interpretation;
 5. exploration/save utilities;
-6. decorative media.
+6. photography.
 
-This hierarchy can be adapted when a screen has a different primary task.
-
-## Media
-
-Use imagery when it adds local atmosphere, historical evidence or explanation.
-
-Quiet Atlas release-owned SVGs are valid deterministic fallbacks. Managed sourced media can replace them where it improves authenticity.
-
-Do not use a misleading historical photo merely because an image slot exists.
+Photography should elevate the experience without overpowering the financial task.
 
 ## Motion
 
 Motion should clarify state change, not decorate routine interaction.
 
-Respect reduced-motion preferences and avoid animations that delay access to information.
+Respect reduced-motion preferences and avoid animation that delays access to information.
 
 ## Responsive design
 
-Prefer flexible layout rules over fixed breakpoint-specific replicas.
+Prefer flexible layout rules over fixed replicas.
 
 Components should survive:
 
 - narrow screens;
-- large text;
-- 200% text zoom/reflow;
+- large text and 200% zoom/reflow;
 - long country/currency names;
-- browser font differences.
-
-Exact pixel values belong in CSS/tests when needed, not in this document.
+- different browser/font metrics;
+- missing imagery.
 
 ## Accessibility visual baseline
 
@@ -102,11 +129,12 @@ Maintain:
 - visible keyboard focus;
 - non-colour state cues;
 - sufficient interactive target area;
-- text that can wrap without hiding functionality;
-- layouts that do not require horizontal scrolling for core tasks at narrow reflow widths.
+- text that wraps without hiding functionality;
+- core layouts without horizontal scrolling at narrow reflow widths;
+- meaningful alt text for informative photography.
 
 ## Evolving the design system
 
-The design system is a shared language, not a frozen visual specification.
+This is a visual direction, not a frozen mood board.
 
-If a new pattern improves comprehension, accessibility, consistency or product value, it can replace the existing pattern. Update this document when the new pattern becomes a project-level convention.
+New patterns may replace existing ones when they improve comprehension, accessibility, consistency or perceived product quality. Keep the premium, trustworthy and culturally authentic character coherent across those changes.

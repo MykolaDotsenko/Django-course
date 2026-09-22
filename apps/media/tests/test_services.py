@@ -274,24 +274,42 @@ def test_selector_prefers_relevant_real_media_over_ai_even_with_coarser_date(
 
 
 @pytest.mark.django_db
-def test_unpublished_asset_is_excluded_and_quiet_atlas_fallback_is_total(finland):
-    MediaAsset.objects.create(
-        kind=MediaKind.ARTWORK,
-        source_kind=MediaSourceKind.MANUAL,
+def test_missing_or_nonphotographic_country_media_renders_no_placeholder(media_root, finland):
+    artwork = _sourced_asset(
+        title="Country artwork",
         role=MediaRole.COUNTRY_HERO,
         country=finland,
-        title="Not published",
-        status=MediaStatus.APPROVED,
     )
+    artwork.kind = MediaKind.ARTWORK
+    artwork.save(update_fields=("kind",))
+    _publish_sourced(artwork, color=(44, 55, 66))
+
+    assert (
+        select_media_for_display(
+            role=MediaRole.COUNTRY_HERO,
+            country=finland,
+        )
+        is None
+    )
+
+    photo = _sourced_asset(
+        title="Premium destination photograph",
+        role=MediaRole.COUNTRY_HERO,
+        country=finland,
+    )
+    photo.kind = MediaKind.CONTEMPORARY_PHOTO
+    photo.save(update_fields=("kind",))
+    _publish_sourced(photo, color=(77, 88, 99))
 
     selection = select_media_for_display(
         role=MediaRole.COUNTRY_HERO,
         country=finland,
     )
 
-    assert selection.fallback_level == 1
-    assert selection.selection_reason == "quiet_atlas_static_fallback"
-    assert selection.image.label == "Finland local value"
+    assert selection is not None
+    assert selection.fallback_level == 0
+    assert selection.authenticity_class == "sourced_media"
+    assert selection.image.label == "Premium destination photograph"
 
 
 @pytest.mark.django_db
