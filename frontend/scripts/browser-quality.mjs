@@ -73,13 +73,13 @@ async function assertNoHorizontalOverflow(page, label) {
           width: Math.round(rect.width),
           scrollWidth: element.scrollWidth,
           clientWidth: element.clientWidth,
+          ignoreInternalOverflow: element.matches("input, textarea, .qa-visually-hidden"),
         };
       })
       .filter((element) => {
         const outsideViewport = element.right > clientWidth + 1 || element.left < -1;
         const internalOverflowIsRelevant =
-          !element.matches("input, textarea, .qa-visually-hidden") &&
-          element.scrollWidth > element.clientWidth + 1;
+          !element.ignoreInternalOverflow && element.scrollWidth > element.clientWidth + 1;
         return outsideViewport || internalOverflowIsRelevant;
       })
       .sort(
