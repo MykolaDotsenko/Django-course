@@ -204,6 +204,10 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
     (await page.locator("#conversion-announcer").count()) === 1,
     "current-converter: expected exactly one persistent conversion announcer",
   );
+  assert(
+    (await page.locator('[role="status"][aria-live="polite"]').count()) === 1,
+    "current-converter: duplicate polite status live regions would double-announce results",
+  );
 
   await page.getByRole("link", { name: "Everyday value" }).waitFor();
   await page.getByRole("link", { name: "Payment context" }).waitFor();
