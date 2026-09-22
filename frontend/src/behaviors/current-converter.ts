@@ -26,8 +26,7 @@ function enhanceAutoRefresh(form: HTMLFormElement): void {
     const submitter = (event as SubmitEvent).submitter;
     focusValidationSummaryAfterRequest =
       submitter === null ||
-      (submitter instanceof HTMLButtonElement &&
-        submitter.classList.contains("qa-primary-button"));
+      (submitter instanceof HTMLButtonElement && submitter.classList.contains("qa-primary-button"));
   });
 
   form.addEventListener("input", (event) => {
