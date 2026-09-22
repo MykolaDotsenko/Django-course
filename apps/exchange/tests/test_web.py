@@ -822,7 +822,7 @@ def test_historical_conversion_exposes_trend_entry_for_actual_observation(client
 
     content = response.content
     assert b'class="qa-destination-context"' not in content
-    assert b"See today&#x27;s travel context" in content or b"See today’s travel context" in content
+    assert b"current local context for Japan" in content
     result_index = content.index(b'id="current-conversion-result"')
     story_index = content.index(b'class="qa-story-entry"')
     historical_index = content.index(b'class="qa-historical-trend-entry"')
