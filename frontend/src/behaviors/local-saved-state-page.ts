@@ -82,11 +82,7 @@ function linkForPair(
   return `${url.pathname}${url.search}`;
 }
 
-function actionLink(
-  text: string,
-  href: string,
-  accessibleName = text,
-): HTMLAnchorElement {
+function actionLink(text: string, href: string, accessibleName = text): HTMLAnchorElement {
   const element = document.createElement("a");
   element.className = "qa-secondary-button";
   element.textContent = text;
@@ -95,11 +91,7 @@ function actionLink(
   return element;
 }
 
-function actionButton(
-  text: string,
-  action: () => void,
-  accessibleName = text,
-): HTMLButtonElement {
+function actionButton(text: string, action: () => void, accessibleName = text): HTMLButtonElement {
   const element = document.createElement("button");
   element.className = "qa-secondary-button";
   element.type = "button";
@@ -218,7 +210,8 @@ function renderRecents(page: HTMLElement, state: LocalPreferencesV1, converterUr
 
     const actions = document.createElement("div");
     actions.className = "qa-saved-row__actions";
-    const conversionActionName = `${recent.amount} ${recent.sourceCurrency} to ${recent.destinationCurrency}`;
+    const conversionActionName =
+      `${recent.amount} ${recent.sourceCurrency} to ${recent.destinationCurrency}`;
     actions.append(
       actionLink(
         "Repeat",
