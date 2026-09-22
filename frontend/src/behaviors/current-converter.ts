@@ -64,6 +64,20 @@ function enhanceAutoRefresh(form: HTMLFormElement): void {
   });
 }
 
+function announceConversionResult(target: EventTarget | null): void {
+  if (!(target instanceof Element) || target.id !== "converter-panel") return;
+
+  const announcer = document.getElementById("conversion-announcer");
+  const payload = target.querySelector<HTMLElement>("[data-conversion-announcement]");
+  const message = payload?.textContent?.trim();
+  if (!announcer || !message) return;
+
+  announcer.textContent = "";
+  window.setTimeout(() => {
+    announcer.textContent = message;
+  }, 0);
+}
+
 function enhanceCurrentConverterBehavior(): void {
   const form = document.querySelector<HTMLFormElement>("[data-current-conversion-form]");
   if (form) enhanceAutoRefresh(form);
@@ -114,8 +128,9 @@ document.addEventListener("htmx:beforeSwap", (event) => {
 });
 
 document.addEventListener("DOMContentLoaded", enhanceCurrentConverterBehavior);
-document.addEventListener("htmx:afterSwap", () => {
+document.addEventListener("htmx:afterSwap", (event) => {
   enhanceCurrentConverterBehavior();
+  announceConversionResult(event.target);
 
   if (!restoreFocusId) return;
   document.getElementById(restoreFocusId)?.focus();
