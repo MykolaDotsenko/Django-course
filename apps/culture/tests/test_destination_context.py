@@ -155,11 +155,25 @@ def test_destination_context_preserves_city_scope_and_provenance(japan_context):
 
 @pytest.mark.django_db
 def test_destination_context_suppresses_invalid_published_provenance(japan_context):
-    _japan, _jpy, profile, price = japan_context
+    japan, jpy, profile, price = japan_context
     profile.source_url = "https://user:secret@example.org/payment"
     profile.save(update_fields=("source_url",))
     price.source_url = "https://user:secret@example.org/fare"
     price.save(update_fields=("source_url",))
+    fallback = TypicalPrice.objects.create(
+        country=japan,
+        city="Tokyo",
+        category=TypicalPriceCategory.CASUAL_MEAL,
+        label="Simple meal",
+        amount_low=Decimal("900"),
+        currency=jpy,
+        source_name="Valid fallback",
+        source_url="https://example.org/meal",
+        observed_at=timezone.localdate(),
+        verified_at=timezone.now(),
+        display_order=200,
+        is_published=True,
+    )
 
     context = build_destination_context(
         country_code="JP",
@@ -169,7 +183,7 @@ def test_destination_context_suppresses_invalid_published_provenance(japan_conte
 
     assert context is not None
     assert context.payment is None
-    assert context.prices == ()
+    assert [item.label for item in context.prices] == [fallback.label]
 
 
 @pytest.mark.django_db
