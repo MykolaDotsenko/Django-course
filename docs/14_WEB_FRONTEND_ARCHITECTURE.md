@@ -1517,7 +1517,7 @@ External source URLs are validated/sanitized server-side.
 
 User-visible culture/story provenance links must be absolute, credential-free HTTPS URLs. This
 invariant is enforced both when content is reviewed/published and defensively when published
-destination context is read, because programmatic ORM writes can bypass Django `full_clean()`.
+destination/story context is read, because programmatic ORM writes can bypass Django `full_clean()`.
 A published row that violates the provenance invariant is suppressed rather than rendered as a
 weaker or potentially credential-bearing link.
 
