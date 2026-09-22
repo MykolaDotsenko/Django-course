@@ -333,9 +333,12 @@ For one obvious local error, field-level feedback may be sufficient depending on
 
 ### Focus
 
-After full form submission with errors, focus may move to the error summary if one exists.
+After an explicit full form submission with multiple errors, move focus to the error summary when
+one exists so keyboard and screen-reader users immediately reach the recovery path.
 
-For inline enhanced validation, avoid disruptive focus movement.
+Inline enhanced validation and automatic post-success refreshes must not steal focus. A 422 response
+alone is not sufficient reason to move focus; the client must distinguish an explicit user submit
+from background/progressive refresh.
 
 ---
 
