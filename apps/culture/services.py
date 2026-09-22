@@ -156,11 +156,18 @@ def select_story_moments(
     queryset = (
         StoryMoment.objects.published()
         .relevant_on(selected_date, historical=historical)
-        .filter(filters)
+        .filter(filters, verified_at__isnull=False)
+        .exclude(source_name="")
+        .exclude(source_url="")
         .prefetch_related("countries", "currencies")
         .distinct()
     )
-    return tuple(queryset[:limit])
+    candidate_limit = min(limit * 2, 16)
+    return tuple(
+        moment
+        for moment in queryset[:candidate_limit]
+        if is_valid_provenance_url(moment.source_url)
+    )[:limit]
 
 
 def currency_era_links(
