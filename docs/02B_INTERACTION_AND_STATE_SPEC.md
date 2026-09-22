@@ -607,6 +607,11 @@ Prefer:
 
 or simply maintain idempotent saved state.
 
+### Empty collections
+
+When favourites or recents are empty, hide collection-level Clear actions rather than displaying
+disabled destructive controls. The empty-state message should carry the section's visual focus.
+
 ### Storage unavailable
 
 Core conversion unaffected.
