@@ -249,6 +249,16 @@ class LatestQuoteGateway:
     ) -> tuple[RateQuote, bool]:
         key = latest_cache_key(base, quote, policy)
         cached = self._cache_get(key)
+        if cached is not None:
+            try:
+                self._assert_quote_identity(cached, base=base, quote=quote, policy=policy)
+            except FxProviderInvalidPayload:
+                logger.warning(
+                    "Ignoring semantically mismatched latest FX cache entry",
+                    extra={"cache_key": key},
+                )
+                cached = None
+
         if (
             cached
             and classify_quote_freshness(
@@ -475,15 +485,23 @@ class HistoricalQuoteGateway:
         resolution_key = historical_resolution_cache_key(base, quote, requested_date, policy)
         cached = self._cache_get(resolution_key)
         if cached is not None:
-            self._assert_quote_identity(
-                cached,
-                base=base,
-                quote=quote,
-                requested_date=requested_date,
-                policy=policy,
-            )
-            self._assert_gap(cached)
-            return cached
+            try:
+                self._assert_quote_identity(
+                    cached,
+                    base=base,
+                    quote=quote,
+                    requested_date=requested_date,
+                    policy=policy,
+                )
+                self._assert_gap(cached)
+            except (FxProviderInvalidPayload, HistoricalObservationUnavailable):
+                logger.warning(
+                    "Ignoring semantically invalid historical FX resolution cache entry",
+                    extra={"cache_key": resolution_key},
+                )
+                cached = None
+            else:
+                return cached
 
         historical = self.provider.historical_quote(base, quote, requested_date, policy)
         self._assert_quote_identity(
