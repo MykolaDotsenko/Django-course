@@ -245,8 +245,8 @@ h3 {
 }
 
 .qa-swap-button {
-  inline-size: 2.75rem;
-  block-size: 2.75rem;
+  inline-size: 3rem;
+  block-size: 3rem;
   border-color: var(--qa-hairline);
   background: var(--color-surface);
   box-shadow: 0 0.5rem 1.5rem rgb(23 27 25 / 0.06);
