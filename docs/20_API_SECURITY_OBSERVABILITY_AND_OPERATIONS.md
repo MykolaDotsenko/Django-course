@@ -577,6 +577,12 @@ For conversion amounts, decide analytics/logging policy explicitly.
 
 Operational debugging usually needs pair/date/status more than amount.
 
+The structured JSON formatter is the final logging safety boundary: event text, string-valued
+structured fields and formatted exception tracebacks are sanitized for credential-bearing URLs,
+Bearer tokens, API keys/tokens, client secrets and passwords before serialization. Call sites still
+must avoid logging raw request bodies or authorization headers; formatter redaction is defense in
+depth, not permission to log sensitive data.
+
 ---
 
 # 32. Provider observability
