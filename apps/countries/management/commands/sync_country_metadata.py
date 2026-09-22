@@ -36,3 +36,23 @@ class Command(BaseCommand):
                 f"relationships +{summary.relationships_created}/~{summary.relationships_updated}"
             )
         )
+
+        if summary.requires_reconciliation_review:
+            details = []
+            if summary.missing_source_countries:
+                details.append(
+                    "source-owned countries absent from snapshot="
+                    + ",".join(summary.missing_source_countries)
+                )
+            if summary.stale_source_relationships:
+                details.append(
+                    "source-owned current relationships absent from snapshot="
+                    + ",".join(summary.stale_source_relationships)
+                )
+            self.stdout.write(
+                self.style.WARNING(
+                    "REVIEW REQUIRED: "
+                    + "; ".join(details)
+                    + ". No records were deactivated or deleted automatically."
+                )
+            )

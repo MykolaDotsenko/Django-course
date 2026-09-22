@@ -155,7 +155,7 @@ Acceptance:
 
 ## Implementation PR 3 — Countries, currencies and temporal relationships
 
-**Execution status for PR 3:** complete. The merged slice adds the canonical Country, Currency and temporal CountryCurrency schema, current/historical query rules, deterministic seed data, and an import-only REST Countries v5 boundary with full-snapshot validation, dry-run and idempotent non-destructive sync semantics.
+**Execution status for PR 3:** complete. The merged slice adds the canonical Country, Currency and temporal CountryCurrency schema, current/historical query rules, deterministic seed data, and an import-only REST Countries v5 boundary with full-snapshot validation, dry-run and idempotent non-destructive sync semantics. Validated full snapshots also report source-owned countries/current currency links that disappear upstream as `REVIEW REQUIRED` drift without automatically deleting or deactivating canonical rows.
 
 **Goal:** model country/currency relationships correctly for both current and historical modes.
 
