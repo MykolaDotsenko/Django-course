@@ -424,9 +424,11 @@ async function assertCurrentConverterFlow(page, consoleErrors) {
   const historicalPost = waitForPost();
   await page.locator("#id_requested_date").fill("1998-06-15");
   await historicalPost;
-  await page.locator("#current-conversion-result").waitFor();
+  const historicalResult = page.locator("#current-conversion-result");
+  await historicalResult.waitFor();
+  await historicalResult.getByText("15 Jun 1998", { exact: true }).first().waitFor();
 
-  const historicalText = await page.locator("#current-conversion-result").innerText();
+  const historicalText = await historicalResult.innerText();
   assert(
     historicalText.includes("Historical exact 1:1"),
     "current-converter: historical identity status is missing",
