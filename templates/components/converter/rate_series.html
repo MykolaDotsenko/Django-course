@@ -31,16 +31,16 @@
     </div>
     <div class="qa-chart-period-row">
       <nav class="qa-chart-period-control" aria-label="Historical trend period">
-      {% for period in series_component.period_links %}
-        <a class="qa-chart-period-control__item{% if period.active %} is-active{% endif %}"
-           href="{{ period.url }}"
-           {% if period.active %}aria-current="page"{% endif %}
-           hx-get="{{ period.url }}"
-           hx-target="#historical-trend"
-           hx-swap="outerHTML"
-           hx-sync="#historical-trend:replace"
-           hx-indicator="#historical-trend-loading">{{ period.label }}</a>
-      {% endfor %}
+        {% for period in series_component.period_links %}
+          <a class="qa-chart-period-control__item{% if period.active %} is-active{% endif %}"
+             href="{{ period.url }}"
+             {% if period.active %}aria-current="page"{% endif %}
+             hx-get="{{ period.url }}"
+             hx-target="#historical-trend"
+             hx-swap="outerHTML"
+             hx-sync="#historical-trend:replace"
+             hx-indicator="#historical-trend-loading">{{ period.label }}</a>
+        {% endfor %}
       </nav>
       <details id="historical-custom-range"
                class="qa-rate-series__custom"
