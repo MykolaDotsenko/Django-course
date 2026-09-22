@@ -346,11 +346,7 @@ def converter(request: HttpRequest) -> HttpResponse:
         response_status = 422
 
     account_recent_history_recorded = False
-    if (
-        result is not None
-        and request.user.is_authenticated
-        and not _is_history_restore(request)
-    ):
+    if result is not None and request.user.is_authenticated and not _is_history_restore(request):
         try:
             account_recent_history_recorded = (
                 record_recent_conversion(
