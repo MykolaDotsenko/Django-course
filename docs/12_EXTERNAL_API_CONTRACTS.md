@@ -152,7 +152,7 @@ All outbound requests identify the application where provider guidance expects i
 Example:
 
 ```text
-CulturalCurrencyConverter/0.1 (+https://github.com/MykolaDotsenko/Django-course)
+CulturalCurrencyConverter/0.1 (+https://github.com/MykolaDotsenko/cultural-currency-converter-)
 ```
 
 For Wikimedia, include meaningful contact information in the deployed configuration as required by their usage guidance.
