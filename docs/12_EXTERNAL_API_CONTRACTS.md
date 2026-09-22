@@ -383,6 +383,11 @@ Properties:
 - atomic per country or whole import;
 - dry-run;
 - diff summary;
+- finite positive request timeout;
+- per-page response body capped at 2 MiB before JSON parsing;
+- malformed JSON/response shape normalized to a source error;
+- ISO alpha-2/alpha-3 and currency codes accepted only as ASCII alphabetic canonical codes;
+- pagination must make explicit positive progress;
 - validation;
 - no destructive removal without explicit policy.
 
