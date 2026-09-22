@@ -81,6 +81,7 @@ This line should stay obvious when reading the repository.
 ```text
 /
 ├── apps/
+│   ├── accounts/
 │   ├── common/
 │   ├── countries/
 │   ├── culture/
@@ -90,6 +91,7 @@ This line should stay obvious when reading the repository.
 │
 ├── templates/
 │   ├── base.html
+│   ├── accounts/
 │   ├── components/
 │   │   ├── converter/
 │   │   ├── culture/
