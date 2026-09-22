@@ -297,22 +297,17 @@ def converter(request: HttpRequest) -> HttpResponse:
     form_valid = form.is_valid() if convert_requested else False
     if form_valid:
         command = _converter_submission_command(form)
-        try:
-            submission = run_converter_submission(
-                command,
-                latest_gateway_factory=build_latest_quote_gateway,
-                historical_gateway_factory=build_historical_quote_gateway,
-            )
-            result = submission.conversion
-            historical_suggestions = [
-                (item.side, item.suggestion) for item in submission.historical_suggestions
-            ]
-            if submission.destination_context is not None:
-                destination_context_component = build_destination_context_component(
-                    submission.destination_context,
-                    historical=result.quote.historical,
-                )
-        except (FxProviderError, HistoricalObservationUnavailable, HistoricalOutOfCoverage) as exc:
+        submission = run_converter_submission(
+            command,
+            latest_gateway_factory=build_latest_quote_gateway,
+            historical_gateway_factory=build_historical_quote_gateway,
+        )
+        historical_suggestions = [
+            (item.side, item.suggestion) for item in submission.historical_suggestions
+        ]
+
+        if submission.error is not None:
+            exc = submission.error
             if isinstance(
                 exc,
                 (
@@ -335,6 +330,15 @@ def converter(request: HttpRequest) -> HttpResponse:
                 },
             )
             error = _conversion_error(exc, historical=command.historical)
+        else:
+            result = submission.conversion
+            if result is None:
+                raise RuntimeError("Successful converter submission returned no conversion.")
+            if submission.destination_context is not None:
+                destination_context_component = build_destination_context_component(
+                    submission.destination_context,
+                    historical=result.quote.historical,
+                )
 
     if convert_requested and not form_valid and request.method == "POST":
         response_status = 422
