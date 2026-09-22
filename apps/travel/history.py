@@ -81,9 +81,7 @@ def record_recent_conversion(
     output_text = format(output_amount, "f")
     fingerprint_input = _canonical_decimal(input_amount)
     rate_mode = (
-        RecentConversion.RateMode.HISTORICAL
-        if historical
-        else RecentConversion.RateMode.LATEST
+        RecentConversion.RateMode.HISTORICAL if historical else RecentConversion.RateMode.LATEST
     )
     normalized_requested_date = requested_date if historical else None
     fingerprint = _fingerprint(
