@@ -11,10 +11,9 @@
     {% vite_asset "frontend/src/app.ts" %}
   </head>
   <body class="qa-shell"
-        {% if user.is_authenticated %}
-          data-account-favourite-sync-url="{% url 'sync_favourites' %}"
-          data-account-csrf-token="{{ csrf_token }}"
-        {% endif %}>
+        data-account-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}"
+        data-account-favourite-sync-url="{% url 'sync_favourites' %}"
+        data-account-csrf-token="{{ csrf_token }}">
     <a class="qa-skip-link" href="#main-content">Skip to content</a>
     <header class="qa-shell__header">
       <div class="qa-shell__frame qa-shell__header-inner">
