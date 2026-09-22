@@ -498,12 +498,14 @@ Phase A:
 - anonymous browser-local recent/favourites;
 - clear local persistence controls.
 
-Phase B — delivered by PR12A for favourites:
+Phase B — delivered by PR12A/PR12B:
 
 - durable signed-in favourite sync;
 - authenticated FavouritePair database uniqueness guarantee;
 - PostgreSQL concurrent duplicate-save test;
-- browser-local recent history remains separate until PR12B defines its explicit account policy.
+- default-off cross-device recent-history preference;
+- bounded account-owned RecentConversion persistence with a 50-row cap;
+- browser-local recent history is never silently imported.
 
 ---
 
