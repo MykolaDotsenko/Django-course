@@ -46,6 +46,8 @@ Initial target before historical chart/media-heavy surfaces:
 - core custom web JavaScript target under approximately **100 KiB compressed** before lazy chart code;
 - HTMX kept small/pinned;
 - historical chart code lazy-loaded;
+- route-only noncritical renderers should be dynamically imported when that removes code from the
+  primary conversion path without creating state duplication;
 - no external runtime fonts/scripts;
 - SVG/static visuals optimized;
 - below-fold media lazy-loaded.
