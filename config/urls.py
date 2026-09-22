@@ -14,7 +14,14 @@ from apps.exchange.views import (
     historical_series,
     picker_options,
 )
-from apps.travel.views import clear_favourites, delete_favourite, saved_state, sync_favourites
+from apps.travel.views import (
+    clear_favourites,
+    clear_recent_conversions,
+    delete_favourite,
+    delete_recent_conversion,
+    saved_state,
+    sync_favourites,
+)
 
 urlpatterns = [
     path("", converter, name="converter"),
@@ -35,6 +42,16 @@ urlpatterns = [
         name="delete_favourite",
     ),
     path("saved/favourites/clear/", clear_favourites, name="clear_favourites"),
+    path(
+        "saved/history/<int:recent_id>/delete/",
+        delete_recent_conversion,
+        name="delete_recent_conversion",
+    ),
+    path(
+        "saved/history/clear/",
+        clear_recent_conversions,
+        name="clear_recent_conversions",
+    ),
     path("accounts/", include("apps.accounts.urls")),
     path("health/live/", health_live, name="health_live"),
     path("health/ready/", health_ready, name="health_ready"),
