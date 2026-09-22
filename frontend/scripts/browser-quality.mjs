@@ -793,7 +793,10 @@ async function assertAuthenticatedRecentHistoryFlow(page) {
     `account-history: account-backed conversion duplicated local history; count=${localRecentCount}`,
   );
 
-  await page.getByRole("link", { name: "Saved & recent" }).click();
+  await page
+    .locator("#conversion-result-region")
+    .getByRole("link", { name: "Saved & recent" })
+    .click();
   await page.locator("[data-account-recent-id]").first().waitFor();
   assert(
     (await page.locator("[data-account-recent-id]").count()) === 1,
