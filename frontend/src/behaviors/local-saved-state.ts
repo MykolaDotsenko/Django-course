@@ -1,13 +1,13 @@
 import { wireSavedPage } from "./local-saved-state-page";
 import {
-  STORAGE_KEY,
-  type LocalPreferencesV1,
-  type PairContext,
-  type ReadStatus,
   isFavourite,
+  type LocalPreferencesV1,
   normalizePair,
   normalizeRecent,
+  type PairContext,
+  type ReadStatus,
   readState,
+  STORAGE_KEY,
   toggleFavouriteInState,
   upsertRecent,
   writeState,
