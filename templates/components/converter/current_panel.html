@@ -179,7 +179,9 @@
                 type="button"
                 hidden
                 data-picker-trigger="source"
-                aria-haspopup="dialog">
+                aria-haspopup="dialog"
+                aria-expanded="false"
+                aria-label="Change source country or currency. Current source: {{ source.country_name }}, {{ source.currency_name }}{% if source.currency_code %} {{ source.currency_code }}{% endif %}.">
           <span class="qa-selector-trigger__media" aria-hidden="true">
             {{ source.country_code|default:source.currency_code|default:"FX" }}
           </span>
@@ -241,7 +243,9 @@
                 type="button"
                 hidden
                 data-picker-trigger="destination"
-                aria-haspopup="dialog">
+                aria-haspopup="dialog"
+                aria-expanded="false"
+                aria-label="Change destination country or currency. Current destination: {{ destination.country_name }}, {{ destination.currency_name }}{% if destination.currency_code %} {{ destination.currency_code }}{% endif %}.">
           <span class="qa-selector-trigger__media" aria-hidden="true">
             {{ destination.country_code|default:destination.currency_code|default:"FX" }}
           </span>
