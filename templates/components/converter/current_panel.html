@@ -51,63 +51,6 @@
         data-current-conversion-form
         data-has-result="{% if conversion_active %}true{% else %}false{% endif %}">
     {% csrf_token %}
-    <fieldset class="qa-rate-date">
-      <legend class="qa-field__label">Rate date</legend>
-      <div class="qa-rate-date__choices">
-        {% for option in form.rate_mode %}
-          <label class="qa-rate-date__choice">
-            {{ option.tag }}
-            <span>{{ option.choice_label }}</span>
-          </label>
-        {% endfor %}
-      </div>
-      <div class="qa-field{% if form.requested_date.errors %} qa-field--error{% endif %}"
-           data-historical-date-field>
-        <label class="qa-field__label"
-               for="{{ form.requested_date.id_for_label }}">Historical date</label>
-        {{ form.requested_date }}
-        {% if form.requested_date.errors %}
-          <p class="qa-field__message qa-field__message--error"
-             id="requested_date-error">{{ form.requested_date.errors.0 }}</p>
-        {% else %}
-          <p class="qa-field__message" id="requested-date-hint">
-            Required only for Historical date. Future dates are not allowed.
-          </p>
-        {% endif %}
-      </div>
-    </fieldset>
-    {% if historical_currency_suggestions %}
-      <div class="qa-historical-suggestions"
-           aria-label="Historical currency suggestions">
-        {% for side, suggestion in historical_currency_suggestions %}
-          <aside class="qa-historical-suggestion">
-            <div>
-              <p class="qa-foundation-kicker">Currency era</p>
-              <p class="qa-historical-suggestion__title">
-                {{ suggestion.country_name }} used {{ suggestion.suggested_currency_name }}
-                ({{ suggestion.suggested_currency_code }}) on
-                {{ suggestion.selected_date|date:"j M Y" }}.
-              </p>
-              <p class="qa-field__message">
-                Your explicit {{ suggestion.selected_currency_code }} selection has not been changed.
-              </p>
-            </div>
-            <div class="qa-historical-suggestion__actions">
-              <button class="qa-secondary-button"
-                      type="submit"
-                      name="historical_currency_action"
-                      value="{{ side }}:{{ suggestion.suggested_currency_code }}">
-                Use {{ suggestion.suggested_currency_code }}
-              </button>
-              <details class="qa-source-details">
-                <summary>Suggestion source</summary>
-                <p>{{ suggestion.source }}</p>
-              </details>
-            </div>
-          </aside>
-        {% endfor %}
-      </div>
-    {% endif %}
     <input type="hidden"
            name="conversion_active"
            value="{% if conversion_active %}1{% else %}0{% endif %}">
@@ -261,6 +204,63 @@
         </button>
       </section>
     </div>
+    <fieldset class="qa-rate-date">
+      <legend class="qa-field__label">Rate date</legend>
+      <div class="qa-rate-date__choices">
+        {% for option in form.rate_mode %}
+          <label class="qa-rate-date__choice">
+            {{ option.tag }}
+            <span>{{ option.choice_label }}</span>
+          </label>
+        {% endfor %}
+      </div>
+      <div class="qa-field{% if form.requested_date.errors %} qa-field--error{% endif %}"
+           data-historical-date-field>
+        <label class="qa-field__label"
+               for="{{ form.requested_date.id_for_label }}">Historical date</label>
+        {{ form.requested_date }}
+        {% if form.requested_date.errors %}
+          <p class="qa-field__message qa-field__message--error"
+             id="requested_date-error">{{ form.requested_date.errors.0 }}</p>
+        {% else %}
+          <p class="qa-field__message" id="requested-date-hint">
+            Required only for Historical date. Future dates are not allowed.
+          </p>
+        {% endif %}
+      </div>
+    </fieldset>
+    {% if historical_currency_suggestions %}
+      <div class="qa-historical-suggestions"
+           aria-label="Historical currency suggestions">
+        {% for side, suggestion in historical_currency_suggestions %}
+          <aside class="qa-historical-suggestion">
+            <div>
+              <p class="qa-foundation-kicker">Currency era</p>
+              <p class="qa-historical-suggestion__title">
+                {{ suggestion.country_name }} used {{ suggestion.suggested_currency_name }}
+                ({{ suggestion.suggested_currency_code }}) on
+                {{ suggestion.selected_date|date:"j M Y" }}.
+              </p>
+              <p class="qa-field__message">
+                Your explicit {{ suggestion.selected_currency_code }} selection has not been changed.
+              </p>
+            </div>
+            <div class="qa-historical-suggestion__actions">
+              <button class="qa-secondary-button"
+                      type="submit"
+                      name="historical_currency_action"
+                      value="{{ side }}:{{ suggestion.suggested_currency_code }}">
+                Use {{ suggestion.suggested_currency_code }}
+              </button>
+              <details class="qa-source-details">
+                <summary>Suggestion source</summary>
+                <p>{{ suggestion.source }}</p>
+              </details>
+            </div>
+          </aside>
+        {% endfor %}
+      </div>
+    {% endif %}
     {% if form.non_field_errors %}
       <div class="qa-inline-alert qa-inline-alert--error" role="alert">
         <p>{{ form.non_field_errors.0 }}</p>
