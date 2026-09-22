@@ -198,13 +198,10 @@ def build_result_component(
         "current_destination_context": (
             {
                 "href": (
-                    f"{reverse('current_destination_context')}?"
-                    f"{urlencode(current_context_params)}"
+                    f"{reverse('current_destination_context')}?{urlencode(current_context_params)}"
                 ),
                 "country_name": (
-                    destination_country.name
-                    if destination_country
-                    else destination_country_code
+                    destination_country.name if destination_country else destination_country_code
                 ),
                 "currency_code": result.quote.quote_currency,
             }
