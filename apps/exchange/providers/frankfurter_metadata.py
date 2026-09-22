@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import socket
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from http.client import HTTPException
