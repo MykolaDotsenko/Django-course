@@ -845,7 +845,9 @@ Expected:
 Priority: P0 regression
 
 Expected:
-- logging redaction tests/policy prevent.
+- logging redaction tests/policy prevent;
+- centralized structured formatter sanitizes event text and exception tracebacks;
+- credential-bearing URLs, Bearer tokens and named API/token/password secrets are redacted.
 
 ## BE-122 — Source URL uses javascript scheme
 Priority: P0
