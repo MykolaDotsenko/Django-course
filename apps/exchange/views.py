@@ -445,6 +445,7 @@ def picker_options(request: HttpRequest) -> HttpResponse:
                 "label": label,
                 "meta": meta,
                 "historical": option.historical,
+                "selected": current_selection,
             }
         )
 
