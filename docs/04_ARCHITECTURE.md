@@ -79,14 +79,17 @@ Managed media assets, rights/provenance, ingestion boundaries, derivatives, publ
 runtime media selection. Media is independent from cultural fact ownership.
 
 ### accounts
-Owns Django-session identity UI and account lifecycle: signup, login/profile presentation and
-explicit account deletion. It does not own travel favourites or FX/domain data.
+Owns Django-session identity UI, account lifecycle and explicit privacy preferences: signup,
+login/profile presentation, the default-off cross-device recent-history opt-in and account deletion.
+It does not own travel favourites, recent-conversion records or FX/domain data.
 
 ### travel
-Owns the Saved & recent web surface and authenticated FavouritePair persistence. Anonymous
-favourites/recents remain versioned browser localStorage; after explicit sign-in only favourites are
-merged into account-owned rows. Recent history remains local until a separate consent/persistence
-policy is implemented. Future Trip and TripBudgetItem persistence also belongs here.
+Owns the Saved & recent web surface, authenticated FavouritePair persistence and bounded
+account-owned RecentConversion history. Anonymous favourites/recents remain versioned browser
+localStorage; after explicit sign-in only favourites are merged automatically. Recent history is
+never imported automatically. When the separate account privacy preference is enabled, only future
+successful conversions are written to account history; older browser-only recents remain local.
+Future Trip and TripBudgetItem persistence also belongs here.
 
 ## 3. Why not more apps?
 
