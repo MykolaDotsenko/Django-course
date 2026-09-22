@@ -39,12 +39,8 @@ def _pair_url(favourite: FavouritePair, *, swap: bool = False) -> str:
 
 
 def _recent_url(recent: RecentConversion, *, swap: bool = False) -> str:
-    source_currency = (
-        recent.destination_currency.code if swap else recent.source_currency.code
-    )
-    destination_currency = (
-        recent.source_currency.code if swap else recent.destination_currency.code
-    )
+    source_currency = recent.destination_currency.code if swap else recent.source_currency.code
+    destination_currency = recent.source_currency.code if swap else recent.destination_currency.code
     source_country = recent.destination_country if swap else recent.source_country
     destination_country = recent.source_country if swap else recent.destination_country
     params = {
