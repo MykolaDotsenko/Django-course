@@ -16,6 +16,8 @@ dependencies = [
     "google-genai==2.24.0",
     "httpx==0.28.1",
     "redis==8.1.0",
+    "django-storages[s3]==1.14.6",
+    "boto3==1.43.101",
 ]
 
 [project.optional-dependencies]
