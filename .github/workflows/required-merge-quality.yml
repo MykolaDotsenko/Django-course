@@ -108,6 +108,7 @@ jobs:
             apps/exchange/providers/frankfurter.py \
             config/environment.py \
             config/database.py \
+            config/cache.py \
             config/ai.py \
             integrations/gemini/client.py
           djlint templates --check
