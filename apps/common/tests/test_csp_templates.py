@@ -58,9 +58,7 @@ def test_inline_style_surface_is_explicit_and_does_not_expand_silently() -> None
 def test_htmx_indicator_styles_are_externalized_for_strict_style_csp() -> None:
     root = Path(settings.BASE_DIR)
     base_template = (root / "templates/base.html").read_text(encoding="utf-8")
-    converter_css = (
-        root / "frontend/src/styles/current-converter.css"
-    ).read_text(encoding="utf-8")
+    converter_css = (root / "frontend/src/styles/current-converter.css").read_text(encoding="utf-8")
 
     assert '{"includeIndicatorStyles": false}' in base_template
     assert ".htmx-indicator" in converter_css
