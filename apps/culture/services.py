@@ -71,11 +71,12 @@ def _validate_publishable(moment: StoryMoment) -> None:
         and moment.date_precision == StoryDatePrecision.UNKNOWN
     ):
         raise StoryPublicationError("Temporal story moments require date precision.")
-    if _CAUSAL_RE.search(moment.summary):
-        if not moment.supports_causality or not moment.causal_support_note.strip():
-            raise StoryPublicationError(
-                "Causal story wording requires explicit source support and an editorial note."
-            )
+    if _CAUSAL_RE.search(moment.summary) and (
+        not moment.supports_causality or not moment.causal_support_note.strip()
+    ):
+        raise StoryPublicationError(
+            "Causal story wording requires explicit source support and an editorial note."
+        )
     try:
         moment.full_clean()
     except ValidationError as exc:
