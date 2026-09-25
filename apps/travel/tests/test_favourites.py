@@ -162,6 +162,10 @@ class FavouriteSyncWebTests(TestCase):
         content = response.content.decode()
         self.assertIn(f'data-account-favourite-id="{own.pk}"', content)
         self.assertNotIn(f'data-account-favourite-id="{hidden.pk}"', content)
+        self.assertIn('aria-label="Use pair: EUR to JPY"', content)
+        self.assertIn('aria-label="Reverse pair: EUR to JPY"', content)
+        self.assertIn('aria-label="Remove saved pair: EUR to JPY"', content)
+        self.assertIn("qa-destructive-button", content)
         self.assertIn('data-account-history-enabled="false"', content)
         self.assertIn("Browser-only history", content)
 
