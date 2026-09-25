@@ -951,7 +951,9 @@ async function assertForcedColors(page, surface) {
 
 async function assertTextExpansion(page, surface) {
   await page.emulateMedia({ forcedColors: "none", reducedMotion: "reduce" });
-  await page.addStyleTag({ content: "html { font-size: 200% !important; }" });
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = "200%";
+  });
   await waitForStableLayout(page);
   await assertNoHorizontalOverflow(page, `${surface}/text-200`);
 
