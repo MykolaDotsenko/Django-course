@@ -223,7 +223,6 @@ class JsonFormatterTests(SimpleTestCase):
         self.assertEqual(payload["cache_status"], "fresh_hit")
         self.assertNotIn("private_correlation", payload)
 
-
     def test_formatter_emits_stable_machine_readable_fields(self) -> None:
         token = bind_request_id("request-42")
         try:
