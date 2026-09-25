@@ -1,5 +1,6 @@
 <figure class="qa-media" data-media-kind="{{ image.kind }}">
-  <div class="qa-media__frame" style="aspect-ratio: {{ display_ratio|default:image.ratio }};">
+  <div class="qa-media__frame"
+       style="aspect-ratio: {{ display_ratio|default:image.ratio }}">
     <img class="qa-media__image"
          src="{{ image.src }}"
          alt="{{ image.alt }}"
