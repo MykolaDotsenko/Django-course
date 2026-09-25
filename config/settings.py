@@ -10,6 +10,7 @@ from pathlib import Path
 
 from config.ai import load_ai_config
 from config.cache import load_cache_config
+from config.csp import load_csp_config
 from config.database import load_database_config
 from config.environment import HttpsMode, load_runtime_config
 
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "apps.common.middleware.RequestContextMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "apps.common.security.ContentSecurityPolicyMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
@@ -82,6 +84,12 @@ CACHE_CONFIG = load_cache_config(
     environment=RUNTIME_CONFIG.environment,
 )
 CACHES = {"default": CACHE_CONFIG.as_django_settings()}
+
+CSP_CONFIG = load_csp_config(
+    environ=os.environ,
+    environment=RUNTIME_CONFIG.environment,
+)
+CONTENT_SECURITY_POLICY_HEADER = CSP_CONFIG.header_name
 
 AI_CONFIG = load_ai_config(os.environ)
 AI_PROVIDER = AI_CONFIG.provider
@@ -169,6 +177,11 @@ LOGGING = {
         "cultural_currency.culture": {
             "handlers": ["console_json"],
             "level": "INFO",
+            "propagate": False,
+        },
+        "cultural_currency.security": {
+            "handlers": ["console_json"],
+            "level": "WARNING",
             "propagate": False,
         },
         "django": {
