@@ -1,6 +1,7 @@
 from datetime import date
 
 import pytest
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 
 from apps.countries.models import Country, CountryCurrency, Currency, primary_currency_for
@@ -54,13 +55,170 @@ def test_only_one_active_primary_currency_is_allowed(finland, eur):
     CountryCurrency.objects.create(country=finland, currency=eur, is_primary=True, source="test")
     usd = Currency.objects.create(code="USD", name="US dollar")
 
-    with pytest.raises(IntegrityError), transaction.atomic():
+    with pytest.raises(ValidationError, match="cannot overlap"):
         CountryCurrency.objects.create(
             country=finland,
             currency=usd,
             is_primary=True,
             source="test",
         )
+
+
+@pytest.mark.django_db
+def test_active_primary_database_constraint_remains_a_second_line_of_defense(finland, eur):
+    CountryCurrency.objects.create(country=finland, currency=eur, is_primary=True, source="test")
+    usd = Currency.objects.create(code="USD", name="US dollar")
+
+    with pytest.raises(IntegrityError), transaction.atomic():
+        CountryCurrency.objects.bulk_create(
+            [
+                CountryCurrency(
+                    country=finland,
+                    currency=usd,
+                    is_primary=True,
+                    source="test",
+                )
+            ]
+        )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("candidate_from", "candidate_to"),
+    [
+        (date(1999, 1, 1), date(2002, 1, 1)),
+        (date(1990, 1, 1), date(2010, 1, 1)),
+        (date(2000, 1, 1), date(2000, 12, 31)),
+        (None, date(2000, 6, 1)),
+        (date(2000, 6, 1), None),
+        (None, None),
+    ],
+)
+def test_primary_currency_periods_reject_any_inclusive_overlap(
+    finland,
+    eur,
+    candidate_from,
+    candidate_to,
+):
+    fim = Currency.objects.create(code="FIM", name="Finnish markka", is_active=False)
+    CountryCurrency.objects.create(
+        country=finland,
+        currency=fim,
+        is_primary=True,
+        valid_from=date(2000, 1, 1),
+        valid_to=date(2000, 12, 31),
+        source="test",
+    )
+
+    with pytest.raises(ValidationError, match="cannot overlap"):
+        CountryCurrency.objects.create(
+            country=finland,
+            currency=eur,
+            is_primary=True,
+            valid_from=candidate_from,
+            valid_to=candidate_to,
+            source="test",
+        )
+
+
+@pytest.mark.django_db
+def test_adjacent_primary_currency_periods_are_allowed(finland, eur):
+    fim = Currency.objects.create(code="FIM", name="Finnish markka", is_active=False)
+    CountryCurrency.objects.create(
+        country=finland,
+        currency=fim,
+        is_primary=True,
+        valid_from=date(1999, 1, 1),
+        valid_to=date(2001, 12, 31),
+        source="test",
+    )
+
+    current = CountryCurrency.objects.create(
+        country=finland,
+        currency=eur,
+        is_primary=True,
+        valid_from=date(2002, 1, 1),
+        source="test",
+    )
+
+    assert current.pk is not None
+
+
+@pytest.mark.django_db
+def test_non_primary_currency_period_may_overlap_primary_period(finland, eur):
+    fim = Currency.objects.create(code="FIM", name="Finnish markka", is_active=False)
+    CountryCurrency.objects.create(
+        country=finland,
+        currency=fim,
+        is_primary=True,
+        valid_from=date(1999, 1, 1),
+        valid_to=date(2001, 12, 31),
+        source="test",
+    )
+
+    secondary = CountryCurrency.objects.create(
+        country=finland,
+        currency=eur,
+        is_primary=False,
+        valid_from=date(2000, 1, 1),
+        valid_to=date(2000, 12, 31),
+        source="test",
+    )
+
+    assert secondary.pk is not None
+
+
+@pytest.mark.django_db
+def test_primary_period_overlap_is_scoped_to_one_country(finland, eur):
+    france = Country.objects.create(iso2="FR", iso3="FRA", name="France")
+    fim = Currency.objects.create(code="FIM", name="Finnish markka", is_active=False)
+    CountryCurrency.objects.create(
+        country=finland,
+        currency=fim,
+        is_primary=True,
+        valid_from=date(2000, 1, 1),
+        valid_to=date(2000, 12, 31),
+        source="test",
+    )
+
+    france_euro = CountryCurrency.objects.create(
+        country=france,
+        currency=eur,
+        is_primary=True,
+        valid_from=date(2000, 1, 1),
+        valid_to=date(2000, 12, 31),
+        source="test",
+    )
+
+    assert france_euro.pk is not None
+
+
+@pytest.mark.django_db
+def test_updating_primary_period_into_overlap_is_rejected(finland, eur):
+    fim = Currency.objects.create(code="FIM", name="Finnish markka", is_active=False)
+    historical = CountryCurrency.objects.create(
+        country=finland,
+        currency=fim,
+        is_primary=True,
+        valid_from=date(1999, 1, 1),
+        valid_to=date(2001, 12, 31),
+        source="test",
+    )
+    current = CountryCurrency.objects.create(
+        country=finland,
+        currency=eur,
+        is_primary=True,
+        valid_from=date(2002, 1, 1),
+        source="test",
+    )
+
+    current.valid_from = date(2001, 12, 31)
+    with pytest.raises(ValidationError, match="cannot overlap"):
+        current.save()
+
+    current.refresh_from_db()
+    assert current.valid_from == date(2002, 1, 1)
+    assert historical.valid_to == date(2001, 12, 31)
 
 
 @pytest.mark.django_db
