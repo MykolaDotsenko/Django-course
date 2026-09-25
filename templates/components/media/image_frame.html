@@ -29,6 +29,14 @@
           <span class="qa-media__attribution">{{ image.attribution_text }}</span>
         {% endif %}
       {% endif %}
+      {% if image.licence_id and image.licence_url %}
+        <a class="qa-media__licence"
+           href="{{ image.licence_url }}"
+           rel="noopener noreferrer">{{ image.licence_id }}</a>
+      {% endif %}
+      {% if image.change_note %}
+        <span class="qa-media__change-note">{{ image.change_note }}</span>
+      {% endif %}
     </figcaption>
   {% endif %}
 </figure>
