@@ -59,6 +59,10 @@ Avoid duplicating the implementation structure in tests when no user/domain risk
 
 ## Security baseline
 
+Deployed HTTPS policy is explicit rather than inferred. Preview and production must declare whether Django receives HTTPS directly or trusts a TLS-terminating proxy. Production also requires a positive HSTS window; increase it gradually only after the real HTTPS topology is verified. Proxy mode trusts `X-Forwarded-Proto`, so it must only be used behind a proxy that overwrites that header rather than accepting it from arbitrary clients.
+
+CI boots production-like settings against PostgreSQL and runs `python manage.py check --deploy --fail-level WARNING`, then asserts the secure redirect/proxy/HSTS/cookie settings. This keeps deployment assumptions executable.
+
 Keep:
 
 - secrets server-side and out of version control;
