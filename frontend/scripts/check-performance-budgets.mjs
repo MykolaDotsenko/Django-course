@@ -1,7 +1,7 @@
 import {
-  PERFORMANCE_BUDGETS,
   assertBuildPerformanceBudgets,
   measureBuildAssets,
+  PERFORMANCE_BUDGETS,
 } from "./performance-budgets.mjs";
 
 const evidence = await measureBuildAssets();
