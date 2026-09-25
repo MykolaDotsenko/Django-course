@@ -99,6 +99,9 @@ def test_destination_context_template_renders_reviewed_hero_with_provenance() ->
         caption="Helsinki tram, May 2026.",
         attribution_text="JIP · CC BY-SA 4.0",
         source_url="https://commons.wikimedia.org/wiki/File:Helsinki.jpg",
+        licence_id="CC BY-SA 4.0",
+        licence_url="https://creativecommons.org/licenses/by-sa/4.0/",
+        change_note="Resized and optimized for web.",
     )
     component = {
         "country_name": "Finland",
@@ -121,4 +124,6 @@ def test_destination_context_template_renders_reviewed_hero_with_provenance() ->
     assert "Helsinki tram, May 2026." in html
     assert "JIP · CC BY-SA 4.0" in html
     assert 'href="https://commons.wikimedia.org/wiki/File:Helsinki.jpg"' in html
+    assert 'href="https://creativecommons.org/licenses/by-sa/4.0/"' in html
+    assert "Resized and optimized for web." in html
     assert "fetchpriority=" not in html
