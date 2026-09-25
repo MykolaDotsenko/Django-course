@@ -3,7 +3,6 @@ from __future__ import annotations
 import html
 import json
 import re
-import socket
 from datetime import UTC, datetime
 from http.client import HTTPException
 from typing import Any
@@ -152,7 +151,7 @@ class WikimediaCommonsClient:
                 raw = response.read(MAX_RESPONSE_BYTES + 1)
         except HTTPError as exc:
             raise MediaSourceError(f"Wikimedia Commons returned HTTP {exc.code}.") from exc
-        except (URLError, HTTPException, TimeoutError, socket.timeout) as exc:
+        except (URLError, HTTPException, TimeoutError) as exc:
             raise MediaSourceError("Wikimedia Commons request failed.") from exc
 
         if len(raw) > MAX_RESPONSE_BYTES:
