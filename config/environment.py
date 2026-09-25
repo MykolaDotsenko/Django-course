@@ -18,16 +18,32 @@ class RuntimeEnvironment(StrEnum):
     PRODUCTION = "production"
 
 
+class HttpsMode(StrEnum):
+    DIRECT = "direct"
+    PROXY = "proxy"
+
+
 @dataclass(frozen=True, slots=True)
 class RuntimeConfig:
     environment: RuntimeEnvironment
     secret_key: str
     debug: bool
     allowed_hosts: tuple[str, ...]
+    https_mode: HttpsMode | None
+    hsts_seconds: int
+    hsts_include_subdomains: bool
+    hsts_preload: bool
 
     @property
     def is_production(self) -> bool:
         return self.environment is RuntimeEnvironment.PRODUCTION
+
+    @property
+    def is_deployed(self) -> bool:
+        return self.environment in {
+            RuntimeEnvironment.PREVIEW,
+            RuntimeEnvironment.PRODUCTION,
+        }
 
 
 _TRUE_VALUES = frozenset({"1", "true", "yes", "on"})
@@ -114,6 +130,68 @@ def _parse_allowed_hosts(
     return hosts
 
 
+def _parse_https_mode(
+    environ: Mapping[str, str],
+    environment: RuntimeEnvironment,
+) -> HttpsMode | None:
+    raw = _optional(environ, "DJANGO_HTTPS_MODE")
+    if raw is None:
+        if environment in {RuntimeEnvironment.PREVIEW, RuntimeEnvironment.PRODUCTION}:
+            raise ConfigurationError(
+                "DJANGO_HTTPS_MODE is required for preview and production (direct/proxy)."
+            )
+        return None
+
+    try:
+        return HttpsMode(raw.lower())
+    except ValueError as exc:
+        raise ConfigurationError("DJANGO_HTTPS_MODE must be direct or proxy.") from exc
+
+
+def _parse_hsts_seconds(
+    environ: Mapping[str, str],
+    environment: RuntimeEnvironment,
+) -> int:
+    raw = _optional(environ, "DJANGO_HSTS_SECONDS")
+    if raw is None:
+        if environment is RuntimeEnvironment.PRODUCTION:
+            raise ConfigurationError("DJANGO_HSTS_SECONDS is required in production.")
+        return 0
+
+    try:
+        seconds = int(raw)
+    except ValueError as exc:
+        raise ConfigurationError("DJANGO_HSTS_SECONDS must be an integer.") from exc
+
+    if seconds < 0 or seconds > 63_072_000:
+        raise ConfigurationError("DJANGO_HSTS_SECONDS must be between 0 and 63072000.")
+    if environment is RuntimeEnvironment.PRODUCTION and seconds == 0:
+        raise ConfigurationError("DJANGO_HSTS_SECONDS must be positive in production.")
+    return seconds
+
+
+def _parse_hsts_flags(
+    environ: Mapping[str, str],
+    *,
+    hsts_seconds: int,
+) -> tuple[bool, bool]:
+    include_subdomains = _parse_bool(
+        environ,
+        "DJANGO_HSTS_INCLUDE_SUBDOMAINS",
+        default=False,
+    )
+    preload = _parse_bool(
+        environ,
+        "DJANGO_HSTS_PRELOAD",
+        default=False,
+    )
+    if hsts_seconds == 0 and (include_subdomains or preload):
+        raise ConfigurationError(
+            "HSTS include-subdomains/preload cannot be enabled when DJANGO_HSTS_SECONDS is 0."
+        )
+    return include_subdomains, preload
+
+
 def _load_secret_key(
     environ: Mapping[str, str],
     environment: RuntimeEnvironment,
@@ -167,9 +245,22 @@ def load_runtime_config(
     ):
         raise ConfigurationError("DJANGO_DEBUG must be false in preview and production.")
 
+    secret_key = _load_secret_key(values, environment)
+    allowed_hosts = _parse_allowed_hosts(values, environment)
+    https_mode = _parse_https_mode(values, environment)
+    hsts_seconds = _parse_hsts_seconds(values, environment)
+    hsts_include_subdomains, hsts_preload = _parse_hsts_flags(
+        values,
+        hsts_seconds=hsts_seconds,
+    )
+
     return RuntimeConfig(
         environment=environment,
-        secret_key=_load_secret_key(values, environment),
+        secret_key=secret_key,
         debug=debug,
-        allowed_hosts=_parse_allowed_hosts(values, environment),
+        allowed_hosts=allowed_hosts,
+        https_mode=https_mode,
+        hsts_seconds=hsts_seconds,
+        hsts_include_subdomains=hsts_include_subdomains,
+        hsts_preload=hsts_preload,
     )
