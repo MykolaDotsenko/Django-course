@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -39,14 +38,10 @@ class MediaStorageConfig:
             return f"https://{self.custom_domain}/media/"
         return "/media/"
 
-    def as_django_storages(self, *, base_dir: Path) -> dict[str, dict[str, Any]]:
+    def as_django_storages(self) -> dict[str, dict[str, Any]]:
         if self.mode is MediaStorageMode.FILESYSTEM:
             default_storage: dict[str, Any] = {
                 "BACKEND": _FILESYSTEM_BACKEND,
-                "OPTIONS": {
-                    "location": base_dir / "media",
-                    "base_url": "/media/",
-                },
             }
         else:
             options: dict[str, Any] = {
