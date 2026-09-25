@@ -4,6 +4,7 @@ import json
 import logging
 
 import pytest
+from django.http import HttpResponse
 from django.test import Client, RequestFactory, override_settings
 
 from apps.common.security import (
@@ -47,9 +48,7 @@ def test_report_only_mode_uses_report_only_header() -> None:
         CONTENT_SECURITY_POLICY_HEADER="Content-Security-Policy-Report-Only",
     )
     def run():
-        middleware = ContentSecurityPolicyMiddleware(lambda _request: __import__(
-            "django.http", fromlist=["HttpResponse"]
-        ).HttpResponse("ok"))
+        middleware = ContentSecurityPolicyMiddleware(lambda _request: HttpResponse("ok"))
         return middleware(request)
 
     response = run()
@@ -64,9 +63,7 @@ def test_disabled_mode_adds_no_csp_header() -> None:
 
     @override_settings(CONTENT_SECURITY_POLICY_HEADER=None)
     def run():
-        middleware = ContentSecurityPolicyMiddleware(lambda _request: __import__(
-            "django.http", fromlist=["HttpResponse"]
-        ).HttpResponse("ok"))
+        middleware = ContentSecurityPolicyMiddleware(lambda _request: HttpResponse("ok"))
         return middleware(request)
 
     response = run()
