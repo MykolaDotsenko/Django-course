@@ -57,7 +57,7 @@ class MediaStatus(models.TextChoices):
     REJECTED = "rejected", "Rejected"
 
 
-def _media_upload_to(instance: "MediaAsset", filename: str) -> str:
+def _media_upload_to(instance: MediaAsset, filename: str) -> str:
     suffix = Path(filename).suffix.lower()
     bucket = "generated" if instance.generated_by_ai else "sourced"
     identity = instance.content_hash[:32] if instance.content_hash else "pending"

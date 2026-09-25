@@ -26,7 +26,8 @@ dev = [
     "pre-commit==4.6.2",
     "pytest==9.1.1",
     "pytest-django==4.14.0",
-    "ruff==0.16.8",
+    "mypy==2.3.1",
+    "ruff==0.16.9",
 ]
 
 [build-system]
@@ -49,7 +50,13 @@ line-length = 100
 extend-exclude = ["artifacts"]
 
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "I"]
+select = ["E4", "E7", "E9", "F", "I", "UP", "B", "SIM", "RUF"]
+allowed-confusables = ["–", "Ε"]
+
+[tool.ruff.lint.per-file-ignores]
+"apps/*/migrations/*.py" = ["RUF012"]
+"apps/*/models.py" = ["RUF012"]
+"apps/*/tests/*.py" = ["SIM117"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -58,7 +65,7 @@ line-ending = "auto"
 
 [tool.coverage.run]
 branch = true
-source = ["apps", "integrations"]
+source = ["apps", "config", "integrations"]
 
 [tool.coverage.report]
 fail_under = 90
@@ -77,3 +84,12 @@ max_line_length = 100
 # The media component intentionally uses a trusted dynamic aspect-ratio style; see docs/INTEGRATIONS_AI_MEDIA.md.
 [tool.djlint.per-file-ignores]
 "templates/components/media/image_frame.html" = "H021"
+
+[tool.mypy]
+python_version = "3.13"
+check_untyped_defs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true

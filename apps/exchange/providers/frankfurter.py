@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import socket
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from http.client import HTTPException
@@ -347,12 +346,12 @@ class FrankfurterProvider:
                 last_transient_error = exc
                 if attempt + 1 == self.max_attempts:
                     raise FxProviderUnavailable(f"Frankfurter returned HTTP {exc.code}.") from exc
-            except (TimeoutError, socket.timeout) as exc:
+            except TimeoutError as exc:
                 last_transient_error = exc
                 if attempt + 1 == self.max_attempts:
                     raise FxProviderTimeout("Frankfurter request timed out.") from exc
             except URLError as exc:
-                if isinstance(exc.reason, (TimeoutError, socket.timeout)):
+                if isinstance(exc.reason, TimeoutError):
                     last_transient_error = exc
                     if attempt + 1 == self.max_attempts:
                         raise FxProviderTimeout("Frankfurter request timed out.") from exc

@@ -72,6 +72,18 @@ jobs:
       - name: Ruff lint
         run: ruff check apps config scripts manage.py
 
+      - name: Focused Python typecheck
+        if: matrix.python-version == '3.13'
+        run: >-
+          mypy
+          apps/exchange/domain.py
+          apps/exchange/providers/base.py
+          apps/exchange/providers/frankfurter.py
+          config/environment.py
+          config/database.py
+          config/ai.py
+          integrations/gemini/client.py
+
       - name: Django template lint
         run: djlint templates --check
 

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import os
+from functools import partial
 from pathlib import Path
 
-from playwright.sync_api import Locator, Page, sync_playwright
+from playwright.sync_api import ConsoleMessage, Locator, Page, sync_playwright
 
 BASE_URL = os.environ.get(
     "CONVERTER_PREVIEW_URL",
@@ -140,6 +141,11 @@ def _assert_preview_integrity(page: Page, *, viewport_width: int) -> None:
         )
 
 
+def _record_console_error(errors: list[str], message: ConsoleMessage) -> None:
+    if message.type == "error":
+        errors.append(message.text)
+
+
 def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -154,12 +160,7 @@ def main() -> None:
             page = context.new_page()
             console_errors: list[str] = []
 
-            page.on(
-                "console",
-                lambda message: (
-                    console_errors.append(message.text) if message.type == "error" else None
-                ),
-            )
+            page.on("console", partial(_record_console_error, console_errors))
 
             response = page.goto(BASE_URL, wait_until="networkidle")
             if response is None or not response.ok:

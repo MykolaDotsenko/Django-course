@@ -183,9 +183,11 @@ class RateQuote:
         providers = tuple(
             sorted({key.lower().strip() for key in self.provider_keys if key.strip()})
         )
-        if self.provider_policy.mode is ProviderPolicyMode.PINNED:
-            if self.provider_policy.provider_key not in providers:
-                raise FxDomainError("Pinned FX quote must attribute the pinned provider.")
+        if (
+            self.provider_policy.mode is ProviderPolicyMode.PINNED
+            and self.provider_policy.provider_key not in providers
+        ):
+            raise FxDomainError("Pinned FX quote must attribute the pinned provider.")
         if self.requested_date and self.effective_date > self.requested_date:
             raise FxDomainError("Historical effective date cannot be after the requested date.")
         if self.historical != (self.requested_date is not None):
