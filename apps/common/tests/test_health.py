@@ -51,9 +51,17 @@ class HealthReadinessTests(TestCase):
         self.assertNotContains(response, "private-host", status_code=503)
 
     @override_settings(CACHE_CONFIG=SimpleNamespace(shared=True))
-    @patch("apps.common.health.cache.get", return_value="ready")
+    @patch("apps.common.health.cache.delete")
+    @patch("apps.common.health.cache.get")
     @patch("apps.common.health.cache.set")
-    def test_readiness_reports_shared_cache_when_available(self, cache_set, cache_get) -> None:
+    def test_readiness_reports_shared_cache_when_available(
+        self,
+        cache_set,
+        cache_get,
+        cache_delete,
+    ) -> None:
+        cache_get.side_effect = lambda key: cache_set.call_args.args[1]
+
         response = self.client.get("/health/ready/")
 
         self.assertEqual(response.status_code, 200)
@@ -67,8 +75,13 @@ class HealthReadinessTests(TestCase):
                 },
             },
         )
-        cache_set.assert_called_once_with("health:readiness", "ready", timeout=5)
-        cache_get.assert_called_once_with("health:readiness")
+        cache_set.assert_called_once()
+        key, marker = cache_set.call_args.args
+        self.assertTrue(key.startswith("health:readiness:"))
+        self.assertTrue(marker)
+        self.assertEqual(cache_set.call_args.kwargs, {"timeout": 5})
+        cache_get.assert_called_once_with(key)
+        cache_delete.assert_called_once_with(key)
 
     @override_settings(CACHE_CONFIG=SimpleNamespace(shared=True))
     @patch("apps.common.health.cache.set", side_effect=RuntimeError("redis unavailable"))
