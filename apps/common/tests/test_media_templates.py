@@ -59,7 +59,7 @@ class ImageFrameTemplateTests(SimpleTestCase):
             },
         )
 
-        self.assertIn('style="aspect-ratio: 16 / 9;"', html)
+        self.assertIn('style="aspect-ratio: 16 / 9"', html)
         self.assertIn('width="1600"', html)
         self.assertIn('height="1200"', html)
 
