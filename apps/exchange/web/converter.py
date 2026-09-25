@@ -29,6 +29,7 @@ from apps.exchange.providers.base import (
     FxProviderUnsupportedPair,
 )
 from apps.exchange.web.common import is_history_restore, is_htmx
+from apps.media.presentation import select_country_hero_for_display
 
 logger = logging.getLogger("cultural_currency.exchange")
 
@@ -299,6 +300,9 @@ def converter_view(
                 destination_context_component = build_destination_context_component(
                     submission.destination_context,
                     historical=False,
+                    hero_media=select_country_hero_for_display(
+                        submission.destination_context.country_code
+                    ),
                 )
 
     if convert_requested and not form_valid and request.method == "POST":
