@@ -1,11 +1,18 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 
 class MediaSourceError(RuntimeError):
     pass
+
+
+@dataclass(frozen=True, slots=True)
+class DownloadedMedia:
+    data: bytes = field(repr=False)
+    filename: str
+    mime_type: str
 
 
 @dataclass(frozen=True, slots=True)
