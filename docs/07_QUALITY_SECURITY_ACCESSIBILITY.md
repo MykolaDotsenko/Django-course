@@ -15,7 +15,7 @@ The current CI runs checks equivalent to:
 ```bash
 ruff format --check apps config scripts manage.py
 ruff check apps config scripts manage.py
-mypy apps/exchange/domain.py apps/exchange/providers/base.py apps/exchange/providers/frankfurter.py config/environment.py config/database.py config/cache.py config/csp.py config/ai.py integrations/gemini/client.py
+mypy apps/exchange/domain.py apps/exchange/providers/base.py apps/exchange/providers/frankfurter.py config/environment.py config/database.py config/cache.py config/csp.py config/media_storage.py config/ai.py integrations/gemini/client.py
 djlint templates --check
 python manage.py check
 python manage.py makemigrations --check --dry-run
@@ -107,9 +107,11 @@ Automated axe checks are useful but do not replace interaction testing.
 
 ## Configuration
 
-Runtime configuration is validated in `config/environment.py`, `config/database.py`, `config/cache.py`, `config/csp.py` and `config/ai.py`.
+Runtime configuration is validated in `config/environment.py`, `config/database.py`, `config/cache.py`, `config/csp.py`, `config/media_storage.py` and `config/ai.py`.
 
 Preview and production require an explicit shared `CACHE_URL`; local/test execution may omit it and use process-local memory caching. PostgreSQL CI also exercises a real Redis service so the deployed cache backend is tested rather than only configuration-parsed.
+
+Media storage is also explicit when deployed. Local/test use filesystem storage by default; preview chooses filesystem or S3 explicitly; production must use the S3-compatible backend. Production-like CI verifies the storage backend, unsigned public delivery setting and immutable cache policy without making a live object-store request.
 
 Use `.env.example` as the practical inventory of supported environment variables.
 
