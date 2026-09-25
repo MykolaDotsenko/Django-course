@@ -34,6 +34,17 @@ def build_media_asset_image_view_model(asset: MediaAsset) -> ImageViewModel:
         caption=asset.caption,
         attribution_text=asset.attribution_text,
         source_url=asset.source_url,
+        licence_id=asset.licence_id,
+        licence_url=asset.licence_url,
+        change_note=(
+            ""
+            if asset.generated_by_ai
+            else (
+                "Resized and optimized for web."
+                if asset.derivative_of_id
+                else "Managed copy normalized for web."
+            )
+        ),
         authenticity_label=asset.ai_label if asset.generated_by_ai else "",
     )
 
