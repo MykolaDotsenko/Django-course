@@ -100,7 +100,7 @@ class RuntimeExplanationService:
             )
 
         cooldown_key = f"ai:runtime-explanation:cooldown:{packet.packet_hash}"
-        if cache.get(cooldown_key):
+        if _safe_cache_get(cooldown_key):
             return _fallback_delivery(
                 snapshot,
                 packet_hash=packet.packet_hash,
@@ -108,7 +108,7 @@ class RuntimeExplanationService:
             )
 
         lock_key = f"ai:runtime-explanation:lock:{cache_key}"
-        if not cache.add(lock_key, "1", timeout=_LOCK_SECONDS):
+        if not _safe_cache_add(lock_key, "1", timeout=_LOCK_SECONDS):
             return _fallback_delivery(
                 snapshot,
                 packet_hash=packet.packet_hash,
@@ -128,7 +128,11 @@ class RuntimeExplanationService:
                 result = validate_provider_payload(provider_result.payload, packet=packet)
             except (AIProviderError, ExplanationValidationError) as exc:
                 latency_ms = round((time.perf_counter() - started) * 1000)
-                cache.set(cooldown_key, exc.__class__.__name__, timeout=_COOLDOWN_SECONDS)
+                _safe_cache_set(
+                    cooldown_key,
+                    exc.__class__.__name__,
+                    timeout=_COOLDOWN_SECONDS,
+                )
                 logger.warning(
                     "AI runtime explanation fallback",
                     extra={
@@ -185,7 +189,65 @@ class RuntimeExplanationService:
                 packet_hash=packet.packet_hash,
             )
         finally:
-            cache.delete(lock_key)
+            _safe_cache_delete(lock_key)
+
+
+def _safe_cache_get(key: str) -> object | None:
+    try:
+        return cache.get(key)
+    except Exception:
+        logger.warning(
+            "AI coordination cache read failed",
+            extra={
+                "ai.capability": "runtime_explanation",
+                "ai.cache_operation": "get",
+            },
+            exc_info=True,
+        )
+        return None
+
+
+def _safe_cache_add(key: str, value: object, *, timeout: int) -> bool:
+    try:
+        return bool(cache.add(key, value, timeout=timeout))
+    except Exception:
+        logger.warning(
+            "AI coordination cache lock failed open",
+            extra={
+                "ai.capability": "runtime_explanation",
+                "ai.cache_operation": "add",
+            },
+            exc_info=True,
+        )
+        return True
+
+
+def _safe_cache_set(key: str, value: object, *, timeout: int) -> None:
+    try:
+        cache.set(key, value, timeout=timeout)
+    except Exception:
+        logger.warning(
+            "AI coordination cache write failed",
+            extra={
+                "ai.capability": "runtime_explanation",
+                "ai.cache_operation": "set",
+            },
+            exc_info=True,
+        )
+
+
+def _safe_cache_delete(key: str) -> None:
+    try:
+        cache.delete(key)
+    except Exception:
+        logger.warning(
+            "AI coordination cache cleanup failed",
+            extra={
+                "ai.capability": "runtime_explanation",
+                "ai.cache_operation": "delete",
+            },
+            exc_info=True,
+        )
 
 
 def build_runtime_explanation_service() -> RuntimeExplanationService:
