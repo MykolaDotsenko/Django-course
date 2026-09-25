@@ -1,6 +1,7 @@
 from datetime import UTC, date, datetime
 
 import pytest
+from django.core.exceptions import ValidationError
 
 from apps.countries.models import Country, CountryCurrency, Currency
 from apps.countries.providers import CountryMetadataSnapshot, CurrencySnapshot
@@ -116,6 +117,26 @@ def test_sync_does_not_report_rows_owned_by_other_sources_as_snapshot_drift():
     assert summary.requires_reconciliation_review is False
     assert summary.missing_source_countries == ()
     assert summary.stale_source_relationships == ()
+
+
+@pytest.mark.django_db
+def test_sync_fails_closed_when_current_snapshot_would_overlap_historical_primary():
+    finland = Country.objects.create(iso2="FI", iso3="FIN", name="Finland")
+    fim = Currency.objects.create(code="FIM", name="Finnish markka", is_active=False)
+    CountryCurrency.objects.create(
+        country=finland,
+        currency=fim,
+        is_primary=True,
+        valid_from=date(1990, 1, 1),
+        valid_to=date(2001, 12, 31),
+        source="curated-history-v1",
+    )
+
+    with pytest.raises(ValidationError, match="cannot overlap"):
+        sync_country_metadata((snapshot(),), minimum_countries=1)
+
+    assert not Currency.objects.filter(code="EUR").exists()
+    assert not CountryCurrency.objects.filter(country=finland, currency__code="EUR").exists()
 
 
 @pytest.mark.django_db
