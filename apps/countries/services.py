@@ -169,7 +169,7 @@ def sync_country_metadata(
                     },
                 )
                 counts["currencies_created" if currency_created else "currencies_updated"] += 1
-                relationship, relationship_created = CountryCurrency.objects.update_or_create(
+                _, relationship_created = CountryCurrency.objects.update_or_create(
                     country=country,
                     currency=currency,
                     valid_to__isnull=True,
