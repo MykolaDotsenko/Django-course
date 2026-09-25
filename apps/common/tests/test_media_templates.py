@@ -50,6 +50,20 @@ class ImageFrameTemplateTests(SimpleTestCase):
         self.assertIn('width="1920"', html)
         self.assertIn('height="1080"', html)
 
+    def test_presentation_can_override_display_ratio_without_changing_intrinsic_dimensions(self):
+        html = render_to_string(
+            "components/media/image_frame.html",
+            {
+                "image": self._image(ratio="4 / 3", width=1600, height=1200),
+                "display_ratio": "16 / 9",
+            },
+        )
+
+        self.assertIn('style="aspect-ratio: 16 / 9;"', html)
+        self.assertIn('width="1600"', html)
+        self.assertIn('height="1200"', html)
+
+
     def test_decorative_managed_image_is_hidden_from_accessibility_tree(self):
         html = render_to_string(
             "components/media/image_frame.html",
