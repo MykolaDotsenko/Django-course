@@ -127,7 +127,7 @@ For schema/data changes:
 
 For imports/seeds, favour idempotent behaviour and explicit provenance.
 
-## Release/rollback thinking
+## Release/rollback and database recovery
 
 Before a release, consider:
 
@@ -139,6 +139,23 @@ Before a release, consider:
 - rollback/roll-forward options.
 
 Prefer roll-forward for simple defects once migrations/data are already in use. Do not assume database rollback is safe.
+
+PostgreSQL recovery uses native custom-format `pg_dump`/`pg_restore` archives:
+
+- `scripts/postgres_backup.sh` writes a private-permission custom archive plus a SHA-256 sidecar and validates that `pg_restore` can list the archive;
+- existing archive/checksum paths are not overwritten unless `BACKUP_OVERWRITE=true` is explicit;
+- `scripts/postgres_restore.sh` requires `RESTORE_CONFIRM=restore-empty-database`, verifies the exact archive checksum and refuses a target containing user tables/views/sequences;
+- restore uses `--single-transaction --exit-on-error` and does not perform an in-place `--clean` against a live database.
+
+Operationally, restore into a fresh database, run Django checks/migration checks and application smoke verification, then cut the application over to the recovered database. Keep the old database available until recovery confidence is established.
+
+Supply credential-bearing database URLs through environment/secrets rather than embedding them in scripts or logs. Prefer a PostgreSQL client version matching the server major version; CI proves the path with the pinned PostgreSQL image used by the project.
+
+The required PostgreSQL CI lane performs a real recovery drill: deterministic reference data is backed up, restored into a new empty database, migration state is checked and restored FI/EUR data is queried. It also proves that backup overwrite and non-empty restore guards reject unsafe repetition.
+
+This database procedure protects PostgreSQL data only. Managed media/object bytes need a deployment-specific storage backup/versioning policy in addition to restoring their database metadata.
+
+Do not claim a production RPO or RTO from CI alone. Set backup frequency/retention off-platform, then measure real backup age and restore duration in the chosen deployment.
 
 ## Runtime health and operational telemetry
 
