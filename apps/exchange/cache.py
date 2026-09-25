@@ -21,7 +21,7 @@ from apps.exchange.domain import (
 )
 from apps.exchange.providers.base import FxProvider, FxProviderInvalidPayload, FxProviderUnavailable
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("cultural_currency.exchange")
 CACHE_VERSION = "v1"
 
 
@@ -279,6 +279,16 @@ class LatestQuoteGateway:
                 )
                 is QuoteFreshness.STALE
             ):
+                logger.warning(
+                    "fx_stale_fallback",
+                    extra={
+                        "dependency": "cache",
+                        "operation": "latest_quote",
+                        "outcome": "degraded",
+                        "cache_status": "stale_fallback",
+                        "stale": True,
+                    },
+                )
                 return cached, True
             raise
 
@@ -306,14 +316,32 @@ class LatestQuoteGateway:
         try:
             return deserialize_quote(cache.get(key))
         except Exception:
-            logger.warning("FX cache read failed", extra={"cache_key": key}, exc_info=True)
+            logger.warning(
+                "FX cache read failed",
+                extra={
+                    "dependency": "cache",
+                    "operation": "latest_quote",
+                    "cache_operation": "get",
+                    "outcome": "failure",
+                },
+                exc_info=True,
+            )
             return None
 
     def _cache_set(self, key: str, quote: RateQuote) -> None:
         try:
             cache.set(key, serialize_quote(quote), timeout=self.physical_ttl_seconds)
         except Exception:
-            logger.warning("FX cache write failed", extra={"cache_key": key}, exc_info=True)
+            logger.warning(
+                "FX cache write failed",
+                extra={
+                    "dependency": "cache",
+                    "operation": "latest_quote",
+                    "cache_operation": "set",
+                    "outcome": "failure",
+                },
+                exc_info=True,
+            )
 
 
 class HistoricalSeriesGateway:
@@ -407,6 +435,16 @@ class HistoricalSeriesGateway:
                 )
                 is QuoteFreshness.STALE
             ):
+                logger.warning(
+                    "fx_stale_fallback",
+                    extra={
+                        "dependency": "cache",
+                        "operation": "rate_series",
+                        "outcome": "degraded",
+                        "cache_status": "stale_fallback",
+                        "stale": True,
+                    },
+                )
                 return cached, True
             raise
 
@@ -441,7 +479,12 @@ class HistoricalSeriesGateway:
         except Exception:
             logger.warning(
                 "Historical FX series cache read failed",
-                extra={"cache_key": key},
+                extra={
+                    "dependency": "cache",
+                    "operation": "rate_series",
+                    "cache_operation": "get",
+                    "outcome": "failure",
+                },
                 exc_info=True,
             )
             return None
@@ -456,7 +499,12 @@ class HistoricalSeriesGateway:
         except Exception:
             logger.warning(
                 "Historical FX series cache write failed",
-                extra={"cache_key": key},
+                extra={
+                    "dependency": "cache",
+                    "operation": "rate_series",
+                    "cache_operation": "set",
+                    "outcome": "failure",
+                },
                 exc_info=True,
             )
 
@@ -538,7 +586,12 @@ class HistoricalQuoteGateway:
             except Exception:
                 logger.warning(
                     "Historical FX cache invalidation failed",
-                    extra={"cache_key": key},
+                    extra={
+                        "dependency": "cache",
+                        "operation": "historical_quote",
+                        "cache_operation": "delete",
+                        "outcome": "failure",
+                    },
                     exc_info=True,
                 )
 
@@ -583,7 +636,14 @@ class HistoricalQuoteGateway:
             return deserialize_quote(cache.get(key))
         except Exception:
             logger.warning(
-                "Historical FX cache read failed", extra={"cache_key": key}, exc_info=True
+                "Historical FX cache read failed",
+                extra={
+                    "dependency": "cache",
+                    "operation": "historical_quote",
+                    "cache_operation": "get",
+                    "outcome": "failure",
+                },
+                exc_info=True,
             )
             return None
 
@@ -593,6 +653,11 @@ class HistoricalQuoteGateway:
         except Exception:
             logger.warning(
                 "Historical FX cache write failed",
-                extra={"cache_key": key},
+                extra={
+                    "dependency": "cache",
+                    "operation": "historical_quote",
+                    "cache_operation": "set",
+                    "outcome": "failure",
+                },
                 exc_info=True,
             )
