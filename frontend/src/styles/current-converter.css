@@ -50,6 +50,16 @@
   border-inline-start: 0.3rem solid var(--color-danger, #9a3f3f);
 }
 
+.htmx-indicator {
+  opacity: 0;
+  transition: opacity 200ms ease-in;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+  opacity: 1;
+}
+
 .qa-loading-indicator {
   margin-inline-end: auto;
   color: var(--color-muted);
