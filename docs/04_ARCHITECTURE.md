@@ -84,11 +84,13 @@ Keep transactions short. External network calls should not be intentionally perf
 
 ## Caching
 
-Caching is an optimization and resilience mechanism, not a second semantic truth source.
+Caching is an optimization, coordination and resilience mechanism, not a second semantic truth source.
 
-Cache keys should include the identity needed to distinguish financial meaning: pair, date/mode and other relevant provider semantics.
+Local/test execution defaults to Django's process-local memory cache. Preview and production require a shared Redis-compatible cache through `CACHE_URL` so FX cache entries and short-lived AI cooldown/lock state are coherent across application instances.
 
-Validate cached objects before reuse when corrupted or semantically mismatched data could produce a wrong financial result.
+Cache keys should include the identity needed to distinguish financial meaning: pair, date/mode and other relevant provider semantics. Deployment namespaces are separated with environment-specific key prefixes.
+
+Validate cached objects before reuse when corrupted or semantically mismatched data could produce a wrong financial result. A cache outage must not make a cached value authoritative or change financial correctness: FX gateways may bypass the cache and AI coordination fails open to bounded live generation/deterministic fallback.
 
 ## External providers
 

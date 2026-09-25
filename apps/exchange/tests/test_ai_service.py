@@ -223,6 +223,62 @@ def test_inflight_duplicate_uses_fallback_instead_of_second_provider_call(snapsh
 
 
 @pytest.mark.django_db(transaction=True)
+def test_coordination_cache_outage_does_not_break_live_generation(snapshot, monkeypatch):
+    drafter = FakeDrafter()
+    service = RuntimeExplanationService(
+        enabled=True,
+        model="gemini-3.1-flash-lite",
+        drafter=drafter,
+    )
+
+    deleted_keys = []
+
+    def unavailable(*args, **kwargs):
+        raise RuntimeError("cache unavailable")
+
+    monkeypatch.setattr(cache, "get", unavailable)
+    monkeypatch.setattr(cache, "add", unavailable)
+    monkeypatch.setattr(cache, "delete", lambda key: deleted_keys.append(key))
+
+    delivery = service.explain(snapshot)
+
+    assert delivery.result.generated is True
+    assert delivery.cache_status == "live"
+    assert drafter.calls == 1
+    assert deleted_keys == []
+    assert RuntimeExplanationCache.objects.count() == 1
+
+
+@pytest.mark.django_db(transaction=True)
+def test_coordination_cache_outage_preserves_provider_fallback(snapshot, monkeypatch):
+    drafter = FakeDrafter(error=AIProviderUnavailable("down"))
+    service = RuntimeExplanationService(
+        enabled=True,
+        model="gemini-3.1-flash-lite",
+        drafter=drafter,
+    )
+
+    deleted_keys = []
+
+    def unavailable(*args, **kwargs):
+        raise RuntimeError("cache unavailable")
+
+    monkeypatch.setattr(cache, "get", unavailable)
+    monkeypatch.setattr(cache, "add", unavailable)
+    monkeypatch.setattr(cache, "set", unavailable)
+    monkeypatch.setattr(cache, "delete", lambda key: deleted_keys.append(key))
+
+    delivery = service.explain(snapshot)
+
+    assert delivery.result.generated is False
+    assert delivery.cache_status == "deterministic_fallback"
+    assert "temporarily unavailable" in delivery.result.fallback_reason
+    assert drafter.calls == 1
+    assert deleted_keys == []
+    assert RuntimeExplanationCache.objects.count() == 0
+
+
+@pytest.mark.django_db(transaction=True)
 def test_live_ai_call_is_rejected_inside_database_transaction(snapshot):
     drafter = FakeDrafter()
     service = RuntimeExplanationService(

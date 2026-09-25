@@ -124,6 +124,16 @@ React Native/Expo is a current candidate, not a permanently pinned roadmap commi
 
 **Revisit when:** mobile work becomes active; benchmark the then-current stable options.
 
+## ADR-013 — Shared cache for deployed coordination
+
+**Status:** active
+
+Preview and production use a shared Redis-compatible Django cache; local/test execution can remain process-local unless a Redis URL is explicitly supplied.
+
+**Why:** FX freshness/stale entries and short-lived AI cooldown/duplicate-generation locks must have coherent meaning across multiple application instances. Redis is used as an optimization/coordination layer, not a financial truth source, so cache failures fail open to provider access or deterministic fallback instead of corrupting domain semantics.
+
+**Revisit when:** measured scale, hosting constraints or reliability evidence justify a different shared cache with equivalent cross-instance atomic add/TTL behaviour and failure semantics.
+
 ## Adding/changing a decision
 
 Create or update an ADR when a change affects a durable project-wide choice.
