@@ -24,7 +24,8 @@ Current web ownership:
 - HTMX handles server-driven partial updates;
 - TypeScript adds focused behaviour such as pickers, persistence helpers and chart loading;
 - Vite builds frontend assets;
-- Tailwind/project CSS provide the visual system.
+- Tailwind/project CSS provide the visual system;
+- project-owned CSP middleware constrains executable/browser content on public responses, with an explicit report-only/enforce rollout mode and a separate Django-admin compatibility policy.
 
 Avoid turning the web product into a client SPA unless a future requirement demonstrates a clear benefit.
 
