@@ -110,6 +110,7 @@ jobs:
             config/database.py \
             config/cache.py \
             config/csp.py \
+            config/media_storage.py \
             config/ai.py \
             integrations/gemini/client.py
           djlint templates --check
@@ -196,9 +197,13 @@ jobs:
           DJANGO_HSTS_INCLUDE_SUBDOMAINS: "true"
           DJANGO_HSTS_PRELOAD: "true"
           DJANGO_CSP_MODE: enforce
+          MEDIA_STORAGE_MODE: s3
+          MEDIA_S3_BUCKET: ci-media-bucket
+          MEDIA_S3_REGION: eu-north-1
+          MEDIA_CDN_DOMAIN: media.example.test
         run: |
           python manage.py check --deploy --fail-level WARNING
-          python manage.py shell -c "from django.conf import settings; from django.test import Client; assert settings.SECURE_SSL_REDIRECT is True; assert settings.SECURE_PROXY_SSL_HEADER == ('HTTP_X_FORWARDED_PROTO', 'https'); assert settings.SECURE_HSTS_SECONDS == 300; assert settings.SESSION_COOKIE_SECURE is True; assert settings.CSRF_COOKIE_SECURE is True; assert settings.CONTENT_SECURITY_POLICY_HEADER == 'Content-Security-Policy'; response = Client(HTTP_HOST='app.example.test', HTTP_X_FORWARDED_PROTO='https').get('/health/live/'); assert response.status_code == 200; policy = response['Content-Security-Policy']; assert \"script-src 'self'\" in policy; assert \"script-src-attr 'none'\" in policy; assert \"object-src 'none'\" in policy; assert \"frame-ancestors 'none'\" in policy"
+          python manage.py shell -c "from django.conf import settings; from django.test import Client; assert settings.SECURE_SSL_REDIRECT is True; assert settings.SECURE_PROXY_SSL_HEADER == ('HTTP_X_FORWARDED_PROTO', 'https'); assert settings.SECURE_HSTS_SECONDS == 300; assert settings.SESSION_COOKIE_SECURE is True; assert settings.CSRF_COOKIE_SECURE is True; assert settings.CONTENT_SECURITY_POLICY_HEADER == 'Content-Security-Policy'; assert settings.STORAGES['default']['BACKEND'] == 'storages.backends.s3.S3Storage'; media_options = settings.STORAGES['default']['OPTIONS']; assert media_options['querystring_auth'] is False; assert media_options['object_parameters']['CacheControl'] == 'public, max-age=31536000, immutable'; assert settings.MEDIA_URL == 'https://media.example.test/media/'; response = Client(HTTP_HOST='app.example.test', HTTP_X_FORWARDED_PROTO='https').get('/health/live/'); assert response.status_code == 200; policy = response['Content-Security-Policy']; assert \"script-src 'self'\" in policy; assert \"script-src-attr 'none'\" in policy; assert \"object-src 'none'\" in policy; assert \"frame-ancestors 'none'\" in policy"
 
   frontend:
     name: Frontend required
