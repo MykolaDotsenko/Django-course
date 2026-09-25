@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from contextlib import suppress
 from uuid import uuid4
 
 from django.conf import settings
@@ -28,10 +29,8 @@ def _shared_cache_available() -> bool:
     except Exception:
         return False
     finally:
-        try:
+        with suppress(Exception):
             cache.delete(key)
-        except Exception:
-            pass
 
 
 @require_safe
