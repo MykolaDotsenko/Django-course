@@ -119,7 +119,16 @@ Runtime pages select already available local/managed media. Searching or generat
 
 ## Observability
 
-Structured logs and request identifiers should make failures diagnosable without logging secrets or unnecessary personal data.
+Structured logs and request identifiers make failures diagnosable without logging secrets or unnecessary personal data.
+
+Health semantics are intentionally separated:
+
+- liveness proves that the Django process can answer without touching dependencies;
+- readiness treats PostgreSQL as a hard serving dependency;
+- shared-cache failure is reported as degraded readiness rather than removing the instance from service because cache use is fail-open by design;
+- FX and AI providers are never probed from health endpoints, so a third-party incident cannot create health-check traffic or make the whole application unready.
+
+Provider/cache telemetry uses a small allowlist of operational fields such as provider, operation, outcome, attempt count, latency, cache status and AI token counts. Do not log provider URLs/query strings, raw payloads, conversion inputs or AI packet hashes merely for correlation.
 
 ## Architecture change guidance
 
