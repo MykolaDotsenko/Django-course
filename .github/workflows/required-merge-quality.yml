@@ -169,6 +169,20 @@ jobs:
           python manage.py migrate --noinput
           pytest -q
 
+      - name: Production deploy security check
+        env:
+          APP_ENV: production
+          DJANGO_DEBUG: "false"
+          DJANGO_ALLOWED_HOSTS: app.example.test
+          DJANGO_SECRET_KEY: ci-production-check-7Qv9pL2mN4xR8sT1uW3yZ6aB5cD0eF7gH9jK2mP4
+          DJANGO_HTTPS_MODE: proxy
+          DJANGO_HSTS_SECONDS: "300"
+          DJANGO_HSTS_INCLUDE_SUBDOMAINS: "true"
+          DJANGO_HSTS_PRELOAD: "true"
+        run: |
+          python manage.py check --deploy --fail-level WARNING
+          python manage.py shell -c "from django.conf import settings; assert settings.SECURE_SSL_REDIRECT is True; assert settings.SECURE_PROXY_SSL_HEADER == ('HTTP_X_FORWARDED_PROTO', 'https'); assert settings.SECURE_HSTS_SECONDS == 300; assert settings.SESSION_COOKIE_SECURE is True; assert settings.CSRF_COOKIE_SECURE is True"
+
   frontend:
     name: Frontend required
     needs: classify
