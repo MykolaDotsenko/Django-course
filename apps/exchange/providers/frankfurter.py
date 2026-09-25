@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import logging
+import time
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from http.client import HTTPException
@@ -22,6 +24,7 @@ from apps.exchange.domain import (
 )
 from apps.exchange.providers.base import (
     FxProviderAuthenticationError,
+    FxProviderError,
     FxProviderInvalidPayload,
     FxProviderRateLimited,
     FxProviderTimeout,
@@ -33,6 +36,7 @@ DEFAULT_BASE_URL = "https://api.frankfurter.dev/v2"
 MAX_RESPONSE_BYTES = 64 * 1024
 MAX_SERIES_RESPONSE_BYTES = 2 * 1024 * 1024
 RETRYABLE_HTTP_STATUSES = frozenset({408, 500, 502, 503, 504})
+logger = logging.getLogger("cultural_currency.exchange")
 _NON_DAILY_PROVIDER_GRANULARITY = {
     "hmrc": ObservationGranularity.MONTHLY,
     "ust": ObservationGranularity.QUARTERLY,
@@ -270,7 +274,11 @@ class FrankfurterProvider:
             f"{self.base_url}/rates?{urlencode(params)}",
             headers={"Accept": "application/json", "User-Agent": "cultural-currency-converter/0.1"},
         )
-        payload = self._request_json(request, max_response_bytes=MAX_SERIES_RESPONSE_BYTES)
+        payload = self._request_json(
+            request,
+            max_response_bytes=MAX_SERIES_RESPONSE_BYTES,
+            operation="rate_series",
+        )
         return parse_series_payload(
             payload,
             expected_base=base_code,
@@ -308,7 +316,11 @@ class FrankfurterProvider:
             f"{self.base_url}/rate/{base_code}/{quote_code}{query}",
             headers={"Accept": "application/json", "User-Agent": "cultural-currency-converter/0.1"},
         )
-        payload = self._request_json(request, max_response_bytes=MAX_RESPONSE_BYTES)
+        payload = self._request_json(
+            request,
+            max_response_bytes=MAX_RESPONSE_BYTES,
+            operation="historical_quote" if requested_date is not None else "latest_quote",
+        )
         fetched_at = datetime.now(UTC)
 
         return parse_rate_payload(
@@ -320,54 +332,99 @@ class FrankfurterProvider:
             fetched_at=fetched_at,
         )
 
-    def _request_json(self, request: Request, *, max_response_bytes: int) -> Any:
-        raw: bytes | None = None
-        last_transient_error: Exception | None = None
-        for attempt in range(self.max_attempts):
-            try:
-                with urlopen(request, timeout=self.timeout_seconds) as response:
-                    raw = response.read(max_response_bytes + 1)
-                if len(raw) > max_response_bytes:
-                    raise FxProviderInvalidPayload("Frankfurter response exceeded the size limit.")
-                break
-            except HTTPError as exc:
-                if exc.code == 429:
-                    raise FxProviderRateLimited("Frankfurter rate limit reached.") from exc
-                if exc.code in {401, 403}:
-                    raise FxProviderAuthenticationError(
-                        "Frankfurter authentication or authorization failed."
-                    ) from exc
-                if exc.code in {400, 404, 422}:
-                    raise FxProviderUnsupportedPair(
-                        "Frankfurter does not support this rate query."
-                    ) from exc
-                if exc.code not in RETRYABLE_HTTP_STATUSES:
-                    raise FxProviderUnavailable(f"Frankfurter returned HTTP {exc.code}.") from exc
-                last_transient_error = exc
-                if attempt + 1 == self.max_attempts:
-                    raise FxProviderUnavailable(f"Frankfurter returned HTTP {exc.code}.") from exc
-            except TimeoutError as exc:
-                last_transient_error = exc
-                if attempt + 1 == self.max_attempts:
-                    raise FxProviderTimeout("Frankfurter request timed out.") from exc
-            except URLError as exc:
-                if isinstance(exc.reason, TimeoutError):
+    def _request_json(
+        self,
+        request: Request,
+        *,
+        max_response_bytes: int,
+        operation: str,
+    ) -> Any:
+        started = time.perf_counter()
+        attempts_used = 0
+        try:
+            raw: bytes | None = None
+            last_transient_error: Exception | None = None
+            for attempt in range(self.max_attempts):
+                attempts_used = attempt + 1
+                try:
+                    with urlopen(request, timeout=self.timeout_seconds) as response:
+                        raw = response.read(max_response_bytes + 1)
+                    if len(raw) > max_response_bytes:
+                        raise FxProviderInvalidPayload(
+                            "Frankfurter response exceeded the size limit."
+                        )
+                    break
+                except HTTPError as exc:
+                    if exc.code == 429:
+                        raise FxProviderRateLimited("Frankfurter rate limit reached.") from exc
+                    if exc.code in {401, 403}:
+                        raise FxProviderAuthenticationError(
+                            "Frankfurter authentication or authorization failed."
+                        ) from exc
+                    if exc.code in {400, 404, 422}:
+                        raise FxProviderUnsupportedPair(
+                            "Frankfurter does not support this rate query."
+                        ) from exc
+                    if exc.code not in RETRYABLE_HTTP_STATUSES:
+                        raise FxProviderUnavailable(
+                            f"Frankfurter returned HTTP {exc.code}."
+                        ) from exc
+                    last_transient_error = exc
+                    if attempt + 1 == self.max_attempts:
+                        raise FxProviderUnavailable(
+                            f"Frankfurter returned HTTP {exc.code}."
+                        ) from exc
+                except TimeoutError as exc:
                     last_transient_error = exc
                     if attempt + 1 == self.max_attempts:
                         raise FxProviderTimeout("Frankfurter request timed out.") from exc
-                    continue
-                last_transient_error = exc
-                if attempt + 1 == self.max_attempts:
-                    raise FxProviderUnavailable("Frankfurter request failed.") from exc
-            except (HTTPException, OSError) as exc:
-                last_transient_error = exc
-                if attempt + 1 == self.max_attempts:
-                    raise FxProviderUnavailable("Frankfurter request failed.") from exc
+                except URLError as exc:
+                    if isinstance(exc.reason, TimeoutError):
+                        last_transient_error = exc
+                        if attempt + 1 == self.max_attempts:
+                            raise FxProviderTimeout("Frankfurter request timed out.") from exc
+                        continue
+                    last_transient_error = exc
+                    if attempt + 1 == self.max_attempts:
+                        raise FxProviderUnavailable("Frankfurter request failed.") from exc
+                except (HTTPException, OSError) as exc:
+                    last_transient_error = exc
+                    if attempt + 1 == self.max_attempts:
+                        raise FxProviderUnavailable("Frankfurter request failed.") from exc
 
-        if raw is None:
-            raise FxProviderUnavailable("Frankfurter request failed.") from last_transient_error
+            if raw is None:
+                raise FxProviderUnavailable(
+                    "Frankfurter request failed."
+                ) from last_transient_error
 
-        try:
-            return json.loads(raw, parse_float=Decimal, parse_int=Decimal)
-        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
-            raise FxProviderInvalidPayload("Frankfurter returned malformed JSON.") from exc
+            try:
+                payload = json.loads(raw, parse_float=Decimal, parse_int=Decimal)
+            except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+                raise FxProviderInvalidPayload(
+                    "Frankfurter returned malformed JSON."
+                ) from exc
+        except FxProviderError as exc:
+            logger.warning(
+                "fx_provider_request",
+                extra={
+                    "provider": "frankfurter",
+                    "operation": operation,
+                    "outcome": "failure",
+                    "attempts": attempts_used or 1,
+                    "latency_ms": round((time.perf_counter() - started) * 1000, 3),
+                    "error_code": exc.__class__.__name__,
+                },
+            )
+            raise
+
+        logger.info(
+            "fx_provider_request",
+            extra={
+                "provider": "frankfurter",
+                "operation": operation,
+                "outcome": "success",
+                "attempts": attempts_used,
+                "latency_ms": round((time.perf_counter() - started) * 1000, 3),
+            },
+        )
+        return payload
