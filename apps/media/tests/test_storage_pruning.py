@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 from io import StringIO
+import os
 from pathlib import Path
 
 import pytest
@@ -47,9 +48,17 @@ def _asset_with_file(name: str) -> MediaAsset:
 def _make_old(path: Path, *, hours: int = 48) -> None:
     timestamp = (timezone.now() - timedelta(hours=hours)).timestamp()
     path.touch(exist_ok=True)
-    import os
-
     os.utime(path, (timestamp, timestamp))
+
+
+@pytest.mark.django_db
+def test_orphan_prune_treats_missing_managed_prefixes_as_empty(media_storage) -> None:
+    stdout = StringIO()
+
+    call_command("prune_orphan_media_storage", stdout=stdout)
+
+    assert "scanned=0" in stdout.getvalue()
+    assert "orphan_candidates=0" in stdout.getvalue()
 
 
 @pytest.mark.django_db
