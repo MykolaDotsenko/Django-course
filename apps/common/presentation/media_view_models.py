@@ -16,4 +16,7 @@ class ImageViewModel:
     caption: str = ""
     attribution_text: str = ""
     source_url: str = ""
+    licence_id: str = ""
+    licence_url: str = ""
+    change_note: str = ""
     authenticity_label: str = ""
