@@ -58,9 +58,11 @@ def _validate_redis_url(cache_url: str) -> None:
         raise ConfigurationError("CACHE_URL must include a Redis host.")
 
     try:
-        parsed.port
+        port = parsed.port
     except ValueError as exc:
         raise ConfigurationError("CACHE_URL contains an invalid Redis port.") from exc
+    if port == 0:
+        raise ConfigurationError("CACHE_URL contains an invalid Redis port.")
 
     database_path = parsed.path.lstrip("/")
     if "/" in database_path:
