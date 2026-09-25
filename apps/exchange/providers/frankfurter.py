@@ -414,16 +414,12 @@ class FrankfurterProvider:
                         raise FxProviderUnavailable("Frankfurter request failed.") from exc
 
             if raw is None:
-                raise FxProviderUnavailable(
-                    "Frankfurter request failed."
-                ) from last_transient_error
+                raise FxProviderUnavailable("Frankfurter request failed.") from last_transient_error
 
             try:
                 payload = json.loads(raw, parse_float=Decimal, parse_int=Decimal)
             except (json.JSONDecodeError, UnicodeDecodeError) as exc:
-                raise FxProviderInvalidPayload(
-                    "Frankfurter returned malformed JSON."
-                ) from exc
+                raise FxProviderInvalidPayload("Frankfurter returned malformed JSON.") from exc
         except FxProviderError as exc:
             logger.warning(
                 "fx_provider_transport",
