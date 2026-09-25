@@ -146,6 +146,18 @@ Violation reporting is bounded and privacy-minimized: raw document URLs/query st
 
 **Revisit when:** Django admin no longer needs inline compatibility, Trusted Types becomes practical for the current browser/runtime surface, or deployment telemetry justifies tightening/removing a directive.
 
+## ADR-015 — Health checks distinguish serving dependencies from degradation
+
+**Status:** active
+
+Process liveness has no dependency probes. Readiness treats PostgreSQL as a hard dependency, while shared-cache failure reports a degraded-but-ready state. External FX and AI providers are never called by health endpoints; their availability is measured from bounded operational telemetry on real application requests.
+
+**Why:** PostgreSQL unavailability prevents safe use of durable application state, but Redis and external providers already have explicit fail-open/fallback semantics. Turning every dependency incident into readiness failure would unnecessarily remove otherwise useful instances and could amplify provider incidents with synthetic probe traffic.
+
+Operational logs use a stable field allowlist and avoid request/provider payloads and user conversion details.
+
+**Revisit when:** a dependency becomes mandatory for every safe request, or the deployment platform requires a different health contract with equivalent semantics.
+
 ## Adding/changing a decision
 
 Create or update an ADR when a change affects a durable project-wide choice.
