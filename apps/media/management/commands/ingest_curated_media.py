@@ -20,6 +20,7 @@ _PROTECTED_STATUSES = {
     MediaStatus.APPROVED,
     MediaStatus.PUBLISHED,
     MediaStatus.RETIRED,
+    MediaStatus.REJECTED,
 }
 
 
