@@ -159,6 +159,29 @@ class JsonFormatterTests(SimpleTestCase):
         self.assertEqual(payload["path"], "/conversion/explain/")
         self.assertIn("[REDACTED]", payload["exception"])
 
+    def test_formatter_emits_privacy_bounded_csp_fields(self) -> None:
+        record = logging.LogRecord(
+            name="cultural_currency.security",
+            level=logging.WARNING,
+            pathname=__file__,
+            lineno=1,
+            msg="content_security_policy_violation",
+            args=(),
+            exc_info=None,
+        )
+        record.csp_directive = "script-src-elem"
+        record.csp_disposition = "enforce"
+        record.csp_blocked_resource = "https://evil.example"
+
+        payload = json.loads(JsonFormatter().format(record))
+
+        self.assertEqual(payload["csp_directive"], "script-src-elem")
+        self.assertEqual(payload["csp_disposition"], "enforce")
+        self.assertEqual(payload["csp_blocked_resource"], "https://evil.example")
+        self.assertNotIn("document_uri", payload)
+        self.assertNotIn("blocked_uri", payload)
+
+
     def test_formatter_emits_stable_machine_readable_fields(self) -> None:
         token = bind_request_id("request-42")
         try:
