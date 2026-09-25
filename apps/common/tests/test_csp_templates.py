@@ -62,4 +62,6 @@ def test_htmx_indicator_styles_are_externalized_for_strict_style_csp() -> None:
 
     assert '{"includeIndicatorStyles": false}' in base_template
     assert ".htmx-indicator" in converter_css
+    assert "visibility: hidden" in converter_css
     assert ".htmx-request .htmx-indicator" in converter_css
+    assert "visibility: visible" in converter_css
