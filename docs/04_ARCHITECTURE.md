@@ -115,7 +115,11 @@ The currently configured runtime provider/model is an implementation choice and 
 
 ## Media boundary
 
-Runtime pages select already available local/managed media. Searching or generating media should not become a normal conversion-request dependency.
+Runtime pages select already available managed media. Searching, downloading or generating media should not become a normal conversion-request dependency.
+
+Local/test execution uses filesystem media storage by default. Production requires shared S3-compatible object storage so uploaded/derived media is not tied to one application instance. Managed filenames are content-addressed, which allows public delivery with a one-year immutable cache policy. Optional CDN/custom-domain delivery is configured separately from the storage API endpoint.
+
+The application owns write credentials only through the standard provider credential chain; credentials are not represented in project configuration objects. Editorial media is public by product design, but write access should remain least-privilege and private to deployment infrastructure.
 
 ## Observability
 
