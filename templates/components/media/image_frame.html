@@ -10,7 +10,7 @@
          {% if fetchpriority %}fetchpriority="{{ fetchpriority }}"{% endif %}
          {% if image.decorative %}aria-hidden="true"{% endif %}>
   </div>
-  {% if caption or image.caption or image.authenticity_label or image.attribution_text %}
+  {% if caption or image.caption or image.authenticity_label or image.attribution_text or image.licence_id or image.change_note %}
     <figcaption class="qa-media__caption">
       {% if caption %}
         <span>{{ caption }}</span>
