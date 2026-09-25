@@ -42,10 +42,7 @@ def _option_rank(
             not option.country_context
             and option.currency_code.casefold() == query
             or option.country_context
-            and (
-                option.country_code.casefold() == query
-                or option.country_name.casefold() == query
-            )
+            and (option.country_code.casefold() == query or option.country_name.casefold() == query)
         ):
             match_rank = 0
         else:
