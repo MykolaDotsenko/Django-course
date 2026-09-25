@@ -143,10 +143,7 @@ class Command(BaseCommand):
                 downloaded.data,
                 filename=downloaded.filename,
             )
-            if (
-                validated.width != spec.expected_width
-                or validated.height != spec.expected_height
-            ):
+            if validated.width != spec.expected_width or validated.height != spec.expected_height:
                 raise MediaAcquisitionError(
                     "Curated source dimensions changed; review the upstream file before ingesting."
                 )
