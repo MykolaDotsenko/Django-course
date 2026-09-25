@@ -51,13 +51,15 @@
 }
 
 .htmx-indicator {
+  visibility: hidden;
   opacity: 0;
-  transition: opacity 200ms ease-in;
 }
 
 .htmx-request .htmx-indicator,
 .htmx-request.htmx-indicator {
+  visibility: visible;
   opacity: 1;
+  transition: opacity 200ms ease-in;
 }
 
 .qa-loading-indicator {
