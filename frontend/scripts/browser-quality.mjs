@@ -49,10 +49,7 @@ async function assertContentSecurityPolicyHeader(response, label) {
   );
   assert(!policy.includes("'unsafe-eval'"), `${label}: CSP unexpectedly allows unsafe-eval`);
   assert(policy.includes("object-src 'none'"), `${label}: object-src is not locked down`);
-  assert(
-    policy.includes("frame-ancestors 'none'"),
-    `${label}: frame-ancestors is not locked down`,
-  );
+  assert(policy.includes("frame-ancestors 'none'"), `${label}: frame-ancestors is not locked down`);
   assert(
     policy.includes("report-uri /security/csp-report/"),
     `${label}: CSP reporting endpoint is missing`,
