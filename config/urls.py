@@ -63,5 +63,5 @@ urlpatterns = [
     path("_design/rate-series/", rate_series_preview, name="rate_series_preview"),
 ]
 
-if settings.DEBUG:
+if settings.DEBUG and settings.MEDIA_STORAGE_IS_FILESYSTEM:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
