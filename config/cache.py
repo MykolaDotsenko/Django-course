@@ -9,8 +9,14 @@ from config.environment import ConfigurationError, RuntimeEnvironment
 
 _REDIS_BACKEND = "django.core.cache.backends.redis.RedisCache"
 _LOCMEM_BACKEND = "django.core.cache.backends.locmem.LocMemCache"
-_RESERVED_FAILURE_QUERY_OPTIONS = frozenset(
-    {"socket_timeout", "socket_connect_timeout", "retry_on_timeout"}
+_RESERVED_CACHE_QUERY_OPTIONS = frozenset(
+    {
+        "socket_timeout",
+        "socket_connect_timeout",
+        "retry_on_timeout",
+        "ssl_cert_reqs",
+        "ssl_check_hostname",
+    }
 )
 
 
@@ -81,9 +87,9 @@ def _validate_redis_url(cache_url: str) -> None:
         raise ConfigurationError("CACHE_URL contains invalid query options.") from exc
 
     for key, _value in query_options:
-        if key in _RESERVED_FAILURE_QUERY_OPTIONS:
+        if key in _RESERVED_CACHE_QUERY_OPTIONS:
             raise ConfigurationError(
-                "CACHE_URL must not override cache timeout or retry policy."
+                "CACHE_URL must not override cache timeout, retry, or TLS verification policy."
             )
 
 
