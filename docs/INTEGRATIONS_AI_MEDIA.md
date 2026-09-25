@@ -27,6 +27,8 @@ A successful HTTP response is not sufficient; validate semantic payloads before 
 
 REST Countries is currently an import/reference source rather than a normal page-request dependency.
 
+The adapter treats provider data as untrusted input: request timeouts must be positive, each response page is capped at 2 MiB before JSON parsing, malformed JSON/shape/pagination failures are normalized to a project-owned source error, and ISO/currency identifiers must satisfy canonical ASCII alphabetic shapes before entering normalized snapshots.
+
 Normalize country/currency data locally so the product can preserve stable identity, temporal relationships and controlled reconciliation during upstream changes.
 
 ## Editorial/cultural sources
