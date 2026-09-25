@@ -63,7 +63,6 @@ class ImageFrameTemplateTests(SimpleTestCase):
         self.assertIn('width="1600"', html)
         self.assertIn('height="1200"', html)
 
-
     def test_licence_and_change_disclosure_render_when_available(self):
         html = render_to_string(
             "components/media/image_frame.html",
