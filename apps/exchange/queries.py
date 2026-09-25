@@ -38,15 +38,9 @@ def _option_rank(
     preferred_currency_code: str,
 ) -> tuple[int, int, str, str]:
     if query:
-        if (
-            (not option.country_context and option.currency_code.casefold() == query)
-            or (
-                option.country_context
-                and (
-                    option.country_code.casefold() == query
-                    or option.country_name.casefold() == query
-                )
-            )
+        if (not option.country_context and option.currency_code.casefold() == query) or (
+            option.country_context
+            and (option.country_code.casefold() == query or option.country_name.casefold() == query)
         ):
             match_rank = 0
         else:
