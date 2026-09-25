@@ -134,6 +134,18 @@ Preview and production use a shared Redis-compatible Django cache; local/test ex
 
 **Revisit when:** measured scale, hosting constraints or reliability evidence justify a different shared cache with equivalent cross-instance atomic add/TTL behaviour and failure semantics.
 
+## ADR-014 — CSP is enforced on the public web surface with an explicit rollout mode
+
+**Status:** active
+
+The public application uses a same-origin Content Security Policy that blocks inline/eval script execution, embedded objects and framing. Test runs enforce the policy. Preview and production must explicitly choose report-only or enforcement mode. Django admin receives a separate compatibility policy rather than weakening public pages.
+
+**Why:** CSP is most valuable when it is an executable browser boundary, but deploying a strict policy without compatibility evidence can break HTMX/Vite or framework-owned admin templates. Separating the public and admin policies preserves a stronger default while keeping rollout observable and reversible.
+
+Violation reporting is bounded and privacy-minimized: raw document URLs/query strings are not persisted or logged.
+
+**Revisit when:** Django admin no longer needs inline compatibility, Trusted Types becomes practical for the current browser/runtime surface, or deployment telemetry justifies tightening/removing a directive.
+
 ## Adding/changing a decision
 
 Create or update an ADR when a change affects a durable project-wide choice.

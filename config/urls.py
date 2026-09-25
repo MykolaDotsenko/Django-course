@@ -6,6 +6,7 @@ from django.contrib import admin
 from django.urls import include, path
 
 from apps.common.health import health_live, health_ready
+from apps.common.security import csp_report
 from apps.common.views import converter_preview, rate_series_preview, shell_preview
 from apps.culture.views import current_destination_context, money_culture_story
 from apps.exchange.views import (
@@ -55,6 +56,7 @@ urlpatterns = [
     path("accounts/", include("apps.accounts.urls")),
     path("health/live/", health_live, name="health_live"),
     path("health/ready/", health_ready, name="health_ready"),
+    path("security/csp-report/", csp_report, name="csp_report"),
     path("admin/", admin.site.urls),
     path("_design/shell/", shell_preview, name="shell_preview"),
     path("_design/converter/", converter_preview, name="converter_preview"),
