@@ -1,0 +1,306 @@
+name: Required merge quality
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: required-merge-quality-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  classify:
+    name: Classify changes
+    runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.changes.outputs.python }}
+      frontend: ${{ steps.changes.outputs.frontend }}
+      browser: ${{ steps.changes.outputs.browser }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Classify changed paths
+        id: changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python=false
+          frontend=false
+          browser=false
+
+          while IFS= read -r file; do
+            case "$file" in
+              apps/*|config/*|scripts/*|manage.py|pyproject.toml|.pre-commit-config.yaml)
+                python=true
+                ;;
+            esac
+
+            case "$file" in
+              frontend/*|apps/common/templatetags/vite.py|config/settings.py|.nvmrc)
+                frontend=true
+                ;;
+            esac
+
+            case "$file" in
+              frontend/*|templates/*|apps/*|config/*|scripts/*|manage.py|pyproject.toml|.nvmrc)
+                browser=true
+                ;;
+            esac
+
+            case "$file" in
+              .github/workflows/*)
+                python=true
+                frontend=true
+                browser=true
+                ;;
+            esac
+          done < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+
+          {
+            echo "python=$python"
+            echo "frontend=$frontend"
+            echo "browser=$browser"
+          } >> "$GITHUB_OUTPUT"
+
+  python:
+    name: Python 3.13 required
+    needs: classify
+    if: needs.classify.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      APP_ENV: test
+      DJANGO_DEBUG: "false"
+      DJANGO_ALLOWED_HOSTS: testserver,localhost,127.0.0.1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install project and quality tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Validate Python and Django quality
+        run: |
+          pre-commit validate-config
+          ruff format --check apps config scripts manage.py
+          ruff check apps config scripts manage.py
+          djlint templates --check
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+          coverage erase
+          coverage run -m pytest -q
+          coverage report
+          python -m pip_audit --skip-editable
+
+  postgres:
+    name: PostgreSQL 18.6 required
+    needs: classify
+    if: needs.classify.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      APP_ENV: test
+      DJANGO_DEBUG: "false"
+      DJANGO_ALLOWED_HOSTS: testserver,localhost,127.0.0.1
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/cultural_currency_test
+    services:
+      postgres:
+        image: postgres:18.6-alpine
+        env:
+          POSTGRES_DB: cultural_currency_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cultural_currency_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install project and test tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Verify PostgreSQL and run suite
+        run: |
+          python manage.py shell -c "from django.db import connection; connection.ensure_connection(); assert connection.vendor == 'postgresql'"
+          python manage.py check --database default
+          python manage.py makemigrations --check --dry-run
+          python manage.py migrate --noinput
+          pytest -q
+
+  frontend:
+    name: Frontend required
+    needs: classify
+    if: needs.classify.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install and validate frontend
+        working-directory: frontend
+        run: |
+          npm ci --no-audit --no-fund
+          npm run quality
+
+  chromium:
+    name: Chromium required
+    needs: classify
+    if: needs.classify.outputs.browser == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      APP_ENV: test
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: testserver,localhost,127.0.0.1
+      BROWSER_QUALITY_ENGINE: chromium
+      BROWSER_QUALITY_SCOPE: full
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install quality dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+          cd frontend
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Build and validate browser surface
+        run: |
+          djlint templates --check --no-github-output
+          djlint templates --lint --no-github-output
+          cd frontend
+          npm run quality
+          cd ..
+          python manage.py check
+          python manage.py migrate --noinput
+          python manage.py seed_reference_data
+          python manage.py seed_story_data
+          python manage.py seed_destination_context
+          python manage.py runserver 127.0.0.1:8000 --noreload > /tmp/required-browser-server.log 2>&1 &
+          echo $! > /tmp/required-browser-server.pid
+
+          python - <<'PY'
+          import time
+          import urllib.error
+          import urllib.request
+
+          urls = (
+              "http://127.0.0.1:8000/",
+              "http://127.0.0.1:8000/_design/shell/",
+              "http://127.0.0.1:8000/_design/converter/",
+          )
+          deadline = time.time() + 20
+
+          while time.time() < deadline:
+              try:
+                  if all(urllib.request.urlopen(url, timeout=2).status == 200 for url in urls):
+                      break
+              except (urllib.error.URLError, TimeoutError):
+                  time.sleep(0.5)
+          else:
+              raise SystemExit("Required browser server did not become ready")
+          PY
+
+          cd frontend
+          npm run browser:quality
+
+      - name: Print server log on failure
+        if: failure()
+        run: cat /tmp/required-browser-server.log || true
+
+      - name: Stop browser server
+        if: always()
+        run: |
+          if [ -f /tmp/required-browser-server.pid ]; then
+            kill "$(cat /tmp/required-browser-server.pid)" || true
+          fi
+
+  required:
+    name: Required merge quality
+    needs:
+      - classify
+      - python
+      - postgres
+      - frontend
+      - chromium
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every applicable lane
+        env:
+          CLASSIFY_RESULT: ${{ needs.classify.result }}
+          PYTHON_RESULT: ${{ needs.python.result }}
+          POSTGRES_RESULT: ${{ needs.postgres.result }}
+          FRONTEND_RESULT: ${{ needs.frontend.result }}
+          CHROMIUM_RESULT: ${{ needs.chromium.result }}
+        run: |
+          test "$CLASSIFY_RESULT" = "success"
+
+          for result in "$PYTHON_RESULT" "$POSTGRES_RESULT" "$FRONTEND_RESULT" "$CHROMIUM_RESULT"; do
+            if [ "$result" != "success" ] && [ "$result" != "skipped" ]; then
+              echo "Required lane finished with result: $result"
+              exit 1
+            fi
+          done
