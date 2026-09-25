@@ -255,7 +255,13 @@ class LatestQuoteGateway:
             except FxProviderInvalidPayload:
                 logger.warning(
                     "Ignoring semantically mismatched latest FX cache entry",
-                    extra={"cache_key": key},
+                    extra={
+                        "dependency": "cache",
+                        "operation": "latest_quote",
+                        "cache_operation": "get",
+                        "outcome": "invalid_cache",
+                        "cache_status": "invalid",
+                    },
                 )
                 cached = None
 
@@ -392,6 +398,16 @@ class HistoricalSeriesGateway:
                     policy=policy,
                 )
             except FxProviderInvalidPayload:
+                logger.warning(
+                    "Ignoring semantically mismatched historical FX series cache entry",
+                    extra={
+                        "dependency": "cache",
+                        "operation": "rate_series",
+                        "cache_operation": "get",
+                        "outcome": "invalid_cache",
+                        "cache_status": "invalid",
+                    },
+                )
                 cached = None
 
         if (
@@ -545,7 +561,13 @@ class HistoricalQuoteGateway:
             except (FxProviderInvalidPayload, HistoricalObservationUnavailable):
                 logger.warning(
                     "Ignoring semantically invalid historical FX resolution cache entry",
-                    extra={"cache_key": resolution_key},
+                    extra={
+                        "dependency": "cache",
+                        "operation": "historical_quote",
+                        "cache_operation": "get",
+                        "outcome": "invalid_cache",
+                        "cache_status": "invalid",
+                    },
                 )
                 cached = None
             else:
