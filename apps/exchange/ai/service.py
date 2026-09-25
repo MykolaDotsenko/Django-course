@@ -29,7 +29,7 @@ from integrations.gemini.errors import AIProviderError
 logger = logging.getLogger("cultural_currency.ai")
 
 _COOLDOWN_SECONDS = 120
-_LOCK_SECONDS = 15
+_LOCK_SECONDS = 45  # Exceeds the configured maximum 15s x 2 provider attempt budget.
 
 
 class AITransactionPolicyError(RuntimeError):
@@ -108,7 +108,8 @@ class RuntimeExplanationService:
             )
 
         lock_key = f"ai:runtime-explanation:lock:{cache_key}"
-        if not _safe_cache_add(lock_key, "1", timeout=_LOCK_SECONDS):
+        lock_acquired = _safe_cache_add(lock_key, "1", timeout=_LOCK_SECONDS)
+        if lock_acquired is False:
             return _fallback_delivery(
                 snapshot,
                 packet_hash=packet.packet_hash,
@@ -189,7 +190,8 @@ class RuntimeExplanationService:
                 packet_hash=packet.packet_hash,
             )
         finally:
-            _safe_cache_delete(lock_key)
+            if lock_acquired is True:
+                _safe_cache_delete(lock_key)
 
 
 def _safe_cache_get(key: str) -> object | None:
@@ -207,7 +209,7 @@ def _safe_cache_get(key: str) -> object | None:
         return None
 
 
-def _safe_cache_add(key: str, value: object, *, timeout: int) -> bool:
+def _safe_cache_add(key: str, value: object, *, timeout: int) -> bool | None:
     try:
         return bool(cache.add(key, value, timeout=timeout))
     except Exception:
@@ -219,7 +221,7 @@ def _safe_cache_add(key: str, value: object, *, timeout: int) -> bool:
             },
             exc_info=True,
         )
-        return True
+        return None
 
 
 def _safe_cache_set(key: str, value: object, *, timeout: int) -> None:
