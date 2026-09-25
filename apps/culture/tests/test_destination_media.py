@@ -86,6 +86,20 @@ def test_destination_hero_media_failure_is_optional(
     assert select_destination_hero_image("FI") is None
 
 
+@pytest.mark.django_db
+def test_destination_hero_malformed_published_row_is_optional(
+    monkeypatch,
+) -> None:
+    Country.objects.create(iso2="FI", iso3="FIN", name="Finland")
+
+    def malformed(*args, **kwargs):
+        raise ValueError("published media is malformed")
+
+    monkeypatch.setattr("apps.culture.media.select_media_for_display", malformed)
+
+    assert select_destination_hero_image("FI") is None
+
+
 def test_destination_context_template_renders_reviewed_hero_with_provenance() -> None:
     image = ImageViewModel(
         src="/media/sourced/helsinki.webp",
