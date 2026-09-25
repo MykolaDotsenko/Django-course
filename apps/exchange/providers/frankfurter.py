@@ -214,6 +214,18 @@ def parse_series_payload(
         raise FxProviderInvalidPayload(str(exc)) from exc
 
 
+def _log_invalid_payload(*, operation: str, exc: FxProviderInvalidPayload) -> None:
+    logger.warning(
+        "fx_provider_payload_invalid",
+        extra={
+            "provider": "frankfurter",
+            "operation": operation,
+            "outcome": "invalid_payload",
+            "error_code": exc.__class__.__name__,
+        },
+    )
+
+
 class FrankfurterProvider:
     def __init__(
         self,
@@ -279,16 +291,20 @@ class FrankfurterProvider:
             max_response_bytes=MAX_SERIES_RESPONSE_BYTES,
             operation="rate_series",
         )
-        return parse_series_payload(
-            payload,
-            expected_base=base_code,
-            expected_quote=quote_code,
-            start_date=start_date,
-            end_date=end_date,
-            grouping=grouping,
-            policy=policy,
-            fetched_at=datetime.now(UTC),
-        )
+        try:
+            return parse_series_payload(
+                payload,
+                expected_base=base_code,
+                expected_quote=quote_code,
+                start_date=start_date,
+                end_date=end_date,
+                grouping=grouping,
+                policy=policy,
+                fetched_at=datetime.now(UTC),
+            )
+        except FxProviderInvalidPayload as exc:
+            _log_invalid_payload(operation="rate_series", exc=exc)
+            raise
 
     def _fetch_quote(
         self,
@@ -323,14 +339,19 @@ class FrankfurterProvider:
         )
         fetched_at = datetime.now(UTC)
 
-        return parse_rate_payload(
-            payload,
-            expected_base=base_code,
-            expected_quote=quote_code,
-            requested_date=requested_date,
-            policy=policy,
-            fetched_at=fetched_at,
-        )
+        operation = "historical_quote" if requested_date is not None else "latest_quote"
+        try:
+            return parse_rate_payload(
+                payload,
+                expected_base=base_code,
+                expected_quote=quote_code,
+                requested_date=requested_date,
+                policy=policy,
+                fetched_at=fetched_at,
+            )
+        except FxProviderInvalidPayload as exc:
+            _log_invalid_payload(operation=operation, exc=exc)
+            raise
 
     def _request_json(
         self,
@@ -405,7 +426,7 @@ class FrankfurterProvider:
                 ) from exc
         except FxProviderError as exc:
             logger.warning(
-                "fx_provider_request",
+                "fx_provider_transport",
                 extra={
                     "provider": "frankfurter",
                     "operation": operation,
@@ -418,7 +439,7 @@ class FrankfurterProvider:
             raise
 
         logger.info(
-            "fx_provider_request",
+            "fx_provider_transport",
             extra={
                 "provider": "frankfurter",
                 "operation": operation,
