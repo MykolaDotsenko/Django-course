@@ -5,10 +5,10 @@ import AxeBuilder from "@axe-core/playwright";
 import { chromium, firefox, webkit } from "playwright";
 
 import {
-  PERFORMANCE_BUDGET_SOURCE,
-  PERFORMANCE_BUDGETS,
   assertBuildPerformanceBudgets,
   measureBuildAssets,
+  PERFORMANCE_BUDGET_SOURCE,
+  PERFORMANCE_BUDGETS,
 } from "./performance-budgets.mjs";
 
 const BASE_URL = process.env.BROWSER_QUALITY_BASE_URL ?? "http://127.0.0.1:8000";
