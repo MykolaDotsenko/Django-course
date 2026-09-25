@@ -231,18 +231,21 @@ def test_coordination_cache_outage_does_not_break_live_generation(snapshot, monk
         drafter=drafter,
     )
 
+    deleted_keys = []
+
     def unavailable(*args, **kwargs):
         raise RuntimeError("cache unavailable")
 
     monkeypatch.setattr(cache, "get", unavailable)
     monkeypatch.setattr(cache, "add", unavailable)
-    monkeypatch.setattr(cache, "delete", unavailable)
+    monkeypatch.setattr(cache, "delete", lambda key: deleted_keys.append(key))
 
     delivery = service.explain(snapshot)
 
     assert delivery.result.generated is True
     assert delivery.cache_status == "live"
     assert drafter.calls == 1
+    assert deleted_keys == []
     assert RuntimeExplanationCache.objects.count() == 1
 
 
@@ -255,13 +258,15 @@ def test_coordination_cache_outage_preserves_provider_fallback(snapshot, monkeyp
         drafter=drafter,
     )
 
+    deleted_keys = []
+
     def unavailable(*args, **kwargs):
         raise RuntimeError("cache unavailable")
 
     monkeypatch.setattr(cache, "get", unavailable)
     monkeypatch.setattr(cache, "add", unavailable)
     monkeypatch.setattr(cache, "set", unavailable)
-    monkeypatch.setattr(cache, "delete", unavailable)
+    monkeypatch.setattr(cache, "delete", lambda key: deleted_keys.append(key))
 
     delivery = service.explain(snapshot)
 
@@ -269,6 +274,7 @@ def test_coordination_cache_outage_preserves_provider_fallback(snapshot, monkeyp
     assert delivery.cache_status == "deterministic_fallback"
     assert "temporarily unavailable" in delivery.result.fallback_reason
     assert drafter.calls == 1
+    assert deleted_keys == []
     assert RuntimeExplanationCache.objects.count() == 0
 
 
