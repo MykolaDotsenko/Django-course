@@ -8,6 +8,7 @@
     <meta name="theme-color" content="#F5F2EB">
     <title>{% block title %}Cultural Currency Converter{% endblock %}</title>
     {% block head_meta %}{% endblock %}
+    <meta name="htmx-config" content='{"includeIndicatorStyles": false}'>
     {% vite_asset "frontend/src/app.ts" %}
   </head>
   <body class="qa-shell"
