@@ -158,6 +158,18 @@ Operational logs use a stable field allowlist and avoid request/provider payload
 
 **Revisit when:** a dependency becomes mandatory for every safe request, or the deployment platform requires a different health contract with equivalent semantics.
 
+## ADR-016 — Database recovery restores into a fresh database
+
+**Status:** active
+
+PostgreSQL backups use native custom-format logical archives with a separate SHA-256 integrity record. Recovery verifies the archive, refuses a non-empty target and restores in a single transaction. Application cutover happens only after migration and data smoke checks against the recovered database.
+
+**Why:** destructive in-place restore combines recovery with deletion and makes operator mistakes harder to contain. Restoring into a fresh database keeps the original database available for comparison/fallback, gives verification a clear boundary and makes failed restore attempts disposable.
+
+The project does not infer production RPO/RTO from CI and does not treat database backup as media/object-storage backup.
+
+**Revisit when:** the production platform provides a stronger tested point-in-time recovery mechanism or managed database workflow with equivalent integrity, verification and rollback properties.
+
 ## Adding/changing a decision
 
 Create or update an ADR when a change affects a durable project-wide choice.

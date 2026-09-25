@@ -83,6 +83,10 @@ Use database constraints for durable invariants such as uniqueness/ownership whe
 
 Keep transactions short. External network calls should not be intentionally performed while holding database row locks or a transaction that does not need to remain open.
 
+Database recovery is based on native PostgreSQL logical archives. Recovery targets a fresh empty database, validates archive integrity before restore, restores atomically in one transaction and verifies the recovered schema/data before application cutover. The recovery path deliberately does not make destructive in-place restore the default.
+
+PostgreSQL recovery does not imply that managed media/object bytes are backed up; deployment storage must provide its own durability/versioning/backup contract.
+
 ## Caching
 
 Caching is an optimization, coordination and resilience mechanism, not a second semantic truth source.
