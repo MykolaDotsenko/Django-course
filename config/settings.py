@@ -126,7 +126,7 @@ MEDIA_STORAGE_CONFIG = load_media_storage_config(
     environ=os.environ,
     environment=RUNTIME_CONFIG.environment,
 )
-STORAGES = MEDIA_STORAGE_CONFIG.as_django_storages(base_dir=BASE_DIR)
+STORAGES = MEDIA_STORAGE_CONFIG.as_django_storages()
 MEDIA_URL = MEDIA_STORAGE_CONFIG.media_url
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_STORAGE_IS_FILESYSTEM = MEDIA_STORAGE_CONFIG.is_filesystem
