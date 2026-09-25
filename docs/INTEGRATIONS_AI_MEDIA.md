@@ -72,6 +72,27 @@ candidate/source
 
 Normal page requests should not search the web or call an image-generation service.
 
+For a small number of editorially selected production assets, the project can use a curated manifest plus an explicit operator command. The command may download from a narrow allowlisted source, but it remains outside normal request handling and never auto-approves or auto-publishes the result.
+
+Finland is the first production vertical slice. Its selected hero source is a 24 May 2026 Helsinki tram photograph by JIP from Wikimedia Commons, available under CC BY-SA 4.0. The source is 4608×3456 and fits under the managed-media byte cap. Ingestion validates the host, media type, response size, redirect target and expected dimensions before the existing sanitizer stores a managed copy.
+
+Operator flow:
+
+```bash
+python manage.py ingest_curated_media --slug finland-helsinki-tram-2026 --dry-run
+python manage.py ingest_curated_media --slug finland-helsinki-tram-2026
+```
+
+Then:
+
+1. review source metadata, composition, rights and managed bytes in admin;
+2. approve the high-resolution managed source;
+3. create a delivery derivative, for example `python manage.py build_media_derivative --asset-id <source-id> --width 1600`;
+4. review the derivative and publish the derivative, not the high-resolution source;
+5. verify the Finland destination context in browser QA.
+
+The runtime selector remains local/database-backed. If no reviewed published derivative exists, the product intentionally renders no destination hero.
+
 ## File formats
 
 Managed media validation accepts JPEG, PNG and WebP and rejects SVG ingestion.
@@ -95,6 +116,8 @@ Before publishing a destination image, check:
 - no obvious stock cliché or country stereotype;
 - no misleading logos, text or manipulated factual cues;
 - rights/provenance are sufficient;
+- licence attribution is visible and links to the source/licence where available;
+- managed normalization/resizing is disclosed when the licence requires change indication;
 - useful alt text when the image carries meaning.
 
 ## Historical media
