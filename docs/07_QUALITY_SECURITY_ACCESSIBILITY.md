@@ -152,6 +152,10 @@ Do not require documentation edits for every refactor.
 
 ## Merge confidence
 
+Pull requests have an always-present `Required merge quality` status. It classifies changed paths, runs the applicable Python/PostgreSQL/frontend/Chromium lanes and fails unless every applicable lane succeeds. This status is designed to be the single required branch-protection check so documentation-only pull requests still receive a deterministic merge result instead of waiting on path-filtered workflows that never start.
+
+The broader Python 3.14 and Firefox/WebKit workflows remain valuable compatibility evidence in addition to that minimum protected merge gate.
+
 A change is generally ready when:
 
 - the user/problem outcome is satisfied;
