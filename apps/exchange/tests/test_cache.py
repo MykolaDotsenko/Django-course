@@ -1,3 +1,4 @@
+import logging
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
@@ -89,15 +90,27 @@ def test_fresh_cache_hit_skips_provider():
     assert provider.calls == 0
 
 
-def test_provider_failure_uses_only_bounded_semantically_matching_stale_quote():
+def test_provider_failure_uses_only_bounded_semantically_matching_stale_quote(caplog):
     cached = make_quote(fetched_at=NOW - timedelta(days=2))
     cache.set(latest_cache_key("EUR", "JPY", DEFAULT_SOURCE_POLICY), serialize_quote(cached), 100)
     provider = FakeProvider(error=FxProviderUnavailable("down"))
 
-    result, stale = LatestQuoteGateway(provider).get("EUR", "JPY", DEFAULT_SOURCE_POLICY, now=NOW)
+    with caplog.at_level(logging.WARNING, logger="cultural_currency.exchange"):
+        result, stale = LatestQuoteGateway(provider).get(
+            "EUR",
+            "JPY",
+            DEFAULT_SOURCE_POLICY,
+            now=NOW,
+        )
 
     assert result == cached
     assert stale is True
+    record = next(record for record in caplog.records if record.msg == "fx_stale_fallback")
+    assert record.dependency == "cache"
+    assert record.operation == "latest_quote"
+    assert record.outcome == "degraded"
+    assert record.cache_status == "stale_fallback"
+    assert record.stale is True
 
 
 def test_too_old_stale_quote_is_rejected():
@@ -686,7 +699,7 @@ def test_rate_series_fresh_cache_hit_skips_provider():
     assert provider.calls == 0
 
 
-def test_rate_series_provider_failure_uses_only_matching_stale_series():
+def test_rate_series_provider_failure_uses_only_matching_stale_series(caplog):
     series = make_rate_series(fetched_at=NOW - timedelta(days=2))
     key = rate_series_cache_key(
         "EUR",
@@ -699,18 +712,24 @@ def test_rate_series_provider_failure_uses_only_matching_stale_series():
     cache.set(key, serialize_series(series), 100)
     provider = FakeProvider(error=FxProviderUnavailable("down"))
 
-    result, stale = HistoricalSeriesGateway(provider).get(
-        "EUR",
-        "JPY",
-        series.start_date,
-        series.end_date,
-        series.grouping,
-        DEFAULT_SOURCE_POLICY,
-        now=NOW,
-    )
+    with caplog.at_level(logging.WARNING, logger="cultural_currency.exchange"):
+        result, stale = HistoricalSeriesGateway(provider).get(
+            "EUR",
+            "JPY",
+            series.start_date,
+            series.end_date,
+            series.grouping,
+            DEFAULT_SOURCE_POLICY,
+            now=NOW,
+        )
 
     assert result == series
     assert stale is True
+    record = next(record for record in caplog.records if record.msg == "fx_stale_fallback")
+    assert record.operation == "rate_series"
+    assert record.outcome == "degraded"
+    assert record.cache_status == "stale_fallback"
+    assert record.stale is True
 
 
 def test_rate_series_too_old_stale_data_is_rejected():
