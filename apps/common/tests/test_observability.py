@@ -181,6 +181,48 @@ class JsonFormatterTests(SimpleTestCase):
         self.assertNotIn("document_uri", payload)
         self.assertNotIn("blocked_uri", payload)
 
+    def test_formatter_emits_only_allowlisted_provider_and_dependency_fields(self) -> None:
+        record = logging.LogRecord(
+            name="cultural_currency.exchange",
+            level=logging.INFO,
+            pathname=__file__,
+            lineno=1,
+            msg="fx_provider_transport",
+            args=(),
+            exc_info=None,
+        )
+        record.provider = "frankfurter"
+        record.dependency = "cache"
+        record.operation = "latest_quote"
+        record.outcome = "success"
+        record.attempts = 2
+        record.latency_ms = 12.345
+        record.capability = "runtime_explanation"
+        record.model = "example-model"
+        record.input_tokens = 120
+        record.output_tokens = 60
+        record.cache_operation = "get"
+        record.stale = False
+        record.cache_status = "fresh_hit"
+        record.private_correlation = "do-not-serialize"
+
+        payload = json.loads(JsonFormatter().format(record))
+
+        self.assertEqual(payload["provider"], "frankfurter")
+        self.assertEqual(payload["dependency"], "cache")
+        self.assertEqual(payload["operation"], "latest_quote")
+        self.assertEqual(payload["outcome"], "success")
+        self.assertEqual(payload["attempts"], 2)
+        self.assertEqual(payload["latency_ms"], 12.345)
+        self.assertEqual(payload["capability"], "runtime_explanation")
+        self.assertEqual(payload["model"], "example-model")
+        self.assertEqual(payload["input_tokens"], 120)
+        self.assertEqual(payload["output_tokens"], 60)
+        self.assertEqual(payload["cache_operation"], "get")
+        self.assertIs(payload["stale"], False)
+        self.assertEqual(payload["cache_status"], "fresh_hit")
+        self.assertNotIn("private_correlation", payload)
+
     def test_formatter_emits_stable_machine_readable_fields(self) -> None:
         token = bind_request_id("request-42")
         try:

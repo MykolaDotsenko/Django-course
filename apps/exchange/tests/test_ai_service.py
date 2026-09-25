@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
@@ -90,7 +91,7 @@ class FakeDrafter:
 
 
 @pytest.mark.django_db(transaction=True)
-def test_live_explanation_is_validated_persisted_and_reused(snapshot):
+def test_live_explanation_is_validated_persisted_reused_and_observable(snapshot, caplog):
     drafter = FakeDrafter()
     service = RuntimeExplanationService(
         enabled=True,
@@ -98,8 +99,9 @@ def test_live_explanation_is_validated_persisted_and_reused(snapshot):
         drafter=drafter,
     )
 
-    first = service.explain(snapshot)
-    second = service.explain(snapshot)
+    with caplog.at_level(logging.INFO, logger="cultural_currency.ai"):
+        first = service.explain(snapshot)
+        second = service.explain(snapshot)
 
     assert first.result.generated is True
     assert first.cache_status == "live"
@@ -115,9 +117,30 @@ def test_live_explanation_is_validated_persisted_and_reused(snapshot):
     assert stored.total_tokens == 180
     assert stored.provider_response_id == "response-1"
 
+    success = next(
+        record for record in caplog.records if record.msg == "AI runtime explanation success"
+    )
+    assert success.capability == "runtime_explanation"
+    assert success.provider == "google"
+    assert success.model == "gemini-3.1-flash-lite"
+    assert success.operation == "generate"
+    assert success.outcome == "success"
+    assert success.latency_ms >= 0
+    assert success.input_tokens == 120
+    assert success.output_tokens == 60
+    assert not hasattr(success, "packet_hash")
+    assert not hasattr(success, "ai.input_hash")
+
+    cache_hit = next(
+        record for record in caplog.records if record.msg == "AI runtime explanation cache hit"
+    )
+    assert cache_hit.operation == "persistent_cache_read"
+    assert cache_hit.outcome == "success"
+    assert cache_hit.cache_status == "persistent_hit"
+
 
 @pytest.mark.django_db(transaction=True)
-def test_provider_failure_returns_deterministic_fallback_and_sets_cooldown(snapshot):
+def test_provider_failure_returns_deterministic_fallback_sets_cooldown_and_logs(snapshot, caplog):
     drafter = FakeDrafter(error=AIProviderUnavailable("down"))
     service = RuntimeExplanationService(
         enabled=True,
@@ -125,8 +148,9 @@ def test_provider_failure_returns_deterministic_fallback_and_sets_cooldown(snaps
         drafter=drafter,
     )
 
-    first = service.explain(snapshot)
-    second = service.explain(snapshot)
+    with caplog.at_level(logging.WARNING, logger="cultural_currency.ai"):
+        first = service.explain(snapshot)
+        second = service.explain(snapshot)
 
     assert first.result.generated is False
     assert first.cache_status == "deterministic_fallback"
@@ -135,6 +159,16 @@ def test_provider_failure_returns_deterministic_fallback_and_sets_cooldown(snaps
     assert "cooling down" in second.result.fallback_reason
     assert drafter.calls == 1
     assert RuntimeExplanationCache.objects.count() == 0
+
+    fallback = next(
+        record for record in caplog.records if record.msg == "AI runtime explanation fallback"
+    )
+    assert fallback.capability == "runtime_explanation"
+    assert fallback.provider == "google"
+    assert fallback.model == "gemini-3.1-flash-lite"
+    assert fallback.operation == "generate"
+    assert fallback.outcome == "AIProviderUnavailable"
+    assert fallback.latency_ms >= 0
 
 
 @pytest.mark.django_db(transaction=True)

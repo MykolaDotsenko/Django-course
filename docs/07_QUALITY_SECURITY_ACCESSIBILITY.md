@@ -140,6 +140,19 @@ Before a release, consider:
 
 Prefer roll-forward for simple defects once migrations/data are already in use. Do not assume database rollback is safe.
 
+## Runtime health and operational telemetry
+
+Keep the health endpoints semantically narrow:
+
+- `/health/live/` is process liveness and must not touch PostgreSQL, Redis or external providers;
+- `/health/ready/` verifies PostgreSQL because durable application state cannot be served safely without it;
+- when a deployed shared cache is unavailable, readiness remains HTTP 200 with `status=degraded`; FX/cache and AI coordination paths are designed to fail open;
+- external FX/AI providers are observed through real request telemetry, not synthetic health probes.
+
+PostgreSQL CI runs the readiness endpoint against real PostgreSQL and Redis so this contract remains executable.
+
+Structured operational events should expose only bounded fields needed for diagnosis/aggregation. Current provider signals include operation, outcome, attempts and latency; AI signals also expose model and token counts. Stale FX fallback is logged explicitly as a degraded-but-successful path. Do not add raw provider URLs, query parameters, payloads, user conversion values or AI packet hashes to routine telemetry.
+
 ## Performance
 
 Performance work should be evidence-driven.

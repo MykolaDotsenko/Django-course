@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import logging
+from contextlib import suppress
+from uuid import uuid4
 
+from django.conf import settings
+from django.core.cache import cache
 from django.db import DatabaseError, connection
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_safe
@@ -16,16 +20,36 @@ def health_live(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"status": "ok"})
 
 
+def _shared_cache_available() -> bool:
+    marker = uuid4().hex
+    key = f"health:readiness:{marker}"
+    try:
+        cache.set(key, marker, timeout=5)
+        return cache.get(key) == marker
+    except Exception:
+        return False
+    finally:
+        with suppress(Exception):
+            cache.delete(key)
+
+
 @require_safe
 def health_ready(request: HttpRequest) -> JsonResponse:
-    """Report readiness using only dependencies required to serve safely."""
+    """Report hard readiness separately from optional degraded dependencies."""
 
     try:
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
             cursor.fetchone()
     except DatabaseError:
-        logger.warning("readiness_failed", extra={"error_code": "database_unavailable"})
+        logger.warning(
+            "readiness_failed",
+            extra={
+                "dependency": "database",
+                "outcome": "unavailable",
+                "error_code": "database_unavailable",
+            },
+        )
         return JsonResponse(
             {
                 "status": "unavailable",
@@ -34,9 +58,30 @@ def health_ready(request: HttpRequest) -> JsonResponse:
             status=503,
         )
 
+    checks = {"database": "ok"}
+    if settings.CACHE_CONFIG.shared:
+        if _shared_cache_available():
+            checks["cache"] = "ok"
+        else:
+            checks["cache"] = "unavailable"
+            logger.warning(
+                "readiness_degraded",
+                extra={
+                    "dependency": "cache",
+                    "outcome": "degraded",
+                    "error_code": "cache_unavailable",
+                },
+            )
+            return JsonResponse(
+                {
+                    "status": "degraded",
+                    "checks": checks,
+                }
+            )
+
     return JsonResponse(
         {
             "status": "ok",
-            "checks": {"database": "ok"},
+            "checks": checks,
         }
     )

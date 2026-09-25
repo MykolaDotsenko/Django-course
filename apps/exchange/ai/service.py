@@ -76,16 +76,27 @@ class RuntimeExplanationService:
                 logger.warning(
                     "Discarding invalid persisted AI explanation",
                     extra={
-                        "ai.capability": "runtime_explanation",
-                        "ai.provider": cached.provider,
-                        "ai.model": cached.model,
-                        "ai.prompt_version": cached.prompt_version,
-                        "ai.input_hash": packet.packet_hash,
-                        "ai.status": "invalid_cache",
+                        "capability": "runtime_explanation",
+                        "provider": cached.provider,
+                        "model": cached.model,
+                        "operation": "persistent_cache_read",
+                        "outcome": "invalid_cache",
+                        "cache_status": "invalid_persistent",
                     },
                 )
                 cached.delete()
             else:
+                logger.info(
+                    "AI runtime explanation cache hit",
+                    extra={
+                        "capability": "runtime_explanation",
+                        "provider": cached.provider,
+                        "model": cached.model,
+                        "operation": "persistent_cache_read",
+                        "outcome": "success",
+                        "cache_status": "persistent_hit",
+                    },
+                )
                 return ExplanationDelivery(
                     result=result,
                     cache_status="persistent_hit",
@@ -137,13 +148,12 @@ class RuntimeExplanationService:
                 logger.warning(
                     "AI runtime explanation fallback",
                     extra={
-                        "ai.capability": "runtime_explanation",
-                        "ai.provider": "google",
-                        "ai.model": self.model,
-                        "ai.prompt_version": PROMPT_VERSION,
-                        "ai.input_hash": packet.packet_hash,
-                        "ai.status": exc.__class__.__name__,
-                        "ai.latency_ms": latency_ms,
+                        "capability": "runtime_explanation",
+                        "provider": "google",
+                        "model": self.model,
+                        "operation": "generate",
+                        "outcome": exc.__class__.__name__,
+                        "latency_ms": latency_ms,
                     },
                 )
                 return _fallback_delivery(
@@ -173,15 +183,14 @@ class RuntimeExplanationService:
             logger.info(
                 "AI runtime explanation success",
                 extra={
-                    "ai.capability": "runtime_explanation",
-                    "ai.provider": "google",
-                    "ai.model": self.model,
-                    "ai.prompt_version": PROMPT_VERSION,
-                    "ai.input_hash": packet.packet_hash,
-                    "ai.status": "success",
-                    "ai.latency_ms": latency_ms,
-                    "ai.input_tokens": provider_result.usage.input_tokens,
-                    "ai.output_tokens": provider_result.usage.output_tokens,
+                    "capability": "runtime_explanation",
+                    "provider": "google",
+                    "model": self.model,
+                    "operation": "generate",
+                    "outcome": "success",
+                    "latency_ms": latency_ms,
+                    "input_tokens": provider_result.usage.input_tokens,
+                    "output_tokens": provider_result.usage.output_tokens,
                 },
             )
             return ExplanationDelivery(
@@ -201,8 +210,10 @@ def _safe_cache_get(key: str) -> object | None:
         logger.warning(
             "AI coordination cache read failed",
             extra={
-                "ai.capability": "runtime_explanation",
-                "ai.cache_operation": "get",
+                "capability": "runtime_explanation",
+                "dependency": "cache",
+                "cache_operation": "get",
+                "outcome": "failure",
             },
             exc_info=True,
         )
@@ -216,8 +227,10 @@ def _safe_cache_add(key: str, value: object, *, timeout: int) -> bool | None:
         logger.warning(
             "AI coordination cache lock failed open",
             extra={
-                "ai.capability": "runtime_explanation",
-                "ai.cache_operation": "add",
+                "capability": "runtime_explanation",
+                "dependency": "cache",
+                "cache_operation": "add",
+                "outcome": "failure",
             },
             exc_info=True,
         )
@@ -231,8 +244,10 @@ def _safe_cache_set(key: str, value: object, *, timeout: int) -> None:
         logger.warning(
             "AI coordination cache write failed",
             extra={
-                "ai.capability": "runtime_explanation",
-                "ai.cache_operation": "set",
+                "capability": "runtime_explanation",
+                "dependency": "cache",
+                "cache_operation": "set",
+                "outcome": "failure",
             },
             exc_info=True,
         )
@@ -245,8 +260,10 @@ def _safe_cache_delete(key: str) -> None:
         logger.warning(
             "AI coordination cache cleanup failed",
             extra={
-                "ai.capability": "runtime_explanation",
-                "ai.cache_operation": "delete",
+                "capability": "runtime_explanation",
+                "dependency": "cache",
+                "cache_operation": "delete",
+                "outcome": "failure",
             },
             exc_info=True,
         )

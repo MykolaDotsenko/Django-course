@@ -165,6 +165,10 @@ jobs:
         run: |
           python manage.py shell -c "from django.conf import settings; from django.core.cache import cache; assert settings.CACHES['default']['BACKEND'] == 'django.core.cache.backends.redis.RedisCache'; cache.set('ci:shared-cache', 'ok', 30); assert cache.get('ci:shared-cache') == 'ok'; cache.delete('ci:shared-lock'); assert cache.add('ci:shared-lock', 'owner-a', 30) is True; assert cache.add('ci:shared-lock', 'owner-b', 30) is False"
 
+      - name: Verify readiness against PostgreSQL and Redis
+        run: |
+          python manage.py shell -c "from django.test import Client; response = Client().get('/health/ready/'); assert response.status_code == 200; assert response.json() == {'status': 'ok', 'checks': {'database': 'ok', 'cache': 'ok'}}"
+
       - name: Django system check
         run: python manage.py check --database default
 
