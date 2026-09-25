@@ -4,6 +4,7 @@
 @import "./shell.css";
 @import "./converter.css";
 @import "./current-converter.css";
+@import "./media.css";
 @import "./rate-series.css";
 @import "./saved-state.css";
 @import "./account.css";
