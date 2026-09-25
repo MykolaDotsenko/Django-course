@@ -74,9 +74,8 @@ export async function measureBuildAssets() {
       .map((file) => file.split("/").at(-1)),
   );
 
-  const javascript = await measureFiles(
-    javascriptNames,
-    (name) => (coreAssetNames.has(name) ? "core" : "dynamic"),
+  const javascript = await measureFiles(javascriptNames, (name) =>
+    coreAssetNames.has(name) ? "core" : "dynamic",
   );
   const stylesheets = await measureFiles(stylesheetNames);
   const coreFiles = javascript.filter((file) => file.loadingClass === "core");
@@ -105,26 +104,11 @@ export async function measureBuildAssets() {
   };
 }
 
-export function assertBuildPerformanceBudgets(
-  evidence,
-  budgets = PERFORMANCE_BUDGETS,
-) {
+export function assertBuildPerformanceBudgets(evidence, budgets = PERFORMANCE_BUDGETS) {
   const checks = [
-    [
-      "core JavaScript gzip",
-      evidence.coreGzipBytes,
-      budgets.coreJavaScriptGzipBytes,
-    ],
-    [
-      "total JavaScript gzip",
-      evidence.totalJavaScriptGzipBytes,
-      budgets.totalJavaScriptGzipBytes,
-    ],
-    [
-      "stylesheet gzip",
-      evidence.stylesheetGzipBytes,
-      budgets.stylesheetGzipBytes,
-    ],
+    ["core JavaScript gzip", evidence.coreGzipBytes, budgets.coreJavaScriptGzipBytes],
+    ["total JavaScript gzip", evidence.totalJavaScriptGzipBytes, budgets.totalJavaScriptGzipBytes],
+    ["stylesheet gzip", evidence.stylesheetGzipBytes, budgets.stylesheetGzipBytes],
     [
       "rate-chart chunk gzip",
       evidence.namedDynamicFiles.rateChart.gzipBytes,
