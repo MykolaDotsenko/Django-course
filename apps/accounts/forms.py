@@ -9,7 +9,7 @@ User = get_user_model()
 
 class QuietAuthenticationForm(AuthenticationForm):
     def __init__(self, request=None, *args, **kwargs):
-        super().__init__(request=request, *args, **kwargs)
+        super().__init__(*args, request=request, **kwargs)
         self.fields["username"].widget.attrs.pop("autofocus", None)
         self.fields["username"].widget.attrs.update(
             {"class": "qa-text-input", "autocomplete": "username"}
