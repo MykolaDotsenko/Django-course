@@ -9,6 +9,7 @@ from django.views.decorators.http import require_GET
 
 from apps.countries.models import Country, Currency
 from apps.culture.forms import CurrentDestinationContextForm, StoryRequestForm
+from apps.culture.media import select_destination_hero_image
 from apps.culture.presentation import build_destination_context_component
 from apps.culture.services import build_destination_context
 from apps.culture.story import compose_story
@@ -115,6 +116,9 @@ def current_destination_context(request: HttpRequest) -> HttpResponse:
                     destination_context,
                     historical=True,
                     show_explore_nav=False,
+                    hero_image=select_destination_hero_image(
+                        destination_context.country_code
+                    ),
                 )
 
     context = {
