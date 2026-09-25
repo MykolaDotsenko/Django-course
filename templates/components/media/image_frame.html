@@ -1,5 +1,6 @@
 <figure class="qa-media" data-media-kind="{{ image.kind }}">
-  <div class="qa-media__frame" style="aspect-ratio: {{ image.ratio }};">
+  <div class="qa-media__frame"
+       style="aspect-ratio: {{ display_ratio|default:image.ratio }}">
     <img class="qa-media__image"
          src="{{ image.src }}"
          alt="{{ image.alt }}"
@@ -10,7 +11,7 @@
          {% if fetchpriority %}fetchpriority="{{ fetchpriority }}"{% endif %}
          {% if image.decorative %}aria-hidden="true"{% endif %}>
   </div>
-  {% if caption or image.caption or image.authenticity_label or image.attribution_text %}
+  {% if caption or image.caption or image.authenticity_label or image.attribution_text or image.licence_id or image.change_note %}
     <figcaption class="qa-media__caption">
       {% if caption %}
         <span>{{ caption }}</span>
@@ -28,6 +29,14 @@
         {% else %}
           <span class="qa-media__attribution">{{ image.attribution_text }}</span>
         {% endif %}
+      {% endif %}
+      {% if image.licence_id and image.licence_url %}
+        <a class="qa-media__licence"
+           href="{{ image.licence_url }}"
+           rel="noopener noreferrer">{{ image.licence_id }}</a>
+      {% endif %}
+      {% if image.change_note %}
+        <span class="qa-media__change-note">{{ image.change_note }}</span>
       {% endif %}
     </figcaption>
   {% endif %}

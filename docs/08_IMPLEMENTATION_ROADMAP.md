@@ -28,7 +28,8 @@ Raise the existing web product to a more expensive, editorial visual standard.
 
 Priority outcomes:
 
-- curate realistic contemporary country photography;
+- use the Finland curated-photography vertical slice as the reference implementation for source review, managed ingestion, responsive derivatives, attribution and destination-context rendering;
+- curate realistic contemporary country photography for additional destinations;
 - wire selected photography into the most valuable destination/context surfaces;
 - keep the converter clean when photography is unavailable;
 - establish consistent image crops, focal points and tonal treatment;

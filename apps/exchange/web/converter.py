@@ -12,6 +12,7 @@ from django.utils.cache import patch_vary_headers
 from django.views.decorators.http import require_http_methods
 
 from apps.countries.models import CountryCurrency, Currency
+from apps.culture.media import select_destination_hero_image
 from apps.culture.presentation import build_destination_context_component
 from apps.exchange.application import ConverterSubmissionCommand, run_converter_submission
 from apps.exchange.cache import HistoricalQuoteGateway, LatestQuoteGateway
@@ -299,6 +300,9 @@ def converter_view(
                 destination_context_component = build_destination_context_component(
                     submission.destination_context,
                     historical=False,
+                    hero_image=select_destination_hero_image(
+                        submission.destination_context.country_code
+                    ),
                 )
 
     if convert_requested and not form_valid and request.method == "POST":

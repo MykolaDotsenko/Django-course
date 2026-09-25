@@ -4,6 +4,7 @@ from decimal import ROUND_FLOOR, Decimal
 
 from django.utils.formats import date_format
 
+from apps.common.presentation.media_view_models import ImageViewModel
 from apps.culture.services import DestinationContext, PurchaseEquivalent
 
 
@@ -32,6 +33,7 @@ def build_destination_context_component(
     *,
     historical: bool,
     show_explore_nav: bool = True,
+    hero_image: ImageViewModel | None = None,
 ) -> dict[str, object]:
     prices = [
         {
@@ -78,6 +80,7 @@ def build_destination_context_component(
         "country_code": context.country_code,
         "country_name": context.country_name,
         "has_content": context.has_content,
+        "hero_image": hero_image,
         "prices": prices,
         "payment": payment,
         "historical_notice": (

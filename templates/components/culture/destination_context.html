@@ -14,6 +14,11 @@
         </nav>
       {% endif %}
     </div>
+    {% if destination_context.hero_image %}
+      <div class="qa-destination-context__hero">
+        {% include "components/media/image_frame.html" with image=destination_context.hero_image display_ratio="16 / 9" %}
+      </div>
+    {% endif %}
     {% if destination_context.historical_notice %}
       <p class="qa-context-freshness-note">{{ destination_context.historical_notice }}</p>
     {% endif %}
