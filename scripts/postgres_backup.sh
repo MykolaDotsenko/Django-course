@@ -17,12 +17,21 @@ CHECKSUM_PATH="${BACKUP_PATH}.sha256"
 [ -n "$BACKUP_PATH" ] || fail "BACKUP_PATH must not be empty."
 [ "$BACKUP_PATH" != "/" ] || fail "BACKUP_PATH must not be the filesystem root."
 
+case "$BACKUP_OVERWRITE" in
+  true|false)
+    ;;
+  *)
+    fail "BACKUP_OVERWRITE must be true or false."
+    ;;
+esac
+
 command -v pg_dump >/dev/null 2>&1 || fail "pg_dump is required."
 command -v pg_restore >/dev/null 2>&1 || fail "pg_restore is required."
 command -v sha256sum >/dev/null 2>&1 || fail "sha256sum is required."
+command -v awk >/dev/null 2>&1 || fail "awk is required."
 
 if [ -e "$BACKUP_PATH" ] || [ -e "$CHECKSUM_PATH" ]; then
-  [ "$BACKUP_OVERWRITE" = "true" ] || fail     "backup or checksum already exists; choose a unique BACKUP_PATH or set BACKUP_OVERWRITE=true."
+  [ "$BACKUP_OVERWRITE" = "true" ] || fail "backup or checksum already exists; choose a unique BACKUP_PATH or set BACKUP_OVERWRITE=true."
 fi
 
 backup_dir=$(dirname "$BACKUP_PATH")
@@ -37,8 +46,7 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
-pg_dump   --format=custom   --no-owner   --no-acl   --file="$tmp_backup"   "$DATABASE_URL"
-
+pg_dump --format=custom --no-owner --no-acl --file="$tmp_backup" "$DATABASE_URL"
 pg_restore --list "$tmp_backup" >/dev/null
 
 checksum=$(sha256sum "$tmp_backup" | awk '{print $1}')
