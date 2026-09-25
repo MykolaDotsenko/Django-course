@@ -46,6 +46,7 @@ checksum=$(sha256sum "$tmp_backup" | awk '{print $1}')
 
 printf '%s  %s\n' "$checksum" "$backup_name" > "$tmp_checksum"
 
+rm -f "$CHECKSUM_PATH"
 mv -f "$tmp_backup" "$BACKUP_PATH"
 mv -f "$tmp_checksum" "$CHECKSUM_PATH"
 
