@@ -5,7 +5,7 @@ from datetime import date
 
 from apps.common.presentation.media_view_models import ImageViewModel
 from apps.countries.models import Country, Currency
-from apps.media.models import MediaAsset, MediaStatus
+from apps.media.models import MediaAsset, MediaRole, MediaStatus
 from apps.media.services import select_published_media
 
 
@@ -56,6 +56,21 @@ def build_media_asset_image_view_model(asset: MediaAsset) -> ImageViewModel:
         authenticity_label=asset.ai_label if asset.generated_by_ai else "",
         srcset=", ".join(srcset_entries) if len(srcset_entries) > 1 else "",
         sizes="(max-width: 58rem) calc(100vw - 2rem), 42rem" if srcset_entries else "",
+    )
+
+
+def select_country_hero_for_display(country_code: str) -> DisplayMediaSelection | None:
+    normalized = country_code.upper().strip()
+    if not normalized:
+        return None
+
+    country = Country.objects.filter(iso2=normalized).first()
+    if country is None:
+        return None
+
+    return select_media_for_display(
+        role=MediaRole.COUNTRY_HERO,
+        country=country,
     )
 
 
