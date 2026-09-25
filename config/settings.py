@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 
 from config.ai import load_ai_config
+from config.cache import load_cache_config
 from config.database import load_database_config
 from config.environment import HttpsMode, load_runtime_config
 
@@ -75,6 +76,12 @@ DATABASE_CONFIG = load_database_config(
     base_dir=BASE_DIR,
 )
 DATABASES = {"default": DATABASE_CONFIG.as_django_settings()}
+
+CACHE_CONFIG = load_cache_config(
+    environ=os.environ,
+    environment=RUNTIME_CONFIG.environment,
+)
+CACHES = {"default": CACHE_CONFIG.as_django_settings()}
 
 AI_CONFIG = load_ai_config(os.environ)
 AI_PROVIDER = AI_CONFIG.provider
