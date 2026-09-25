@@ -13,6 +13,7 @@ from config.cache import load_cache_config
 from config.csp import load_csp_config
 from config.database import load_database_config
 from config.environment import HttpsMode, load_runtime_config
+from config.media_storage import load_media_storage_config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 RUNTIME_CONFIG = load_runtime_config()
@@ -121,8 +122,14 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
-MEDIA_URL = "/media/"
+MEDIA_STORAGE_CONFIG = load_media_storage_config(
+    environ=os.environ,
+    environment=RUNTIME_CONFIG.environment,
+)
+STORAGES = MEDIA_STORAGE_CONFIG.as_django_storages(base_dir=BASE_DIR)
+MEDIA_URL = MEDIA_STORAGE_CONFIG.media_url
 MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_STORAGE_IS_FILESYSTEM = MEDIA_STORAGE_CONFIG.is_filesystem
 
 VITE_DEV_SERVER_ENABLED = APP_ENV == "local" and DEBUG
 VITE_DEV_SERVER_ORIGIN = "http://127.0.0.1:5173"
