@@ -102,11 +102,27 @@ Create a 16:10 premium desktop design concept for Cultural Currency Converter fo
 
 Create a 9:16 premium mobile design concept for Cultural Currency Converter focused on Finland, using **100 USD → EUR**. Translate the desktop hierarchy into a believable single-column mobile flow: compact source/destination selector, large conversion result, one editorial country image, then concise local-value/payment context. Make the mobile version especially calm and Nordic: one strong number, almost no decoration, one Helsinki crop and a single understated local-context section. Keep tap targets believable, spacing generous and visible copy minimal. No tiny dashboard cards, fake phone chrome, floating glass panels or crowded widgets.
 
+## Production hero source
+
+The production-oriented Finland hero path now uses a real contemporary photograph rather than the earlier synthetic trial:
+
+- **Source:** Wikimedia Commons — *Helsinki tram on line 4 on Aleksanterinkatu in May 2026.jpg*
+- **Photographer:** JIP
+- **Captured:** 24 May 2026
+- **Licence selected for this project:** CC BY-SA 4.0
+- **Original:** 4608×3456 JPEG
+- **Curated slug:** `finland-helsinki-tram-2026`
+- **Runtime rule:** only an explicitly reviewed and published managed derivative can appear as the destination hero.
+
+The original is intentionally not fetched by a normal web request. Use the curated ingest command, review the managed source, build a responsive WebP derivative, review that derivative, and publish only after editorial/licensing QA. The rendered media component shows attribution, links to source/licence and identifies that the managed image was normalized or resized.
+
+The synthetic P01/P02 assets below remain historical trial artifacts only. They are not eligible to become the production country hero because runtime hero selection requires sourced, non-generated contemporary photography.
+
 ## Generation log
 
 | Prompt | Version | Date | Generator/model | Repository path | Status | Review note |
 | --- | --- | --- | --- | --- | --- | --- |
-| P01 | v01 | 2026-09-23 | OpenAI image generation (ChatGPT) | `static/images/country-media/fi/hero/fi-hero-v01.webp` | ✅ trial-approved | First end-to-end proof of flow. Synthetic 16:9 Helsinki hero; repository copy is an optimized 640×360 WebP preview. Keep as generated media; replace with a full-resolution v02 before production publication. |
+| P01 | v01 | 2026-09-23 | OpenAI image generation (ChatGPT) | `static/images/country-media/fi/hero/fi-hero-v01.webp` | historical trial | Synthetic 16:9 Helsinki proof-of-flow only. It must not be used as the production country hero; the curated Wikimedia workflow above supersedes it for production. |
 | P02 | v01 | 2026-09-23 | OpenAI image generation (ChatGPT) + crop/inpaint cleanup | `static/images/country-media/fi/everyday-value/fi-everyday-value-v01.webp` | ✅ trial-approved | Helsinki café everyday-value scene: coffee + korvapuusti, text overlays removed, 4:5 WebP trial asset. Replace only with a clearly stronger v02 after review. |
 | P03 | — | — | — | — | planned | — |
 | P04 | — | — | — | — | planned | — |
