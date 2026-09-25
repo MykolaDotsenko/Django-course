@@ -171,7 +171,7 @@ def csp_report(request: HttpRequest) -> HttpResponse:
     if declared_length is not None and declared_length > _MAX_CSP_REPORT_BYTES:
         return HttpResponse(status=413)
 
-    content_type = request.content_type.lower()
+    content_type = (request.content_type or "").lower()
     if content_type not in _ACCEPTED_REPORT_CONTENT_TYPES:
         return HttpResponse(status=415)
 
