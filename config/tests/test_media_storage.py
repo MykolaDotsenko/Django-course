@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 from storages.backends.s3 import S3Storage
 
@@ -9,7 +7,7 @@ from config.environment import ConfigurationError, RuntimeEnvironment
 from config.media_storage import MediaStorageMode, load_media_storage_config
 
 
-def test_local_defaults_to_filesystem_media_storage(tmp_path: Path) -> None:
+def test_local_defaults_to_filesystem_media_storage() -> None:
     config = load_media_storage_config(
         environ={},
         environment=RuntimeEnvironment.LOCAL,
@@ -18,13 +16,9 @@ def test_local_defaults_to_filesystem_media_storage(tmp_path: Path) -> None:
     assert config.mode is MediaStorageMode.FILESYSTEM
     assert config.is_filesystem is True
     assert config.media_url == "/media/"
-    assert config.as_django_storages(base_dir=tmp_path) == {
+    assert config.as_django_storages() == {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
-            "OPTIONS": {
-                "location": tmp_path / "media",
-                "base_url": "/media/",
-            },
         },
         "staticfiles": {
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
@@ -57,7 +51,7 @@ def test_preview_can_explicitly_use_filesystem_for_ephemeral_validation() -> Non
     assert config.mode is MediaStorageMode.FILESYSTEM
 
 
-def test_s3_backend_uses_public_immutable_content_delivery(tmp_path: Path) -> None:
+def test_s3_backend_uses_public_immutable_content_delivery() -> None:
     config = load_media_storage_config(
         environ={
             "MEDIA_STORAGE_MODE": "s3",
@@ -68,7 +62,7 @@ def test_s3_backend_uses_public_immutable_content_delivery(tmp_path: Path) -> No
         environment=RuntimeEnvironment.PRODUCTION,
     )
 
-    storage = config.as_django_storages(base_dir=tmp_path)["default"]
+    storage = config.as_django_storages()["default"]
     assert storage["BACKEND"] == "storages.backends.s3.S3Storage"
     assert storage["OPTIONS"] == {
         "bucket_name": "cultural-currency-media",
@@ -111,7 +105,7 @@ def test_s3_backend_generates_stable_unsigned_cdn_url_without_network() -> None:
     }
 
 
-def test_s3_compatible_endpoint_is_supported_without_credential_config(tmp_path: Path) -> None:
+def test_s3_compatible_endpoint_is_supported_without_credential_config() -> None:
     config = load_media_storage_config(
         environ={
             "MEDIA_STORAGE_MODE": "s3",
@@ -122,7 +116,7 @@ def test_s3_compatible_endpoint_is_supported_without_credential_config(tmp_path:
         environment=RuntimeEnvironment.PRODUCTION,
     )
 
-    options = config.as_django_storages(base_dir=tmp_path)["default"]["OPTIONS"]
+    options = config.as_django_storages()["default"]["OPTIONS"]
     assert options["endpoint_url"] == "https://account.r2.cloudflarestorage.com"
     assert "access_key" not in options
     assert "secret_key" not in options
