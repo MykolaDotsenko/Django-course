@@ -37,6 +37,28 @@ function assertBrowserConfiguration() {
   }
 }
 
+async function assertContentSecurityPolicyHeader(response, label) {
+  const headers = await response.headers();
+  const policy = headers["content-security-policy"] ?? "";
+
+  assert(policy.includes("default-src 'self'"), `${label}: CSP default-src is missing`);
+  assert(policy.includes("script-src 'self'"), `${label}: CSP script-src is missing`);
+  assert(
+    policy.includes("script-src-attr 'none'"),
+    `${label}: inline script attributes are not blocked`,
+  );
+  assert(!policy.includes("'unsafe-eval'"), `${label}: CSP unexpectedly allows unsafe-eval`);
+  assert(policy.includes("object-src 'none'"), `${label}: object-src is not locked down`);
+  assert(
+    policy.includes("frame-ancestors 'none'"),
+    `${label}: frame-ancestors is not locked down`,
+  );
+  assert(
+    policy.includes("report-uri /security/csp-report/"),
+    `${label}: CSP reporting endpoint is missing`,
+  );
+}
+
 const VIEWPORTS = [
   { name: "wide-1440", width: 1440, height: 1000 },
   { name: "transition-1023", width: 1023, height: 900 },
@@ -1081,6 +1103,63 @@ async function collectPerformance(page) {
   });
 }
 
+async function assertCspEnforcement(browser) {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 1,
+  });
+  const page = await context.newPage();
+
+  try {
+    const response = await page.goto(`${BASE_URL}/`, { waitUntil: "networkidle" });
+    assert(response?.ok(), "csp/enforcement: converter request failed");
+    await assertContentSecurityPolicyHeader(response, "csp/enforcement");
+
+    const result = await page.evaluate(async () => {
+      window.__qaInlineScriptExecuted = false;
+      const violations = [];
+      const listener = (event) => {
+        violations.push({
+          effectiveDirective: event.effectiveDirective,
+          blockedURI: event.blockedURI,
+        });
+      };
+      document.addEventListener("securitypolicyviolation", listener);
+
+      const script = document.createElement("script");
+      script.textContent = "window.__qaInlineScriptExecuted = true;";
+      document.body.appendChild(script);
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      document.removeEventListener("securitypolicyviolation", listener);
+
+      return {
+        inlineScriptExecuted: window.__qaInlineScriptExecuted,
+        violations,
+      };
+    });
+
+    assert(
+      result.inlineScriptExecuted === false,
+      "csp/enforcement: an injected inline script executed under enforced CSP",
+    );
+    assert(
+      result.violations.some((violation) =>
+        String(violation.effectiveDirective).startsWith("script-src"),
+      ),
+      `csp/enforcement: browser emitted no script CSP violation: ${JSON.stringify(result.violations)}`,
+    );
+
+    return {
+      enforcedHeader: true,
+      inlineScriptBlocked: true,
+      violationEventObserved: true,
+    };
+  } finally {
+    await context.close();
+  }
+}
+
 async function assertNoJavaScriptSavedStateFallback(browser) {
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
@@ -1157,8 +1236,10 @@ async function openSurface(page, surface) {
     response?.ok(),
     `${surface.name}: request failed with ${response?.status() ?? "no response"}`,
   );
+  await assertContentSecurityPolicyHeader(response, surface.name);
   const h1Count = await page.locator("h1").count();
   assert(h1Count === 1, `${surface.name}: expected exactly one H1, found ${h1Count}`);
+  return response;
 }
 
 await mkdir(OUTPUT_DIR, { recursive: true });
@@ -1268,6 +1349,7 @@ try {
   }
 
   if (BROWSER_SCOPE === "full") {
+    evidence.csp = await assertCspEnforcement(browser);
     evidence.noJavaScript = await assertNoJavaScriptSavedStateFallback(browser);
     evidence.compressedAssets = await collectCompressedAssetEvidence();
     assert(
