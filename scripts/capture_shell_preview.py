@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import os
+from functools import partial
 from pathlib import Path
 
-from playwright.sync_api import Page, sync_playwright
+from playwright.sync_api import ConsoleMessage, Page, sync_playwright
 
 BASE_URL = os.environ.get(
     "SHELL_PREVIEW_URL",
@@ -83,6 +84,11 @@ def _assert_shell_integrity(page: Page) -> None:
         raise RuntimeError(f"Skip link is not first in keyboard order: {active_class!r}")
 
 
+def _record_console_error(errors: list[str], message: ConsoleMessage) -> None:
+    if message.type == "error":
+        errors.append(message.text)
+
+
 def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -97,12 +103,7 @@ def main() -> None:
             page = context.new_page()
             console_errors: list[str] = []
 
-            page.on(
-                "console",
-                lambda message: (
-                    console_errors.append(message.text) if message.type == "error" else None
-                ),
-            )
+            page.on("console", partial(_record_console_error, console_errors))
 
             response = page.goto(BASE_URL, wait_until="networkidle")
             if response is None or not response.ok:
