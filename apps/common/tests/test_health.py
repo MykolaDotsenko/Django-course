@@ -21,6 +21,7 @@ class HealthLivenessTests(SimpleTestCase):
 
 
 class HealthReadinessTests(TestCase):
+    @override_settings(CACHE_CONFIG=SimpleNamespace(shared=False))
     def test_readiness_checks_database_connectivity(self) -> None:
         response = self.client.get("/health/ready/")
 
