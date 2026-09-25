@@ -5,6 +5,7 @@ from decimal import ROUND_FLOOR, Decimal
 from django.utils.formats import date_format
 
 from apps.culture.services import DestinationContext, PurchaseEquivalent
+from apps.media.presentation import DisplayMediaSelection
 
 
 def _money_text(value: Decimal, *, minor_units: int) -> str:
@@ -32,6 +33,7 @@ def build_destination_context_component(
     *,
     historical: bool,
     show_explore_nav: bool = True,
+    hero_media: DisplayMediaSelection | None = None,
 ) -> dict[str, object]:
     prices = [
         {
@@ -88,4 +90,5 @@ def build_destination_context_component(
             else None
         ),
         "show_explore_nav": show_explore_nav,
+        "hero_media": hero_media,
     }
