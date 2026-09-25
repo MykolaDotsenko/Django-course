@@ -97,8 +97,9 @@ class ContentSecurityPolicyMiddleware:
             if _is_admin_request(request)
             else PUBLIC_CONTENT_SECURITY_POLICY
         )
-        if header_name not in response:
-            response[header_name] = policy
+        response.headers.pop("Content-Security-Policy", None)
+        response.headers.pop("Content-Security-Policy-Report-Only", None)
+        response[header_name] = policy
         return response
 
 
