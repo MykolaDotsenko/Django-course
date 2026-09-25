@@ -28,7 +28,7 @@ def select_destination_hero_image(country_code: str) -> ImageViewModel | None:
             role=MediaRole.COUNTRY_HERO,
             country=country,
         )
-    except DatabaseError as exc:
+    except (DatabaseError, ValueError) as exc:
         logger.warning(
             "Destination hero media lookup failed",
             extra={
