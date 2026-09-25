@@ -61,6 +61,7 @@ def test_redis_cache_url_enables_shared_cache(scheme: str) -> None:
         ("http://cache.example.test/0", "redis:// or rediss://"),
         ("redis:///0", "Redis host"),
         ("redis://cache.example.test:bad/0", "invalid Redis port"),
+        ("redis://cache.example.test:0/0", "invalid Redis port"),
         ("redis://cache.example.test/0/1", "at most one Redis database"),
         ("redis://cache.example.test/not-a-db", "non-negative integer"),
         ("redis://cache.example.test/0#fragment", "URL fragment"),
