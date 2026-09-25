@@ -15,6 +15,7 @@ The current CI runs checks equivalent to:
 ```bash
 ruff format --check apps config scripts manage.py
 ruff check apps config scripts manage.py
+mypy apps/exchange/domain.py apps/exchange/providers/base.py apps/exchange/providers/frankfurter.py config/environment.py config/database.py config/ai.py integrations/gemini/client.py
 djlint templates --check
 python manage.py check
 python manage.py makemigrations --check --dry-run
@@ -23,7 +24,7 @@ coverage report
 python -m pip_audit --skip-editable
 ```
 
-The coverage threshold is configured in `pyproject.toml`; treat that file as authoritative.
+The coverage threshold and source packages are configured in `pyproject.toml`; treat that file as authoritative. Coverage includes application, configuration and integration code. Static typing is intentionally introduced first at the financial/provider/config boundaries rather than pretending the entire Django surface is strict-typed.
 
 PostgreSQL also has a dedicated CI job because SQLite alone cannot validate all persistence/concurrency behaviour.
 
