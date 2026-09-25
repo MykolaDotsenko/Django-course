@@ -300,6 +300,38 @@ def test_curated_ingest_never_mutates_reviewed_protected_media(
 
 
 @pytest.mark.django_db
+def test_curated_ingest_preserves_rejected_editorial_decision(
+    finland,
+    curated_spec,
+    media_root,
+    monkeypatch,
+) -> None:
+    payload = _png()
+    monkeypatch.setattr(
+        "apps.media.management.commands.ingest_curated_media.download_media_bytes",
+        lambda url: DownloadedMedia(
+            data=payload,
+            filename="Test_Helsinki.png",
+            content_type="image/png",
+            final_url=curated_spec.source_media_url,
+        ),
+    )
+    call_command("ingest_curated_media", slug=curated_spec.slug)
+    asset = MediaAsset.objects.get()
+    asset.status = MediaStatus.REJECTED
+    asset.save(update_fields=("status", "updated_at"))
+
+    monkeypatch.setattr(
+        "apps.media.management.commands.ingest_curated_media.download_media_bytes",
+        lambda url: (_ for _ in ()).throw(AssertionError("rejected media must remain protected")),
+    )
+    call_command("ingest_curated_media", slug=curated_spec.slug)
+
+    asset.refresh_from_db()
+    assert asset.status == MediaStatus.REJECTED
+
+
+@pytest.mark.django_db
 def test_curated_ingest_rejects_upstream_dimension_drift(
     finland,
     curated_spec,
