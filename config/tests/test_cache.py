@@ -60,11 +60,21 @@ def test_redis_cache_url_enables_shared_cache(scheme: str) -> None:
     [
         ("http://cache.example.test/0", "redis:// or rediss://"),
         ("redis:///0", "Redis host"),
-        ("redis://cache.example.test:bad/0", "invalid Redis port"),
+        ("redis://cache.example.test:bad/0", "invalid Redis host or port"),
         ("redis://cache.example.test:0/0", "invalid Redis port"),
+        ("redis://cache.example.test//0", "at most one Redis database"),
         ("redis://cache.example.test/0/1", "at most one Redis database"),
         ("redis://cache.example.test/not-a-db", "non-negative integer"),
         ("redis://cache.example.test/0#fragment", "URL fragment"),
+        ("redis://cache.example.test/0?broken", "invalid query options"),
+        (
+            "redis://cache.example.test/0?socket_timeout=30",
+            "must not override cache timeout or retry policy",
+        ),
+        (
+            "redis://cache.example.test/0?retry_on_timeout=true",
+            "must not override cache timeout or retry policy",
+        ),
     ],
 )
 def test_invalid_cache_urls_fail_fast(url: str, message: str) -> None:
