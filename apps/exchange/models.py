@@ -25,7 +25,8 @@ class RuntimeExplanationCache(models.Model):
             models.Index(
                 fields=("prompt_version", "model", "locale"),
                 name="fx_ai_prompt_model_idx",
-            )
+            ),
+            models.Index(fields=("created_at",), name="fx_ai_created_at_idx"),
         ]
 
     def __str__(self) -> str:

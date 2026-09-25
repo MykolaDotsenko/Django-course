@@ -127,6 +127,15 @@ AI should remain:
 - absent from normal live-provider CI;
 - gracefully degradable.
 
+Validated runtime explanations are persisted as a reuse/cost optimization, not as a financial truth source. Operators can bound that table with:
+
+```bash
+python manage.py prune_runtime_explanation_cache --older-than-days <days> --dry-run
+python manage.py prune_runtime_explanation_cache --older-than-days <days> --batch-size <rows>
+```
+
+The retention window is deliberately explicit rather than hard-coded into application behaviour. Pruning uses a fixed cutoff and bounded batches; deleting an old explanation only means a later request may generate it again or use the deterministic fallback.
+
 ## Security/privacy at external boundaries
 
 Avoid sending unnecessary personal/user-owned data to external providers.
