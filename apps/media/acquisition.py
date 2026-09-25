@@ -91,9 +91,7 @@ def download_media_bytes(
 
             data = response.read(max_bytes + 1)
     except HTTPError as exc:
-        raise MediaAcquisitionError(
-            f"Curated media source returned HTTP {exc.code}."
-        ) from exc
+        raise MediaAcquisitionError(f"Curated media source returned HTTP {exc.code}.") from exc
     except (URLError, HTTPException, TimeoutError) as exc:
         raise MediaAcquisitionError("Curated media download failed.") from exc
 
