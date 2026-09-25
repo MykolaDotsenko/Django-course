@@ -99,9 +99,9 @@ def test_csp_report_endpoint_accepts_legacy_report_without_query_logging(
         for record in caplog.records
         if record.getMessage() == "content_security_policy_violation"
     )
-    assert record.__dict__["csp.directive"] == "script-src-elem"
-    assert record.__dict__["csp.disposition"] == "enforce"
-    assert record.__dict__["csp.blocked_resource"] == "https://evil.example"
+    assert record.csp_directive == "script-src-elem"
+    assert record.csp_disposition == "enforce"
+    assert record.csp_blocked_resource == "https://evil.example"
     assert "secret" not in str(record.__dict__)
 
 
