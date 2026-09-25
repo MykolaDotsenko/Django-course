@@ -63,11 +63,12 @@
           {% if account_favourite_rows %}
             <form method="post" action="{% url 'clear_favourites' %}">
               {% csrf_token %}
-              <button class="qa-secondary-button" type="submit">Clear account favourites</button>
+              <button class="qa-secondary-button qa-destructive-button"
+                      type="submit">Clear account favourites</button>
             </form>
           {% endif %}
         {% else %}
-          <button class="qa-secondary-button"
+          <button class="qa-secondary-button qa-destructive-button"
                   type="button"
                   data-clear-favourites
                   hidden>Clear saved pairs</button>
@@ -99,11 +100,17 @@
                     </p>
                   </div>
                   <div class="qa-saved-row__actions">
-                    <a class="qa-secondary-button" href="{{ row.use_url }}">Use pair</a>
-                    <a class="qa-secondary-button" href="{{ row.reverse_url }}">Reverse pair</a>
+                    <a class="qa-secondary-button"
+                       href="{{ row.use_url }}"
+                       aria-label="Use pair: {{ favourite.source_currency.code }} to {{ favourite.destination_currency.code }}">Use pair</a>
+                    <a class="qa-secondary-button"
+                       href="{{ row.reverse_url }}"
+                       aria-label="Reverse pair: {{ favourite.source_currency.code }} to {{ favourite.destination_currency.code }}">Reverse pair</a>
                     <form method="post" action="{% url 'delete_favourite' favourite.pk %}">
                       {% csrf_token %}
-                      <button class="qa-secondary-button" type="submit">Remove</button>
+                      <button class="qa-secondary-button"
+                              type="submit"
+                              aria-label="Remove saved pair: {{ favourite.source_currency.code }} to {{ favourite.destination_currency.code }}">Remove</button>
                     </form>
                   </div>
                 </article>
@@ -144,7 +151,8 @@
           {% if account_recent_rows %}
             <form method="post" action="{% url 'clear_recent_conversions' %}">
               {% csrf_token %}
-              <button class="qa-secondary-button" type="submit">Clear account history</button>
+              <button class="qa-secondary-button qa-destructive-button"
+                      type="submit">Clear account history</button>
             </form>
           {% endif %}
         </div>
@@ -183,11 +191,17 @@
                     </p>
                   </div>
                   <div class="qa-saved-row__actions">
-                    <a class="qa-secondary-button" href="{{ row.repeat_url }}">Repeat</a>
-                    <a class="qa-secondary-button" href="{{ row.swap_url }}">Swap</a>
+                    <a class="qa-secondary-button"
+                       href="{{ row.repeat_url }}"
+                       aria-label="Repeat conversion: {{ recent.input_amount }} {{ recent.source_currency.code }} to {{ recent.destination_currency.code }}">Repeat</a>
+                    <a class="qa-secondary-button"
+                       href="{{ row.swap_url }}"
+                       aria-label="Swap conversion: {{ recent.input_amount }} {{ recent.source_currency.code }} to {{ recent.destination_currency.code }}">Swap</a>
                     <form method="post" action="{% url 'delete_recent_conversion' recent.pk %}">
                       {% csrf_token %}
-                      <button class="qa-secondary-button" type="submit">Remove</button>
+                      <button class="qa-secondary-button"
+                              type="submit"
+                              aria-label="Remove recent conversion: {{ recent.input_amount }} {{ recent.source_currency.code }} to {{ recent.destination_currency.code }}">Remove</button>
                     </form>
                   </div>
                 </article>
@@ -210,7 +224,7 @@
               including after account history is enabled.
             </p>
           </div>
-          <button class="qa-secondary-button"
+          <button class="qa-secondary-button qa-destructive-button"
                   type="button"
                   data-clear-recents
                   hidden>Clear browser history</button>
@@ -228,7 +242,7 @@
             <h2 id="recent-conversions-title">Recent conversions</h2>
             <p>Up to 10 recent conversions stay on this device so you can repeat or reverse them.</p>
           </div>
-          <button class="qa-secondary-button"
+          <button class="qa-secondary-button qa-destructive-button"
                   type="button"
                   data-clear-recents
                   hidden>Clear recent history</button>

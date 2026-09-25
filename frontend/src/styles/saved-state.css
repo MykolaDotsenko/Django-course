@@ -129,6 +129,25 @@
   font-size: var(--text-body-sm);
 }
 
+.qa-destructive-button {
+  border-color: color-mix(in srgb, var(--color-danger) 45%, var(--color-border-control));
+  background: var(--color-surface);
+  color: var(--color-danger);
+}
+
+.qa-destructive-button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .qa-destructive-button:hover {
+    border-color: var(--color-danger);
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
+  }
+}
+
 @media (max-width: 48rem) {
   .qa-saved-section__heading,
   .qa-saved-row {
@@ -157,7 +176,8 @@
   .qa-saved-row,
   .qa-saved-empty,
   .qa-saved-state__storage-note[data-storage-tone="feedback"],
-  .qa-saved-state__storage-note[data-storage-tone="warning"] {
+  .qa-saved-state__storage-note[data-storage-tone="warning"],
+  .qa-destructive-button {
     border-color: CanvasText;
   }
 }

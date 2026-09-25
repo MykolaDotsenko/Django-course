@@ -171,6 +171,10 @@ class RecentHistoryWebTests(TestCase):
         self.assertContains(response, "Account recent history")
         self.assertContains(response, "Browser-only history")
         self.assertContains(response, f'data-account-recent-id="{recent.pk}"')
+        self.assertContains(response, 'aria-label="Repeat conversion: 10 EUR to JPY"')
+        self.assertContains(response, 'aria-label="Swap conversion: 10 EUR to JPY"')
+        self.assertContains(response, 'aria-label="Remove recent conversion: 10 EUR to JPY"')
+        self.assertContains(response, "qa-destructive-button")
         self.assertContains(response, "never uploaded automatically")
 
     def test_disabling_history_keeps_existing_account_rows(self):
