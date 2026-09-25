@@ -13,7 +13,7 @@ from apps.culture.presentation import build_destination_context_component
 from apps.culture.services import build_destination_context
 from apps.culture.story import compose_story
 from apps.media.models import MediaRole
-from apps.media.presentation import select_media_for_display
+from apps.media.presentation import select_country_hero_for_display, select_media_for_display
 
 logger = logging.getLogger("cultural_currency.culture")
 
@@ -115,6 +115,9 @@ def current_destination_context(request: HttpRequest) -> HttpResponse:
                     destination_context,
                     historical=True,
                     show_explore_nav=False,
+                    hero_media=select_country_hero_for_display(
+                        destination_context.country_code
+                    ),
                 )
 
     context = {
