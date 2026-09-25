@@ -45,9 +45,8 @@ FINLAND_HELSINKI_TRAM_HERO = CuratedMediaSpec(
     caption="Helsinki tram on Aleksanterinkatu, photographed 24 May 2026.",
     source_name="Wikimedia Commons",
     source_url=(
-        "https://commons.wikimedia.org/w/index.php?"
-        "title=File:Helsinki_tram_on_line_4_on_Aleksanterinkatu_in_May_2026.jpg"
-        "&oldid=1266566279"
+        "https://commons.wikimedia.org/wiki/"
+        "File:Helsinki_tram_on_line_4_on_Aleksanterinkatu_in_May_2026.jpg"
     ),
     source_media_url=(
         "https://upload.wikimedia.org/wikipedia/commons/6/60/"
