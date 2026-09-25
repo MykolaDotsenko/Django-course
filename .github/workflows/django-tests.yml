@@ -112,6 +112,7 @@ jobs:
       DJANGO_DEBUG: "false"
       DJANGO_ALLOWED_HOSTS: testserver,localhost,127.0.0.1
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/cultural_currency_test
+      CACHE_URL: redis://127.0.0.1:6379/0
 
     services:
       postgres:
@@ -124,6 +125,15 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd "pg_isready -U postgres -d cultural_currency_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:8.2.2-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -148,6 +158,10 @@ jobs:
         run: |
           python manage.py shell -c \
             "from django.db import connection; connection.ensure_connection(); assert connection.vendor == 'postgresql'; print(f'PostgreSQL server: {connection.pg_version}')"
+
+      - name: Verify shared Redis cache
+        run: |
+          python manage.py shell -c "from django.conf import settings; from django.core.cache import cache; assert settings.CACHES['default']['BACKEND'] == 'django.core.cache.backends.redis.RedisCache'; cache.set('ci:shared-cache', 'ok', 30); assert cache.get('ci:shared-cache') == 'ok'"
 
       - name: Django system check
         run: python manage.py check --database default
