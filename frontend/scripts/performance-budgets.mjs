@@ -83,6 +83,7 @@ export async function measureBuildAssets() {
   const dynamicFiles = javascript.filter((file) => file.loadingClass === "dynamic");
 
   return {
+    files: javascript,
     javascript,
     stylesheets,
     coreFiles,
@@ -97,6 +98,8 @@ export async function measureBuildAssets() {
     dynamicGzipBytes: total(dynamicFiles, "gzipBytes"),
     totalJavaScriptRawBytes: total(javascript, "rawBytes"),
     totalJavaScriptGzipBytes: total(javascript, "gzipBytes"),
+    totalRawBytes: total(javascript, "rawBytes"),
+    totalGzipBytes: total(javascript, "gzipBytes"),
     stylesheetRawBytes: total(stylesheets, "rawBytes"),
     stylesheetGzipBytes: total(stylesheets, "gzipBytes"),
   };
