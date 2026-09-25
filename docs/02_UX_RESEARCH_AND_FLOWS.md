@@ -86,7 +86,7 @@ These paths can evolve. Their purpose is more important than a fixed card layout
 
 ## Saved and recent state
 
-Anonymous browser storage is useful for convenience but should be described as local-only.
+Anonymous browser storage is useful for convenience but should be described as local-only. Browser-local controls that require JavaScript should not render as inert actions before enhancement, and empty-state claims should appear only after the browser state has actually been inspected.
 
 Signed-in data should respect ownership. Cross-device recent history is separately opt-in; signing in should not silently upload existing local recent activity.
 
