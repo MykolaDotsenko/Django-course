@@ -103,7 +103,9 @@ Automated axe checks are useful but do not replace interaction testing.
 
 ## Configuration
 
-Runtime configuration is validated in `config/environment.py`, `config/database.py` and `config/ai.py`.
+Runtime configuration is validated in `config/environment.py`, `config/database.py`, `config/cache.py` and `config/ai.py`.
+
+Preview and production require an explicit shared `CACHE_URL`; local/test execution may omit it and use process-local memory caching. PostgreSQL CI also exercises a real Redis service so the deployed cache backend is tested rather than only configuration-parsed.
 
 Use `.env.example` as the practical inventory of supported environment variables.
 
