@@ -82,7 +82,6 @@ class ImageFrameTemplateTests(SimpleTestCase):
         self.assertIn('href="https://creativecommons.org/licenses/by-sa/4.0/"', html)
         self.assertIn("Resized and optimized for web.", html)
 
-
     def test_decorative_managed_image_is_hidden_from_accessibility_tree(self):
         html = render_to_string(
             "components/media/image_frame.html",
