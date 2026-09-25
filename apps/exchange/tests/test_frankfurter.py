@@ -1,3 +1,4 @@
+import logging
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from http.client import HTTPException
@@ -106,7 +107,7 @@ class FakeResponse:
         return self.payload if size < 0 else self.payload[:size]
 
 
-def test_transient_network_failure_retries_at_most_once():
+def test_transient_network_failure_retries_at_most_once(caplog):
     payload = b'{"date":"2026-09-18","base":"EUR","quote":"JPY","rate":174.5,"providers":["ECB"]}'
     attempts = [URLError("temporary"), FakeResponse(payload)]
 
@@ -117,11 +118,21 @@ def test_transient_network_failure_retries_at_most_once():
         return result
 
     provider = FrankfurterProvider(max_attempts=2)
-    with patch("apps.exchange.providers.frankfurter.urlopen", side_effect=fake_urlopen) as mocked:
+    with (
+        caplog.at_level(logging.INFO, logger="cultural_currency.exchange"),
+        patch("apps.exchange.providers.frankfurter.urlopen", side_effect=fake_urlopen) as mocked,
+    ):
         result = provider.latest_quote("EUR", "JPY", DEFAULT_SOURCE_POLICY)
 
     assert mocked.call_count == 2
     assert result.rate == Decimal("174.5")
+    record = next(record for record in caplog.records if record.msg == "fx_provider_transport")
+    assert record.provider == "frankfurter"
+    assert record.operation == "latest_quote"
+    assert record.outcome == "success"
+    assert record.attempts == 2
+    assert record.latency_ms >= 0
+    assert not hasattr(record, "url")
 
 
 def test_rate_limit_is_not_retried():
@@ -215,17 +226,53 @@ def test_non_retryable_unexpected_4xx_is_not_retried():
     assert mocked.call_count == 1
 
 
-def test_timeout_is_normalized_after_bounded_retry():
+def test_timeout_is_normalized_after_bounded_retry(caplog):
     provider = FrankfurterProvider(max_attempts=2)
 
-    with patch(
-        "apps.exchange.providers.frankfurter.urlopen",
-        side_effect=TimeoutError("slow"),
-    ) as mocked:
+    with (
+        caplog.at_level(logging.WARNING, logger="cultural_currency.exchange"),
+        patch(
+            "apps.exchange.providers.frankfurter.urlopen",
+            side_effect=TimeoutError("slow"),
+        ) as mocked,
+    ):
         with pytest.raises(FxProviderTimeout):
             provider.latest_quote("EUR", "JPY", DEFAULT_SOURCE_POLICY)
 
     assert mocked.call_count == 2
+    record = next(record for record in caplog.records if record.msg == "fx_provider_transport")
+    assert record.provider == "frankfurter"
+    assert record.operation == "latest_quote"
+    assert record.outcome == "failure"
+    assert record.attempts == 2
+    assert record.error_code == "FxProviderTimeout"
+    assert record.latency_ms >= 0
+
+
+def test_semantically_invalid_payload_is_distinct_from_transport_success(caplog):
+    payload = b'{"date":"2026-09-18","base":"USD","quote":"JPY","rate":174.5,"providers":["ECB"]}'
+    provider = FrankfurterProvider(max_attempts=1)
+
+    with (
+        caplog.at_level(logging.INFO, logger="cultural_currency.exchange"),
+        patch(
+            "apps.exchange.providers.frankfurter.urlopen",
+            return_value=FakeResponse(payload),
+        ),
+    ):
+        with pytest.raises(FxProviderInvalidPayload):
+            provider.latest_quote("EUR", "JPY", DEFAULT_SOURCE_POLICY)
+
+    transport = next(record for record in caplog.records if record.msg == "fx_provider_transport")
+    semantic = next(
+        record for record in caplog.records if record.msg == "fx_provider_payload_invalid"
+    )
+    assert transport.outcome == "success"
+    assert transport.attempts == 1
+    assert semantic.provider == "frankfurter"
+    assert semantic.operation == "latest_quote"
+    assert semantic.outcome == "invalid_payload"
+    assert semantic.error_code == "FxProviderInvalidPayload"
 
 
 def test_oversized_single_rate_response_is_rejected_before_json_parsing():
