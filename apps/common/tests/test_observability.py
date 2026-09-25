@@ -181,7 +181,6 @@ class JsonFormatterTests(SimpleTestCase):
         self.assertNotIn("document_uri", payload)
         self.assertNotIn("blocked_uri", payload)
 
-
     def test_formatter_emits_stable_machine_readable_fields(self) -> None:
         token = bind_request_id("request-42")
         try:
