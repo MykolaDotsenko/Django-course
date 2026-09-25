@@ -199,9 +199,9 @@ def csp_report(request: HttpRequest) -> HttpResponse:
         logger.warning(
             "content_security_policy_violation",
             extra={
-                "csp.directive": str(directive)[:80],
-                "csp.disposition": disposition,
-                "csp.blocked_resource": _reported_resource(blocked),
+                "csp_directive": str(directive)[:80],
+                "csp_disposition": disposition,
+                "csp_blocked_resource": _reported_resource(blocked),
             },
         )
 
