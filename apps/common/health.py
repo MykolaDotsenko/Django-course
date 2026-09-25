@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from uuid import uuid4
 
 from django.conf import settings
 from django.core.cache import cache
@@ -19,12 +20,18 @@ def health_live(request: HttpRequest) -> JsonResponse:
 
 
 def _shared_cache_available() -> bool:
-    marker = "ready"
+    marker = uuid4().hex
+    key = f"health:readiness:{marker}"
     try:
-        cache.set("health:readiness", marker, timeout=5)
-        return cache.get("health:readiness") == marker
+        cache.set(key, marker, timeout=5)
+        return cache.get(key) == marker
     except Exception:
         return False
+    finally:
+        try:
+            cache.delete(key)
+        except Exception:
+            pass
 
 
 @require_safe
