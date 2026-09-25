@@ -66,8 +66,7 @@ _ADMIN_DIRECTIVES: tuple[tuple[str, tuple[str, ...]], ...] = (
 
 def _serialize_policy(directives: Sequence[tuple[str, Sequence[str]]]) -> str:
     return "; ".join(
-        " ".join((directive, *values)) if values else directive
-        for directive, values in directives
+        " ".join((directive, *values)) if values else directive for directive, values in directives
     )
 
 
