@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from storages.backends.s3 import S3Storage
 
 from config.environment import ConfigurationError, RuntimeEnvironment
 from config.media_storage import MediaStorageMode, load_media_storage_config
@@ -85,6 +86,29 @@ def test_s3_backend_uses_public_immutable_content_delivery(tmp_path: Path) -> No
         "url_protocol": "https:",
     }
     assert config.media_url == "https://media.example.test/media/"
+
+
+def test_s3_backend_generates_stable_unsigned_cdn_url_without_network() -> None:
+    storage = S3Storage(
+        access_key="test-access-key",
+        secret_key="test-secret-key",
+        bucket_name="media-bucket",
+        region_name="eu-north-1",
+        location="media",
+        custom_domain="media.example.test",
+        querystring_auth=False,
+        object_parameters={
+            "CacheControl": "public, max-age=31536000, immutable",
+        },
+    )
+
+    url = storage.url("sourced/ab/abcdef.webp")
+
+    assert url == "https://media.example.test/media/sourced/ab/abcdef.webp"
+    assert "?" not in url
+    assert storage.get_object_parameters("sourced/ab/abcdef.webp") == {
+        "CacheControl": "public, max-age=31536000, immutable",
+    }
 
 
 def test_s3_compatible_endpoint_is_supported_without_credential_config(tmp_path: Path) -> None:
