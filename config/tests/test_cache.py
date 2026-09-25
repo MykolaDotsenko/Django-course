@@ -69,11 +69,19 @@ def test_redis_cache_url_enables_shared_cache(scheme: str) -> None:
         ("redis://cache.example.test/0?broken", "invalid query options"),
         (
             "redis://cache.example.test/0?socket_timeout=30",
-            "must not override cache timeout or retry policy",
+            "must not override cache timeout, retry, or TLS verification policy",
         ),
         (
             "redis://cache.example.test/0?retry_on_timeout=true",
-            "must not override cache timeout or retry policy",
+            "must not override cache timeout, retry, or TLS verification policy",
+        ),
+        (
+            "rediss://cache.example.test/0?ssl_cert_reqs=none",
+            "must not override cache timeout, retry, or TLS verification policy",
+        ),
+        (
+            "rediss://cache.example.test/0?ssl_check_hostname=false",
+            "must not override cache timeout, retry, or TLS verification policy",
         ),
     ],
 )
