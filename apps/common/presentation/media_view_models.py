@@ -17,3 +17,5 @@ class ImageViewModel:
     attribution_text: str = ""
     source_url: str = ""
     authenticity_label: str = ""
+    srcset: str = ""
+    sizes: str = ""
