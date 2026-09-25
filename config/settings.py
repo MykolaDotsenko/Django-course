@@ -10,7 +10,7 @@ from pathlib import Path
 
 from config.ai import load_ai_config
 from config.database import load_database_config
-from config.environment import load_runtime_config
+from config.environment import HttpsMode, load_runtime_config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 RUNTIME_CONFIG = load_runtime_config()
@@ -113,8 +113,18 @@ VITE_DEV_SERVER_ENABLED = APP_ENV == "local" and DEBUG
 VITE_DEV_SERVER_ORIGIN = "http://127.0.0.1:5173"
 VITE_MANIFEST_PATH = BASE_DIR / "static" / "build" / ".vite" / "manifest.json"
 
-SESSION_COOKIE_SECURE = RUNTIME_CONFIG.is_production
-CSRF_COOKIE_SECURE = RUNTIME_CONFIG.is_production
+SESSION_COOKIE_SECURE = RUNTIME_CONFIG.is_deployed
+CSRF_COOKIE_SECURE = RUNTIME_CONFIG.is_deployed
+SECURE_SSL_REDIRECT = RUNTIME_CONFIG.is_deployed
+SECURE_PROXY_SSL_HEADER = (
+    ("HTTP_X_FORWARDED_PROTO", "https")
+    if RUNTIME_CONFIG.https_mode is HttpsMode.PROXY
+    else None
+)
+SECURE_HSTS_SECONDS = RUNTIME_CONFIG.hsts_seconds
+SECURE_HSTS_INCLUDE_SUBDOMAINS = RUNTIME_CONFIG.hsts_include_subdomains
+SECURE_HSTS_PRELOAD = RUNTIME_CONFIG.hsts_preload
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 
 LOGGING = {
     "version": 1,
