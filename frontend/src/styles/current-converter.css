@@ -581,6 +581,14 @@
   background: var(--color-history-soft);
 }
 
+.qa-destination-context__hero {
+  width: min(100%, 42rem);
+}
+
+.qa-destination-context__hero .qa-media__frame {
+  box-shadow: 0 12px 32px rgb(20 33 29 / 8%);
+}
+
 .qa-destination-context__grid {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
