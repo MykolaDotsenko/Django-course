@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import socket
 from datetime import UTC, datetime
 from http.client import HTTPException
 from typing import Any
@@ -29,10 +28,7 @@ def _first_text(value: Any) -> str:
 
 def _first_https(*values: Any) -> str:
     for value in values:
-        if isinstance(value, list):
-            candidates = value
-        else:
-            candidates = (value,)
+        candidates = value if isinstance(value, list) else (value,)
         for candidate in candidates:
             text = _first_text(candidate)
             if text.startswith("https://"):
@@ -138,7 +134,7 @@ class EuropeanaSearchClient:
             if exc.code == 429:
                 raise MediaSourceError("Europeana rate limit reached.") from exc
             raise MediaSourceError(f"Europeana returned HTTP {exc.code}.") from exc
-        except (URLError, HTTPException, TimeoutError, socket.timeout) as exc:
+        except (URLError, HTTPException, TimeoutError) as exc:
             raise MediaSourceError("Europeana request failed.") from exc
 
         if len(raw) > MAX_RESPONSE_BYTES:
