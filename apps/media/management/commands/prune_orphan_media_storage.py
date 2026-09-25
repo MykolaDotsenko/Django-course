@@ -15,7 +15,9 @@ _MANAGED_PREFIXES = ("sourced", "generated")
 def _walk_storage(prefix: str) -> Iterator[str]:
     try:
         directories, files = default_storage.listdir(prefix)
-    except (OSError, NotImplementedError) as exc:
+    except FileNotFoundError:
+        return
+    except Exception as exc:
         raise CommandError(f"Media storage cannot list {prefix!r}.") from exc
 
     for filename in files:
@@ -27,7 +29,7 @@ def _walk_storage(prefix: str) -> Iterator[str]:
 def _modified_at(name: str):
     try:
         value = default_storage.get_modified_time(name)
-    except (OSError, NotImplementedError) as exc:
+    except Exception as exc:
         raise CommandError(f"Media storage cannot read modified time for {name!r}.") from exc
 
     if timezone.is_naive(value):
@@ -63,9 +65,8 @@ class Command(BaseCommand):
 
         scanned = candidates = deleted = skipped_young = 0
         for prefix in _MANAGED_PREFIXES:
-            try:
-                names = _walk_storage(prefix)
-                for name in names:
+            names = _walk_storage(prefix)
+            for name in names:
                     scanned += 1
                     if scanned > max_objects:
                         raise CommandError(
@@ -91,12 +92,10 @@ class Command(BaseCommand):
 
                     try:
                         default_storage.delete(name)
-                    except OSError as exc:
+                    except Exception as exc:
                         raise CommandError(f"Failed to delete orphan media {name!r}.") from exc
                     deleted += 1
                     self.stdout.write(f"DELETED: {name}")
-            except FileNotFoundError:
-                continue
 
         mode = "APPLIED" if apply else "DRY RUN"
         self.stdout.write(
