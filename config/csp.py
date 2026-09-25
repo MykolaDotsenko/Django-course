@@ -53,8 +53,7 @@ def load_csp_config(
         if environment is RuntimeEnvironment.TEST:
             return CspConfig(CspMode.ENFORCE)
         raise ConfigurationError(
-            "DJANGO_CSP_MODE is required for preview and production "
-            "(report-only/enforce)."
+            "DJANGO_CSP_MODE is required for preview and production (report-only/enforce)."
         )
 
     try:
@@ -68,8 +67,6 @@ def load_csp_config(
         environment in {RuntimeEnvironment.PREVIEW, RuntimeEnvironment.PRODUCTION}
         and mode is CspMode.DISABLED
     ):
-        raise ConfigurationError(
-            "DJANGO_CSP_MODE cannot be disabled in preview or production."
-        )
+        raise ConfigurationError("DJANGO_CSP_MODE cannot be disabled in preview or production.")
 
     return CspConfig(mode)
