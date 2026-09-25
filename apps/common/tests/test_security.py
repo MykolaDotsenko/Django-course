@@ -57,6 +57,23 @@ def test_report_only_mode_uses_report_only_header() -> None:
     assert response["Content-Security-Policy-Report-Only"] == PUBLIC_CONTENT_SECURITY_POLICY
 
 
+def test_enabled_middleware_replaces_weaker_view_policy() -> None:
+    request = RequestFactory().get("/health/live/")
+    request.resolver_match = None
+
+    def weak_response(_request):
+        response = HttpResponse("ok")
+        response["Content-Security-Policy"] = "default-src * 'unsafe-inline' 'unsafe-eval'"
+        response["Content-Security-Policy-Report-Only"] = "default-src *"
+        return response
+
+    with override_settings(CONTENT_SECURITY_POLICY_HEADER="Content-Security-Policy"):
+        response = ContentSecurityPolicyMiddleware(weak_response)(request)
+
+    assert response["Content-Security-Policy"] == PUBLIC_CONTENT_SECURITY_POLICY
+    assert "Content-Security-Policy-Report-Only" not in response
+
+
 def test_disabled_mode_adds_no_csp_header() -> None:
     request = RequestFactory().get("/health/live/")
     request.resolver_match = None
