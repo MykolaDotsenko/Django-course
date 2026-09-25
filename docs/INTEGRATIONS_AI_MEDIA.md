@@ -93,6 +93,22 @@ Then:
 
 The runtime selector remains local/database-backed. If no reviewed published derivative exists, the product intentionally renders no destination hero.
 
+## Production media storage and delivery
+
+Local/test media defaults to Django filesystem storage. Production requires the configured S3-compatible backend through `MEDIA_STORAGE_MODE=s3`.
+
+The storage contract intentionally separates:
+
+- **storage API** — bucket/region and optional credential-free HTTPS S3-compatible endpoint;
+- **credentials** — standard AWS/S3 credential chain supplied by deployment infrastructure;
+- **public delivery** — direct public object URLs or an optional `MEDIA_CDN_DOMAIN`.
+
+Editorial media is public content. Generated URLs therefore do not use query-string authentication. Bucket/CDN policy must allow public reads while deployment credentials retain only the write/list/delete permissions the application actually needs.
+
+Managed source and derivative names are content-hashed. Production uploads set `Cache-Control: public, max-age=31536000, immutable`, making long-lived caching safe because a byte change produces a different object key. Do not reuse this immutable policy for mutable, user-private or non-content-addressed files without a separate storage class.
+
+The application does not proxy production media bytes through Django. In debug filesystem mode Django may serve `MEDIA_URL` only for local development/testing.
+
 ## File formats
 
 Managed media validation accepts JPEG, PNG and WebP and rejects SVG ingestion.
