@@ -35,6 +35,9 @@ _LOG_FIELDS = (
     "error_code",
     "provider",
     "cache_status",
+    "csp_directive",
+    "csp_disposition",
+    "csp_blocked_resource",
 )
 
 
