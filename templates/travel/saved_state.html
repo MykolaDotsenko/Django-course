@@ -117,7 +117,8 @@
         {% endif %}
       {% else %}
         <p class="qa-saved-empty"
-           data-favourites-empty>No saved pairs yet. Save a pair after a conversion for quicker access.</p>
+           data-favourites-empty
+           hidden>No saved pairs yet. Save a pair after a conversion for quicker access.</p>
         <div class="qa-saved-list" data-favourites-list></div>
       {% endif %}
     </section>
@@ -214,7 +215,9 @@
                   data-clear-recents
                   hidden>Clear browser history</button>
         </div>
-        <p class="qa-saved-empty" data-recents-empty>No browser-only recent conversions here.</p>
+        <p class="qa-saved-empty"
+           data-recents-empty
+           hidden>No browser-only recent conversions here.</p>
         <div class="qa-saved-list" data-recents-list></div>
       </section>
     {% else %}
@@ -230,7 +233,9 @@
                   data-clear-recents
                   hidden>Clear recent history</button>
         </div>
-        <p class="qa-saved-empty" data-recents-empty>No recent conversions in this browser yet.</p>
+        <p class="qa-saved-empty"
+           data-recents-empty
+           hidden>No recent conversions in this browser yet.</p>
         <div class="qa-saved-list" data-recents-list></div>
       </section>
     {% endif %}
