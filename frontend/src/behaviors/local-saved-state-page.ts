@@ -82,19 +82,21 @@ function linkForPair(
   return `${url.pathname}${url.search}`;
 }
 
-function actionLink(text: string, href: string): HTMLAnchorElement {
+function actionLink(text: string, href: string, accessibleName = text): HTMLAnchorElement {
   const element = document.createElement("a");
   element.className = "qa-secondary-button";
   element.textContent = text;
   element.href = href;
+  if (accessibleName !== text) element.setAttribute("aria-label", accessibleName);
   return element;
 }
 
-function actionButton(text: string, action: () => void): HTMLButtonElement {
+function actionButton(text: string, action: () => void, accessibleName = text): HTMLButtonElement {
   const element = document.createElement("button");
   element.className = "qa-secondary-button";
   element.type = "button";
   element.textContent = text;
+  if (accessibleName !== text) element.setAttribute("aria-label", accessibleName);
   element.addEventListener("click", action);
   return element;
 }
@@ -134,17 +136,26 @@ function renderFavourites(
 
     const actions = document.createElement("div");
     actions.className = "qa-saved-row__actions";
+    const pairActionName = `${favourite.sourceCurrency} to ${favourite.destinationCurrency}`;
     actions.append(
-      actionLink("Use pair", linkForPair(converterUrl, favourite)),
-      actionLink("Reverse pair", linkForPair(converterUrl, favourite, { swap: true })),
-      actionButton("Remove", () => {
-        const read = readState();
-        const next = {
-          ...read.state,
-          favourites: read.state.favourites.filter((item) => item.id !== favourite.id),
-        };
-        persistAndRender(next, "Removed from saved.");
-      }),
+      actionLink("Use pair", linkForPair(converterUrl, favourite), `Use pair: ${pairActionName}`),
+      actionLink(
+        "Reverse pair",
+        linkForPair(converterUrl, favourite, { swap: true }),
+        `Reverse pair: ${pairActionName}`,
+      ),
+      actionButton(
+        "Remove",
+        () => {
+          const read = readState();
+          const next = {
+            ...read.state,
+            favourites: read.state.favourites.filter((item) => item.id !== favourite.id),
+          };
+          persistAndRender(next, "Removed from saved.");
+        },
+        `Remove saved pair: ${pairActionName}`,
+      ),
     );
     article.append(copy, actions);
     list.append(article);
@@ -196,6 +207,7 @@ function renderRecents(page: HTMLElement, state: LocalPreferencesV1, converterUr
 
     const actions = document.createElement("div");
     actions.className = "qa-saved-row__actions";
+    const conversionActionName = `${recent.amount} ${recent.sourceCurrency} to ${recent.destinationCurrency}`;
     actions.append(
       actionLink(
         "Repeat",
@@ -204,6 +216,7 @@ function renderRecents(page: HTMLElement, state: LocalPreferencesV1, converterUr
           rateMode: recent.rateMode,
           requestedDate: recent.requestedDate,
         }),
+        `Repeat conversion: ${conversionActionName}`,
       ),
       actionLink(
         "Swap",
@@ -213,15 +226,20 @@ function renderRecents(page: HTMLElement, state: LocalPreferencesV1, converterUr
           requestedDate: recent.requestedDate,
           swap: true,
         }),
+        `Swap conversion: ${conversionActionName}`,
       ),
-      actionButton("Remove", () => {
-        const read = readState();
-        const next = {
-          ...read.state,
-          recent: read.state.recent.filter((item) => item.id !== recent.id),
-        };
-        persistAndRender(next, "Recent conversion removed.");
-      }),
+      actionButton(
+        "Remove",
+        () => {
+          const read = readState();
+          const next = {
+            ...read.state,
+            recent: read.state.recent.filter((item) => item.id !== recent.id),
+          };
+          persistAndRender(next, "Recent conversion removed.");
+        },
+        `Remove recent conversion: ${conversionActionName}`,
+      ),
     );
     article.append(copy, actions);
     list.append(article);
