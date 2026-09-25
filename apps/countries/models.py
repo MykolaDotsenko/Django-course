@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date
 
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Q
 from django.utils import timezone
 
@@ -151,9 +151,50 @@ class CountryCurrency(models.Model):
             ),
         ]
 
+    def _validate_primary_period_overlap(self) -> None:
+        if not self.is_primary or self.country_id is None:
+            return
+
+        conflicts = CountryCurrency.objects.filter(
+            country_id=self.country_id,
+            is_primary=True,
+        )
+        if self.pk is not None:
+            conflicts = conflicts.exclude(pk=self.pk)
+        if self.valid_from is not None:
+            conflicts = conflicts.filter(
+                Q(valid_to__isnull=True) | Q(valid_to__gte=self.valid_from)
+            )
+        if self.valid_to is not None:
+            conflicts = conflicts.filter(
+                Q(valid_from__isnull=True) | Q(valid_from__lte=self.valid_to)
+            )
+
+        conflict = conflicts.select_related("currency").order_by("valid_from", "pk").first()
+        if conflict is not None:
+            raise ValidationError(
+                {
+                    "valid_from": (
+                        "Primary currency periods for one country cannot overlap. "
+                        f"Conflicts with {conflict.currency.code}."
+                    )
+                }
+            )
+
     def clean(self):
         if self.valid_from and self.valid_to and self.valid_to < self.valid_from:
             raise ValidationError({"valid_to": "valid_to cannot precede valid_from."})
+        self._validate_primary_period_overlap()
+
+    def save(self, *args, **kwargs):
+        if self.country_id is None:
+            self.clean()
+            return super().save(*args, **kwargs)
+
+        with transaction.atomic():
+            Country.objects.select_for_update().get(pk=self.country_id)
+            self.clean()
+            return super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"{self.country.iso2} → {self.currency.code}"

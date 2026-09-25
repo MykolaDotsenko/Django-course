@@ -28,6 +28,8 @@ This supports:
 
 Temporal boundaries are part of the relationship, not inferred from current data.
 
+Primary-currency periods for the same country are inclusive, non-overlapping intervals. Adjacent eras are valid; ambiguous or overlapping eras fail closed rather than relying on query ordering. Supported model writes serialize on the country row before validating this invariant, while database uniqueness constraints remain a second line of defense for active relationships.
+
 ## FX quote / conversion result
 
 A normalized quote/result should carry enough information to explain its financial meaning:
@@ -118,7 +120,7 @@ The exact schema can evolve, but the UI should be able to communicate enough sou
 Examples of durable invariants:
 
 - country and currency identity remain separate;
-- temporal country/currency relationships are explicit;
+- temporal country/currency relationships are explicit and primary eras do not overlap;
 - financial arithmetic uses Decimal semantics;
 - historical requested date and effective observation date are not silently conflated;
 - current context is not silently backdated;
