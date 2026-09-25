@@ -15,7 +15,7 @@ The current CI runs checks equivalent to:
 ```bash
 ruff format --check apps config scripts manage.py
 ruff check apps config scripts manage.py
-mypy apps/exchange/domain.py apps/exchange/providers/base.py apps/exchange/providers/frankfurter.py config/environment.py config/database.py config/cache.py config/ai.py integrations/gemini/client.py
+mypy apps/exchange/domain.py apps/exchange/providers/base.py apps/exchange/providers/frankfurter.py config/environment.py config/database.py config/cache.py config/csp.py config/ai.py integrations/gemini/client.py
 djlint templates --check
 python manage.py check
 python manage.py makemigrations --check --dry-run
@@ -63,6 +63,10 @@ Deployed HTTPS policy is explicit rather than inferred. Preview and production m
 
 CI boots production-like settings against PostgreSQL and runs `python manage.py check --deploy --fail-level WARNING`, then asserts the secure redirect/proxy/HSTS/cookie settings. This keeps deployment assumptions executable.
 
+The public web surface also uses an explicit Content Security Policy. Test/browser QA runs with enforcement enabled so HTMX/Vite interactions are exercised under the real policy, including a negative browser check that injected inline script does not execute. Preview and production must explicitly choose `DJANGO_CSP_MODE=report-only` or `enforce`; production-like CI verifies the enforced header. The public policy allows scripts only from the same origin, forbids inline script attributes, `unsafe-eval`, objects and framing, and narrows the one current dynamic media aspect-ratio style through `style-src-attr`. Django admin uses a separate compatibility policy because its upstream templates may require inline assets; that exception is not applied to public pages.
+
+CSP violation reports are accepted by a bounded same-origin endpoint. The endpoint does not persist document URLs/query strings and logs only the directive, disposition and a sanitized blocked-resource origin/category.
+
 Keep:
 
 - secrets server-side and out of version control;
@@ -103,7 +107,7 @@ Automated axe checks are useful but do not replace interaction testing.
 
 ## Configuration
 
-Runtime configuration is validated in `config/environment.py`, `config/database.py`, `config/cache.py` and `config/ai.py`.
+Runtime configuration is validated in `config/environment.py`, `config/database.py`, `config/cache.py`, `config/csp.py` and `config/ai.py`.
 
 Preview and production require an explicit shared `CACHE_URL`; local/test execution may omit it and use process-local memory caching. PostgreSQL CI also exercises a real Redis service so the deployed cache backend is tested rather than only configuration-parsed.
 
