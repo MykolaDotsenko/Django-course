@@ -146,6 +146,18 @@ Violation reporting is bounded and privacy-minimized: raw document URLs/query st
 
 **Revisit when:** Django admin no longer needs inline compatibility, Trusted Types becomes practical for the current browser/runtime surface, or deployment telemetry justifies tightening/removing a directive.
 
+## ADR-015 — Production editorial media uses shared S3-compatible object storage
+
+**Status:** active
+
+Production managed editorial media uses Django's S3-compatible storage backend. Local/test remain filesystem-first; preview chooses its storage mode explicitly.
+
+Content-addressed managed filenames are delivered as public editorial assets with unsigned URLs and an immutable one-year cache policy. A custom CDN/public domain may sit in front of the storage API. Storage credentials remain outside project configuration objects and are supplied through the provider's standard credential chain.
+
+**Why:** instance-local media files are not reliable across multi-instance deploys or replacement/restart events. Content-addressed object storage gives durable shared bytes and makes aggressive public caching safe without turning Django into a media proxy.
+
+**Revisit when:** the product introduces private/user-owned uploads, mutable media keys, a dedicated image CDN/transformation service, or another shared storage system with equivalent durability and delivery semantics.
+
 ## Adding/changing a decision
 
 Create or update an ADR when a change affects a durable project-wide choice.
