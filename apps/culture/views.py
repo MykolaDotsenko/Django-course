@@ -116,9 +116,7 @@ def current_destination_context(request: HttpRequest) -> HttpResponse:
                     destination_context,
                     historical=True,
                     show_explore_nav=False,
-                    hero_image=select_destination_hero_image(
-                        destination_context.country_code
-                    ),
+                    hero_image=select_destination_hero_image(destination_context.country_code),
                 )
 
     context = {
