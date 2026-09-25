@@ -7,14 +7,18 @@ from datetime import UTC, datetime
 from http.client import HTTPException
 from typing import Any
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote, urlencode
+from pathlib import PurePosixPath
+from urllib.parse import quote, unquote, urlencode, urlsplit
 from urllib.request import Request, urlopen
 
 from apps.media.models import MediaSourceKind
-from apps.media.sources.base import MediaCandidate, MediaSourceError
+from apps.media.sources.base import DownloadedMedia, MediaCandidate, MediaSourceError
+from apps.media.validation import MAX_MEDIA_BYTES
 
 COMMONS_API_URL = "https://commons.wikimedia.org/w/api.php"
 MAX_RESPONSE_BYTES = 2 * 1024 * 1024
+_ALLOWED_MEDIA_MIME_TYPES = frozenset({"image/jpeg", "image/png", "image/webp"})
+_WIKIMEDIA_MEDIA_HOST = "upload.wikimedia.org"
 _TAG_RE = re.compile(r"<[^>]+>")
 
 
@@ -101,6 +105,37 @@ def parse_wikimedia_search_payload(
     return tuple(candidates)
 
 
+def _validate_wikimedia_media_url(value: str) -> str:
+    parsed = urlsplit(value.strip())
+    if (
+        parsed.scheme != "https"
+        or parsed.hostname != _WIKIMEDIA_MEDIA_HOST
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.fragment
+    ):
+        raise MediaSourceError(
+            "Wikimedia media URL must be credential-free HTTPS on upload.wikimedia.org."
+        )
+    return value.strip()
+
+
+def _response_content_type(response: Any) -> str:
+    headers = getattr(response, "headers", None)
+    if headers is None:
+        return ""
+
+    get_content_type = getattr(headers, "get_content_type", None)
+    if callable(get_content_type):
+        return str(get_content_type()).lower()
+
+    getter = getattr(headers, "get", None)
+    if callable(getter):
+        raw = str(getter("Content-Type", "") or "")
+        return raw.partition(";")[0].strip().lower()
+    return ""
+
+
 class WikimediaCommonsClient:
     def __init__(self, *, timeout_seconds: float = 10.0):
         if not 0 < timeout_seconds <= 30:
@@ -143,6 +178,70 @@ class WikimediaCommonsClient:
         return parse_wikimedia_search_payload(
             payload,
             retrieved_at=datetime.now(UTC),
+        )
+
+    def download_media(
+        self,
+        media_url: str,
+        *,
+        max_bytes: int = MAX_MEDIA_BYTES,
+    ) -> DownloadedMedia:
+        if not 1 <= max_bytes <= MAX_MEDIA_BYTES:
+            raise ValueError("Wikimedia media max_bytes must be within the managed-media limit.")
+
+        validated_url = _validate_wikimedia_media_url(media_url)
+        request = Request(
+            validated_url,
+            headers={
+                "Accept": "image/jpeg,image/png,image/webp",
+                "User-Agent": "CulturalCurrencyConverter/0.1 media-ingestion",
+            },
+        )
+
+        try:
+            with urlopen(request, timeout=self.timeout_seconds) as response:
+                final_url = _validate_wikimedia_media_url(
+                    str(response.geturl() if hasattr(response, "geturl") else validated_url)
+                )
+                content_type = _response_content_type(response)
+                if content_type not in _ALLOWED_MEDIA_MIME_TYPES:
+                    raise MediaSourceError(
+                        "Wikimedia media response used an unsupported content type."
+                    )
+
+                headers = getattr(response, "headers", None)
+                raw_length = headers.get("Content-Length") if hasattr(headers, "get") else None
+                if raw_length:
+                    try:
+                        declared_length = int(raw_length)
+                    except (TypeError, ValueError) as exc:
+                        raise MediaSourceError(
+                            "Wikimedia media response has an invalid Content-Length."
+                        ) from exc
+                    if declared_length < 0 or declared_length > max_bytes:
+                        raise MediaSourceError(
+                            "Wikimedia media response exceeded the managed-media byte limit."
+                        )
+
+                raw = response.read(max_bytes + 1)
+        except MediaSourceError:
+            raise
+        except HTTPError as exc:
+            raise MediaSourceError(f"Wikimedia media returned HTTP {exc.code}.") from exc
+        except (URLError, HTTPException, TimeoutError) as exc:
+            raise MediaSourceError("Wikimedia media download failed.") from exc
+
+        if len(raw) > max_bytes:
+            raise MediaSourceError("Wikimedia media response exceeded the managed-media byte limit.")
+
+        filename = PurePosixPath(unquote(urlsplit(final_url).path)).name
+        if not filename:
+            raise MediaSourceError("Wikimedia media URL is missing a filename.")
+
+        return DownloadedMedia(
+            data=raw,
+            filename=filename,
+            mime_type=content_type,
         )
 
     def _request_json(self, request: Request) -> Any:
