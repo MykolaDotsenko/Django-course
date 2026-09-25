@@ -64,11 +64,13 @@ def _validate_publishable(moment: StoryMoment) -> None:
         raise StoryPublicationError(
             "Story moments require at least one country or currency relationship."
         )
-    if moment.category in _TEMPORAL_CATEGORIES:
-        if moment.start_date is None:
-            raise StoryPublicationError("Temporal story moments require start_date.")
-        if moment.date_precision == StoryDatePrecision.UNKNOWN:
-            raise StoryPublicationError("Temporal story moments require date precision.")
+    if moment.category in _TEMPORAL_CATEGORIES and moment.start_date is None:
+        raise StoryPublicationError("Temporal story moments require start_date.")
+    if (
+        moment.category in _TEMPORAL_CATEGORIES
+        and moment.date_precision == StoryDatePrecision.UNKNOWN
+    ):
+        raise StoryPublicationError("Temporal story moments require date precision.")
     if _CAUSAL_RE.search(moment.summary):
         if not moment.supports_causality or not moment.causal_support_note.strip():
             raise StoryPublicationError(
