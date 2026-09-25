@@ -132,7 +132,7 @@ def test_destination_context_template_renders_reviewed_hero_with_provenance() ->
     )
 
     assert 'class="qa-destination-context__hero"' in html
-    assert 'style="aspect-ratio: 16 / 9;"' in html
+    assert 'style="aspect-ratio: 16 / 9"' in html
     assert 'loading="lazy"' in html
     assert "A Helsinki tram on Aleksanterinkatu." in html
     assert "Helsinki tram, May 2026." in html
