@@ -15,6 +15,7 @@ dependencies = [
     "Pillow==12.3.0",
     "google-genai==2.24.0",
     "httpx==0.28.1",
+    "redis==8.1.0",
 ]
 
 [project.optional-dependencies]
