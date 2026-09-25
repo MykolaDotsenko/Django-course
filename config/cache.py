@@ -3,12 +3,15 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import parse_qsl, urlparse
 
 from config.environment import ConfigurationError, RuntimeEnvironment
 
 _REDIS_BACKEND = "django.core.cache.backends.redis.RedisCache"
 _LOCMEM_BACKEND = "django.core.cache.backends.locmem.LocMemCache"
+_RESERVED_FAILURE_QUERY_OPTIONS = frozenset(
+    {"socket_timeout", "socket_connect_timeout", "retry_on_timeout"}
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,21 +57,34 @@ def _validate_redis_url(cache_url: str) -> None:
     if parsed.fragment:
         raise ConfigurationError("CACHE_URL must not contain a URL fragment.")
 
-    if not parsed.hostname:
-        raise ConfigurationError("CACHE_URL must include a Redis host.")
-
     try:
+        hostname = parsed.hostname
         port = parsed.port
     except ValueError as exc:
-        raise ConfigurationError("CACHE_URL contains an invalid Redis port.") from exc
+        raise ConfigurationError("CACHE_URL contains an invalid Redis host or port.") from exc
+
+    if not hostname:
+        raise ConfigurationError("CACHE_URL must include a Redis host.")
     if port == 0:
         raise ConfigurationError("CACHE_URL contains an invalid Redis port.")
 
-    database_path = parsed.path.lstrip("/")
-    if "/" in database_path:
-        raise ConfigurationError("CACHE_URL may contain at most one Redis database number.")
-    if database_path and (not database_path.isascii() or not database_path.isdecimal()):
-        raise ConfigurationError("CACHE_URL Redis database must be a non-negative integer.")
+    if parsed.path not in {"", "/"}:
+        if not parsed.path.startswith("/") or "/" in parsed.path[1:]:
+            raise ConfigurationError("CACHE_URL may contain at most one Redis database number.")
+        database_path = parsed.path[1:]
+        if not database_path.isascii() or not database_path.isdecimal():
+            raise ConfigurationError("CACHE_URL Redis database must be a non-negative integer.")
+
+    try:
+        query_options = parse_qsl(parsed.query, keep_blank_values=False, strict_parsing=True)
+    except ValueError as exc:
+        raise ConfigurationError("CACHE_URL contains invalid query options.") from exc
+
+    for key, _value in query_options:
+        if key in _RESERVED_FAILURE_QUERY_OPTIONS:
+            raise ConfigurationError(
+                "CACHE_URL must not override cache timeout or retry policy."
+            )
 
 
 def load_cache_config(
