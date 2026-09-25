@@ -2,6 +2,7 @@
   <div class="qa-media__frame" style="aspect-ratio: {{ image.ratio }};">
     <img class="qa-media__image"
          src="{{ image.src }}"
+         {% if image.srcset %}srcset="{{ image.srcset }}" sizes="{{ image.sizes }}"{% endif %}
          alt="{{ image.alt }}"
          width="{{ image.width }}"
          height="{{ image.height }}"
